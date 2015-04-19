@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "description": "Nodal Sample Application",
   "main": "server.js",
-  "devDependencies": {},
+  "dependencies": {
+    "nodal": "latest"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
