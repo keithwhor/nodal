@@ -1,0 +1,35 @@
+{
+  "name": "nodal",
+  "version": "0.1.0",
+  "description": "A Lightweight, Opinionated API Server + Framework",
+  "author": "Keith Horwood",
+  "main": "core/module.js",
+  "dependencies": {
+    "any-db": "latest",
+    "any-db-postgres": "latest",
+    "any-db-transaction": "latest",
+    "async": "latest",
+    "colors": "latest",
+    "dot": "latest",
+    "http-proxy": "latest",
+    "i": "latest",
+    "ncp": "latest",
+    "ws": "latest"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/keithwhor/nodal.git"
+  },
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/keithwhor/nodal/issues"
+  },
+  "homepage": "https://github.com/keithwhor/nodal",
+  "bin": {
+    "nodal": "cli/cli.js"
+  },
+  "private": true
+}
