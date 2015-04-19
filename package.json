@@ -1,6 +1,6 @@
 {
   "name": "nodal",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A lightweight, opinionated API server + framework",
   "author": "Keith Horwood",
   "main": "core/module.js",
@@ -14,7 +14,8 @@
     "http-proxy": "latest",
     "i": "latest",
     "ncp": "latest",
-    "ws": "latest"
+    "ws": "latest",
+    "pg": "latest"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
