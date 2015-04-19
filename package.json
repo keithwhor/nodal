@@ -31,5 +31,4 @@
   "bin": {
     "nodal": "cli/cli.js"
   },
-  "private": true
 }
