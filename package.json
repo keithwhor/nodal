@@ -1,7 +1,7 @@
 {
   "name": "nodal",
   "version": "0.1.0",
-  "description": "A Lightweight, Opinionated API Server + Framework",
+  "description": "A lightweight, opinionated API server + framework",
   "author": "Keith Horwood",
   "main": "core/module.js",
   "dependencies": {
