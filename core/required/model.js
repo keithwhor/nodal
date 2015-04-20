@@ -1,4 +1,6 @@
-module.exports = function(app) {
+module.exports = (function() {
+
+  var DataTypes = require('./data_types.js');
 
   function Model(modelData) {
 
@@ -76,31 +78,13 @@ module.exports = function(app) {
 
   Model.prototype.validate = function(fieldList) {
 
-    var errors = this._errors;
+    return (fieldList || this.fieldList()).filter(function(field) {
 
-    if (!fieldList) {
-      errors = {};
-      fieldList = this.fieldList();
-    }
+      // does nothing right now
+      this.clearError(field);
+      return false;
 
-    fieldList.forEach((function(field) {
-
-      var type;
-
-      if (this.get(field) === null) {
-        type = this.getFieldType(field);
-        if (!type.primary_key && !type.nullable) {
-          !errors[field] && (errors[field] = []);
-          errors[field].push('Field can not be null');
-          return;
-        }
-      }
-
-      delete errors[field];
-
-    }).bind(this));
-
-    this._errors = errors;
+    }.bind(this)).length > 0;
 
   };
 
@@ -128,17 +112,18 @@ module.exports = function(app) {
 
     }
 
-    var type = this.getFieldType(field);
+    var dataType = this.getDataTypeOf(field);
 
     (value === undefined) && (value = null);
 
     if (value === null) {
       this._data[field] = null;
     } else {
-      if (value instanceof Array && this.getFieldProperties(field).array) {
-        this._data[field] = value.map(function(v) { return type.convert(v); });
+      if (this.isFieldArray(field)) {
+        value = value instanceof Array ? value : [value];
+        this._data[field] = value.map(function(v) { return dataType.convert(v); });
       } else {
-        this._data[field] = type.convert(value);
+        this._data[field] = dataType.convert(value);
       }
     }
 
@@ -151,19 +136,6 @@ module.exports = function(app) {
   Model.prototype.get = function(key) {
     var value = this._data[key];
     return value === undefined ? null : value;
-  };
-
-  Model.prototype.getSanitized = function(field) {
-
-    var type = this.getFieldType(field);
-    var value = this.get(field);
-
-    if (value instanceof Array) {
-      return app.db.adapter.generateArray(value.map(function(v) { return type.sanitize(v); }));
-    }
-
-    return type.sanitize(value);
-
   };
 
   Model.prototype.toObject = function() {
@@ -183,12 +155,27 @@ module.exports = function(app) {
     return !!this._fieldLookup[field];
   };
 
-  Model.prototype.getFieldType = function(field) {
-    return app.db.adapter.getType(this._fieldLookup[field].type);
+  Model.prototype.getFieldData = function(field) {
+    return this._fieldLookup[field];
   };
 
-  Model.prototype.getFieldProperties = function(field) {
-    return app.db.adapter.parseProperties(this._fieldLookup[field].properties);
+  Model.prototype.getDataTypeOf = function(field) {
+    return DataTypes[this._fieldLookup[field].type];
+  };
+
+  Model.prototype.isFieldArray = function(field) {
+    var fieldData = this._fieldLookup[field];
+    return !!(fieldData && fieldData.properties && fieldData.properties.array);
+  };
+
+  Model.prototype.isFieldPrimaryKey = function(field) {
+    var fieldData = this._fieldLookup[field];
+    return !!(fieldData && fieldData.properties && fieldData.properties.primary_key);
+  };
+
+  Model.prototype.fieldDefaultValue = function(field) {
+    var fieldData = this._fieldLookup[field];
+    return !!(fieldData && fieldData.properties && fieldData.properties.array);
   };
 
   Model.prototype.fieldList = function() {
@@ -199,47 +186,14 @@ module.exports = function(app) {
     return this._fieldArray.slice();
   };
 
-  Model.prototype.save = function(callback) {
+  Model.prototype.error = function(key, message) {
+    this._errors[key] = message;
+    return true;
+  };
 
-    var model = this;
-
-    if(typeof callback !== 'function') {
-      callback = function() {};
-    }
-
-    if (this.hasErrors()) {
-      setTimeout(callback.bind(model, model.getErrors(), model), 1);
-      return;
-    };
-
-    var columns = this.fieldList().filter(function(v) {
-      return !model.getFieldType(v).primary_key;
-    });
-
-    var rowData = columns.map(function(v) { return model.getSanitized(v); });
-
-    var query = [
-      'INSERT INTO "',
-        this.tableName(),
-      '"(',
-        columns.map(function(v) { return '"' + v + '"'; }).join(','),
-      ') VALUES(',
-        columns.map(function(v, i) { return '$' + (i + 1); }).join(','),
-      ') RETURNING *'
-    ].join('');
-
-    app.db.query(query, rowData, function(err, result) {
-
-      if (err) {
-        model._errors['_query'] = err.message;
-      } else {
-        result.rows.length && model.load(result.rows[0]);
-      };
-
-      callback.call(model, model.hasErrors() ? model.getErrors() : null, model);
-
-    });
-
+  Model.prototype.clearError = function(key) {
+    delete this._errors[key];
+    return true;
   };
 
   Model.prototype.schema = {
@@ -251,4 +205,4 @@ module.exports = function(app) {
 
   return Model;
 
-};
+})();

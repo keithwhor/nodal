@@ -9,7 +9,6 @@ module.exports = (function() {
     'nullable',
     'unique',
     'primary_key',
-    'convert',
     'sanitize'
   ];
 
@@ -19,7 +18,6 @@ module.exports = (function() {
     nullable: true,
     unique: false,
     primary_key: false,
-    convert: function(v) { return v; },
     sanitize: function(v) { return v; }
   };
 
@@ -113,6 +111,18 @@ module.exports = (function() {
       'DROP TABLE ', this.escapeField(name)
     ].join('');
 
+  };
+
+  DatabaseAdapter.prototype.generateInsertQuery = function(table, columns) {
+    return [
+      'INSERT INTO ',
+        this.escapeField(table),
+      '(',
+        columns.map(this.escapeField.bind(this)).join(','),
+      ') VALUES(',
+        columns.map(function(v, i) { return '$' + (i + 1); }).join(','),
+      ') RETURNING *'
+    ].join('');
   };
 
   return DatabaseAdapter;

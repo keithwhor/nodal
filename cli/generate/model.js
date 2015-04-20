@@ -13,10 +13,12 @@ module.exports = (function() {
   function generateModelDefinition(modelName) {
 
     return [
-      'module.exports = function(app) {',
+      'module.exports = (function() {',
       '',
-      '  var Model = require(\'nodal\').Model(app);',
-      '  var Schema = require(\'../../db/schema.js\');',
+      '  var Nodal = require(\'nodal\');',
+      '',
+      '  var Model = Nodal.Model;',
+      '  var Schema = Nodal.require(\'db/schema.js\');',
       '',
       '  function ' + modelName + '() {',
       '    Model.apply(this, arguments);',
@@ -29,7 +31,7 @@ module.exports = (function() {
       '',
       '  return ' + modelName + ';',
       '',
-      '};',
+      '})();',
       ''
     ].join('\n');
 
@@ -64,6 +66,8 @@ module.exports = (function() {
 
       var schemaObject = generateModelSchemaObject(modelName, convertArgListToPropertyList(args));
 
+      !fs.existsSync(modelDir) && fs.mkdirSync(modelDir);
+
       var createPath = modelDir + '/' + inflect.underscore(modelName) + '.js';
 
       if (fs.existsSync(createPath)) {
@@ -72,7 +76,7 @@ module.exports = (function() {
 
       fs.writeFileSync(createPath, generateModelDefinition(modelName));
 
-      console.log(colors.green.bold('Create: ') + modelDir + '/' + modelName + '.js');
+      console.log(colors.green.bold('Create: ') + createPath);
 
       generateMigration('Create' + modelName,
         ['this.createTable(\"' + schemaObject.table + '\", ' + JSON.stringify(schemaObject.fields) + ')'],

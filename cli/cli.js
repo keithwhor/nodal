@@ -29,7 +29,7 @@ var commands = {
       process.exit(0);
     }
   },
-  init: {
+  new: {
     _: function(args, flags) {
 
       var ncp = require('ncp');
@@ -38,14 +38,32 @@ var commands = {
         if (err) {
           return console.error(err);
         }
-        console.log('done!');
+        console.log('Created new nodal project!');
       });
 
     }
   },
   s: {
     _: function(args, flags) {
-      // start the server
+
+      var spawn = require('child_process').spawn;
+      var child = spawn('npm',  ['start'], {stdio: 'inherit'});
+
+      child.stdout.setEncoding('utf8');
+      child.stdout.on('data', function (data) {
+        var log = data.toString().split(/\r?\n/g);
+        log.pop();
+        console.log(log.join('\n'));
+      });
+
+      child.on('close', function (code) {
+        process.exit();
+      });
+
+      process.on('exit', function() {
+        child.kill();
+      });
+
     }
   },
   db: {

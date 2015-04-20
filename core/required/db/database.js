@@ -11,14 +11,18 @@ module.exports = (function() {
 
   function Database(cfg) {
 
-    this.adapter = new PostgresAdapter;
+    this.adapter = new PostgresAdapter();
 
-    this._connection = anyDB.createConnection(
-      this.adapter.generateConnectionString(cfg.host, cfg.port, cfg.database, cfg.user, cfg.password)
-    );
+    this._connection = null;
 
     this._useLogColor = 0;
 
+  };
+
+  Database.prototype.connect = function(cfg) {
+    this._connection = anyDB.createConnection(
+      this.adapter.generateConnectionString(cfg.host, cfg.port, cfg.database, cfg.user, cfg.password)
+    );
   };
 
   Database.prototype.__logColorFuncs = [

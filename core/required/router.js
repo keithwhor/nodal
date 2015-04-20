@@ -66,7 +66,7 @@ module.exports = function(Application) {
     return true;
   };
 
-  function Router(app, port) {
+  function Router(app) {
     this._routes = [];
     this._app = app;
   };

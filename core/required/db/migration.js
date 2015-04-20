@@ -1,6 +1,6 @@
 module.exports = function(db, Schema) {
 
-  var Model = require('../model.js')(db);
+  var Model = require('../model.js');
 
   var fs = require('fs');
 
@@ -132,12 +132,6 @@ module.exports = function(db, Schema) {
       '};',
       ''
     ]).join('\n');
-
-  };
-
-  Migration.prototype.saveSchema = function(id) {
-
-    fs.writeFileSync(__dirname + '/schema.js', this.generateSchema(id));
 
   };
 

@@ -4,6 +4,8 @@ module.exports = (function() {
   var inflect = require('i')();
   var colors = require('colors/safe');
 
+  var migrationDir = './db/migrations';
+
   function composeMigration(up, down) {
 
     var hasInstructions = false;
@@ -25,8 +27,10 @@ module.exports = (function() {
       return [
         'module.exports = function(db) {',
         '',
-        '  var Schema = require(\'../schema.js\')',
-        '  var Migration = require(\'nodal\').Migration(db, Schema);',
+        '  var Nodal = require(\'nodal\');',
+        '',
+        '  var Schema = Nodal.require(\'db/schema.js\')',
+        '  var Migration = Nodal.Migration(db, Schema);',
         '',
         '  function ' + migrationName + '() {',
         '',
@@ -96,7 +100,9 @@ module.exports = (function() {
     var id = generateId(new Date());
     var migrationFileName = id + '__' + inflect.underscore(migrationName) + '.js';
 
-    var migrationPath = './db/migrations/' + migrationFileName;
+    !fs.existsSync(migrationDir) && fs.mkdirSync(migrationDir);
+
+    var migrationPath = migrationDir + '/' + migrationFileName;
 
     if (fs.existsSync(migrationPath)) {
       throw new Error('Migration already exists');
@@ -104,7 +110,7 @@ module.exports = (function() {
 
     fs.writeFileSync(migrationPath, composeMigration(up, down)(migrationName, id));
 
-    console.log(colors.green.bold('Create: ') + '/db/migrations/' + migrationFileName);
+    console.log(colors.green.bold('Create: ') + migrationPath);
 
   };
 

@@ -9,28 +9,11 @@ var colors = require('colors/safe');
 var MODEL_PATH = './app/models'
 var MIGRATION_PATH = './db/migrations';
 
-function generateModelQuery() {
-
-  return fs.readdirSync(MODEL_PATH)
-    .filter(function(filename) { return fs.statSync(MODEL_PATH + '/' + filename).isDirectory(); })
-    .map(convertModelDataToSQL)
-    .join(';');
-
-};
-
-function convertModelDataToSQL(filename) {
-
-  var modelDef = require(MODEL_PATH + '/' + filename + '/definition.js');
-
-  var model = new modelDef();
-
-  return model.generateSQL();
-
-};
-
 function composeQueryFunc(query) {
 
-  var cfg = Database.prototype.config;
+  var dbCredentials = require(process.cwd() + '/db/credentials.js');
+
+  var cfg = dbCredentials;
   var conString = 'postgres://' + cfg.user + ':' + cfg.password + '@' + cfg.host + ':' + cfg.port + '/postgres';
 
   return function rawQuery(callback) {
@@ -84,11 +67,13 @@ module.exports = {
 
   drop: function() {
 
+    var dbCredentials = require(process.cwd() + '/db/credentials.js');
+
     dropDatabase(
-      Database.prototype.config.database,
+      dbCredentials.database,
       errorHandler(function() {
 
-        Database.prototype.info('Dropped database');
+        Database.prototype.info('Dropped database "' + dbCredentials.database + '"');
 
       })
     );
@@ -97,11 +82,13 @@ module.exports = {
 
   create: function() {
 
+    var dbCredentials = require(process.cwd() + '/db/credentials.js');
+
     createDatabase(
-      Database.prototype.config.database,
+      dbCredentials.database,
       errorHandler(function() {
 
-        Database.prototype.info('Created empty database');
+        Database.prototype.info('Created empty database "' + dbCredentials.database + '"');
         process.exit(0);
 
       })
@@ -111,7 +98,10 @@ module.exports = {
 
   prepare: function() {
 
+    var dbCredentials = require(process.cwd() + '/db/credentials.js');
+
     var db = new Database();
+    db.connect(dbCredentials);
 
     db.transaction(
       'DROP SCHEMA public CASCADE;' +
@@ -129,12 +119,15 @@ module.exports = {
 
   migrate: function(args, flags) {
 
+    var dbCredentials = require(process.cwd() + '/db/credentials.js');
+
     var db = new Database();
+    db.connect(dbCredentials);
 
     db.query('SELECT id FROM schema_migrations', function(err, result) {
 
       if (err) {
-        db.error('Could not get schema migrations');
+        db.error('Could not get schema migrations, try `nodal db:prepare` first');
         process.exit(0);
       }
 
@@ -143,7 +136,7 @@ module.exports = {
       var migrations = fs.readdirSync(MIGRATION_PATH).map(function(v) {
         return {
           id: v.substr(0, v.indexOf('__')),
-          migration: new (require(MIGRATION_PATH + '/' + v)(db))
+          migration: new (require(process.cwd() + '/' + MIGRATION_PATH + '/' + v)(db))
         };
       }).filter(function(v) {
         return schema_ids.indexOf(v.id) === -1;
@@ -160,7 +153,7 @@ module.exports = {
 
         return function(callback) {
           migrationInstance.executeUp(function(err) {
-            !err && migrationInstance.saveSchema();
+            !err && fs.writeFileSync(process.cwd() + '/db/schema.js', migrationInstance.generateSchema());
             callback(err);
           });
         };
@@ -189,7 +182,10 @@ module.exports = {
 
   rollback: function(args, flags) {
 
+    var dbCredentials = require(process.cwd() + '/db/credentials.js');
+
     var db = new Database();
+    db.connect(dbCredentials);
 
     var steps = flags['step'] | 0;
     if (!steps) { steps = 1; }
@@ -197,7 +193,7 @@ module.exports = {
     db.query('SELECT id FROM schema_migrations', function(err, result) {
 
       if (err) {
-        db.error('Could not get schema migrations');
+        db.error('Could not get schema migrations, try `nodal db:prepare` first');
         process.exit(0);
       }
 
@@ -206,7 +202,7 @@ module.exports = {
       var migrations = fs.readdirSync(MIGRATION_PATH).map(function(v) {
         return {
           id: v.substr(0, v.indexOf('__')),
-          migration: new (require(MIGRATION_PATH + '/' + v)(db))
+          migration: new (require(process.cwd() + '/' + MIGRATION_PATH + '/' + v)(db))
         };
       }).filter(function(v) {
         return schema_ids.indexOf(v.id) !== -1;
@@ -224,7 +220,7 @@ module.exports = {
 
         return function(callback) {
           migrationInstance.executeDown(function(err) {
-            !err && migrationInstance.saveSchema(nextMigrationInstanceId);
+            !err && fs.writeFileSync(process.cwd() + '/db/schema.js', migrationInstance.generateSchema(nextMigrationInstanceId));
             callback(err);
           });
         };

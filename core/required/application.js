@@ -4,6 +4,7 @@ module.exports = (function() {
   var Router = require('./router.js')(Application);
   var SocketServer = require('./socket.js');
   var Template = require('./template.js');
+  var Model = require('./model.js');
 
   var dot = require('dot');
   var fs = require('fs');
@@ -14,7 +15,7 @@ module.exports = (function() {
 
   function Application() {
 
-    this._router = new Router(this, port);
+    this._router = new Router(this);
     this._server = null;
     this._proxy = null;
 
@@ -27,8 +28,10 @@ module.exports = (function() {
 
   };
 
-  Application.prototype.useDatabase = function(credentials) {
-    this.db = new Database(credentials);
+  Application.prototype.useDatabase = function() {
+    this.db = new Database();
+    this.db.connect(require(process.cwd() + '/db/credentials.js'));
+    return true;
   };
 
   Application.prototype.template = function(name) {
@@ -49,11 +52,34 @@ module.exports = (function() {
     return this._templates['!'];
   };
 
+  Application.prototype._proxyWebSocketRequests = function() {
+
+    if (this._server && this.socket && !this._proxy) {
+
+      this._proxy = httpProxy.createProxyServer({ ws: true })
+
+      this._server.on('upgrade', (function (req, socket, head) {
+        this._proxy.ws(req, socket, head, {target: 'ws://localhost:' + this.socket._port});
+      }).bind(this));
+
+    }
+
+    return true;
+
+  };
+
   Application.prototype.listen = function(port) {
 
-    this._server = http.createServer(this.execute.bind(this)).listen(port);
+    if (this._server) {
+      console.error('HTTP server already listening');
+      return;
+    }
 
-    console.log('Nodal server listening on port ' + port);
+    this._server = http.createServer(this._router.execute.bind(this._router)).listen(port);
+
+    this._proxyWebSocketRequests();
+
+    console.log('Nodal HTTP server listening on port ' + port);
 
     return true;
 
@@ -65,15 +91,16 @@ module.exports = (function() {
 
   Application.prototype.socketListen = function(port) {
 
-    var socket = new SocketServer(port);
+    if (this.socket) {
+      console.error('WebSocket server already listening');
+      return;
+    }
 
-    this._proxy = httpProxy.createProxyServer({ ws: true });
+    this.socket = new SocketServer(port);
 
-    this._server && this._server.on('upgrade', (function (req, socket, head) {
-      this._proxy.ws(req, socket, head, {target: 'ws://localhost:' + socket._port});
-    }).bind(this));
+    this._proxyWebSocketRequests();
 
-    this.socket = socket;
+    console.log('Nodal WebSocket server listening on port ' + port);
 
     return true;
 
@@ -84,6 +111,48 @@ module.exports = (function() {
       throw new Error('Application must socketListen before it can use commands');
     }
     this.socket.command.apply(this.socket, arguments);
+  };
+
+  Application.prototype.saveModel = function(model, callback) {
+
+    if (!(model instanceof Model)) {
+      throw new Error('Can only save valid models.');
+    }
+
+    if(typeof callback !== 'function') {
+      callback = function() {};
+    }
+
+    if (model.hasErrors()) {
+      setTimeout(callback.bind(model, model.getErrors(), model), 1);
+      return;
+    };
+
+    var columns = model.fieldList().filter(function(v) {
+      return !model.isFieldPrimaryKey(v);
+    }).filter(function(v) {
+      return model.get(v) !== null;
+    });
+
+    var db = this.db;
+
+    db.query(
+      db.adapter.generateInsertQuery(model.schema.table, columns),
+      columns.map(function(v) {
+        return db.adapter.getType(model.getFieldData(v).type).sanitize(model.get(v));
+      }),
+      function(err, result) {
+
+        if (err) {
+          model.error('_query', err.message);
+        } else {
+          result.rows.length && model.load(result.rows[0]);
+        };
+
+        callback.call(model, model.hasErrors() ? model.getErrors() : null, model);
+
+    });
+
   };
 
   return Application;
