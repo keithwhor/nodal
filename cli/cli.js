@@ -47,18 +47,7 @@ var commands = {
     _: function(args, flags) {
 
       var spawn = require('child_process').spawn;
-      var child = spawn('npm',  ['start'], {stdio: 'inherit'});
-
-      child.stdout.setEncoding('utf8');
-      child.stdout.on('data', function (data) {
-        var log = data.toString().split(/\r?\n/g);
-        log.pop();
-        console.log(log.join('\n'));
-      });
-
-      child.on('close', function (code) {
-        process.exit();
-      });
+      var child = spawn('npm',  ['start'], {stdio: [process.stdin, process.stdout, process.stderr]});
 
       process.on('exit', function() {
         child.kill();

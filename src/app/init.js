@@ -1,12 +1,12 @@
-var Application = require('nodal').Application;
+var Nodal = require('nodal');
 
-var app = new Application();
+var app = new Nodal.Application();
 
 /* bind data layer */
-app.useDatabase(require('../db/credentials.js'));
+app.useDatabase(Nodal.require('db/credentials.js'));
 
 /* Load routes */
-require('./routes.js')(app);
+Nodal.require('app/routes.js')(app);
 
 /* Initialize App */
 app.listen(global.settings.PORT);
