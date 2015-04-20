@@ -13,9 +13,9 @@ module.exports = (function() {
   function generateModelDefinition(modelName) {
 
     return [
-      'module.exports = function(db) {',
+      'module.exports = function(app) {',
       '',
-      '  var Model = require(\'nodal\').Model(db);',
+      '  var Model = require(\'nodal\').Model(app);',
       '  var Schema = require(\'../../db/schema.js\');',
       '',
       '  function ' + modelName + '() {',

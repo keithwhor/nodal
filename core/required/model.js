@@ -1,4 +1,4 @@
-module.exports = function(db) {
+module.exports = function(app) {
 
   function Model(modelData) {
 
@@ -159,7 +159,7 @@ module.exports = function(db) {
     var value = this.get(field);
 
     if (value instanceof Array) {
-      return db.adapter.generateArray(value.map(function(v) { return type.sanitize(v); }));
+      return app.db.adapter.generateArray(value.map(function(v) { return type.sanitize(v); }));
     }
 
     return type.sanitize(value);
@@ -184,11 +184,11 @@ module.exports = function(db) {
   };
 
   Model.prototype.getFieldType = function(field) {
-    return db.adapter.getType(this._fieldLookup[field].type);
+    return app.db.adapter.getType(this._fieldLookup[field].type);
   };
 
   Model.prototype.getFieldProperties = function(field) {
-    return db.adapter.parseProperties(this._fieldLookup[field].properties);
+    return app.db.adapter.parseProperties(this._fieldLookup[field].properties);
   };
 
   Model.prototype.fieldList = function() {
@@ -228,7 +228,7 @@ module.exports = function(db) {
       ') RETURNING *'
     ].join('');
 
-    db.query(query, rowData, function(err, result) {
+    app.db.query(query, rowData, function(err, result) {
 
       if (err) {
         model._errors['_query'] = err.message;

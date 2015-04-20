@@ -1,19 +1,34 @@
 module.exports = (function() {
 
+  var Database = require('./db/database.js');
   var Router = require('./router.js')(Application);
   var SocketServer = require('./socket.js');
   var Template = require('./template.js');
+
   var dot = require('dot');
   var fs = require('fs');
+  var http = require('http');
+  var httpProxy = require('http-proxy');
 
   dot.templateSettings.varname = 'template';
 
   function Application() {
-    this._router = null;
-    this._socker = null;
+
+    this._router = new Router(this, port);
+    this._server = null;
+    this._proxy = null;
+
     this._templates = {
       '!': new Template(this, function() { return '<!-- Invalid Template //-->'; })
     };
+
+    this.db = null;
+    this.socket = null;
+
+  };
+
+  Application.prototype.useDatabase = function(credentials) {
+    this.db = new Database(credentials);
   };
 
   Application.prototype.template = function(name) {
@@ -35,28 +50,40 @@ module.exports = (function() {
   };
 
   Application.prototype.listen = function(port) {
-    this._router = new Router(port);
-    this._router.bindApplication(this);
-    if(this._socket) {
-      this._router.bindSocket(this._socket);
-    }
+
+    this._server = http.createServer(this.execute.bind(this)).listen(port);
+
+    console.log('Nodal server listening on port ' + port);
+
+    return true;
+
   };
 
   Application.prototype.route = function() {
-    if(!this._router) { throw new Error('Application must listen before it can route'); }
     this._router.route.apply(this._router, arguments);
   };
 
   Application.prototype.socketListen = function(port) {
-    this._socket = new SocketServer(port);
-    if(this._router) {
-      this._router.bindSocket(this._socket);
-    }
+
+    var socket = new SocketServer(port);
+
+    this._proxy = httpProxy.createProxyServer({ ws: true });
+
+    this._server && this._server.on('upgrade', (function (req, socket, head) {
+      this._proxy.ws(req, socket, head, {target: 'ws://localhost:' + socket._port});
+    }).bind(this));
+
+    this.socket = socket;
+
+    return true;
+
   };
 
   Application.prototype.command = function() {
-    if(!this._socket) { throw new Error('Application must socketListen before it can use commands'); }
-    this._socket.command.apply(this._socket, arguments);
+    if(!this.socket) {
+      throw new Error('Application must socketListen before it can use commands');
+    }
+    this.socket.command.apply(this.socket, arguments);
   };
 
   return Application;

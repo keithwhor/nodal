@@ -1,11 +1,8 @@
 module.exports = function(Application) {
 
-  var http = require('http');
   var url = require('url');
-  var httpProxy = require('http-proxy');
 
   var Controller = require('./controller.js');
-  var SocketServer = require('./socket.js');
 
   function Route(regex, controller) {
     this._regex = null;
@@ -69,32 +66,9 @@ module.exports = function(Application) {
     return true;
   };
 
-  function Router(port) {
+  function Router(app, port) {
     this._routes = [];
-    this._socket = null;
-    this._app = null;
-    this._proxy = httpProxy.createProxyServer({ ws: true });
-    this._server = http.createServer(this.execute.bind(this)).listen(port);
-    console.log('Server listening on port ' + port);
-  };
-
-  Router.prototype.bindApplication = function(application) {
-
-    if(!(application instanceof Application)) {
-      throw new Error('bindApplication requires valid Application');
-    }
-    this._app = application;
-    return true;
-
-  };
-
-  Router.prototype.bindSocket = function(socketServer) {
-    if(!(socketServer instanceof SocketServer)) { throw new Error('bindSocket requires valid SocketServer'); }
-    this._socket = socketServer;
-    this._server.on('upgrade', (function (req, socket, head) {
-      this._proxy.ws(req, socket, head, {target: 'ws://localhost:' + socketServer._port});
-    }).bind(this));
-    return true;
+    this._app = app;
   };
 
   Router.prototype.route = function(regex, Controller) {
@@ -115,7 +89,7 @@ module.exports = function(Application) {
     var urlParts = url.parse(request.url, true);
     var route = this.find(urlParts.pathname);
     if (route) {
-      return route.execute(request, response, urlParts, this._app, this._socket);
+      return route.execute(request, response, urlParts, this._app);
     }
     response.writeHead(404, {'Content-Type': 'text/plain'});
     response.end('404 Not Found');

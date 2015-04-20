@@ -1,4 +1,4 @@
-module.exports = function(credentials) {
+module.exports = (function() {
 
   var anyDB = require('any-db-postgres');
   var beginTransaction = require('any-db-transaction');
@@ -9,9 +9,7 @@ module.exports = function(credentials) {
 
   var PostgresAdapter = require('./adapters/postgres.js');
 
-  function Database() {
-
-    var cfg = Object.create(this.config);
+  function Database(cfg) {
 
     this.adapter = new PostgresAdapter;
 
@@ -68,8 +66,6 @@ module.exports = function(credentials) {
     return true;
 
   };
-
-  Database.prototype.config = credentials;
 
   Database.prototype.query = function(query, params, callback) {
 
@@ -205,4 +201,4 @@ module.exports = function(credentials) {
 
   return Database;
 
-};
+})();

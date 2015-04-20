@@ -4,10 +4,10 @@ module.exports = ({
 
   development: {
     host: 'localhost',
-    port: '5432',
-    user: 'root',
+    port: '',
+    user: '',
     password: '',
-    database: 'nodal_development'
+    database: ''
   },
 
   production: {

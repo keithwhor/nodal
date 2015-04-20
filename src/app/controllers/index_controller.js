@@ -1,4 +1,4 @@
-module.exports = function(db) {
+module.exports = (function() {
 
   var Controller = require('nodal').Controller;
 
@@ -17,4 +17,4 @@ module.exports = function(db) {
 
   return IndexController;
 
-};
+})();
