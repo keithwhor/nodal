@@ -41,7 +41,7 @@ module.exports = {
   },
   boolean: {
     convert: function(v) {
-      return [false, true][v === 't'];
+      return typeof v === 'string' ? [true, false][({'f':1,'false':1,'n':1,'no':1,'off':1,'0':1,'':1}[v]|0)] : !!v;
     }
   }
 };
