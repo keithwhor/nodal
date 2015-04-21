@@ -70,23 +70,15 @@ module.exports = (function() {
 
   Controller.prototype.get = function() {
     this.status(501);
-    this.response('501 - Not Implemented');
+    this.setHeader('Content-Type', 'text/plain');
+    this.render('501 - Not Implemented');
   };
 
-  Controller.prototype.post = function() {
-    this.status(501);
-    this.response('501 - Not Implemented');
-  };
+  Controller.prototype.post = Controller.prototype.get;
 
-  Controller.prototype.put = function() {
-    this.status(501);
-    this.response('501 - Not Implemented');
-  };
+  Controller.prototype.put = Controller.prototype.get;
 
-  Controller.prototype.delete = function() {
-    this.status(501);
-    this.response('501 - Not Implemented');
-  };
+  Controller.prototype.delete = Controller.prototype.get;
 
   return Controller;
 
