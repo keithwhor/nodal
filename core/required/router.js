@@ -17,7 +17,7 @@ module.exports = function(Application) {
       throw new Error('Route requires a valid Controller');
     }
     this._controller = controller;
-  };
+  }
 
   Route.prototype.match = function(pathname) {
     var matches = this._regex.exec(pathname);
@@ -30,21 +30,22 @@ module.exports = function(Application) {
 
     Object.keys(query).forEach(function(key) {
 
-      var match, newKey, subKey;
+      var newKey, subKey;
       var value = query[key];
+      var match = key.match(/(.*)\[(.*)\]$/);
 
-      if (match = key.match(/(.*)\[(.*)\]$/)) {
+      if (match) {
 
         newKey = match[1];
         subKey = match[2];
 
         if (subKey) {
-          obj[newKey] || (obj[newKey] = {});
+          obj[newKey] = obj[newKey] || {};
           obj[newKey][subKey] = value;
           return;
         }
 
-        !(value instanceof Array) && (value = [value]);
+        value = !(value instanceof Array) ? [value] : value;
 
         obj[newKey] = value;
         return;
@@ -69,7 +70,7 @@ module.exports = function(Application) {
   function Router(app) {
     this._routes = [];
     this._app = app;
-  };
+  }
 
   Router.prototype.route = function(regex, Controller) {
     this._routes.push(new Route(regex, Controller));

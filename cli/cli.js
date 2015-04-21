@@ -6,7 +6,7 @@ var generateCommands = require('./generate/commands.js');
 
 var command = process.argv.slice(2, 3).pop();
 
-!command && (command = '_');
+command = command ? command : '_';
 command = {name: command.split(':')[0], value: command.split(':')[1] || '_'};
 
 var args = [];

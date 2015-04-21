@@ -4,7 +4,7 @@ module.exports = (function() {
 
   function IndexController() {
     Controller.apply(this, arguments);
-  };
+  }
 
   IndexController.prototype = Object.create(Controller.prototype);
   IndexController.prototype.constructor = IndexController;

@@ -26,7 +26,7 @@ module.exports = (function() {
     this.db = null;
     this.socket = null;
 
-  };
+  }
 
   Application.prototype.useDatabase = function() {
     this.db = new Database();
@@ -56,7 +56,7 @@ module.exports = (function() {
 
     if (this._server && this.socket && !this._proxy) {
 
-      this._proxy = httpProxy.createProxyServer({ ws: true })
+      this._proxy = httpProxy.createProxyServer({ws: true});
 
       this._server.on('upgrade', (function (req, socket, head) {
         this._proxy.ws(req, socket, head, {target: 'ws://localhost:' + this.socket._port});
@@ -126,7 +126,7 @@ module.exports = (function() {
     if (model.hasErrors()) {
       setTimeout(callback.bind(model, model.getErrors(), model), 1);
       return;
-    };
+    }
 
     var columns = model.fieldList().filter(function(v) {
       return !model.isFieldPrimaryKey(v);
@@ -147,7 +147,7 @@ module.exports = (function() {
           model.error('_query', err.message);
         } else {
           result.rows.length && model.load(result.rows[0]);
-        };
+        }
 
         callback.call(model, model.hasErrors() ? model.getErrors() : null, model);
 

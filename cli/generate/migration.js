@@ -71,7 +71,7 @@ module.exports = (function() {
 
     };
 
-  };
+  }
 
   function generateId(date) {
 
@@ -80,7 +80,7 @@ module.exports = (function() {
       n = n.toString();
       return Array(1 + Math.max(0, l - n.length)).join('0') + n;
 
-    };
+    }
 
     return parseInt([
       [date.getUTCFullYear(), 4],
@@ -93,7 +93,7 @@ module.exports = (function() {
       return padZero.apply(null, v);
     }).join(''));
 
-  };
+  }
 
   function generateMigration(migrationName, up, down) {
 
@@ -112,7 +112,7 @@ module.exports = (function() {
 
     console.log(colors.green.bold('Create: ') + migrationPath);
 
-  };
+  }
 
   return {
     command: function(args, flags) {

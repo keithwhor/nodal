@@ -3,7 +3,7 @@ module.exports = (function() {
   function Template(app, fn) {
     this._app = app;
     this._fn = fn;
-  };
+  }
 
   Template.prototype.render = function(data) {
     return this._fn(new TemplateData(this._app, data));
@@ -14,7 +14,7 @@ module.exports = (function() {
   function TemplateData(app, data) {
     this._app = app;
     this._data = data;
-  };
+  }
 
   TemplateData.prototype.get = function(key, value) {
     if(this._data.hasOwnProperty(key)) {

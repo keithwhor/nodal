@@ -1,12 +1,12 @@
 var fs = require('fs');
 var pg = require('pg');
-var async = require('async')
+var async = require('async');
 
 var Database = require('../../core/module.js').Database;
 
 var colors = require('colors/safe');
 
-var MODEL_PATH = './app/models'
+var MODEL_PATH = './app/models';
 var MIGRATION_PATH = './db/migrations';
 
 function composeQueryFunc(query) {
@@ -38,15 +38,15 @@ function composeQueryFunc(query) {
 
   };
 
-};
+}
 
 function dropDatabase(databaseName, callback) {
   return composeQueryFunc('DROP DATABASE IF EXISTS "' + databaseName + '"')(callback);
-};
+}
 
 function createDatabase(databaseName, callback) {
   return composeQueryFunc('CREATE DATABASE "' + databaseName + '"')(callback);
-};
+}
 
 function errorHandler(callback) {
 
@@ -59,9 +59,9 @@ function errorHandler(callback) {
 
     callback.apply(this, [].slice.call(arguments, 1));
 
-  }
+  };
 
-};
+}
 
 module.exports = {
 
@@ -136,7 +136,7 @@ module.exports = {
       var migrations = fs.readdirSync(MIGRATION_PATH).map(function(v) {
         return {
           id: v.substr(0, v.indexOf('__')),
-          migration: new (require(process.cwd() + '/' + MIGRATION_PATH + '/' + v)(db))
+          migration: new (require(process.cwd() + '/' + MIGRATION_PATH + '/' + v)(db))()
         };
       }).filter(function(v) {
         return schema_ids.indexOf(v.id) === -1;
@@ -187,7 +187,7 @@ module.exports = {
     var db = new Database();
     db.connect(dbCredentials);
 
-    var steps = flags['step'] | 0;
+    var steps = flags.step | 0;
     if (!steps) { steps = 1; }
 
     db.query('SELECT id FROM schema_migrations', function(err, result) {
@@ -202,7 +202,7 @@ module.exports = {
       var migrations = fs.readdirSync(MIGRATION_PATH).map(function(v) {
         return {
           id: v.substr(0, v.indexOf('__')),
-          migration: new (require(process.cwd() + '/' + MIGRATION_PATH + '/' + v)(db))
+          migration: new (require(process.cwd() + '/' + MIGRATION_PATH + '/' + v)(db))()
         };
       }).filter(function(v) {
         return schema_ids.indexOf(v.id) !== -1;

@@ -35,15 +35,17 @@ module.exports = (function() {
       ''
     ].join('\n');
 
-  };
+  }
 
   function convertArgListToPropertyList(argList) {
     return argList.slice(1).map(function(v) {
       var obj = {name: inflect.underscore(v[0]), type: v[1]};
-      v[2] && (v[2] === 'array') && (obj.properties = {array: true});
+      if (v[2] && (v[2] === 'array')) {
+        obj.properties = {array: true};
+      }
       return obj;
     });
-  };
+  }
 
   function generateModelSchemaObject(modelName, propertyList) {
 
@@ -52,7 +54,7 @@ module.exports = (function() {
       fields: propertyList
     };
 
-  };
+  }
 
   return {
     command: function(args, flags) {

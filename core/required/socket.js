@@ -13,7 +13,7 @@ module.exports = (function() {
       ws.on('message', this.receive.bind(this, client));
       ws.on('close', this.close.bind(this, client));
     }).bind(this));
-  };
+  }
 
   SocketServer.prototype.allocate = function(ws) {
     var availableIds = this._availableIds;
@@ -91,7 +91,7 @@ module.exports = (function() {
   function SocketClient(ws, uniqid) {
     this._ws = ws;
     this.id = uniqid;
-  };
+  }
 
   SocketClient.prototype.send = function(command, data) {
     if(typeof data === 'object') {

@@ -4,13 +4,13 @@ module.exports = (function() {
 
   function Controller(request, response) {
 
-    this._initializeTime = (new Date).valueOf();
+    this._initializeTime = (new Date()).valueOf();
     this._request = request;
     this._response = response;
     this._status = 200;
     this._headers = {'Content-Type': 'text/html'};
 
-  };
+  }
 
   Controller.prototype.request = function() {
     return this._request;
@@ -62,7 +62,7 @@ module.exports = (function() {
     this._response.writeHead(this._status, this._headers);
     this._response.end(data);
 
-    console.log(this._request.url + ' loaded in: ' + ((new Date).valueOf() - this._initializeTime) + 'ms');
+    console.log(this._request.url + ' loaded in: ' + ((new Date()).valueOf() - this._initializeTime) + 'ms');
 
     return true;
 

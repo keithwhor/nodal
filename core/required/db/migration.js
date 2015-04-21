@@ -11,7 +11,7 @@ module.exports = function(db, Schema) {
 
     this.id = null;
 
-  };
+  }
 
   Migration.prototype.executeUp = function(callback) {
 

@@ -17,7 +17,7 @@ module.exports = (function() {
 
     this._useLogColor = 0;
 
-  };
+  }
 
   Database.prototype.connect = function(cfg) {
     this._connection = anyDB.createConnection(
@@ -124,14 +124,14 @@ module.exports = (function() {
           return function(result, next) {
             db.log(queryData[0], queryData[1]);
             transaction.query(queryData[0], queryData[1], next);
-          }
+          };
 
         }
 
         return function(next) {
           db.log(queryData[0], queryData[1]);
           transaction.query(queryData[0], queryData[1], next);
-        }
+        };
 
       } else {
 
@@ -140,14 +140,14 @@ module.exports = (function() {
           return function(result, next) {
             db.log(queryData[0]);
             transaction.query(queryData[0], next);
-          }
+          };
 
         }
 
         return function(next) {
           db.log(queryData[0]);
           transaction.query(queryData[0], next);
-        }
+        };
 
       }
 

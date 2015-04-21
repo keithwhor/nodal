@@ -2,7 +2,7 @@ module.exports = (function() {
 
   function DatabaseAdapter() {
 
-  };
+  }
 
   DatabaseAdapter.prototype.typeConfigurables = [
     'length',
@@ -45,7 +45,7 @@ module.exports = (function() {
   };
 
   DatabaseAdapter.prototype.getType = function(typeName) {
-    var type = this.types[typeName]
+    var type = this.types[typeName];
     var outputType = Object.create(this.typeConfigurableDefaults);
     Object.keys(type).forEach(function(v) {
       outputType[v] = type[v];
@@ -78,7 +78,7 @@ module.exports = (function() {
     return fieldData
       .filter(function(v) { return v.type.primary_key; })
       .map(function(v) { return self.generatePrimaryKey(v.name, self.getType(v.type), self.parseProperties(v.properties)); })
-      .join(',')
+      .join(',');
   };
 
   DatabaseAdapter.prototype.generateUniqueKeysStatement = function(fieldData) {
@@ -86,7 +86,7 @@ module.exports = (function() {
     return fieldData
       .filter(function(v) { return v.type.unique; })
       .map(function(v) { return self.generateUnique(v.name, self.getType(v.type), self.parseProperties(v.properties)); })
-      .join(',')
+      .join(',');
   };
 
   DatabaseAdapter.prototype.generateCreateTableQuery = function(name, fieldData) {

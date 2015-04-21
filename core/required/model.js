@@ -8,7 +8,7 @@ module.exports = (function() {
 
     modelData && this.load(modelData);
 
-  };
+  }
 
   Model.prototype.setSchema = function(schema) {
 
@@ -72,7 +72,7 @@ module.exports = (function() {
     var errors = this._errors;
     Object.keys(errors).forEach(function(key) {
       obj[key] = errors[key];
-    })
+    });
     return obj;
   };
 
@@ -114,7 +114,7 @@ module.exports = (function() {
 
     var dataType = this.getDataTypeOf(field);
 
-    (value === undefined) && (value = null);
+    value = value === undefined ? value : null;
 
     if (value === null) {
       this._data[field] = null;
@@ -143,7 +143,7 @@ module.exports = (function() {
     var data = this._data;
     Object.keys(data).forEach(function(key) {
       obj[key] = data[key];
-    })
+    });
     return obj;
   };
 

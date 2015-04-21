@@ -6,7 +6,7 @@ module.exports = (function() {
 
     DatabaseAdapter.apply(this, arguments);
 
-  };
+  }
 
   PostgresAdapter.prototype = Object.create(DatabaseAdapter.prototype);
   PostgresAdapter.prototype.constructor = PostgresAdapter;
