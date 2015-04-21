@@ -114,7 +114,7 @@ module.exports = (function() {
 
     var dataType = this.getDataTypeOf(field);
 
-    value = value === undefined ? value : null;
+    value = (value !== undefined) ? value : null;
 
     if (value === null) {
       this._data[field] = null;
