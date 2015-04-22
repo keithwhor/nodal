@@ -3,6 +3,7 @@ require('../config/settings.js');
 module.exports = ({
 
   development: {
+    adapter: 'postgres',
     host: 'localhost',
     port: '',
     user: '',
@@ -11,6 +12,7 @@ module.exports = ({
   },
 
   production: {
+    adapter: 'postgres',
     host: process.env.DATABASE_HOST,
     port: process.env.DATABASE_PORT,
     user: process.env.DATABASE_USER,

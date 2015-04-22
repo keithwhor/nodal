@@ -17,6 +17,7 @@ module.exports = (function() {
     index: {
       field: 'BIGSERIAL',
       primary_key: true,
+      unique: true,
       nullable: false
     },
     int: {

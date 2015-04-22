@@ -77,6 +77,11 @@ module.exports = function(db, Schema) {
     var model = new Model();
 
     var schema = Schema[inflect.classify(table)];
+
+    if (!schema) {
+      throw new Error('This table does not exist in your schema');
+    }
+
     schema.fields.push(fieldData);
 
     Schema[inflect.classify(table)] = model.setSchema(schema);
