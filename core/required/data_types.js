@@ -1,12 +1,12 @@
 module.exports = {
   index: {
     convert: function(v) {
-      return v | 0;
+      return parseInt(v) || 0;
     }
   },
   int: {
     convert: function(v) {
-      return v | 0;
+      return parseInt(v) || 0;
     }
   },
   float: {
