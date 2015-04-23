@@ -99,7 +99,7 @@ module.exports = (function() {
     return [
       'ALTER TABLE',
         this.escapeField(table),
-      'ADD CONSTRAINT',
+      'ADD',
         this.generatePrimaryKey(table, column)
     ].join(' ');
 
