@@ -70,9 +70,39 @@ module.exports = function(db, Schema) {
 
   };
 
-  Migration.prototype.addField = function(table, fieldData) {
+  Migration.prototype.alterColumn = function(table, column, fieldData) {
 
-    /* fix this bro */
+    var model = new Model();
+
+    var schema = Schema[inflect.classify(table)];
+
+    if (!schema) {
+      throw new Error('This table does not exist in your schema');
+    }
+
+    var field = schema.fields.filter(function(f) {
+      return f.name === column;
+    }).pop();
+
+    if (!field) {
+      throw new Error('Could not find column "' + field.name + '" of table "' + table + '" in Schema');
+    }
+
+    field.type = fieldData.type ? fieldData.type : field.type;
+
+    if (fieldData) {
+      field.properties = field.properties || {};
+    }
+
+    Object.keys(fieldData).forEach(function(v) {
+      field.properties[v] = fieldData[v];
+    });
+
+    return db.adapter.generateAlterTableQuery(table, column, fieldData);
+
+  };
+
+  Migration.prototype.addColumn = function(table, fieldData) {
 
     var model = new Model();
 
@@ -86,7 +116,7 @@ module.exports = function(db, Schema) {
 
     Schema[inflect.classify(table)] = model.setSchema(schema);
 
-    return model.generateCreateFieldSQL(fieldData); // ?
+    return model.generateCreateAddColumnSQL(table, fieldData); // ?
 
   };
 
