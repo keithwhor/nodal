@@ -3,7 +3,7 @@ var pg = require('pg');
 var async = require('async');
 
 var Database = require('../../core/module.js').Database;
-var SchemaGenerator = require('../../core/module.js');
+var SchemaGenerator = require('../../core/module.js').SchemaGenerator;
 
 var colors = require('colors/safe');
 

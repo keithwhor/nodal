@@ -1,4 +1,4 @@
-module.exports = function() {
+module.exports = (function() {
 
   var Database = require('./database.js');
   var SchemaGenerator = require('./schema_generator.js');
@@ -101,4 +101,4 @@ module.exports = function() {
 
   return Migration;
 
-};
+})();

@@ -1,6 +1,8 @@
 module.exports = (function() {
 
   var Adapter = require('./adapter.js');
+  var fs = require('fs');
+  var inflect = require('i')();
 
   function SchemaGenerator() {
 
@@ -11,7 +13,7 @@ module.exports = (function() {
 
   }
 
-  SchemaGenerator.load = function(filename) {
+  SchemaGenerator.prototype.load = function(filename) {
     filename = filename || this._defaultPath;
     filename = process.cwd() + '/' + filename;
     return this.set(require(filename));
@@ -97,7 +99,7 @@ module.exports = (function() {
 
     this.tables[tableClass] = {
       table: table,
-      fields: fieldData
+      fields: arrFieldData
     };
 
     return true;
@@ -116,11 +118,11 @@ module.exports = (function() {
 
   SchemaGenerator.prototype.alterColumn = function(table, column, properties) {
 
-    if (fieldData.primary_key) {
-      delete fieldData.unique;
+    if (properties.primary_key) {
+      delete properties.unique;
     }
 
-    var tableData = this.tables.filter(function(v) {
+    var tableData = Object.keys(this.tables).filter(function(v) {
       return v.table === table;
     }).pop();
 
@@ -150,7 +152,7 @@ module.exports = (function() {
     var fileData = [
       'module.exports = {',
       '',
-      '  migration_id: ' + this.migration_id + ',',
+      '  migration_id: ' + this.migrationId + ',',
     ];
 
     var tables = this.tables;
@@ -162,7 +164,7 @@ module.exports = (function() {
         Object.keys(tables).sort().map(function(t) {
           var curTable = tables[t];
           return [
-            '  ' + v + ': {',
+            '  ' + t + ': {',
             '',
             '    table: \'' + curTable.table + '\',',
             '',
