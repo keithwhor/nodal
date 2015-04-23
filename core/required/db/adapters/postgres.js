@@ -57,10 +57,10 @@ module.exports = (function() {
 
   };
 
-  PostgresAdapter.prototype.generateColumn = function(column, properties) {
+  PostgresAdapter.prototype.generateColumn = function(columnName, properties) {
 
     return [
-      this.escapeField(column),
+      this.escapeField(columnName),
       properties.field,
       properties.array ? 'ARRAY' : '',
       (properties.primary_key || !properties.nullable) ? 'NOT NULL' : ''
@@ -68,73 +68,73 @@ module.exports = (function() {
 
   };
 
-  PostgresAdapter.prototype.generateConstraint = function(table, column, suffix) {
-    return this.escapeField(table + '_' + column + '_' + suffix);
+  PostgresAdapter.prototype.generateConstraint = function(table, columnName, suffix) {
+    return this.escapeField(table + '_' + columnName + '_' + suffix);
   };
 
-  PostgresAdapter.prototype.generatePrimaryKey = function(table, column) {
+  PostgresAdapter.prototype.generatePrimaryKey = function(table, columnName) {
 
-    return ['CONSTRAINT ', this.generateConstraint(table, column, 'pk'), ' PRIMARY KEY(', this.escapeField(column), ')'].join('');
-
-  };
-
-  PostgresAdapter.prototype.generateUniqueKey = function(table, column) {
-
-    return ['CONSTRAINT ', this.generateConstraint(table, column, 'unique'), ' UNIQUE(', this.escapeField(column), ')'].join('');
+    return ['CONSTRAINT ', this.generateConstraint(table, columnName, 'pk'), ' PRIMARY KEY(', this.escapeField(columnName), ')'].join('');
 
   };
 
-  PostgresAdapter.prototype.generateAlterColumnType = function(table, column, properties) {
+  PostgresAdapter.prototype.generateUniqueKey = function(table, columnName) {
+
+    return ['CONSTRAINT ', this.generateConstraint(table, columnName, 'unique'), ' UNIQUE(', this.escapeField(columnName), ')'].join('');
+
+  };
+
+  PostgresAdapter.prototype.generateAlterColumnType = function(table, columnName, properties) {
 
     return [
       'ALTER TABLE',
         this.escapeField(table),
       'ALTER COLUMN',
-        this.generateColumn(column, properties)
+        this.generateColumn(columnName, properties)
     ].join(' ');
 
   };
 
-  PostgresAdapter.prototype.generateAlterAddPrimaryKey = function(table, column) {
+  PostgresAdapter.prototype.generateAlterAddPrimaryKey = function(table, columnName) {
 
     return [
       'ALTER TABLE',
         this.escapeField(table),
       'ADD',
-        this.generatePrimaryKey(table, column)
+        this.generatePrimaryKey(table, columnName)
     ].join(' ');
 
   };
 
-  PostgresAdapter.prototype.generateAlterDropPrimaryKey = function(table, column) {
+  PostgresAdapter.prototype.generateAlterDropPrimaryKey = function(table, columnName) {
 
     return [
       'ALTER TABLE',
         this.escapeField(table),
       'DROP CONSTRAINT IF EXISTS',
-        this.generateConstraint(table, column, 'pk')
+        this.generateConstraint(table, columnName, 'pk')
     ].join(' ');
 
   };
 
-  PostgresAdapter.prototype.generateAlterAddUniqueKey = function(table, column) {
+  PostgresAdapter.prototype.generateAlterAddUniqueKey = function(table, columnName) {
 
     return [
       'ALTER TABLE',
         this.escapeField(table),
       'ADD',
-        this.generateUniqueKey(table, column)
+        this.generateUniqueKey(table, columnName)
     ].join(' ');
 
   };
 
-  PostgresAdapter.prototype.generateAlterDropUniqueKey = function(table, column) {
+  PostgresAdapter.prototype.generateAlterDropUniqueKey = function(table, columnName) {
 
     return [
       'ALTER TABLE',
         this.escapeField(table),
       'DROP CONSTRAINT IF EXISTS',
-        this.generateConstraint(table, column, 'unique')
+        this.generateConstraint(table, columnName, 'unique')
     ].join(' ');
 
   };

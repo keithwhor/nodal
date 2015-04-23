@@ -29,15 +29,15 @@ module.exports = (function() {
 
   DatabaseAdapter.prototype.generateConnectionString = function(host, port, database, user, password) {};
 
-  DatabaseAdapter.prototype.generateColumn = function(column, type, properties) {};
-  DatabaseAdapter.prototype.generatePrimaryKey = function(column, type, properties) {};
-  DatabaseAdapter.prototype.generateUniqueKey = function(column, type, properties) {};
+  DatabaseAdapter.prototype.generateColumn = function(columnName, type, properties) {};
+  DatabaseAdapter.prototype.generatePrimaryKey = function(columnName, type, properties) {};
+  DatabaseAdapter.prototype.generateUniqueKey = function(columnName, type, properties) {};
 
-  DatabaseAdapter.prototype.generateAlterColumnType = function(table, column, type, properties) {};
-  DatabaseAdapter.prototype.generateAlterAddPrimaryKey = function(table, column) {};
-  DatabaseAdapter.prototype.generateAlterDropPrimaryKey = function(table, column) {};
-  DatabaseAdapter.prototype.generateAlterAddUniqueKey = function(table, column) {};
-  DatabaseAdapter.prototype.generateAlterDropUniqueKey = function(table, column) {};
+  DatabaseAdapter.prototype.generateAlterColumnType = function(table, columnName, type, properties) {};
+  DatabaseAdapter.prototype.generateAlterAddPrimaryKey = function(table, columnName) {};
+  DatabaseAdapter.prototype.generateAlterDropPrimaryKey = function(table, columnName) {};
+  DatabaseAdapter.prototype.generateAlterAddUniqueKey = function(table, columnName) {};
+  DatabaseAdapter.prototype.generateAlterDropUniqueKey = function(table, columnName) {};
 
   DatabaseAdapter.prototype.sanitize = function(type, value) {
 
@@ -54,50 +54,56 @@ module.exports = (function() {
     var type = this.types[typeName];
     optionalValues = optionalValues || {};
     var outputType = Object.create(this.typePropertyDefaults);
-    Object.keys(type).forEach(function(v) {
-      outputType[v] = optionalValues.hasOwnProperty(v) ? optionalValues[v] : (type.hasOwnProperty(v) ? type[v] : outputType[v]);
+    this.typeProperties.forEach(function(v) {
+      if (optionalValues.hasOwnProperty(v)) {
+        outputType[v] = optionalValues[v];
+      } else if(type.hasOwnProperty(v)) {
+        outputType[v] = type[v];
+      }
     });
     return outputType;
   };
 
-  DatabaseAdapter.prototype.generateColumnsStatement = function(table, fieldData) {
+  DatabaseAdapter.prototype.generateColumnsStatement = function(table, columns) {
     var self = this;
-    return fieldData
-      .map(function(v) { return self.generateColumn(v.name, self.getTypeProperties(v.type, v)); })
+    return columns
+      .map(function(columnData) {
+        return self.generateColumn(columnData.name, self.getTypeProperties(columnData.type, columnData.properties));
+      })
       .join(',');
   };
 
-  DatabaseAdapter.prototype.generatePrimaryKeysStatement = function(table, fieldData) {
+  DatabaseAdapter.prototype.generatePrimaryKeysStatement = function(table, columns) {
     var self = this;
-    return fieldData
-      .filter(function(v) { return self.getTypeProperties(v.type, v).primary_key; })
-      .map(function(v) { return self.generatePrimaryKey(table, v.name); })
+    return columns
+      .filter(function(columnData) { return self.getTypeProperties(columnData.type, columnData.properties).primary_key; })
+      .map(function(columnData) { return self.generatePrimaryKey(table, columnData.name); })
       .join(',');
   };
 
-  DatabaseAdapter.prototype.generateUniqueKeysStatement = function(table, fieldData) {
+  DatabaseAdapter.prototype.generateUniqueKeysStatement = function(table, columns) {
     var self = this;
-    return fieldData
+    return columns
       .filter(
-        function(v) {
-          var type = self.getTypeProperties(v.type, fieldData);
+        function(columnData) {
+          var type = self.getTypeProperties(columnData.type, columnData.properties);
           return (!type.primary_key && type.unique);
         }
       )
-      .map(function(v) { return self.generateUniqueKey(table, v.name); })
+      .map(function(columnData) { return self.generateUniqueKey(table, columnData.name); })
       .join(',');
   };
 
-  DatabaseAdapter.prototype.generateCreateTableQuery = function(table, fieldData) {
+  DatabaseAdapter.prototype.generateCreateTableQuery = function(table, columns) {
 
     return [
       'CREATE TABLE ',
         this.escapeField(table),
       '(',
         [
-          this.generateColumnsStatement(table, fieldData),
-          this.generatePrimaryKeysStatement(table, fieldData),
-          this.generateUniqueKeysStatement(table, fieldData)
+          this.generateColumnsStatement(table, columns),
+          this.generatePrimaryKeysStatement(table, columns),
+          this.generateUniqueKeysStatement(table, columns)
         ].filter(function(v) { return !!v; }).join(','),
       ')'
     ].join('');
@@ -112,45 +118,45 @@ module.exports = (function() {
 
   };
 
-  DatabaseAdapter.prototype.generateInsertQuery = function(table, columns) {
+  DatabaseAdapter.prototype.generateInsertQuery = function(table, columnNames) {
     return [
       'INSERT INTO ',
         this.escapeField(table),
       '(',
-        columns.map(this.escapeField.bind(this)).join(','),
+        columnNames.map(this.escapeField.bind(this)).join(','),
       ') VALUES(',
-        columns.map(function(v, i) { return '$' + (i + 1); }).join(','),
+        columnNames.map(function(v, i) { return '$' + (i + 1); }).join(','),
       ') RETURNING *'
     ].join('');
   };
 
-  DatabaseAdapter.prototype.generateAlterTableQuery = function(table, column, fieldData) {
+  DatabaseAdapter.prototype.generateAlterTableQuery = function(table, columnName, columnData) {
 
     var queries = [];
 
-    if (fieldData.hasOwnProperty('type')) {
+    if (columnData.hasOwnProperty('type')) {
       queries.push(
         this.generateAlterColumnType(
           table,
-          column,
-          this.getTypeProperties(fieldData.type, fieldData)
+          columnName,
+          this.getTypeProperties(columnData.type, columnData)
         )
       );
     }
 
-    if (fieldData.hasOwnProperty('primary_key')) {
+    if (columnData.hasOwnProperty('primary_key')) {
       queries.push(
         [
           this.generateAlterDropPrimaryKey,
           this.generateAlterAddPrimaryKey
-        ][fieldData.primary_key | 0].call(this, table, column)
+        ][columnData.primary_key | 0].call(this, table, columnName)
       );
-    } else if (fieldData.hasOwnProperty('unique')) {
+    } else if (columnData.hasOwnProperty('unique')) {
       queries.push(
         [
           this.generateAlterDropUniqueKey,
           this.generateAlterAddUniqueKey
-        ][fieldData.primary_key | 0].call(this, table, column)
+        ][columnData.primary_key | 0].call(this, table, columnName)
       );
     }
 

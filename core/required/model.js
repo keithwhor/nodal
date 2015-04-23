@@ -14,7 +14,7 @@ module.exports = (function() {
 
 
     this._table = this.schema.table;
-    this._fieldArray = this.schema.fields.slice();
+    this._fieldArray = this.schema.columns.slice();
 
     var fieldLookup = {};
 
@@ -176,7 +176,7 @@ module.exports = (function() {
 
   Model.prototype.schema = {
     table: '',
-    fields: []
+    columns: []
   };
 
   Model.prototype.data = null;

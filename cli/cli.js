@@ -3,11 +3,17 @@
 var colors = require('colors/safe');
 var dbCommands = require('./db/commands.js');
 var generateCommands = require('./generate/commands.js');
+var fs = require('fs');
 
 var command = process.argv.slice(2, 3).pop();
 
 command = command ? command : '_';
 command = {name: command.split(':')[0], value: command.split(':')[1] || '_'};
+
+if (command.name !== 'new' && !fs.existsSync(process.cwd() + '/.nodal')) {
+  console.error(colors.red.bold('Error: ') + 'Nodal project not initialized. Use `nodal new` to initialize a project.');
+  process.exit(0);
+}
 
 var args = [];
 var flags = {};

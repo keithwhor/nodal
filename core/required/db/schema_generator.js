@@ -28,13 +28,13 @@ module.exports = (function() {
     return true;
   };
 
-  SchemaGenerator.prototype.mergeProperties = function(fieldData, properties) {
+  SchemaGenerator.prototype.mergeProperties = function(columnData, properties) {
 
     properties = properties || {};
 
     var defaults = this.db.adapter.typePropertyDefaults;
 
-    var oldProperties = this.db.adapter.getTypeProperties(fieldData.type, fieldData.properties) || {};
+    var oldProperties = this.db.adapter.getTypeProperties(columnData.type, columnData.properties) || {};
     var newProperties = {};
 
     this.db.adapter.typeProperties.forEach(function(v) {
@@ -46,12 +46,12 @@ module.exports = (function() {
     });
 
     if (Object.keys(newProperties).length) {
-      fieldData.properties = newProperties;
+      columnData.properties = newProperties;
     } else {
-      delete fieldData.properties;
+      delete columnData.properties;
     }
 
-    return fieldData;
+    return columnData;
 
   };
 
@@ -77,40 +77,40 @@ module.exports = (function() {
     this.migrationId = id;
   };
 
-  SchemaGenerator.prototype.createTable = function(table, arrFieldData) {
+  SchemaGenerator.prototype.createTable = function(table, arrColumnData) {
 
     var tableClass = inflect.classify(table);
 
-    arrFieldData = arrFieldData.slice();
+    arrColumnData = arrColumnData.slice();
 
-    var fields = arrFieldData.map(function(v) {
+    var columns = arrColumnData.map(function(v) {
       return v.name;
     });
 
-    if (fields.indexOf('id') === -1) {
-      arrFieldData.unshift({name: 'id', type: 'serial'});
+    if (columns.indexOf('id') === -1) {
+      arrColumnData.unshift({name: 'id', type: 'serial'});
     }
 
-    if (fields.indexOf('created_at') === -1) {
-      arrFieldData.push({name:'created_at', type: 'datetime'});
+    if (columns.indexOf('created_at') === -1) {
+      arrColumnData.push({name:'created_at', type: 'datetime'});
     }
 
     var defaults = this.db.adapter.typePropertyDefaults;
 
-    arrFieldData.forEach((function(fieldData) {
-      this.mergeProperties(fieldData);
+    arrColumnData.forEach((function(columnData) {
+      this.mergeProperties(columnData);
     }).bind(this));
 
     this.tables[tableClass] = {
       table: table,
-      fields: arrFieldData
+      columns: arrColumnData
     };
 
-    return arrFieldData;
+    return arrColumnData;
 
   };
 
-  SchemaGenerator.prototype.dropTable = function(table, fieldData) {
+  SchemaGenerator.prototype.dropTable = function(table, columnData) {
 
     var tableClass = inflect.classify(table);
 
@@ -135,7 +135,7 @@ module.exports = (function() {
       throw new Error('Table "' + table + '" does not exist');
     }
 
-    var schemaFieldData = tables[tableKey].fields.filter(function(v) {
+    var schemaFieldData = tables[tableKey].columns.filter(function(v) {
       return v.name === column;
     }).pop();
 
@@ -174,15 +174,15 @@ module.exports = (function() {
             '',
             '    "table": "' + curTable.table + '",',
             '',
-            '    "fields": [',
-            curTable.fields.map(function(fieldData) {
+            '    "columns": [',
+            curTable.columns.map(function(columnData) {
               return [
                 '      ',
                 '{',
                   [
-                    '"name": "' + fieldData.name + '"',
-                    '"type": "' + fieldData.type + '"',
-                    fieldData.properties ? '"properties": ' + JSON.stringify(fieldData.properties) : ''
+                    '"name": "' + columnData.name + '"',
+                    '"type": "' + columnData.type + '"',
+                    columnData.properties ? '"properties": ' + JSON.stringify(columnData.properties) : ''
                   ].filter(function(v) { return !!v; }).join(', '),
                 '}'
               ].join('');
