@@ -56,13 +56,13 @@ module.exports = (function() {
 
   };
 
-  PostgresAdapter.prototype.generateColumn = function(column, type, properties) {
+  PostgresAdapter.prototype.generateColumn = function(column, properties) {
 
     return [
       this.escapeField(column),
-      type.field,
+      properties.field,
       properties.array ? 'ARRAY' : '',
-      (type.primary_key || !type.nullable) ? 'NOT NULL' : ''
+      (properties.primary_key || !properties.nullable) ? 'NOT NULL' : ''
     ].filter(function(v) { return !!v; }).join(' ');
 
   };
@@ -83,13 +83,13 @@ module.exports = (function() {
 
   };
 
-  PostgresAdapter.prototype.generateAlterColumnType = function(table, column, type, properties) {
+  PostgresAdapter.prototype.generateAlterColumnType = function(table, column, properties) {
 
     return [
       'ALTER TABLE',
         this.escapeField(table),
       'ALTER COLUMN',
-        this.generateColumn(column, this.getType(fieldData.type), fieldData.properties)
+        this.generateColumn(column, properties)
     ].join(' ');
 
   };

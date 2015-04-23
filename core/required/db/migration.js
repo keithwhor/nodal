@@ -1,15 +1,25 @@
-module.exports = function(db, Schema) {
+module.exports = function() {
 
-  var Model = require('../model.js');
+  var Database = require('./database.js');
+  var SchemaGenerator = require('./schema_generator.js');
 
   var fs = require('fs');
 
   var colors = require('colors/safe');
   var inflect = require('i')();
 
-  function Migration() {
+  function Migration(db) {
+
+    if (!(db instanceof Database)) {
+      throw new Error('Migration required valid database instance');
+    }
 
     this.id = null;
+
+    this.db = db;
+
+    this.schema = new SchemaGenerator();
+    this.schema.load('db/schema.js');
 
   }
 
@@ -19,7 +29,7 @@ module.exports = function(db, Schema) {
       'INSERT INTO "schema_migrations"("id") VALUES(' + this.id + ')'
     ]);
 
-    db.transaction(up.join(';'), callback);
+    this.db.transaction(up.join(';'), callback);
 
   };
 
@@ -29,7 +39,7 @@ module.exports = function(db, Schema) {
       'DELETE FROM "schema_migrations" WHERE id = ' + this.id
     ]);
 
-    db.transaction(down.join(';'), callback);
+    this.db.transaction(down.join(';'), callback);
 
   };
 
@@ -45,128 +55,33 @@ module.exports = function(db, Schema) {
 
   };
 
-  Migration.prototype.createTable = function(table, fields) {
+  Migration.prototype.createTable = function(table, fieldData) {
 
-    var model = new Model();
+    this.schema.createTable(table, fieldData);
 
-    fields = fields || [];
-
-    var schema = {
-      table: table,
-      fields: fields
-    };
-
-    schema = Schema[inflect.classify(table)] = model.setSchema(schema);
-
-    return db.adapter.generateCreateTableQuery(schema.table, schema.fields);
+    return this.db.adapter.generateCreateTableQuery(table, fieldData);
 
   };
 
   Migration.prototype.dropTable = function(table) {
 
-    delete Schema[inflect.classify(table)];
+    this.schema.dropTable(table);
 
-    return db.adapter.generateDropTableQuery(table);
+    return this.db.adapter.generateDropTableQuery(table);
 
   };
 
   Migration.prototype.alterColumn = function(table, column, fieldData) {
 
-    var model = new Model();
+    this.schema.alterColumn(table, column, fieldData);
 
-    var schema = Schema[inflect.classify(table)];
-
-    if (!schema) {
-      throw new Error('This table does not exist in your schema');
-    }
-
-    var field = schema.fields.filter(function(f) {
-      return f.name === column;
-    }).pop();
-
-    if (!field) {
-      throw new Error('Could not find column "' + field.name + '" of table "' + table + '" in Schema');
-    }
-
-    field.type = fieldData.type ? fieldData.type : field.type;
-
-    if (fieldData) {
-      field.properties = field.properties || {};
-    }
-
-    Object.keys(fieldData).forEach(function(v) {
-      field.properties[v] = fieldData[v];
-    });
-
-    return db.adapter.generateAlterTableQuery(table, column, fieldData);
+    return this.db.adapter.generateAlterTableQuery(table, column, fieldData);
 
   };
 
   Migration.prototype.addColumn = function(table, fieldData) {
 
-    var model = new Model();
-
-    var schema = Schema[inflect.classify(table)];
-
-    if (!schema) {
-      throw new Error('This table does not exist in your schema');
-    }
-
-    schema.fields.push(fieldData);
-
-    Schema[inflect.classify(table)] = model.setSchema(schema);
-
-    return model.generateCreateAddColumnSQL(table, fieldData); // ?
-
-  };
-
-  Migration.prototype.generateSchema = function(id) {
-
-    var fileData = [
-      'module.exports = {',
-      '',
-      '  migration_id: ' + (typeof id === 'undefined' ? this.id : id) + ',',
-    ];
-
-    if (Object.keys(Schema).length > 1) {
-
-      fileData = fileData.concat([
-        '',
-        Object.keys(Schema).filter(function(v) {
-          return v !== 'migration_id';
-        }).sort().map(function(v) {
-          return [
-            '  ' + v + ': {',
-            '',
-            '    table: \'' + Schema[v].table + '\',',
-            '',
-            '    fields: [',
-            Schema[v].fields.map(function(fieldData) {
-              return [
-                '      ',
-                '{',
-                  [
-                    'name: \'' + fieldData.name + '\'',
-                    'type: \'' + fieldData.type + '\'',
-                    fieldData.properties ? 'properties: ' + JSON.stringify(fieldData.properties) : ''
-                  ].filter(function(v) { return !!v; }).join(', '),
-                '}'
-              ].join('');
-            }).join(',\n'),
-            '    ]',
-            '',
-            '  }'
-          ].join('\n');
-        }).join(',\n\n')
-      ]);
-
-    }
-
-    return fileData.concat([
-      '',
-      '};',
-      ''
-    ]).join('\n');
+    /* not implemented */
 
   };
 

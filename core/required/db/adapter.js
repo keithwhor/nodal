@@ -4,31 +4,25 @@ module.exports = (function() {
 
   }
 
-  DatabaseAdapter.prototype.typeConfigurables = [
+  DatabaseAdapter.prototype.typeProperties = [
     'length',
     'nullable',
     'unique',
     'primary_key',
+    'array',
+    'defaultValue',
     'sanitize'
   ];
 
-  DatabaseAdapter.prototype.typeConfigurableDefaults = {
+  DatabaseAdapter.prototype.typePropertyDefaults = {
     field: 'INTEGER',
     length: null,
     nullable: true,
     unique: false,
     primary_key: false,
+    array: false,
+    defaultValue: null,
     sanitize: function(v) { return v; }
-  };
-
-  DatabaseAdapter.prototype.fieldProperties = [
-    'defaultValue',
-    'array'
-  ];
-
-  DatabaseAdapter.prototype.fieldPropertyDefaults = {
-    defaultValue: undefined,
-    array: false
   };
 
   DatabaseAdapter.prototype.types = {};
@@ -50,40 +44,27 @@ module.exports = (function() {
     return ['', name, ''].join(this.escapeFieldCharacter);
   };
 
-  DatabaseAdapter.prototype.getType = function(typeName, optionalValues) {
+  DatabaseAdapter.prototype.getTypeProperties = function(typeName, optionalValues) {
     var type = this.types[typeName];
     optionalValues = optionalValues || {};
-    var outputType = Object.create(this.typeConfigurableDefaults);
+    var outputType = Object.create(this.typePropertyDefaults);
     Object.keys(type).forEach(function(v) {
       outputType[v] = optionalValues.hasOwnProperty(v) ? optionalValues[v] : (type.hasOwnProperty(v) ? type[v] : outputType[v]);
     });
     return outputType;
   };
 
-  DatabaseAdapter.prototype.parseProperties = function(properties) {
-
-    var props = {};
-    var defaultProps = this.fieldPropertyDefaults;
-
-    this.fieldProperties.forEach(function(v) {
-      props[v] = (properties && properties.hasOwnProperty(v)) ? properties[v] : defaultProps[v];
-    });
-
-    return props;
-
-  };
-
   DatabaseAdapter.prototype.generateColumnsStatement = function(table, fieldData) {
     var self = this;
     return fieldData
-      .map(function(v) { return self.generateColumn(v.name, self.getType(v.type), self.parseProperties(v.properties)); })
+      .map(function(v) { return self.generateColumn(v.name, self.getTypeProperties(v.type, v)); })
       .join(',');
   };
 
   DatabaseAdapter.prototype.generatePrimaryKeysStatement = function(table, fieldData) {
     var self = this;
     return fieldData
-      .filter(function(v) { return self.getType(v.type, fieldData).primary_key; })
+      .filter(function(v) { return self.getTypeProperties(v.type, v).primary_key; })
       .map(function(v) { return self.generatePrimaryKey(table, v.name); })
       .join(',');
   };
@@ -93,7 +74,7 @@ module.exports = (function() {
     return fieldData
       .filter(
         function(v) {
-          var type = self.getType(v.type, fieldData);
+          var type = self.getTypeProperties(v.type, fieldData);
           return (!type.primary_key && type.unique);
         }
       )
@@ -146,8 +127,7 @@ module.exports = (function() {
         this.generateAlterColumnType(
           table,
           column,
-          this.getType(fieldData.type),
-          this.parseProperties(fieldData.properties)
+          this.getTypeProperties(fieldData.type, fieldData)
         )
       );
     }

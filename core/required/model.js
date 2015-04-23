@@ -4,34 +4,21 @@ module.exports = (function() {
 
   function Model(modelData) {
 
-    this.setSchema();
+    this.initialize();
 
     modelData && this.load(modelData);
 
   }
 
-  Model.prototype.setSchema = function(schema) {
+  Model.prototype.initialize = function() {
 
-    var fieldArray;
 
-    if (schema) {
+    this._table = this.schema.table;
+    this._fieldArray = this.schema.fields.slice();
 
-      fieldArray = schema.fields.slice();
-      fieldArray.unshift({name: 'id', type: 'index'});
-      fieldArray.push({name:'created_at', type: 'datetime'});
-      this._table = schema.table;
-
-    } else {
-
-      fieldArray = this.schema.fields.slice();
-      this._table = this.schema.table;
-
-    }
-
-    this._fieldArray = fieldArray;
     var fieldLookup = {};
 
-    fieldArray.forEach(function(v) {
+    this._fieldArray.forEach(function(v) {
       fieldLookup[v.name] = v;
     });
 
@@ -48,16 +35,7 @@ module.exports = (function() {
 
     this.validate();
 
-    return (this.schema = this.getSchema());
-
-  };
-
-  Model.prototype.getSchema = function() {
-
-    return {
-      table: this._table,
-      fields: this._fieldArray.slice()
-    };
+    return true;
 
   };
 
