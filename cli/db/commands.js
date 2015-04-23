@@ -3,6 +3,7 @@ var pg = require('pg');
 var async = require('async');
 
 var Database = require('../../core/module.js').Database;
+var SchemaGenerator = require('../../core/module.js');
 
 var colors = require('colors/safe');
 
@@ -103,6 +104,8 @@ module.exports = {
     var db = new Database();
     db.connect(dbCredentials);
 
+    var schema = new SchemaGenerator();
+
     db.transaction(
       'DROP SCHEMA public CASCADE;' +
       'CREATE SCHEMA public;' +
@@ -110,6 +113,7 @@ module.exports = {
       errorHandler(function(result) {
 
         Database.prototype.info('Prepared database for migrations');
+        schema.save();
         process.exit(0);
 
       })
@@ -136,7 +140,7 @@ module.exports = {
       var migrations = fs.readdirSync(MIGRATION_PATH).map(function(v) {
         return {
           id: v.substr(0, v.indexOf('__')),
-          migration: new (require(process.cwd() + '/' + MIGRATION_PATH + '/' + v)(db))()
+          migration: new (require(process.cwd() + '/' + MIGRATION_PATH + '/' + v))(db)
         };
       }).filter(function(v) {
         return schema_ids.indexOf(v.id) === -1;
@@ -152,10 +156,7 @@ module.exports = {
         var migrationInstance = v.migration;
 
         return function(callback) {
-          migrationInstance.executeUp(function(err) {
-            !err && fs.writeFileSync(process.cwd() + '/db/schema.js', migrationInstance.generateSchema());
-            callback(err);
-          });
+          migrationInstance.executeUp(callback);
         };
 
       });
@@ -202,7 +203,7 @@ module.exports = {
       var migrations = fs.readdirSync(MIGRATION_PATH).map(function(v) {
         return {
           id: v.substr(0, v.indexOf('__')),
-          migration: new (require(process.cwd() + '/' + MIGRATION_PATH + '/' + v)(db))()
+          migration: new (require(process.cwd() + '/' + MIGRATION_PATH + '/' + v))(db)
         };
       }).filter(function(v) {
         return schema_ids.indexOf(v.id) !== -1;
@@ -219,10 +220,7 @@ module.exports = {
         var nextMigrationInstanceId = migrations[i + 1] ? migrations[i + 1].migration.id : null;
 
         return function(callback) {
-          migrationInstance.executeDown(function(err) {
-            !err && fs.writeFileSync(process.cwd() + '/db/schema.js', migrationInstance.generateSchema(nextMigrationInstanceId));
-            callback(err);
-          });
+          migrationInstance.executeDown(callback, nextMigrationInstanceId);
         };
 
       }).slice(0, steps);

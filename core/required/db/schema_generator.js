@@ -7,18 +7,20 @@ module.exports = (function() {
     this.migrationId = null;
     this.tables = {};
 
-    this.filename = '';
+    this._defaultPath = 'db/schema.js';
 
   }
 
   SchemaGenerator.load = function(filename) {
-    this.filename = process.cwd() + '/' + filename;
-    return this.set(require(this.filename));
+    filename = filename || this._defaultPath;
+    filename = process.cwd() + '/' + filename;
+    return this.set(require(filename));
   };
 
   SchemaGenerator.prototype.save = function(filename) {
+    filename = filename || this._defaultPath;
     filename = process.cwd() + '/' + filename;
-    fs.writeFileSync(this.filename || filename, this.generate());
+    fs.writeFileSync(filename, this.generate());
     return true;
   };
 

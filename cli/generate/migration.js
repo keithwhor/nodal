@@ -25,20 +25,20 @@ module.exports = (function() {
     return function(migrationName, id) {
 
       return [
-        'module.exports = function(db) {',
+        'module.exports = (function() {',
         '',
         '  var Nodal = require(\'nodal\');',
         '',
         '  var Schema = Nodal.require(\'db/schema.js\')',
         '  var Migration = Nodal.Migration(db, Schema);',
         '',
-        '  function ' + migrationName + '() {',
+        '  function ' + migrationName + '(db) {',
         '',
         '    Migration.apply(this, arguments);',
         '',
         '    this.id = ' + (parseInt(id) || 0) + ';',
         '',
-        '  };',
+        '  }',
         '',
         '  ' + migrationName + '.prototype = Object.create(Migration.prototype);',
         '  ' + migrationName + '.prototype.constructor = ' + migrationName + ';',
@@ -65,7 +65,7 @@ module.exports = (function() {
         '',
         '  return ' + migrationName + ';',
         '',
-        '};',
+        '})();',
         ''
       ].join('\n');
 

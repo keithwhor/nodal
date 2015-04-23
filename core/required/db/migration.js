@@ -19,29 +19,8 @@ module.exports = function() {
     this.db = db;
 
     this.schema = new SchemaGenerator();
-    this.schema.load('db/schema.js');
 
   }
-
-  Migration.prototype.executeUp = function(callback) {
-
-    var up = this.up().concat([
-      'INSERT INTO "schema_migrations"("id") VALUES(' + this.id + ')'
-    ]);
-
-    this.db.transaction(up.join(';'), callback);
-
-  };
-
-  Migration.prototype.executeDown = function(callback) {
-
-    var down = this.down().concat([
-      'DELETE FROM "schema_migrations" WHERE id = ' + this.id
-    ]);
-
-    this.db.transaction(down.join(';'), callback);
-
-  };
 
   Migration.prototype.up = function() {
 
@@ -52,6 +31,41 @@ module.exports = function() {
   Migration.prototype.down = function() {
 
     return [];
+
+  };
+
+  Migration.prototype.executeUp = function(callback) {
+
+    var schema = this.schema;
+
+    schema.load();
+    schema.setMigrationId(this.id);
+
+    var up = this.up().concat([
+      'INSERT INTO "schema_migrations"("id") VALUES(' + this.id + ')'
+    ]);
+
+    this.db.transaction(up.join(';'), function(err) {
+      !err && schema.save();
+      callback(err);
+    });
+
+  };
+
+  Migration.prototype.executeDown = function(callback, prevId) {
+
+    var schema = this.schema;
+    schema.load();
+    schema.setMigrationId(prevId || null);
+
+    var down = this.down().concat([
+      'DELETE FROM "schema_migrations" WHERE id = ' + this.id
+    ]);
+
+    this.db.transaction(down.join(';'), function(err) {
+      !err && schema.save();
+      callback(err);
+    });
 
   };
 

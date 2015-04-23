@@ -22,7 +22,7 @@ module.exports = (function() {
       '',
       '  function ' + modelName + '() {',
       '    Model.apply(this, arguments);',
-      '  };',
+      '  }',
       '',
       '  ' + modelName + '.prototype = Object.create(Model.prototype);',
       '  ' + modelName + '.prototype.constructor = ' + modelName + ';',
