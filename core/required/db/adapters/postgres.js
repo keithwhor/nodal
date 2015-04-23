@@ -68,18 +68,18 @@ module.exports = (function() {
   };
 
   PostgresAdapter.prototype.generateConstraint = function(table, column, suffix) {
-    return 'CONSTRAINT ' + this.escapeField(table + '_' + column + '_' + suffix);
+    return this.escapeField(table + '_' + column + '_' + suffix);
   };
 
   PostgresAdapter.prototype.generatePrimaryKey = function(table, column) {
 
-    return [this.generateConstraint(table, column, 'pk'), ' PRIMARY KEY(', this.escapeField(column), ')'].join('');
+    return ['CONSTRAINT ', this.generateConstraint(table, column, 'pk'), ' PRIMARY KEY(', this.escapeField(column), ')'].join('');
 
   };
 
   PostgresAdapter.prototype.generateUniqueKey = function(table, column) {
 
-    return [this.generateConstraint(table, column, 'unique'), ' UNIQUE(', this.escapeField(column), ')'].join('');
+    return ['CONSTRAINT ', this.generateConstraint(table, column, 'unique'), ' UNIQUE(', this.escapeField(column), ')'].join('');
 
   };
 
@@ -99,7 +99,7 @@ module.exports = (function() {
     return [
       'ALTER TABLE',
         this.escapeField(table),
-      'ADD',
+      'ADD CONSTRAINT',
         this.generatePrimaryKey(table, column)
     ].join(' ');
 
@@ -110,7 +110,7 @@ module.exports = (function() {
     return [
       'ALTER TABLE',
         this.escapeField(table),
-      'DROP',
+      'DROP CONSTRAINT IF EXISTS',
         this.generateConstraint(table, column, 'pk')
     ].join(' ');
 
@@ -132,7 +132,7 @@ module.exports = (function() {
     return [
       'ALTER TABLE',
         this.escapeField(table),
-      'DROP',
+      'DROP CONSTRAINT IF EXISTS',
         this.generateConstraint(table, column, 'unique')
     ].join(' ');
 
