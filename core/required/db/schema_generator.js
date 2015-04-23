@@ -4,19 +4,21 @@ module.exports = (function() {
   var fs = require('fs');
   var inflect = require('i')();
 
-  function SchemaGenerator() {
+  function SchemaGenerator(db) {
+
+    this.db = db;
 
     this.migrationId = null;
     this.tables = {};
 
-    this._defaultPath = 'db/schema.js';
+    this._defaultPath = 'db/schema.json';
 
   }
 
   SchemaGenerator.prototype.load = function(filename) {
     filename = filename || this._defaultPath;
     filename = process.cwd() + '/' + filename;
-    return this.set(require(filename));
+    return this.set(JSON.parse(fs.readFileSync(filename)));
   };
 
   SchemaGenerator.prototype.save = function(filename) {
@@ -30,12 +32,12 @@ module.exports = (function() {
 
     properties = properties || {};
 
-    var defaults = Adapter.prototype.typePropertyDefaults;
+    var defaults = this.db.adapter.typePropertyDefaults;
 
-    var oldProperties = fieldData.properties || {};
+    var oldProperties = this.db.adapter.getTypeProperties(fieldData.type, fieldData.properties) || {};
     var newProperties = {};
 
-    Adapter.prototype.typeProperties.forEach(function(v) {
+    this.db.adapter.typeProperties.forEach(function(v) {
       if (properties.hasOwnProperty(v) && properties[v] !== defaults[v]) {
         newProperties[v] = properties[v];
       } else if (oldProperties.hasOwnProperty(v) && oldProperties[v] !== defaults[v]) {
@@ -65,6 +67,8 @@ module.exports = (function() {
       tables[k] = schema[k];
     });
 
+    this.tables = tables;
+
     return true;
 
   };
@@ -84,14 +88,14 @@ module.exports = (function() {
     });
 
     if (fields.indexOf('id') === -1) {
-      arrFieldData.unshift({name: 'id', type: 'index'});
+      arrFieldData.unshift({name: 'id', type: 'serial'});
     }
 
     if (fields.indexOf('created_at') === -1) {
       arrFieldData.push({name:'created_at', type: 'datetime'});
     }
 
-    var defaults = Adapter.prototype.typePropertyDefaults;
+    var defaults = this.db.adapter.typePropertyDefaults;
 
     arrFieldData.forEach((function(fieldData) {
       this.mergeProperties(fieldData);
@@ -102,7 +106,7 @@ module.exports = (function() {
       fields: arrFieldData
     };
 
-    return true;
+    return arrFieldData;
 
   };
 
@@ -122,15 +126,16 @@ module.exports = (function() {
       delete properties.unique;
     }
 
-    var tableData = Object.keys(this.tables).filter(function(v) {
-      return v.table === table;
+    var tables = this.tables;
+    var tableKey = Object.keys(tables).filter(function(t) {
+      return tables[t].table === table;
     }).pop();
 
-    if (!tableData) {
+    if (!tableKey) {
       throw new Error('Table "' + table + '" does not exist');
     }
 
-    var schemaFieldData = tableData.fields.filter(function(v) {
+    var schemaFieldData = tables[tableKey].fields.filter(function(v) {
       return v.name === column;
     }).pop();
 
@@ -149,34 +154,35 @@ module.exports = (function() {
 
   SchemaGenerator.prototype.generate = function() {
 
+    var tables = this.tables;
+    var hasTables = !!Object.keys(tables).length;
+
     var fileData = [
-      'module.exports = {',
+      '{',
       '',
-      '  migration_id: ' + this.migrationId + ',',
+      '  "migration_id": ' + this.migrationId + (hasTables ? ',' : ''),
     ];
 
-    var tables = this.tables;
-
-    if (Object.keys(tables).length) {
+    if (hasTables) {
 
       fileData = fileData.concat([
         '',
         Object.keys(tables).sort().map(function(t) {
           var curTable = tables[t];
           return [
-            '  ' + t + ': {',
+            '  "' + t + '": {',
             '',
-            '    table: \'' + curTable.table + '\',',
+            '    "table": "' + curTable.table + '",',
             '',
-            '    fields: [',
+            '    "fields": [',
             curTable.fields.map(function(fieldData) {
               return [
                 '      ',
                 '{',
                   [
-                    'name: \'' + fieldData.name + '\'',
-                    'type: \'' + fieldData.type + '\'',
-                    fieldData.properties ? 'properties: ' + JSON.stringify(fieldData.properties) : ''
+                    '"name": "' + fieldData.name + '"',
+                    '"type": "' + fieldData.type + '"',
+                    fieldData.properties ? '"properties": ' + JSON.stringify(fieldData.properties) : ''
                   ].filter(function(v) { return !!v; }).join(', '),
                 '}'
               ].join('');
@@ -192,7 +198,7 @@ module.exports = (function() {
 
     return fileData.concat([
       '',
-      '};',
+      '}',
       ''
     ]).join('\n');
 

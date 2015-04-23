@@ -5,6 +5,7 @@ module.exports = {
   Database: require('./required/db/database.js'),
   Migration: require('./required/db/migration.js'),
   SchemaGenerator: require('./required/db/schema_generator.js'),
+  Schema: require('./required/db/schema.js'),
   require: function(filename) {
     return require(process.cwd() + '/' + filename);
   }

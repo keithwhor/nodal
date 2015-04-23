@@ -10,8 +10,7 @@ module.exports = (function() {
     'unique',
     'primary_key',
     'array',
-    'defaultValue',
-    'sanitize'
+    'defaultValue'
   ];
 
   DatabaseAdapter.prototype.typePropertyDefaults = {
@@ -21,11 +20,11 @@ module.exports = (function() {
     unique: false,
     primary_key: false,
     array: false,
-    defaultValue: null,
-    sanitize: function(v) { return v; }
+    defaultValue: null
   };
 
   DatabaseAdapter.prototype.types = {};
+  DatabaseAdapter.prototype.sanitizeType = {};
   DatabaseAdapter.prototype.escapeFieldCharacter = '';
 
   DatabaseAdapter.prototype.generateConnectionString = function(host, port, database, user, password) {};
@@ -39,6 +38,13 @@ module.exports = (function() {
   DatabaseAdapter.prototype.generateAlterDropPrimaryKey = function(table, column) {};
   DatabaseAdapter.prototype.generateAlterAddUniqueKey = function(table, column) {};
   DatabaseAdapter.prototype.generateAlterDropUniqueKey = function(table, column) {};
+
+  DatabaseAdapter.prototype.sanitize = function(type, value) {
+
+    var fnSanitize = this.sanitizeType[type];
+    return fnSanitize ? fnSanitize(value) : value;
+
+  };
 
   DatabaseAdapter.prototype.escapeField = function(name) {
     return ['', name, ''].join(this.escapeFieldCharacter);

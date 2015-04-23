@@ -28,8 +28,6 @@ module.exports = (function() {
         'module.exports = (function() {',
         '',
         '  var Nodal = require(\'nodal\');',
-        '',
-        '  var Schema = Nodal.require(\'db/schema.js\');',
         '  var Migration = Nodal.Migration;',
         '',
         '  function ' + migrationName + '(db) {',

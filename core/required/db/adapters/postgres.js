@@ -14,33 +14,34 @@ module.exports = (function() {
   PostgresAdapter.prototype.escapeFieldCharacter = '"';
 
   PostgresAdapter.prototype.types = {
-    index: {
+    serial: {
       field: 'BIGSERIAL',
       primary_key: true,
-      unique: true,
       nullable: false
     },
     int: {
-      field: 'BIGINT',
+      field: 'BIGINT'
     },
     float: {
-      field: 'FLOAT',
+      field: 'FLOAT'
     },
     string: {
-      field: 'VARCHAR',
-      length: 256,
+      field: 'VARCHAR'
     },
     text: {
-      field: 'TEXT',
+      field: 'TEXT'
     },
     datetime: {
-      field: 'TIMESTAMP',
+      field: 'TIMESTAMP'
     },
     boolean: {
-      field: 'BOOLEAN',
-      sanitize: function(v) {
-        return ['f', 't'][v | 0];
-      }
+      field: 'BOOLEAN'
+    }
+  };
+
+  PostgresAdapter.prototype.sanitizeType = {
+    boolean: function(v) {
+      return ['f', 't'][v | 0];
     }
   };
 

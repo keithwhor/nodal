@@ -18,7 +18,7 @@ module.exports = (function() {
       '  var Nodal = require(\'nodal\');',
       '',
       '  var Model = Nodal.Model;',
-      '  var Schema = Nodal.require(\'db/schema.js\');',
+      '  var Schema = Nodal.Schema;',
       '',
       '  function ' + modelName + '() {',
       '    Model.apply(this, arguments);',

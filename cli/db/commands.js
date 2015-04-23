@@ -104,7 +104,7 @@ module.exports = {
     var db = new Database();
     db.connect(dbCredentials);
 
-    var schema = new SchemaGenerator();
+    var schema = new SchemaGenerator(db);
 
     db.transaction(
       'DROP SCHEMA public CASCADE;' +
@@ -127,6 +127,9 @@ module.exports = {
 
     var db = new Database();
     db.connect(dbCredentials);
+
+    var steps = flags.step | 0;
+    if (!steps) { steps = 0; }
 
     db.query('SELECT id FROM schema_migrations', function(err, result) {
 
@@ -160,6 +163,10 @@ module.exports = {
         };
 
       });
+
+      if (steps) {
+        migrateFuncs = migrateFuncs.slice(0, steps);
+      }
 
       async.series(
         migrateFuncs,

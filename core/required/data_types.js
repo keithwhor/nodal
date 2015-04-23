@@ -1,5 +1,5 @@
 module.exports = {
-  index: {
+  serial: {
     convert: function(v) {
       return parseInt(v) || 0;
     }

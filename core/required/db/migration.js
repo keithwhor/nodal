@@ -18,7 +18,7 @@ module.exports = (function() {
 
     this.db = db;
 
-    this.schema = new SchemaGenerator();
+    this.schema = new SchemaGenerator(db);
 
   }
 
@@ -69,11 +69,11 @@ module.exports = (function() {
 
   };
 
-  Migration.prototype.createTable = function(table, fieldData) {
+  Migration.prototype.createTable = function(table, arrFieldData) {
 
-    this.schema.createTable(table, fieldData);
+    arrFieldData = this.schema.createTable(table, arrFieldData);
 
-    return this.db.adapter.generateCreateTableQuery(table, fieldData);
+    return this.db.adapter.generateCreateTableQuery(table, arrFieldData);
 
   };
 

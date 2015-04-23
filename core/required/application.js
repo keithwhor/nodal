@@ -139,7 +139,7 @@ module.exports = (function() {
     db.query(
       db.adapter.generateInsertQuery(model.schema.table, columns),
       columns.map(function(v) {
-        return db.adapter.getType(model.getFieldData(v).type).sanitize(model.get(v));
+        return db.adapter.sanitize(model.getFieldData(v).type, model.get(v));
       }),
       function(err, result) {
 
