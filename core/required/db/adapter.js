@@ -14,7 +14,6 @@ module.exports = (function() {
   ];
 
   DatabaseAdapter.prototype.typePropertyDefaults = {
-    field: 'INTEGER',
     length: null,
     nullable: true,
     unique: false,
@@ -51,24 +50,35 @@ module.exports = (function() {
   };
 
   DatabaseAdapter.prototype.getTypeProperties = function(typeName, optionalValues) {
+
     var type = this.types[typeName];
+    var typeProperties = type ? (type.properties || {}) : {};
+
     optionalValues = optionalValues || {};
+
     var outputType = Object.create(this.typePropertyDefaults);
     this.typeProperties.forEach(function(v) {
       if (optionalValues.hasOwnProperty(v)) {
         outputType[v] = optionalValues[v];
-      } else if(type.hasOwnProperty(v)) {
-        outputType[v] = type[v];
+      } else if(typeProperties.hasOwnProperty(v)) {
+        outputType[v] = typeProperties[v];
       }
     });
+
     return outputType;
+
+  };
+
+  DatabaseAdapter.prototype.getTypeDbName = function(typeName) {
+    type = this.types[typeName];
+    return type ? type.dbName : 'INTEGER';
   };
 
   DatabaseAdapter.prototype.generateColumnsStatement = function(table, columns) {
     var self = this;
     return columns
       .map(function(columnData) {
-        return self.generateColumn(columnData.name, self.getTypeProperties(columnData.type, columnData.properties));
+        return self.generateColumn(columnData.name, self.getTypeDbName(columnData.type), self.getTypeProperties(columnData.type, columnData.properties));
       })
       .join(',');
   };
@@ -139,6 +149,7 @@ module.exports = (function() {
         this.generateAlterColumnType(
           table,
           columnName,
+          this.getTypeDbName(columnData.type),
           this.getTypeProperties(columnData.type, columnData)
         )
       );

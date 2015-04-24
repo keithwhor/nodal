@@ -15,27 +15,29 @@ module.exports = (function() {
 
   PostgresAdapter.prototype.types = {
     serial: {
-      field: 'BIGSERIAL',
-      primary_key: true,
-      nullable: false
+      dbName: 'BIGSERIAL',
+      properties: {
+        primary_key: true,
+        nullable: false
+      }
     },
     int: {
-      field: 'BIGINT'
+      dbName: 'BIGINT'
     },
     float: {
-      field: 'FLOAT'
+      dbName: 'FLOAT'
     },
     string: {
-      field: 'VARCHAR'
+      dbName: 'VARCHAR'
     },
     text: {
-      field: 'TEXT'
+      dbName: 'TEXT'
     },
     datetime: {
-      field: 'TIMESTAMP'
+      dbName: 'TIMESTAMP'
     },
     boolean: {
-      field: 'BOOLEAN'
+      dbName: 'BOOLEAN'
     }
   };
 
@@ -57,11 +59,11 @@ module.exports = (function() {
 
   };
 
-  PostgresAdapter.prototype.generateColumn = function(columnName, properties) {
+  PostgresAdapter.prototype.generateColumn = function(columnName, columnType, properties) {
 
     return [
       this.escapeField(columnName),
-      properties.field,
+      columnType,
       properties.array ? 'ARRAY' : '',
       (properties.primary_key || !properties.nullable) ? 'NOT NULL' : ''
     ].filter(function(v) { return !!v; }).join(' ');
@@ -84,13 +86,13 @@ module.exports = (function() {
 
   };
 
-  PostgresAdapter.prototype.generateAlterColumnType = function(table, columnName, properties) {
+  PostgresAdapter.prototype.generateAlterColumnType = function(table, columnName, columnType, properties) {
 
     return [
       'ALTER TABLE',
         this.escapeField(table),
       'ALTER COLUMN',
-        this.generateColumn(columnName, properties)
+        this.generateColumn(columnName, columnType, properties)
     ].join(' ');
 
   };
