@@ -124,8 +124,6 @@ The following is an active development checklist (TODO):
 
 ### Migrations
 
-- Add column
-- Drop column
 - Add index
 - Drop index
 

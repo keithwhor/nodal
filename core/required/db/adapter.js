@@ -32,11 +32,15 @@ module.exports = (function() {
   DatabaseAdapter.prototype.generatePrimaryKey = function(columnName, type, properties) {};
   DatabaseAdapter.prototype.generateUniqueKey = function(columnName, type, properties) {};
 
-  DatabaseAdapter.prototype.generateAlterColumnType = function(table, columnName, type, properties) {};
-  DatabaseAdapter.prototype.generateAlterAddPrimaryKey = function(table, columnName) {};
-  DatabaseAdapter.prototype.generateAlterDropPrimaryKey = function(table, columnName) {};
-  DatabaseAdapter.prototype.generateAlterAddUniqueKey = function(table, columnName) {};
-  DatabaseAdapter.prototype.generateAlterDropUniqueKey = function(table, columnName) {};
+  DatabaseAdapter.prototype.generateAlterTableColumnType = function(table, columnName, columnType, columnProperties) {};
+  DatabaseAdapter.prototype.generateAlterTableAddPrimaryKey = function(table, columnName) {};
+  DatabaseAdapter.prototype.generateAlterTableDropPrimaryKey = function(table, columnName) {};
+  DatabaseAdapter.prototype.generateAlterTableAddUniqueKey = function(table, columnName) {};
+  DatabaseAdapter.prototype.generateAlterTableDropUniqueKey = function(table, columnName) {};
+
+  DatabaseAdapter.prototype.generateAlterTableAddColumn = function(table, columnName, columnType, columnProperties) {};
+  DatabaseAdapter.prototype.generateAlterTableDropColumn = function(table, columnName) {};
+  DatabaseAdapter.prototype.generateAlterTableRenameColumn = function(table, columnName, newColumnName) {};
 
   DatabaseAdapter.prototype.sanitize = function(type, value) {
 
@@ -140,38 +144,61 @@ module.exports = (function() {
     ].join('');
   };
 
-  DatabaseAdapter.prototype.generateAlterTableQuery = function(table, columnName, columnData) {
+  DatabaseAdapter.prototype.generateAlterTableQuery = function(table, columnName, type, properties) {
 
     var queries = [];
 
-    if (columnData.hasOwnProperty('type')) {
+    if (properties.hasOwnProperty('type')) {
       queries.push(
-        this.generateAlterColumnType(
+        this.generateAlterTableColumnType(
           table,
           columnName,
-          this.getTypeDbName(columnData.type),
-          this.getTypeProperties(columnData.type, columnData)
+          this.getTypeDbName(type),
+          this.getTypeProperties(type, properties)
         )
       );
     }
 
-    if (columnData.hasOwnProperty('primary_key')) {
+    if (properties.hasOwnProperty('primary_key')) {
       queries.push(
         [
-          this.generateAlterDropPrimaryKey,
-          this.generateAlterAddPrimaryKey
-        ][columnData.primary_key | 0].call(this, table, columnName)
+          this.generateAlterTableDropPrimaryKey,
+          this.generateAlterTableAddPrimaryKey
+        ][properties.primary_key | 0].call(this, table, columnName)
       );
-    } else if (columnData.hasOwnProperty('unique')) {
+    } else if (properties.hasOwnProperty('unique')) {
       queries.push(
         [
-          this.generateAlterDropUniqueKey,
-          this.generateAlterAddUniqueKey
-        ][columnData.primary_key | 0].call(this, table, columnName)
+          this.generateAlterTableDropUniqueKey,
+          this.generateAlterTableAddUniqueKey
+        ][properties.primary_key | 0].call(this, table, columnName)
       );
     }
 
     return queries.join(';');
+
+  };
+
+  DatabaseAdapter.prototype.generateAlterTableAddColumnQuery = function(table, columnName, type, properties) {
+
+    return this.generateAlterTableAddColumn(
+      table,
+      columnName,
+      this.getTypeDbName(type),
+      this.getTypeProperties(type, properties)
+    );
+
+  };
+
+  DatabaseAdapter.prototype.generateAlterTableDropColumnQuery = function(table, columnName) {
+
+    return this.generateAlterTableDropColumn(table, columnName);
+
+  };
+
+  DatabaseAdapter.prototype.generateAlterTableRenameColumnQuery = function(table, columnName, newColumnName) {
+
+    return this.generateAlterTableRenameColumn(table, columnName, newColumnName);
 
   };
 

@@ -120,7 +120,7 @@ module.exports = (function() {
 
   };
 
-  SchemaGenerator.prototype.alterColumn = function(table, column, properties) {
+  SchemaGenerator.prototype.alterColumn = function(table, column, type, properties) {
 
     if (properties.primary_key) {
       delete properties.unique;
@@ -143,10 +143,98 @@ module.exports = (function() {
       throw new Error('Column "' + column + '" of table "' + table + '" does not exist');
     }
 
-    schemaFieldData.type = properties.type || schemaFieldData.type;
-    delete properties.type;
+    schemaFieldData.type = type;
 
     this.mergeProperties(schemaFieldData, properties);
+
+    return true;
+
+  };
+
+  SchemaGenerator.prototype.addColumn = function(table, column, type, properties) {
+
+    if (properties.primary_key) {
+      delete properties.unique;
+    }
+
+    var tables = this.tables;
+    var tableKey = Object.keys(tables).filter(function(t) {
+      return tables[t].table === table;
+    }).pop();
+
+    if (!tableKey) {
+      throw new Error('Table "' + table + '" does not exist');
+    }
+
+    var tableSchema = tables[tableKey];
+
+    var schemaFieldData = tableSchema.columns.filter(function(v) {
+      return v.name === column;
+    }).pop();
+
+    if (schemaFieldData) {
+      throw new Error('Column "' + column + '" of table "' + table + '" already exists');
+    }
+
+    var columnData = {
+      name: column,
+      type: type,
+      properties: properties
+    };
+
+    tableSchema.columns.push(columnData);
+
+    return true;
+
+  };
+
+  SchemaGenerator.prototype.dropColumn = function(table, column) {
+
+    var tables = this.tables;
+    var tableKey = Object.keys(tables).filter(function(t) {
+      return tables[t].table === table;
+    }).pop();
+
+    if (!tableKey) {
+      throw new Error('Table "' + table + '" does not exist');
+    }
+
+    var tableSchema = tables[tableKey];
+
+    var columnIndex = tableSchema.columns.map(function(v, i) { return v.name; }).indexOf(column);
+
+    if (columnIndex === -1) {
+      throw new Error('Column "' + column + '" of table "' + table + '" does not exist');
+    }
+
+    tableSchema.columns.splice(columnIndex, 1);
+
+    return true;
+
+  };
+
+  SchemaGenerator.prototype.renameColumn = function(table, column, newColumn) {
+
+    var tables = this.tables;
+    var tableKey = Object.keys(tables).filter(function(t) {
+      return tables[t].table === table;
+    }).pop();
+
+    if (!tableKey) {
+      throw new Error('Table "' + table + '" does not exist');
+    }
+
+    var tableSchema = tables[tableKey];
+
+    var schemaFieldData = tableSchema.columns.filter(function(v) {
+      return v.name === column;
+    }).pop();
+
+    if (!schemaFieldData) {
+      throw new Error('Column "' + column + '" of table "' + table + '" already exists');
+    }
+
+    schemaFieldData.name = newColumn;
 
     return true;
 

@@ -93,9 +93,27 @@ module.exports = (function() {
 
   };
 
-  Migration.prototype.addColumn = function(table, fieldData) {
+  Migration.prototype.addColumn = function(table, column, type, options) {
 
-    /* not implemented */
+    this.schema.addColumn(table, column, type, options);
+
+    return this.db.adapter.generateAlterTableAddColumnQuery(table, column, type, options);
+
+  };
+
+  Migration.prototype.dropColumn = function(table, column) {
+
+    this.schema.dropColumn(table, column);
+
+    return this.db.adapter.generateAlterTableDropColumnQuery(table, column);
+
+  };
+
+  Migration.prototype.renameColumn = function(table, column, newColumn) {
+
+    this.schema.renameColumn(table, column, newColumn);
+
+    return this.db.adapter.generateAlterTableRenameColumnQuery(table, column, newColumn);
 
   };
 
