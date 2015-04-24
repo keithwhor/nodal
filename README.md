@@ -13,9 +13,6 @@ With a built-in command-line interface, models, controllers, templates,
 migrations and application architecture, Nodal provides all of the tools a
 developer needs to get a new node.js project started with very little overhead.
 
-**Please note that Nodal is currently pre-release, and in current state is meant
-to be used for testing purposes only.**
-
 ## Installation
 
 To install the latest version of Nodal, make sure you have node.js installed.
