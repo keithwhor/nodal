@@ -24,54 +24,33 @@ module.exports = (function() {
       '!': new Template(this, function() { return '<!-- Invalid Template //-->'; })
     };
 
-    this._static = this.loadStaticAssets();
+    this._static = {};
 
     this.db = null;
     this.socket = null;
 
   }
 
-  Application.prototype.loadStaticAssets = function() {
+  Application.prototype.static = function(name) {
 
-    // can probably lazy load, like templates
-
-    function readDir(cwd, dirname, data) {
-
-      data = data || {};
-      var files = fs.readdirSync([cwd, dirname].join('/'));
-
-      files.forEach(function(v) {
-
-        var filename = [dirname, v].join('/');
-        var fullPath = [cwd, filename].join('/');
-
-        if (fs.statSync(fullPath).isDirectory()) {
-          readDir(cwd, filename, data);
-          return;
-        }
-
-        var ext = fullPath.substr(fullPath.lastIndexOf('.'));
-        data[filename] = {
-          mime: mime.lookup(ext) || 'application/octet-stream',
-          buffer: fs.readFileSync(fullPath)
-        };
-        return;
-
-      });
-
-      return data;
-
+    if(this._static[name]) {
+      return this._static[name];
     }
 
-    return readDir(process.cwd(), 'static');
+    var filename = './static/' + name;
 
-  };
-
-  Application.prototype.static = function(path) {
-    if (path.indexOf('/') === 0) {
-      path = path.substr(1);
+    try {
+      this._static[name] = {
+        mime: mime.lookup(filename) || 'application/octet-stream',
+        buffer: fs.readFileSync(filename)
+      };
+      return this._static[name];
+    } catch(e) {
+      return null;
     }
-    return this._static[path] || null;
+
+    return null;
+
   };
 
   Application.prototype.useDatabase = function() {
@@ -97,6 +76,7 @@ module.exports = (function() {
       console.log('Could not load template ' + name);
     }
     return this._templates['!'];
+
   };
 
   Application.prototype._proxyWebSocketRequests = function() {

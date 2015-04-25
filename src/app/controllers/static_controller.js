@@ -13,7 +13,7 @@ module.exports = (function() {
 
   StaticController.prototype.get = function(self, params, app, socket) {
 
-    var staticData = app.static(this.path());
+    var staticData = app.static(this.path().substr('/static/'.length));
 
     if (!staticData) {
       Error404Controller.prototype.get.apply(this, arguments);
