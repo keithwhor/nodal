@@ -70,8 +70,14 @@ module.exports = (function() {
 
   };
 
+  PostgresAdapter.prototype.generateIndex = function(table, columnName) {
+
+    return this.generateConstraint(table, columnName, 'index');
+
+  };
+
   PostgresAdapter.prototype.generateConstraint = function(table, columnName, suffix) {
-    return this.escapeField(table + '_' + columnName + '_' + suffix);
+    return this.escapeField([table, columnName, suffix].join('_'));
   };
 
   PostgresAdapter.prototype.generatePrimaryKey = function(table, columnName) {
@@ -163,7 +169,7 @@ module.exports = (function() {
 
   };
 
-  DatabaseAdapter.prototype.generateAlterTableRenameColumn = function(table, columnName, newColumnName) {
+  PostgresAdapter.prototype.generateAlterTableRenameColumn = function(table, columnName, newColumnName) {
 
     return [
       'ALTER TABLE',
@@ -172,6 +178,28 @@ module.exports = (function() {
         this.escapeField(columnName),
       'TO',
       this.escapeField(newColumnName)
+    ].join(' ');
+
+  };
+
+  PostgresAdapter.prototype.generateCreateIndex = function(table, columnName, indexType) {
+
+    return [
+      'CREATE INDEX',
+        this.generateIndex(table, columnName),
+      'ON',
+        table,
+      'USING',
+        indexType,
+      ['(', this.escapeField(columnName), ')'].join('')
+    ].join(' ');
+
+  };
+
+  PostgresAdapter.prototype.generateDropIndex = function(table, columnName) {
+
+    return [
+      'DROP INDEX', this.generateIndex(table, columnName)
     ].join(' ');
 
   };

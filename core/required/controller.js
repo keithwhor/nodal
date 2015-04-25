@@ -1,5 +1,7 @@
 module.exports = (function() {
 
+  var url = require('url');
+
   var Template = require('./template.js');
 
   function Controller(request, response) {
@@ -7,6 +9,7 @@ module.exports = (function() {
     this._initializeTime = (new Date()).valueOf();
     this._request = request;
     this._response = response;
+    this._path = url.parse(this._request.url, true).pathname;
     this._status = 200;
     this._headers = {'Content-Type': 'text/html'};
 
@@ -14,6 +17,10 @@ module.exports = (function() {
 
   Controller.prototype.request = function() {
     return this._request;
+  };
+
+  Controller.prototype.path = function() {
+    return this._path;
   };
 
   Controller.prototype.status = function(value) {

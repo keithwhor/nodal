@@ -10,6 +10,7 @@ module.exports = (function() {
   var fs = require('fs');
   var http = require('http');
   var httpProxy = require('http-proxy');
+  var mime = require('mime-types');
 
   dot.templateSettings.varname = 'template';
 
@@ -23,10 +24,55 @@ module.exports = (function() {
       '!': new Template(this, function() { return '<!-- Invalid Template //-->'; })
     };
 
+    this._static = this.loadStaticAssets();
+
     this.db = null;
     this.socket = null;
 
   }
+
+  Application.prototype.loadStaticAssets = function() {
+
+    // can probably lazy load, like templates
+
+    function readDir(cwd, dirname, data) {
+
+      data = data || {};
+      var files = fs.readdirSync([cwd, dirname].join('/'));
+
+      files.forEach(function(v) {
+
+        var filename = [dirname, v].join('/');
+        var fullPath = [cwd, filename].join('/');
+
+        if (fs.statSync(fullPath).isDirectory()) {
+          readDir(cwd, filename, data);
+          return;
+        }
+
+        var ext = fullPath.substr(fullPath.lastIndexOf('.'));
+        data[filename] = {
+          mime: mime.lookup(ext) || 'application/octet-stream',
+          buffer: fs.readFileSync(fullPath)
+        };
+        return;
+
+      });
+
+      return data;
+
+    }
+
+    return readDir(process.cwd(), 'static');
+
+  };
+
+  Application.prototype.static = function(path) {
+    if (path.indexOf('/') === 0) {
+      path = path.substr(1);
+    }
+    return this._static[path] || null;
+  };
 
   Application.prototype.useDatabase = function() {
     this.db = new Database();
@@ -35,6 +81,7 @@ module.exports = (function() {
   };
 
   Application.prototype.template = function(name) {
+
     if(this._templates[name]) {
       return this._templates[name];
     }

@@ -28,6 +28,9 @@ module.exports = (function() {
 
   DatabaseAdapter.prototype.generateConnectionString = function(host, port, database, user, password) {};
 
+  DatabaseAdapter.prototype.generateIndex = function() {};
+  DatabaseAdapter.prototype.generateConstraint = function() {};
+
   DatabaseAdapter.prototype.generateColumn = function(columnName, type, properties) {};
   DatabaseAdapter.prototype.generatePrimaryKey = function(columnName, type, properties) {};
   DatabaseAdapter.prototype.generateUniqueKey = function(columnName, type, properties) {};
@@ -41,6 +44,9 @@ module.exports = (function() {
   DatabaseAdapter.prototype.generateAlterTableAddColumn = function(table, columnName, columnType, columnProperties) {};
   DatabaseAdapter.prototype.generateAlterTableDropColumn = function(table, columnName) {};
   DatabaseAdapter.prototype.generateAlterTableRenameColumn = function(table, columnName, newColumnName) {};
+
+  DatabaseAdapter.prototype.generateCreateIndex = function(table, columnName, indexType) {};
+  DatabaseAdapter.prototype.generateDropIndex = function(table, columnName) {};
 
   DatabaseAdapter.prototype.sanitize = function(type, value) {
 
@@ -199,6 +205,20 @@ module.exports = (function() {
   DatabaseAdapter.prototype.generateAlterTableRenameColumnQuery = function(table, columnName, newColumnName) {
 
     return this.generateAlterTableRenameColumn(table, columnName, newColumnName);
+
+  };
+
+  DatabaseAdapter.prototype.generateCreateIndexQuery = function(table, columnName, index) {
+
+    indexType = index || 'btree';
+
+    return this.generateCreateIndex(table, columnName, indexType);
+
+  };
+
+  DatabaseAdapter.prototype.generateDropIndexQuery = function(table, columnName) {
+
+    return this.generateDropIndex(table, columnName);
 
   };
 

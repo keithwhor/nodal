@@ -122,15 +122,11 @@ The following is an active development checklist (TODO):
 - Model querying
 - Model relationships (belongs_to, has_many)
 
-### Migrations
-
-- Add index
-- Drop index
-
 ### Misc.
 
 - Offload all SQL generation to DatabaseAdapter
 - Offload save model / query model logic to Database (from Application)
+- Keep track of indices in schema.json
 - Tests for all modules (!!!)
 
 ## About

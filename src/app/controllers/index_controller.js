@@ -1,6 +1,7 @@
 module.exports = (function() {
 
-  var Controller = require('nodal').Controller;
+  var Nodal = require('nodal');
+  var Controller = Nodal.Controller;
 
   function IndexController() {
     Controller.apply(this, arguments);

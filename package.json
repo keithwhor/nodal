@@ -15,7 +15,8 @@
     "i": "latest",
     "ncp": "latest",
     "ws": "latest",
-    "pg": "latest"
+    "pg": "latest",
+    "mime-types": "latest"
   },
   "scripts": {
     "test": "node ./tests/runner.js"

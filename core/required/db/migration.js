@@ -117,6 +117,18 @@ module.exports = (function() {
 
   };
 
+  Migration.prototype.createIndex = function(table, column, type) {
+
+    return this.db.adapter.generateCreateIndexQuery(table, column, type);
+
+  };
+
+  Migration.prototype.dropIndex = function(table, column) {
+
+    return this.db.adapter.generateDropIndexQuery(table, column);
+
+  };
+
   return Migration;
 
 })();
