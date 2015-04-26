@@ -1,7 +1,7 @@
 module.exports = (function() {
 
   var Database = require('./db/database.js');
-  var Router = require('./router.js')(Application);
+  var Router = require('./router.js');
   var SocketServer = require('./socket.js');
   var Template = require('./template.js');
 
@@ -15,7 +15,6 @@ module.exports = (function() {
 
   function Application() {
 
-    this._router = new Router(this);
     this._server = null;
     this._proxy = null;
 
@@ -27,6 +26,7 @@ module.exports = (function() {
 
     this._db = {};
 
+    this.router = null;
     this.socket = null;
 
   }
@@ -117,7 +117,10 @@ module.exports = (function() {
       return;
     }
 
-    this._server = http.createServer(this._router.execute.bind(this._router)).listen(port);
+    var router = require(process.cwd() + '/app/routes.js');
+
+    this._server = http.createServer(router.delegate.bind(router, this)).listen(port);
+    this.router = router;
 
     this._proxyWebSocketRequests();
 
@@ -125,10 +128,6 @@ module.exports = (function() {
 
     return true;
 
-  };
-
-  Application.prototype.route = function() {
-    this._router.route.apply(this._router, arguments);
   };
 
   Application.prototype.socketListen = function(port) {

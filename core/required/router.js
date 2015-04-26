@@ -1,4 +1,4 @@
-module.exports = function(Application) {
+module.exports = (function() {
 
   var url = require('url');
 
@@ -61,15 +61,14 @@ module.exports = function(Application) {
 
   };
 
-  Route.prototype.execute = function(request, response, urlParts, app, socket) {
+  Route.prototype.execute = function(request, response, urlParts, app) {
     var controller = new this._controller(request, response);
-    controller.get(controller, this.parseQueryParameters(urlParts.query), app, socket);
+    controller.get(controller, this.parseQueryParameters(urlParts.query), app);
     return true;
   };
 
-  function Router(app) {
+  function Router() {
     this._routes = [];
-    this._app = app;
   }
 
   Router.prototype.route = function(regex, Controller) {
@@ -86,11 +85,11 @@ module.exports = function(Application) {
     return null;
   };
 
-  Router.prototype.execute = function(request, response) {
+  Router.prototype.delegate = function(app, request, response) {
     var urlParts = url.parse(request.url, true);
     var route = this.find(urlParts.pathname);
     if (route) {
-      return route.execute(request, response, urlParts, this._app);
+      return route.execute(request, response, urlParts, app);
     }
     response.writeHead(404, {'Content-Type': 'text/plain'});
     response.end('404 Not Found');
@@ -99,4 +98,4 @@ module.exports = function(Application) {
 
   return Router;
 
-};
+})();

@@ -125,7 +125,6 @@ The following is an active development checklist (TODO):
 ### Misc.
 
 - Offload all SQL generation to DatabaseAdapter
-- Offload save model / query model logic to Database (from Application)
 - Keep track of indices in schema.json
 - Tests for all modules (!!!)
 
