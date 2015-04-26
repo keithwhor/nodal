@@ -6,4 +6,4 @@ var app = new Nodal.Application();
 app.addDatabase('main', Nodal.Config.db.main);
 
 /* Initialize App */
-app.listen(global.settings.PORT);
+app.listen(Nodal.Config.port);

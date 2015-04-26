@@ -2,7 +2,7 @@
 
 **v0.1.x is pre-release, and is intended for testing purposes only**
 
-Nodal is framework for quickly creating API servers in node.js.
+Nodal is framework for quickly creating an API server in node.js.
 
 It is intended to be used for cross-platform applications with various
 client-side implementations or loosely-coupled services where responses to
@@ -17,10 +17,10 @@ developer needs to get a new node.js project started with very little overhead.
 
 To install the latest version of Nodal, make sure you have node.js installed.
 
-You can then run (may need superuser privileges):
+You can then run:
 
 ```
-$ npm install nodal -g
+$ sudo npm install nodal -g
 ```
 
 And voila! You now have access to the Nodal command-line interface.

@@ -4,26 +4,36 @@ module.exports = (function() {
   var dot = require('dot');
 
   var config = {
-    env: process.env.NODE_ENV || 'development'
+    env: process.env.NODE_ENV || 'development',
+    port: process.env.PORT || 3000
   };
 
-  var credentials;
+  var credentials, secrets;
 
   var varname = dot.templateSettings.varname;
 
   dot.templateSettings.varname = 'env';
 
   try {
-    credentials = fs.readFileSync(process.cwd() + '/db/credentials.json');
-    credentials = dot.template(credentials)(process.env);
-    credentials = JSON.parse(credentials);
+    db = fs.readFileSync(process.cwd() + '/config/db.json');
+    db = dot.template(db)(process.env);
+    db = JSON.parse(db);
   } catch(e) {
-    credentials = {};
+    db = {};
+  }
+
+  try {
+    secrets = fs.readFileSync(process.cwd() + '/config/secrets.json');
+    secrets = dot.template(secrets)(process.env);
+    secrets = JSON.parse(secrets);
+  } catch(e) {
+    secrets = {};
   }
 
   dot.templateSettings.varname = varname;
 
-  config.db = credentials[config.env];
+  config.db = db[config.env];
+  config.secrets = secrets[config.env];
 
   return config;
 
