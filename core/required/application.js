@@ -4,7 +4,6 @@ module.exports = (function() {
   var Router = require('./router.js')(Application);
   var SocketServer = require('./socket.js');
   var Template = require('./template.js');
-  var Model = require('./model.js');
 
   var dot = require('dot');
   var fs = require('fs');
@@ -26,7 +25,8 @@ module.exports = (function() {
 
     this._static = {};
 
-    this.db = null;
+    this._db = {};
+
     this.socket = null;
 
   }
@@ -53,10 +53,25 @@ module.exports = (function() {
 
   };
 
-  Application.prototype.useDatabase = function() {
-    this.db = new Database();
-    this.db.connect(require(process.cwd() + '/db/credentials.js'));
+  Application.prototype.addDatabase = function(alias, connectionDetails) {
+
+    var db = new Database();
+    db.connect(connectionDetails);
+
+    if (this._db[alias]) {
+      throw new Error('Database aliased with "' + alias + '" already added to application.');
+    }
+
+    this._db[alias] = db;
+
     return true;
+
+  };
+
+  Application.prototype.db = function(alias) {
+
+    return this._db[alias] || null;
+
   };
 
   Application.prototype.template = function(name) {
@@ -138,48 +153,6 @@ module.exports = (function() {
       throw new Error('Application must socketListen before it can use commands');
     }
     this.socket.command.apply(this.socket, arguments);
-  };
-
-  Application.prototype.saveModel = function(model, callback) {
-
-    if (!(model instanceof Model)) {
-      throw new Error('Can only save valid models.');
-    }
-
-    if(typeof callback !== 'function') {
-      callback = function() {};
-    }
-
-    if (model.hasErrors()) {
-      setTimeout(callback.bind(model, model.getErrors(), model), 1);
-      return;
-    }
-
-    var columns = model.fieldList().filter(function(v) {
-      return !model.isFieldPrimaryKey(v);
-    }).filter(function(v) {
-      return model.get(v) !== null;
-    });
-
-    var db = this.db;
-
-    db.query(
-      db.adapter.generateInsertQuery(model.schema.table, columns),
-      columns.map(function(v) {
-        return db.adapter.sanitize(model.getFieldData(v).type, model.get(v));
-      }),
-      function(err, result) {
-
-        if (err) {
-          model.error('_query', err.message);
-        } else {
-          result.rows.length && model.load(result.rows[0]);
-        }
-
-        callback.call(model, model.hasErrors() ? model.getErrors() : null, model);
-
-    });
-
   };
 
   return Application;

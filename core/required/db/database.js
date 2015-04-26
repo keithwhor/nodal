@@ -9,6 +9,8 @@ module.exports = (function() {
 
   var PostgresAdapter = require('./adapters/postgres.js');
 
+  var Model = require('../model.js');
+
   function Database(cfg) {
 
     this.adapter = new PostgresAdapter();
@@ -198,6 +200,48 @@ module.exports = (function() {
       }
 
       transaction.commit();
+
+    });
+
+  };
+
+  Database.prototype.saveModel = function(model, callback) {
+
+    if (!(model instanceof Model)) {
+      throw new Error('Can only save valid models.');
+    }
+
+    if(typeof callback !== 'function') {
+      callback = function() {};
+    }
+
+    if (model.hasErrors()) {
+      setTimeout(callback.bind(model, model.getErrors(), model), 1);
+      return;
+    }
+
+    var columns = model.fieldList().filter(function(v) {
+      return !model.isFieldPrimaryKey(v);
+    }).filter(function(v) {
+      return model.get(v) !== null;
+    });
+
+    var db = this;
+
+    db.query(
+      db.adapter.generateInsertQuery(model.schema.table, columns),
+      columns.map(function(v) {
+        return db.adapter.sanitize(model.getFieldData(v).type, model.get(v));
+      }),
+      function(err, result) {
+
+        if (err) {
+          model.error('_query', err.message);
+        } else {
+          result.rows.length && model.load(result.rows[0]);
+        }
+
+        callback.call(model, model.hasErrors() ? model.getErrors() : null, model);
 
     });
 

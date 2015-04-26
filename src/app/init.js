@@ -3,7 +3,7 @@ var Nodal = require('nodal');
 var app = new Nodal.Application();
 
 /* bind data layer */
-app.useDatabase(Nodal.require('db/credentials.js'));
+app.addDatabase('main', Nodal.Credentials.main);
 
 /* Load routes */
 Nodal.require('app/routes.js')(app);
