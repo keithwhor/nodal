@@ -75,7 +75,7 @@ $ nodal g:model HasAnArray arr_of_ints:int:array arr_of_strings:string:array
 
 Now that you've created the model and migration file (from the last step),
 prepare your database. First set your local connection details in
-`db/credentials.js` (only PostgreSQL is currently supported), then run:
+`db/credentials.json` (only PostgreSQL is currently supported), then run:
 
 ```
 $ nodal db:create

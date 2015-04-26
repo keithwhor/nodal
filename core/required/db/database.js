@@ -10,6 +10,7 @@ module.exports = (function() {
   var PostgresAdapter = require('./adapters/postgres.js');
 
   var Model = require('../model.js');
+  var Config = require('../config.js');
 
   function Database(cfg) {
 
@@ -38,7 +39,7 @@ module.exports = (function() {
 
   Database.prototype.log = function(sql, params) {
 
-    if (global.settings.ENV !== 'development') {
+    if (Config.env !== 'development') {
       return;
     }
 

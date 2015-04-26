@@ -85,11 +85,11 @@ module.exports = (function() {
 
   };
 
-  Migration.prototype.alterColumn = function(table, column, fieldData) {
+  Migration.prototype.alterColumn = function(table, column, type, properties) {
 
-    this.schema.alterColumn(table, column, fieldData);
+    this.schema.alterColumn(table, column, type, properties);
 
-    return this.db.adapter.generateAlterTableQuery(table, column, fieldData);
+    return this.db.adapter.generateAlterTableQuery(table, column, type, properties);
 
   };
 

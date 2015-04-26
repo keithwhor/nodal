@@ -1,9 +1,10 @@
 var fs = require('fs');
 var pg = require('pg');
 var async = require('async');
+var Nodal = require('../../core/module.js');
 
-var Database = require('../../core/module.js').Database;
-var SchemaGenerator = require('../../core/module.js').SchemaGenerator;
+var Database = Nodal.Database;
+var SchemaGenerator = Nodal.SchemaGenerator;
 
 var colors = require('colors/safe');
 
@@ -12,7 +13,7 @@ var MIGRATION_PATH = './db/migrations';
 
 function composeQueryFunc(query) {
 
-  var dbCredentials = require(process.cwd() + '/db/credentials.js');
+  var dbCredentials = Nodal.Config.db.main;
 
   var cfg = dbCredentials;
   var conString = 'postgres://' + cfg.user + ':' + cfg.password + '@' + cfg.host + ':' + cfg.port + '/postgres';
@@ -68,7 +69,7 @@ module.exports = {
 
   drop: function() {
 
-    var dbCredentials = require(process.cwd() + '/db/credentials.js');
+    var dbCredentials = Nodal.Config.db.main;
 
     dropDatabase(
       dbCredentials.database,
@@ -83,7 +84,7 @@ module.exports = {
 
   create: function() {
 
-    var dbCredentials = require(process.cwd() + '/db/credentials.js');
+    var dbCredentials = Nodal.Config.db.main;
 
     createDatabase(
       dbCredentials.database,
@@ -99,7 +100,7 @@ module.exports = {
 
   prepare: function() {
 
-    var dbCredentials = require(process.cwd() + '/db/credentials.js');
+    var dbCredentials = Nodal.Config.db.main;
 
     var db = new Database();
     db.connect(dbCredentials);
@@ -123,7 +124,7 @@ module.exports = {
 
   migrate: function(args, flags) {
 
-    var dbCredentials = require(process.cwd() + '/db/credentials.js');
+    var dbCredentials = Nodal.Config.db.main;
 
     var db = new Database();
     db.connect(dbCredentials);
@@ -190,7 +191,7 @@ module.exports = {
 
   rollback: function(args, flags) {
 
-    var dbCredentials = require(process.cwd() + '/db/credentials.js');
+    var dbCredentials = Nodal.Config.db.main;
 
     var db = new Database();
     db.connect(dbCredentials);
