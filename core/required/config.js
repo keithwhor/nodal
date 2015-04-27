@@ -14,26 +14,31 @@ module.exports = (function() {
 
   dot.templateSettings.varname = 'env';
 
-  try {
-    db = fs.readFileSync(process.cwd() + '/config/db.json');
-    db = dot.template(db)(process.env);
-    db = JSON.parse(db);
-  } catch(e) {
-    db = {};
-  }
+  var dir = process.cwd() + '/config';
+  var configFiles = fs.readdirSync(dir);
 
-  try {
-    secrets = fs.readFileSync(process.cwd() + '/config/secrets.json');
-    secrets = dot.template(secrets)(process.env);
-    secrets = JSON.parse(secrets);
-  } catch(e) {
-    secrets = {};
-  }
+  var ext = '.json';
+
+  configFiles.filter(function(filename) {
+    var name = filename.substr(0, filename.length - ext.length);
+    return !config[name] && filename.substr(filename.length - ext.length) === ext;
+  }).forEach(function(filename) {
+
+    var configData;
+
+    try {
+      configData = fs.readFileSync([dir, filename].join('/'));
+      configData = dot.template(configData)(process.env);
+      configData = JSON.parse(configData);
+    } catch(e) {
+      configData = {};
+    }
+
+    config[filename.substr(0, filename.length - ext.length)] = configData[config.env];
+
+  });
 
   dot.templateSettings.varname = varname;
-
-  config.db = db[config.env];
-  config.secrets = secrets[config.env];
 
   return config;
 
