@@ -35,6 +35,9 @@
 
   }
 
+  var dbCommands = require('./db/commands.js');
+  var generateCommands = require('./generate/commands.js');
+
   var args = [];
   var flags = {};
 
