@@ -15,7 +15,6 @@ module.exports = (function() {
 
   function Application() {
 
-    this._server = null;
     this._proxy = null;
 
     this._templates = {
@@ -28,6 +27,28 @@ module.exports = (function() {
 
     this.router = null;
     this.socket = null;
+    this.server = null;
+
+    process.on('SIGINT', (function() {
+
+      console.log('Gracefully exiting...');
+      var closed = [];
+      var fnKill = function() {
+        closed.pop();
+        (closed.length === 0) && process.kill();
+      };
+
+      if (this.server) {
+        closed.push();
+        this.server.close(fnKill);
+      }
+
+      if (this.socket) {
+        closed.push();
+        this.socket.close(fnKill);
+      }
+
+    }).bind(this));
 
   }
 
@@ -96,11 +117,11 @@ module.exports = (function() {
 
   Application.prototype._proxyWebSocketRequests = function() {
 
-    if (this._server && this.socket && !this._proxy) {
+    if (this.server && this.socket && !this._proxy) {
 
       this._proxy = httpProxy.createProxyServer({ws: true});
 
-      this._server.on('upgrade', (function (req, socket, head) {
+      this.server.on('upgrade', (function (req, socket, head) {
         this._proxy.ws(req, socket, head, {target: 'ws://localhost:' + this.socket._port});
       }).bind(this));
 
@@ -112,14 +133,15 @@ module.exports = (function() {
 
   Application.prototype.listen = function(port) {
 
-    if (this._server) {
+    if (this.server) {
       console.error('HTTP server already listening');
       return;
     }
 
     var router = require(process.cwd() + '/app/routes.js');
+    var server = http.createServer(router.delegate.bind(router, this)).listen(port);
 
-    this._server = http.createServer(router.delegate.bind(router, this)).listen(port);
+    this.server = server;
     this.router = router;
 
     this._proxyWebSocketRequests();

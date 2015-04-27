@@ -11,9 +11,17 @@ module.exports = (function() {
     this._server.on('connection', (function(ws) {
       var client = this.connect(ws);
       ws.on('message', this.receive.bind(this, client));
-      ws.on('close', this.close.bind(this, client));
+      ws.on('close', this.closeClient.bind(this, client));
     }).bind(this));
+
   }
+
+  SocketServer.prototype.close = function(callback) {
+
+    this._server.on('close', callback.bind(this));
+    this._server.close();
+
+  };
 
   SocketServer.prototype.allocate = function(ws) {
     var availableIds = this._availableIds;
@@ -57,7 +65,7 @@ module.exports = (function() {
     }
   };
 
-  SocketServer.prototype.close = function(client) {
+  SocketServer.prototype.closeClient = function(client) {
     this.deallocate(client);
     console.log('Socket Client ' + client.id + ' disconnected');
     return true;

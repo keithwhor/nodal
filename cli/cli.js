@@ -52,11 +52,16 @@ var commands = {
   s: {
     _: function(args, flags) {
 
+      var Nodal = require('../core/module.js');
+      var watch = require('watch');
+
+      var restart = false;
+
       var spawn = require('child_process').spawn;
       var child = spawn('npm',  ['start'], {stdio: [process.stdin, process.stdout, process.stderr]});
 
       process.on('exit', function() {
-        child.kill();
+        child && child.kill('SIGINT');
       });
 
     }
