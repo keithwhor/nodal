@@ -23,9 +23,21 @@ module.exports = (function() {
   }
 
   Database.prototype.connect = function(cfg) {
-    this._connection = anyDB.createConnection(
-      this.adapter.generateConnectionString(cfg.host, cfg.port, cfg.database, cfg.user, cfg.password)
-    );
+
+    var connection;
+
+    if (cfg.connectionString) {
+      connection = anyDB.createConnection(cfg.connectionString);
+    } else {
+      connection = anyDB.createConnection(
+        this.adapter.generateConnectionString(cfg.host, cfg.port, cfg.database, cfg.user, cfg.password)
+      );
+    }
+
+    this._connection = connection;
+
+    return true;
+
   };
 
   Database.prototype.__logColorFuncs = [
