@@ -6,25 +6,11 @@ module.exports = (function() {
   }
 
   Template.prototype.render = function(data) {
-    return this._fn(new TemplateData(this._app, data));
+    return this._fn.call(this, data);
   };
 
-  /* */
-
-  function TemplateData(app, data) {
-    this._app = app;
-    this._data = data;
-  }
-
-  TemplateData.prototype.get = function(key, value) {
-    if(this._data.hasOwnProperty(key)) {
-      return this._data[key];
-    }
-    return value;
-  };
-
-  TemplateData.prototype.partial = function(name) {
-    return this._app.template(name).render(this._data);
+  Template.prototype.partial = function(name, data) {
+    return this._app.template(name).render(data);
   };
 
   return Template;

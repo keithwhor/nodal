@@ -63,7 +63,14 @@ module.exports = (function() {
 
   Route.prototype.execute = function(request, response, urlParts, app) {
     var controller = new this._controller(request, response);
-    controller.get(controller, this.parseQueryParameters(urlParts.query), app);
+    controller.get(
+      controller,
+      {
+        path: [].slice.call(urlParts.pathname.match(this._regex), 1),
+        query: this.parseQueryParameters(urlParts.query)
+      },
+      app
+    );
     return true;
   };
 

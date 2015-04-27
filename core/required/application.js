@@ -11,7 +11,8 @@ module.exports = (function() {
   var httpProxy = require('http-proxy');
   var mime = require('mime-types');
 
-  dot.templateSettings.varname = 'template';
+  // For templates
+  dot.templateSettings.varname = 'data';
 
   function Application() {
 
