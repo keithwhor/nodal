@@ -10,7 +10,7 @@ module.exports = (function() {
   IndexController.prototype = Object.create(Controller.prototype);
   IndexController.prototype.constructor = IndexController;
 
-  IndexController.prototype.get = function(self, params, app, socket) {
+  IndexController.prototype.get = function(self, params, app) {
 
     self.render(app.template('index'), params);
 

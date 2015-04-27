@@ -10,7 +10,7 @@ module.exports = (function() {
   Error404Controller.prototype = Object.create(Controller.prototype);
   Error404Controller.prototype.constructor = Error404Controller;
 
-  Error404Controller.prototype.get = function(self, params, app, socket) {
+  Error404Controller.prototype.get = function(self, params, app) {
 
     self.status(404);
     self.render(app.template('error/404'), params);

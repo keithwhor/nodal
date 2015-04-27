@@ -11,8 +11,6 @@ function testDatabase(adapter) {
 
   /* Test Migrations */
 
-  var Migration = Nodal.Migration(db, {});
-
-  var testMigration = new Migration();
+  var testMigration = new Nodal.Migration();
 
 }

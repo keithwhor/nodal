@@ -11,7 +11,7 @@ module.exports = (function() {
   StaticController.prototype = Object.create(Controller.prototype);
   StaticController.prototype.constructor = StaticController;
 
-  StaticController.prototype.get = function(self, params, app, socket) {
+  StaticController.prototype.get = function(self, params, app) {
 
     var staticData = app.static(this.path().substr('/static/'.length));
 
