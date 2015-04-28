@@ -90,7 +90,8 @@
         console.log('Please specify an action');
       },
       model: generateCommands.model,
-      migration: generateCommands.migration
+      migration: generateCommands.migration,
+      controller: generateCommands.controller
     }
   };
 

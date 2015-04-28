@@ -3,6 +3,9 @@ module.exports = (function() {
   var fs = require('fs');
   var inflect = require('i')();
   var colors = require('colors/safe');
+  var dot = require('dot');
+
+  //dot.templateSettings.strip = false;
 
   var migrationDir = './db/migrations';
 
@@ -17,55 +20,21 @@ module.exports = (function() {
     up =  up || [];
     down = down || [];
 
-    var fnAddPadding = function(v) { return '        ' + v; };
-
-    up = up.map(fnAddPadding);
-    down = down.map(fnAddPadding);
-
     return function(migrationName, id) {
 
-      return [
-        'module.exports = (function() {',
-        '',
-        '  var Nodal = require(\'nodal\');',
-        '  var Migration = Nodal.Migration;',
-        '',
-        '  function ' + migrationName + '(db) {',
-        '',
-        '    Migration.apply(this, arguments);',
-        '',
-        '    this.id = ' + (parseInt(id) || 0) + ';',
-        '',
-        '  }',
-        '',
-        '  ' + migrationName + '.prototype = Object.create(Migration.prototype);',
-        '  ' + migrationName + '.prototype.constructor = ' + migrationName + ';',
-        '',
-        '  ' + migrationName + '.prototype.up = function() {',
-        '',
-        '    return [',
-        '',
-        hasInstructions ? up.join('\n') : '',
-        '',
-        '    ];',
-        '',
-        '  };',
-        '',
-        '  ' + migrationName + '.prototype.down = function() {',
-        '',
-        '    return [',
-        '',
-        hasInstructions ? down.join('\n') : '',
-        '',
-        '    ];',
-        '',
-        '  };',
-        '',
-        '  return ' + migrationName + ';',
-        '',
-        '})();',
-        ''
-      ].join('\n');
+      var migration = {
+          up: up,
+          down: down,
+          name: migrationName,
+          id: parseInt(id) || 0
+      };
+
+      return dot.template(
+        fs.readFileSync(__dirname + '/templates/migration.jst', {
+          varname: 'data',
+          strip: false
+        }).toString()
+      )(migration);
 
     };
 

@@ -8,32 +8,24 @@ module.exports = (function() {
 
   var generateMigration = require('./migration.js').generate;
 
+  var dot = require('dot');
+
+  dot.templateSettings.strip = false;
+
   var modelDir = './app/models';
 
   function generateModelDefinition(modelName) {
 
-    return [
-      'module.exports = (function() {',
-      '',
-      '  var Nodal = require(\'nodal\');',
-      '',
-      '  var Model = Nodal.Model;',
-      '  var Schema = Nodal.Schema;',
-      '',
-      '  function ' + modelName + '() {',
-      '    Model.apply(this, arguments);',
-      '  }',
-      '',
-      '  ' + modelName + '.prototype = Object.create(Model.prototype);',
-      '  ' + modelName + '.prototype.constructor = ' + modelName + ';',
-      '',
-      '  ' + modelName + '.prototype.schema = Schema.' + modelName + ';',
-      '',
-      '  return ' + modelName + ';',
-      '',
-      '})();',
-      ''
-    ].join('\n');
+    var model = {
+      name: modelName
+    };
+
+    return dot.template(
+      fs.readFileSync(__dirname + '/templates/model.jst', {
+        varname: 'data',
+        strip: false
+      }).toString()
+    )(model);
 
   }
 

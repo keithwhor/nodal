@@ -1,6 +1,7 @@
 module.exports = (function() {
 
   var url = require('url');
+  var zlib = require('zlib');
 
   var Template = require('./template.js');
 
@@ -66,12 +67,69 @@ module.exports = (function() {
       data = data + '';
     }
 
+    this.compress(data, this.end.bind(this));
+
+    return true;
+
+  };
+
+  Controller.prototype.compress = function(data, callback) {
+
+    var acceptEncoding = this._request.headers['accept-encoding'] || '';
+    var canCompress = !!{
+      'text/plain': 1,
+      'text/html': 1,
+      'text/xml': 1,
+      'text/json': 1,
+      'text/javascript': 1,
+      'application/json': 1,
+      'application/xml': 1,
+      'application/javascript': 1,
+      'application/octet-stream': 1
+    }[this.getHeader('Content-Type')];
+
+    if (canCompress) {
+
+      if (acceptEncoding.match(/\bdeflate\b/)) {
+
+        zlib.deflate(data, (function(err, result) {
+          if (!err) {
+            this.setHeader('Content-Encoding', 'deflate');
+            callback(result);
+            return;
+          }
+          callback(data);
+        }).bind(this));
+        return true;
+
+      } else if (acceptEncoding.match(/\bgzip\b/)) {
+
+        zlib.gzip(result, (function(err, result) {
+          if (!err) {
+            this.setHeader('Content-Encoding', 'gzip');
+            callback(result);
+            return;
+          }
+          callback(data);
+        }).bind(this));
+
+        return true;
+
+      }
+
+    }
+
+    callback(data);
+    return false;
+
+  };
+
+  Controller.prototype.end = function(data) {
+
     this._response.writeHead(this._status, this._headers);
     this._response.end(data);
 
     console.log(this._request.url + ' loaded in: ' + ((new Date()).valueOf() - this._initializeTime) + 'ms');
-
-    return true;
 
   };
 

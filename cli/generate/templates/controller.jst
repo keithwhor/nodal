@@ -1,0 +1,21 @@
+module.exports = (function() {
+
+  var Nodal = require('nodal');
+  var Controller = Nodal.Controller;
+
+  function {{= data.name }}Controller() {
+    Controller.apply(this, arguments);
+  }
+
+  {{= data.name }}Controller.prototype = Object.create(Controller.prototype);
+  {{= data.name }}Controller.prototype.constructor = {{= data.name }}Controller;
+
+  {{= data.name }}Controller.prototype.get = function(self, params, app) {
+
+    self.render();
+
+  };
+
+  return {{= data.name }}Controller;
+
+})();

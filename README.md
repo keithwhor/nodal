@@ -124,11 +124,10 @@ The following is an active development checklist (TODO):
 
 ### Misc.
 
-- Offload all SQL generation to DatabaseAdapter
+- Offload all SQL generation to DatabaseAdapter (in CLI)
 - Keep track of indices in schema.json
-- Tests for all modules (!!!)
-- CLI controller generation
 - Task scheduler
+- Tests for all modules (!!!)
 
 ## About
 
