@@ -4,6 +4,7 @@ module.exports = (function() {
   var Router = require('./router.js');
   var SocketServer = require('./socket.js');
   var Template = require('./template.js');
+  var Auth = require('./auth.js');
 
   var dot = require('dot');
   var fs = require('fs');
@@ -30,6 +31,7 @@ module.exports = (function() {
     this.router = null;
     this.socket = null;
     this.server = null;
+    this.auth = null;
 
     // process.on('SIGINT', (function() {
     //
@@ -73,6 +75,12 @@ module.exports = (function() {
     }
 
     return null;
+
+  };
+
+  Application.prototype.enableAuth = function() {
+
+    this.auth = new Auth();
 
   };
 

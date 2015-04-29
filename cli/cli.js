@@ -62,7 +62,6 @@
       _: function(args, flags) {
 
         var Nodal = require('../core/module.js');
-        var watch = require('watch');
 
         var restart = false;
 

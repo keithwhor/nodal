@@ -10,8 +10,16 @@ module.exports = (function() {
 
   }
 
-  Model.prototype.initialize = function() {
+  Model.prototype.validates = function(field, message, fnAction) {
 
+    this._validations =  this._validations || {};
+
+    this._validations[field] = this._validations[field] || [];
+    this._validations[field].push({message: message, action: fnAction});
+
+  };
+
+  Model.prototype.initialize = function() {
 
     this._table = this.schema.table;
     this._fieldArray = this.schema.columns.slice();
@@ -33,7 +41,9 @@ module.exports = (function() {
     this._data = data;
     this._errors = {};
 
-    this.validate();
+    this._validations = this._validations || {};
+
+    this._validate();
 
     return true;
 
@@ -54,15 +64,30 @@ module.exports = (function() {
     return obj;
   };
 
-  Model.prototype.validate = function(fieldList) {
+  Model.prototype._validate = function(fieldList) {
 
-    return (fieldList || this.fieldList()).filter(function(field) {
+    var data = this._data;
 
-      // does nothing right now
+    this.clearError('*');
+
+    return (fieldList || this.fieldList()).filter((function(field) {
+
       this.clearError(field);
-      return false;
+      var value = data[field];
 
-    }.bind(this)).length > 0;
+      return (this._validations[field] || []).filter((function(validation) {
+
+        var isValid = validation.action.call(null, value);
+        return !(isValid || !this.setError(field, validation.message));
+
+      }).bind(this)).length > 0;
+
+    }).bind(this)).concat((this._validations['*'] || []).filter((function(validation) {
+
+      var isValid = validation.action.call(null, data);
+      return !(isValid || !this.setError('*', validation.message));
+
+    }).bind(this))).length > 0;
 
   };
 
@@ -105,15 +130,14 @@ module.exports = (function() {
       }
     }
 
-    this.validate([field]);
+    this._validate([field]);
 
     return value;
 
   };
 
   Model.prototype.get = function(key) {
-    var value = this._data[key];
-    return value === undefined ? null : value;
+    return this._data[key];
   };
 
   Model.prototype.toObject = function() {
@@ -164,8 +188,9 @@ module.exports = (function() {
     return this._fieldArray.slice();
   };
 
-  Model.prototype.error = function(key, message) {
-    this._errors[key] = message;
+  Model.prototype.setError = function(key, message) {
+    this._errors[key] = this._errors[key] || [];
+    this._errors[key].push(message);
     return true;
   };
 
