@@ -12,7 +12,7 @@ module.exports = (function() {
     this._response = response;
     this._path = url.parse(this._request.url, true).pathname;
     this._status = 200;
-    this._headers = {'Content-Type': 'text/html'};
+    this._headers = {};
 
   }
 
@@ -31,7 +31,7 @@ module.exports = (function() {
 
   Controller.prototype.headers = function(object) {
     var keys = Object.keys(object);
-    var headers = {'Content-Type': 'text/html'};
+    var headers = {};
     for(var i = 0, len = keys.length; i < len; i++) {
       headers[keys[i]] = object[keys[i]];
     }
@@ -53,17 +53,18 @@ module.exports = (function() {
     if(!data) { data = ''; }
 
     if(data instanceof Buffer) {
-      // do nothing
+      this.getHeader('Content-Type') || this.setHeader('Content-Type', 'text/html');
     } else if(data instanceof Template) {
-      this.setHeader('Content-Type', 'text/html');
+      this.getHeader('Content-Type') || this.setHeader('Content-Type', 'text/html');
       data = data.render(templateData);
     } else if(typeof data === 'function') {
-      this.setHeader('Content-Type', 'text/html');
+      this.getHeader('Content-Type') || this.setHeader('Content-Type', 'text/html');
       data = data(templateData);
     } else if(typeof data === 'object') {
-      this.setHeader('Content-Type', 'application/json');
+      this.getHeader('Content-Type') || this.setHeader('Content-Type', 'application/json');
       data = JSON.stringify(data);
     } else {
+      this.getHeader('Content-Type') || this.setHeader('Content-Type', 'text/html');
       data = data + '';
     }
 
