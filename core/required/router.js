@@ -66,7 +66,7 @@ module.exports = (function() {
     controller.get(
       controller,
       {
-        path: [].slice.call(urlParts.pathname.match(this._regex), 1),
+        path: [].slice.call(urlParts.pathname.match(this._regex), 0),
         query: this.parseQueryParameters(urlParts.query)
       },
       app

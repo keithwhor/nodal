@@ -13,6 +13,7 @@ module.exports = (function() {
 
   // For templates
   dot.templateSettings.varname = 'data';
+  dot.templateSettings.strip = false;
 
   function Application() {
 
