@@ -31,26 +31,26 @@ module.exports = (function() {
     this.socket = null;
     this.server = null;
 
-    process.on('SIGINT', (function() {
-
-      console.log('Gracefully exiting...');
-      var closed = [];
-      var fnKill = function() {
-        closed.pop();
-        (closed.length === 0) && process.kill();
-      };
-
-      if (this.server) {
-        closed.push();
-        this.server.close(fnKill);
-      }
-
-      if (this.socket) {
-        closed.push();
-        this.socket.close(fnKill);
-      }
-
-    }).bind(this));
+    // process.on('SIGINT', (function() {
+    //
+    //   console.log('Gracefully exiting...');
+    //   var closed = [];
+    //   var fnKill = function() {
+    //     closed.pop();
+    //     (closed.length === 0) && process.kill();
+    //   };
+    //
+    //   if (this.server) {
+    //     closed.push();
+    //     this.server.close(fnKill);
+    //   }
+    //
+    //   if (this.socket) {
+    //     closed.push();
+    //     this.socket.close(fnKill);
+    //   }
+    //
+    // }).bind(this));
 
   }
 

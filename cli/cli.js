@@ -70,7 +70,7 @@
         var child = spawn('npm',  ['start'], {stdio: [process.stdin, process.stdout, process.stderr]});
 
         process.on('exit', function() {
-          child && child.kill('SIGINT');
+          child && child.kill();
         });
 
       }
