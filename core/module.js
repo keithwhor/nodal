@@ -3,6 +3,7 @@ module.exports = {
   Config: require('./required/config.js'),
   Controller: require('./required/controller.js'),
   Database: require('./required/db/database.js'),
+  Middleware: require('./required/middleware.js'),
   Migration: require('./required/db/migration.js'),
   Model: require('./required/model.js'),
   Router: require('./required/router.js'),

@@ -62,7 +62,7 @@ module.exports = (function() {
   };
 
   Route.prototype.execute = function(request, response, urlParts, app) {
-    var controller = new this._controller(request, response);
+    var controller = new this._controller(request, response, app.middleware);
     controller.get(
       controller,
       {

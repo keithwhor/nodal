@@ -1,12 +1,12 @@
 module.exports = (function() {
 
   var url = require('url');
-  var zlib = require('zlib');
 
   var Template = require('./template.js');
 
-  function Controller(request, response) {
+  function Controller(request, response, middlewareManager) {
 
+    this._middlewareManager = middlewareManager;
     this._initializeTime = (new Date()).valueOf();
     this._request = request;
     this._response = response;
@@ -29,7 +29,7 @@ module.exports = (function() {
     return this._status;
   };
 
-  Controller.prototype.headers = function(object) {
+  Controller.prototype.setHeaders = function(object) {
     var keys = Object.keys(object);
     var headers = {};
     for(var i = 0, len = keys.length; i < len; i++) {
@@ -68,60 +68,17 @@ module.exports = (function() {
       data = data + '';
     }
 
-    this.compress(data, this.end.bind(this));
+    this._middlewareManager.exec(this, data, (function(err, data) {
+      if (err) {
+        this.setHeader('Content-Type', 'text/plain');
+        this.status(500);
+        this.end('Middleware error');
+        return;
+      }
+      this.end(data);
+    }).bind(this));
 
     return true;
-
-  };
-
-  Controller.prototype.compress = function(data, callback) {
-
-    var acceptEncoding = this._request.headers['accept-encoding'] || '';
-    var canCompress = !!{
-      'text/plain': 1,
-      'text/html': 1,
-      'text/xml': 1,
-      'text/json': 1,
-      'text/javascript': 1,
-      'application/json': 1,
-      'application/xml': 1,
-      'application/javascript': 1,
-      'application/octet-stream': 1
-    }[this.getHeader('Content-Type')];
-
-    if (canCompress) {
-
-      if (acceptEncoding.match(/\bdeflate\b/)) {
-
-        zlib.deflate(data, (function(err, result) {
-          if (!err) {
-            this.setHeader('Content-Encoding', 'deflate');
-            callback(result);
-            return;
-          }
-          callback(data);
-        }).bind(this));
-        return true;
-
-      } else if (acceptEncoding.match(/\bgzip\b/)) {
-
-        zlib.gzip(result, (function(err, result) {
-          if (!err) {
-            this.setHeader('Content-Encoding', 'gzip');
-            callback(result);
-            return;
-          }
-          callback(data);
-        }).bind(this));
-
-        return true;
-
-      }
-
-    }
-
-    callback(data);
-    return false;
 
   };
 

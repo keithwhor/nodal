@@ -5,6 +5,7 @@ module.exports = (function() {
   var SocketServer = require('./socket.js');
   var Template = require('./template.js');
   var Auth = require('./auth.js');
+  var MiddlewareManager = require('./middleware_manager.js');
 
   var dot = require('dot');
   var fs = require('fs');
@@ -32,6 +33,8 @@ module.exports = (function() {
     this.socket = null;
     this.server = null;
     this.auth = null;
+
+    this.middleware = new MiddlewareManager();
 
     // process.on('SIGINT', (function() {
     //
