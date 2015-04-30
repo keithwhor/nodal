@@ -3,6 +3,7 @@ module.exports = (function() {
   var url = require('url');
 
   var Template = require('./template.js');
+  var Config = require('./config.js');
 
   function Controller(request, response, middlewareManager) {
 
@@ -68,11 +69,11 @@ module.exports = (function() {
       data = data + '';
     }
 
-    this._middlewareManager.exec(this, data, (function(err, data) {
-      if (err) {
+    this._middlewareManager.exec(this, data, (function(e, data) {
+      if (e) {
         this.setHeader('Content-Type', 'text/plain');
         this.status(500);
-        this.end('Middleware error');
+        this.end((Config.env !== 'production') ? (e.message || 'Unresolved error') : '500 - Internal Server Error');
         return;
       }
       this.end(data);
