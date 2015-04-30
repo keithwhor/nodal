@@ -6,6 +6,7 @@ module.exports = (function() {
   var Template = require('./template.js');
   var Auth = require('./auth.js');
   var MiddlewareManager = require('./middleware_manager.js');
+  var InitializerManager = require('./initializer_manager.js');
 
   var dot = require('dot');
   var fs = require('fs');
@@ -35,6 +36,7 @@ module.exports = (function() {
     this.auth = null;
 
     this.middleware = new MiddlewareManager();
+    this.initializers = new InitializerManager();
 
     // process.on('SIGINT', (function() {
     //
@@ -58,6 +60,12 @@ module.exports = (function() {
     // }).bind(this));
 
   }
+
+  Application.prototype.initialize = function(callback) {
+
+    this.initializers.exec(callback.bind(this));
+
+  };
 
   Application.prototype.static = function(name) {
 
