@@ -1,6 +1,7 @@
 module.exports = (function() {
 
   var url = require('url');
+  var qs = require('querystring');
 
   var Controller = require('./controller.js');
 
@@ -61,17 +62,60 @@ module.exports = (function() {
 
   };
 
+  Route.prototype.parseBody = function(contentType, body) {
+
+    var fn = {
+      'application/x-www-form-urlencoded': (function(body) {
+        return {raw: body, data: this.parseQueryParameters(qs.parse(body))};
+      }).bind(this),
+      'application/json': function(body) {
+        try {
+          return {raw: body, data: JSON.parse(body)};
+        } catch(e) {
+          return {raw: body, data: {}};
+        }
+      }
+    }[contentType];
+
+    return fn ? fn.call(this, body) : {raw: body, data: {}};
+
+  };
+
   Route.prototype.execute = function(request, response, urlParts, app) {
+
     var controller = new this._controller(request, response, app.middleware);
-    controller.get(
-      controller,
-      {
-        path: [].slice.call(urlParts.pathname.match(this._regex), 0),
-        query: this.parseQueryParameters(urlParts.query)
-      },
-      app
-    );
+
+    var body = '';
+    var query = this.parseQueryParameters(urlParts.query);
+    var path = [].slice.call(urlParts.pathname.match(this._regex), 0);
+
+    if (request.method === 'POST' || request.method === 'PUT') {
+
+      request.on('data', function(data) {
+        body += data;
+        if (body.length > 1e6) {
+          request.connection.destroy();
+        }
+      });
+
+    }
+
+    request.on('end', (function() {
+
+      controller[request.method.toLowerCase()](
+        controller,
+        {
+          path: path,
+          query: query,
+          body: this.parseBody(request.headers['content-type'], body)
+        },
+        app
+      );
+
+    }).bind(this));
+
     return true;
+
   };
 
   function Router() {

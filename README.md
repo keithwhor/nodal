@@ -33,7 +33,7 @@ Additionally, a built-in CLI that supports:
 - Database drop, create, prepare, migrate, rollback
 - Running your Nodal server
 
-Nodal comes configured to deploy to to Heroku easily (using git) for rapid
+Nodal comes configured to deploy to Heroku easily (using git) for rapid
 prototyping.
 
 ## Installation
