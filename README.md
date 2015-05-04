@@ -1,8 +1,9 @@
-# Nodal: An API Framework for node.js
+# Nodal: An API Server and Framework for node.js
 
 **v0.1.x is pre-release, and is intended for testing purposes only**
 
-Nodal is framework for quickly creating an API server in node.js.
+Nodal is an API Server and Framework for quickly generating RESTful API
+services in node.js.
 
 It is intended to be used for cross-platform applications with various
 client-side implementations or loosely-coupled services where responses to
@@ -12,6 +13,28 @@ support for HTML and static resources, they are not a priority.)
 With a built-in command-line interface, models, controllers, templates,
 migrations and application architecture, Nodal provides all of the tools a
 developer needs to get a new node.js project started with very little overhead.
+
+## Features
+
+- Models
+- Controllers
+- Templates
+- Migrations
+- Routing
+- Multiple database connections
+- Multiple environment configurations
+- Middleware (gzip/deflate middleware pre-packaged)
+- Initializers
+
+Additionally, a built-in CLI that supports:
+
+- Starting a new project
+- Easy generation of models, controllers, migrations, middleware, initializers
+- Database drop, create, prepare, migrate, rollback
+- Running your Nodal server
+
+Nodal comes configured to deploy to to Heroku easily (using git) for rapid
+prototyping.
 
 ## Installation
 

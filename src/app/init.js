@@ -20,8 +20,8 @@ app.auth.setKey(Nodal.Config.secrets.auth.key);
 app.auth.setTTL(Nodal.Config.secrets.auth.ttl);
 
 /* Initialize App */
-app.initialize(function(err) {
+app.initialize(function() {
 
-  app.listen(Nodal.Config.port);
+  app.listen(Nodal.Config.secrets.port);
 
 });

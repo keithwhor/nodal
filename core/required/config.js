@@ -5,7 +5,6 @@ module.exports = (function() {
 
   var config = {
     env: process.env.NODE_ENV || 'development',
-    port: process.env.PORT || 3000
   };
 
   var credentials, secrets;

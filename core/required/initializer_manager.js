@@ -32,7 +32,15 @@ module.exports = (function() {
       })
     );
 
-    async.waterfall(mwa, fnComplete);
+    async.waterfall(mwa, function(err) {
+
+      if (err) {
+        throw err;
+      }
+
+      fnComplete();
+
+    });
 
   };
 
