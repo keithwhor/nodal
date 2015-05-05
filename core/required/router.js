@@ -88,21 +88,23 @@ module.exports = (function() {
     var body = '';
     var query = this.parseQueryParameters(urlParts.query);
     var path = [].slice.call(urlParts.pathname.match(this._regex), 0);
+    var method = {
+      'GET': 'get',
+      'PUT': 'put',
+      'POST': 'post',
+      'DELETE': 'delete'
+    }[request.method] || 'get';
 
-    if (request.method === 'POST' || request.method === 'PUT') {
-
-      request.on('data', function(data) {
-        body += data;
-        if (body.length > 1e6) {
-          request.connection.destroy();
-        }
-      });
-
-    }
+    request.on('data', function(data) {
+      body += data;
+      if (body.length > 1e6) {
+        request.connection.destroy();
+      }
+    });
 
     request.on('end', (function() {
 
-      controller[request.method.toLowerCase()](
+      controller[method](
         controller,
         {
           path: path,

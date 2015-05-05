@@ -29,6 +29,15 @@ module.exports = (function() {
 
   }
 
+  function generateUserDefinition() {
+    return dot.template(
+      fs.readFileSync(__dirname + '/templates/models/user.jst', {
+        varname: 'data',
+        strip: false
+      }).toString()
+    )();
+  };
+
   function convertArgListToPropertyList(argList) {
     return argList.slice(1).map(function(v) {
       var obj = {name: inflect.underscore(v[0]), type: v[1]};
@@ -51,6 +60,10 @@ module.exports = (function() {
   return {
     command: function(args, flags) {
 
+      if (flags.hasOwnProperty('user')) {
+        args = [['User'], ['email', 'string'], ['password', 'string']];
+      }
+
       if (!args.length) {
         console.error(colors.red.bold('Error: ') + 'No model name specified.');
         return;
@@ -68,13 +81,18 @@ module.exports = (function() {
         throw new Error('Model already exists');
       }
 
-      fs.writeFileSync(createPath, generateModelDefinition(modelName));
+      if (flags.hasOwnProperty('user')) {
+        fs.writeFileSync(createPath, generateUserDefinition());
+      } else {
+        fs.writeFileSync(createPath, generateModelDefinition(modelName));
+      }
 
       console.log(colors.green.bold('Create: ') + createPath);
 
       generateMigration('Create' + modelName,
         ['this.createTable(\"' + schemaObject.table + '\", ' + JSON.stringify(schemaObject.fields) + ')'],
-        ['this.dropTable(\"' + schemaObject.table + '\")']
+        ['this.dropTable(\"' + schemaObject.table + '\")'],
+        flags.hasOwnProperty('user') ? 10000000000000 : null
       );
 
       process.exit(0);

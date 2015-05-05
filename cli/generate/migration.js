@@ -62,9 +62,9 @@ module.exports = (function() {
 
   }
 
-  function generateMigration(migrationName, up, down) {
+  function generateMigration(migrationName, up, down, id) {
 
-    var id = generateId(new Date());
+    var id = id || generateId(new Date());
     var migrationFileName = id + '__' + inflect.underscore(migrationName) + '.js';
 
     !fs.existsSync(migrationDir) && fs.mkdirSync(migrationDir);

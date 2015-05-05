@@ -1,0 +1,41 @@
+module.exports = (function() {
+
+  var Nodal = require('nodal');
+  var bcrypt = require('bcrypt');
+
+  var Model = Nodal.Model;
+  var Schema = Nodal.Schema;
+
+  function User() {
+    Model.apply(this, arguments);
+  }
+
+  User.prototype = Object.create(Model.prototype);
+  User.prototype.constructor = User;
+
+  User.prototype.schema = Schema.User;
+
+  User.prototype.setPassword = function(unencrypted, callback) {
+
+    var user = this;
+
+    bcrypt.hash(unencrypted, 10, function(err, hash) {
+      !err && user.set('password', hash);
+      callback.call(user, err, hash);
+    });
+
+  };
+
+  User.prototype.verifyPassword = function(unencrypted, callback) {
+
+    var user = this;
+
+    bcrypt.compare(unencrypted, user.get('password'), function(err, result) {
+      callback.call(user, err, result);
+    });
+
+  };
+
+  return User;
+
+})();
