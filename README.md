@@ -141,7 +141,6 @@ The following is an active development checklist (TODO):
 
 ### Models
 
-- Model permanence state management (is it in the DB as far as we know?)
 - Model querying
 - Model relationships (belongs_to, has_many)
 

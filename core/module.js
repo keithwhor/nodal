@@ -1,4 +1,5 @@
 module.exports = {
+  API: require('./required/api.js'),
   Application: require('./required/application.js'),
   Config: require('./required/config.js'),
   Controller: require('./required/controller.js'),
@@ -12,5 +13,10 @@ module.exports = {
   SchemaGenerator: require('./required/db/schema_generator.js'),
   require: function(filename) {
     return require(process.cwd() + '/' + filename);
+  },
+  include: {
+    bcrypt: require('bcrypt'),
+    mime: require('mime-types'),
+    inflect: require('i')()
   }
 };

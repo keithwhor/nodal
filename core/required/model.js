@@ -1,25 +1,32 @@
 module.exports = (function() {
 
   var DataTypes = require('./data_types.js');
+  var Database = require('./db/database.js');
 
-  function Model(modelData) {
+  function Model(modelData, fromStorage) {
 
-    this.initialize();
+    this.initialize(fromStorage);
 
-    modelData && this.load(modelData);
+    modelData && this.load(modelData, fromStorage);
 
   }
 
   Model.prototype.validates = function(field, message, fnAction) {
 
-    this._validations =  this._validations || {};
+    this._validations = this._validations || {};
 
     this._validations[field] = this._validations[field] || [];
     this._validations[field].push({message: message, action: fnAction});
 
   };
 
-  Model.prototype.initialize = function() {
+  Model.prototype.inStorage = function() {
+    return this._inStorage;
+  };
+
+  Model.prototype.initialize = function(fromStorage) {
+
+    this._inStorage = fromStorage;
 
     this._table = this.schema.table;
     this._fieldArray = this.schema.columns.slice();
@@ -33,12 +40,15 @@ module.exports = (function() {
     this._fieldLookup = fieldLookup;
 
     var data = {};
+    var changed = {};
 
     this.fieldList().forEach(function(v) {
       data[v] = null;
+      changed[v] = false;
     });
 
     this._data = data;
+    this._changed = changed;
     this._errors = {};
 
     this._validations = this._validations || {};
@@ -47,6 +57,21 @@ module.exports = (function() {
 
     return true;
 
+  };
+
+  Model.prototype.hasChanged = function(field) {
+    return field === undefined ? this.changedFields().length > 0 : !!this._changed[field];
+  };
+
+  Model.prototype.changedFields = function() {
+    var changed = this._changed;
+    return Object.keys(changed).filter(function(v) {
+      return changed[v];
+    });
+  };
+
+  Model.prototype.errorObject = function() {
+    return this.hasErrors() ? this.getErrors() : null;
   };
 
   Model.prototype.hasErrors = function() {
@@ -91,23 +116,27 @@ module.exports = (function() {
 
   };
 
-  Model.prototype.load = function(data) {
+  Model.prototype.load = function(data, fromStorage) {
 
     var self = this;
 
-    self.set('created_at', new Date());
+    !fromStorage && self.set('created_at', new Date());
 
     self.fieldList().filter(function(key) {
       return data.hasOwnProperty(key);
     }).forEach(function(key) {
-      self.set(key, data[key]);
+      // do not validate or log changes when loading from storage
+      self.set(key, data[key], !fromStorage, !fromStorage);
     });
 
     return this;
 
   };
 
-  Model.prototype.set = function(field, value) {
+  Model.prototype.set = function(field, value, validate, logChange) {
+
+    validate = (validate === undefined) ? true : !!validate;
+    logChange = (logChange === undefined) ? true : !!logChange;
 
     if (!this.hasField(field)) {
 
@@ -116,21 +145,36 @@ module.exports = (function() {
     }
 
     var dataType = this.getDataTypeOf(field);
+    var newValue = null;
 
     value = (value !== undefined) ? value : null;
 
-    if (value === null) {
-      this._data[field] = null;
-    } else {
+    if (value !== null) {
       if (this.isFieldArray(field)) {
-        value = value instanceof Array ? value : [value];
-        this._data[field] = value.map(function(v) { return dataType.convert(v); });
+        newValue = value instanceof Array ? value : [value];
+        newValue = newValue.map(function(v) { return dataType.convert(v); });
       } else {
-        this._data[field] = dataType.convert(value);
+        newValue = dataType.convert(value);
       }
     }
 
-    this._validate([field]);
+    var curValue = this._data[field];
+    var changed = false;
+
+    if (newValue !== curValue) {
+      if (newValue instanceof Array && curValue instanceof Array) {
+        if (newValue.filter(function(v, i) { return v !== curValue[i]; }).length) {
+          this._data[field] = newValue;
+          logChange && (changed = true);
+        }
+      } else {
+        this._data[field] = newValue;
+        logChange && (changed = true);
+      }
+    }
+
+    this._changed[field] = changed;
+    validate && (!logChange || changed) && this._validate([field]);
 
     return value;
 
@@ -197,6 +241,62 @@ module.exports = (function() {
   Model.prototype.clearError = function(key) {
     delete this._errors[key];
     return true;
+  };
+
+  Model.prototype.save = function(db, callback) {
+
+    if (!(db instanceof Database)) {
+      throw new Error('Can only save to a valid database');
+    }
+
+    var model = this;
+
+    if(typeof callback !== 'function') {
+      callback = function() {};
+    }
+
+    if (model.hasErrors()) {
+      setTimeout(callback.bind(model, model.getErrors(), model), 1);
+      return;
+    }
+
+    var columns, query;
+
+    if (!model.inStorage()) {
+
+      columns = model.fieldList().filter(function(v) {
+        return !model.isFieldPrimaryKey(v) && model.get(v) !== null;
+      });
+
+      query = db.adapter.generateInsertQuery(model.schema.table, columns);
+
+    } else {
+
+      columns = ['id'].concat(model.changedFields().filter(function(v) {
+        return !model.isFieldPrimaryKey(v);
+      }));
+
+      query = db.adapter.generateUpdateQuery(model.schema.table, columns);
+
+    }
+
+    db.query(
+      query,
+      columns.map(function(v) {
+        return db.adapter.sanitize(model.getFieldData(v).type, model.get(v));
+      }),
+      function(err, result) {
+
+        if (err) {
+          model.error('_query', err.message);
+        } else {
+          result.rows.length && model.load(result.rows[0], true);
+        }
+
+        callback.call(model, model.errorObject(), model);
+
+    });
+
   };
 
   Model.prototype.schema = {

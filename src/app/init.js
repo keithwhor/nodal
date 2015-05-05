@@ -17,7 +17,8 @@ app.addDatabase('main', Nodal.Config.db.main);
 /* Add authorization */
 app.enableAuth();
 app.auth.setKey(Nodal.Config.secrets.auth.key);
-app.auth.setTTL(Nodal.Config.secrets.auth.ttl);
+app.auth.definePermission('user', 1);
+app.auth.definePermission('admin', 10);
 
 /* Initialize App */
 app.initialize(function() {

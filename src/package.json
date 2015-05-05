@@ -4,8 +4,7 @@
   "description": "Nodal Sample Application",
   "main": "server.js",
   "dependencies": {
-    "nodal": "latest",
-    "bcrypt": "latest"
+    "nodal": "latest"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

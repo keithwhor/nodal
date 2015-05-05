@@ -138,6 +138,24 @@ module.exports = (function() {
 
   };
 
+  DatabaseAdapter.prototype.generateUpdateQuery = function(table, columnNames) {
+
+    var pkColumn = columnNames[0];
+
+    return [
+      'UPDATE ',
+        this.escapeField(table),
+      'SET (',
+        columnNames.slice(1).map(this.escapeField.bind(this)).join(','),
+      ') = (',
+        columnNames.slice(1).map(function(v, i) { return '$' + (i + 2); }).join(','),
+      ') WHERE ',
+        this.escapeField(pkColumn), ' = $1',
+      ' RETURNING *'
+    ].join('');
+
+  };
+
   DatabaseAdapter.prototype.generateInsertQuery = function(table, columnNames) {
     return [
       'INSERT INTO ',

@@ -1,6 +1,6 @@
 {
   "name": "nodal",
-  "version": "0.1.36",
+  "version": "0.1.37",
   "description": "An API Server and Framework for node.js",
   "author": "Keith Horwood",
   "main": "core/module.js",
@@ -16,7 +16,8 @@
     "ncp": "latest",
     "ws": "latest",
     "pg": "latest",
-    "mime-types": "latest"
+    "mime-types": "latest",
+    "bcrypt": "latest"
   },
   "scripts": {
     "test": "node ./tests/runner.js"

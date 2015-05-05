@@ -1,13 +1,20 @@
 module.exports = (function() {
 
   var Nodal = require('nodal');
-  var bcrypt = require('bcrypt');
 
   var Model = Nodal.Model;
   var Schema = Nodal.Schema;
 
+  var bcrypt = Nodal.include.bcrypt;
+
   function User() {
+
+    this.validates('password', 'must be at least 5 characters in length', function(v) {
+      return v && v.length >= 5;
+    });
+
     Model.apply(this, arguments);
+
   }
 
   User.prototype = Object.create(Model.prototype);
@@ -15,14 +22,29 @@ module.exports = (function() {
 
   User.prototype.schema = Schema.User;
 
-  User.prototype.setPassword = function(unencrypted, callback) {
+  User.prototype.save = function(db, callback) {
 
     var user = this;
 
-    bcrypt.hash(unencrypted, 10, function(err, hash) {
-      !err && user.set('password', hash);
-      callback.call(user, err, hash);
-    });
+    if (!user.hasErrors() && user.hasChanged('password')) {
+
+      bcrypt.hash(user.get('password'), 10, function(err, hash) {
+
+        if (err) {
+          user.setError('password', 'Could not encrypt password');
+        } else {
+          user.set('password', hash, false);
+        }
+
+        Model.prototype.save.call(user, db, callback);
+
+      });
+
+    } else {
+
+      Model.prototype.save.call(user, db, callback);
+
+    }
 
   };
 
