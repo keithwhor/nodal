@@ -5,6 +5,11 @@ module.exports = (function() {
   var Template = require('./template.js');
   var Config = require('./config.js');
 
+  var Model = require('./model.js');
+  var ComposerResult = require('./composer_result.js');
+
+  var API = require('./api.js');
+
   function Controller(request, response, middlewareManager) {
 
     this._middlewareManager = middlewareManager;
@@ -12,7 +17,7 @@ module.exports = (function() {
     this._request = request;
     this._response = response;
     this._path = url.parse(this._request.url, true).pathname;
-    this._status = 200;
+    this._status = null;
     this._headers = {};
 
   }
@@ -23,6 +28,10 @@ module.exports = (function() {
 
   Controller.prototype.path = function() {
     return this._path;
+  };
+
+  Controller.prototype.getStatus = function() {
+    return this._status;
   };
 
   Controller.prototype.status = function(value) {
@@ -53,21 +62,28 @@ module.exports = (function() {
 
     if(!data) { data = ''; }
 
-    if(data instanceof Buffer) {
+    if (data instanceof Buffer) {
       this.getHeader('Content-Type') || this.setHeader('Content-Type', 'text/html');
-    } else if(data instanceof Template) {
+    } else if (data instanceof Template) {
       this.getHeader('Content-Type') || this.setHeader('Content-Type', 'text/html');
       data = data.render(templateData);
-    } else if(typeof data === 'function') {
+    } else if (data instanceof Model || data instanceof ComposerResult) {
+      this.getHeader('Content-Type') || this.setHeader('Content-Type', 'application/json');
+      data = API.format(data);
+      data.meta.error && this.getStatus() || this.status(400);
+      data = JSON.stringify(data);
+    } else if (typeof data === 'function') {
       this.getHeader('Content-Type') || this.setHeader('Content-Type', 'text/html');
       data = data(templateData);
-    } else if(typeof data === 'object') {
+    } else if (typeof data === 'object') {
       this.getHeader('Content-Type') || this.setHeader('Content-Type', 'application/json');
       data = JSON.stringify(data);
     } else {
       this.getHeader('Content-Type') || this.setHeader('Content-Type', 'text/html');
       data = data + '';
     }
+
+    this.getStatus() || this.status(200);
 
     this._middlewareManager.exec(this, data, (function(e, data) {
       if (e) {

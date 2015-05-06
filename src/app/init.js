@@ -14,9 +14,6 @@ app.middleware.use(GzipMiddleware);
 /* bind data layer */
 app.addDatabase('main', Nodal.Config.db.main);
 
-/* Use this database for the composer */
-app.composer.useDatabase(app.db('main'));
-
 /* Add authorization */
 app.enableAuth();
 app.auth.setKey(Nodal.Config.secrets.auth.key);

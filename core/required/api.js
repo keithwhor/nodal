@@ -1,32 +1,57 @@
 module.exports = (function() {
 
   var Model = require('./model.js');
+  var ComposerResult = require('./composer_result.js');
 
   function APIConstructor() {}
 
-  APIConstructor.prototype.format = function(model) {
+  APIConstructor.prototype.format = function(obj) {
 
-    if (!(model instanceof Model)) {
-      throw new Error('Format requires a valid model response');
+    if (obj instanceof Model) {
+      return this.formatModel(obj);
     }
 
+    if (obj instanceof ComposerResult) {
+      return this.formatComposerResult(obj);
+    }
+
+    throw new Error('.format requires Model or ComposerResult');
+
+  };
+
+  APIConstructor.prototype.formatComposerResult = function(composerResult) {
+
     return {
-      meta: this.meta(1, 1, 0, model.errorObject(), this.resource(model)),
-      data: model.hasErrors() ? [] : [model.toObject()],
+      resource: this.resource(composerResult.query._modelConstructor),
+      meta: this.meta(
+        composerResult.total,
+        composerResult.count,
+        composerResult.offset,
+        composerResult.error
+      ),
+      data: composerResult.rows
     };
 
   };
 
-  APIConstructor.prototype.resource = function(model) {
+  APIConstructor.prototype.formatModel = function(model) {
+    return {
+      resource: this.resource(model.constructor),
+      meta: this.meta(1, 1, 0, model.errorObject()),
+      data: model.hasErrors() ? [] : [model.toStdObject()],
+    };
+  };
+
+  APIConstructor.prototype.resource = function(modelConstructor) {
 
     return {
-      name: model.constructor.name,
+      name: modelConstructor.name,
       children: []
     };
 
   };
 
-  APIConstructor.prototype.meta = function(total, count, offset, error, resource) {
+  APIConstructor.prototype.meta = function(total, count, offset, error) {
 
     if (error) {
       total = 0;
@@ -34,14 +59,11 @@ module.exports = (function() {
       offset = 0;
     }
 
-    resource = resource || {};
-
     return {
       total: total,
       count: count,
       offset: offset,
-      error: error,
-      resource: resource
+      error: error
     };
 
   };

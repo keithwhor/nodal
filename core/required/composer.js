@@ -2,80 +2,110 @@ module.exports = (function() {
 
   var Model = require('./model.js');
   var Database = require('./db/database.js');
+  var ComposerResult = require('./composer_result.js');
 
-  function Composer() {
+  function ComposerQuery(db, modelConstructor) {
 
-    this._db = null;
+    this._db = db;
+    this._modelConstructor = modelConstructor;
+    this._table = modelConstructor.prototype.schema.table;
+    this._columns = modelConstructor.prototype.schema.columns.map(function(v) { return v.name; });
+    this._stdColumns = modelConstructor.prototype.stdInterface.slice();
+
+    this._select = {
+      filters: [],
+      limit: {count: null, offset: 0},
+      order: []
+    };
+
+    this._total = 0;
 
   }
 
-  Composer.prototype.useDatabase = function(db) {
+  ComposerQuery.prototype.filter = function(filterObj) {
 
-    if (!(db instanceof Database)) {
-      throw new Error('Can only save a valid model');
-    }
-
-    this._db = db;
+    this._select.filters.push(filterObj);
+    return this;
 
   };
 
-  Composer.prototype.save = function(model, callback) {
+  ComposerQuery.prototype.limit = function(offset, count) {
+
+    if (count === undefined) {
+      this._select.limit.count = offset;
+      return this;
+    }
+
+    this._select.limit.offset = offset;
+    this._select.limit.count = count;
+
+    return this;
+
+  };
+
+  ComposerQuery.prototype.order = function(columnName, dir) {
+
+    dir = {'ASC': 1, 'DESC': 1}[dir] ? dir : 'ASC';
+    this._select.order.push([columnName, dir]);
+
+    return this;
+
+  };
+
+  ComposerQuery.prototype.stdQuery = function(callback) {
 
     var db = this._db;
+    var table = this._table;
+    var columns = this._stdColumns;
 
-    if (!db) {
-      throw new Error('Please set a Database for the composer using composer.useDatabase');
-    }
-
-    if (!(model instanceof Model)) {
-      throw new Error('Can only save a valid model');
-    }
-
-    if(typeof callback !== 'function') {
-      callback = function() {};
-    }
-
-    if (model.hasErrors()) {
-      setTimeout(callback.bind(model, model.getErrors(), model), 1);
-      return;
-    }
-
-    var columns, query;
-
-    if (!model.inStorage()) {
-
-      columns = model.fieldList().filter(function(v) {
-        return !model.isFieldPrimaryKey(v) && model.get(v) !== null;
-      });
-
-      query = db.adapter.generateInsertQuery(model.schema.table, columns);
-
-    } else {
-
-      columns = ['id'].concat(model.changedFields().filter(function(v) {
-        return !model.isFieldPrimaryKey(v);
-      }));
-
-      query = db.adapter.generateUpdateQuery(model.schema.table, columns);
-
-    }
+    var composerQuery = this;
 
     db.query(
-      query,
-      columns.map(function(v) {
-        return db.adapter.sanitize(model.getFieldData(v).type, model.get(v));
-      }),
+      db.adapter.generateCountQuery(
+        table,
+        columns[0]
+      ),
+      [],
       function(err, result) {
 
         if (err) {
-          model.error('_query', err.message);
-        } else {
-          result.rows.length && model.load(result.rows[0], true);
+          callback.call(composerQuery, err, new ComposerResult(composerQuery, err, result));
+          return;
         }
 
-        callback.call(model, model.errorObject(), model);
+        composerQuery._total = parseInt(result.rows[0].__total__) || 0;
 
-    });
+        db.query(
+          db.adapter.generateSelectQuery(
+            table,
+            columns
+          ),
+          [],
+          function(err, result) {
+
+            callback.call(composerQuery, err, new ComposerResult(composerQuery, err, result));
+
+          }
+        );
+
+      }
+    );
+
+  };
+
+  function Composer() {}
+
+  Composer.prototype.from = function(db, modelConstructor) {
+
+    if (!(db instanceof Database)) {
+      throw new Error('Composer queries require valid database');
+    }
+
+    if (!Model.prototype.isPrototypeOf(modelConstructor.prototype)) {
+      throw new Error('Composer queries require valid Model constructor');
+    }
+
+    return new ComposerQuery(db, modelConstructor);
 
   };
 

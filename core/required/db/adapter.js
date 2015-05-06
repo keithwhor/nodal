@@ -138,6 +138,28 @@ module.exports = (function() {
 
   };
 
+  DatabaseAdapter.prototype.generateSelectQuery = function(table, columnNames) {
+
+    return [
+      'SELECT ',
+        columnNames.map(this.escapeField.bind(this)).join(','),
+      ' FROM ',
+        table
+    ].join('');
+
+  };
+
+  DatabaseAdapter.prototype.generateCountQuery = function(table, columnName) {
+
+    return [
+      'SELECT COUNT(',
+        this.escapeField(columnName),
+      ') AS __total__ FROM ',
+        table
+    ].join('');
+
+  };
+
   DatabaseAdapter.prototype.generateUpdateQuery = function(table, columnNames) {
 
     var pkColumn = columnNames[0];
@@ -145,7 +167,7 @@ module.exports = (function() {
     return [
       'UPDATE ',
         this.escapeField(table),
-      'SET (',
+      ' SET (',
         columnNames.slice(1).map(this.escapeField.bind(this)).join(','),
       ') = (',
         columnNames.slice(1).map(function(v, i) { return '$' + (i + 2); }).join(','),
