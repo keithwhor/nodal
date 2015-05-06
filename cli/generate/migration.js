@@ -55,7 +55,8 @@ module.exports = (function() {
       [date.getUTCDate(), 2],
       [date.getUTCHours(), 2],
       [date.getUTCMinutes(), 2],
-      [date.getUTCSeconds(), 2]
+      [date.getUTCSeconds(), 2],
+      [(date.getUTCMilliseconds() / 10) | 0, 2]
     ].map(function(v) {
       return padZero.apply(null, v);
     }).join(''));
@@ -64,7 +65,7 @@ module.exports = (function() {
 
   function generateMigration(migrationName, up, down, id) {
 
-    var id = id || generateId(new Date());
+    id = id || generateId(new Date());
     var migrationFileName = id + '__' + inflect.underscore(migrationName) + '.js';
 
     !fs.existsSync(migrationDir) && fs.mkdirSync(migrationDir);

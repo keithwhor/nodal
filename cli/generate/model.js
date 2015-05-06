@@ -61,7 +61,7 @@ module.exports = (function() {
     command: function(args, flags) {
 
       if (flags.hasOwnProperty('user')) {
-        args = [['User'], ['email', 'string'], ['password', 'string'], ['auth_token', 'string'], ['auth_level', 'int']];
+        args = [['User'], ['email', 'string'], ['password', 'string'], ['auth_token', 'string'], ['auth_permission', 'int']];
       }
 
       if (!args.length) {
@@ -91,8 +91,7 @@ module.exports = (function() {
 
       generateMigration('Create' + modelName,
         ['this.createTable(\"' + schemaObject.table + '\", ' + JSON.stringify(schemaObject.fields) + ')'],
-        ['this.dropTable(\"' + schemaObject.table + '\")'],
-        flags.hasOwnProperty('user') ? 10000000000000 : null
+        ['this.dropTable(\"' + schemaObject.table + '\")']
       );
 
       process.exit(0);
