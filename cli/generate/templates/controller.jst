@@ -4,19 +4,37 @@ module.exports = (function() {
   var Controller = Nodal.Controller;
   var API = Nodal.API;
 
-  function {{= data.name }}Controller() {
+  function {{= data.name }}() {
     Controller.apply(this, arguments);
   }
 
-  {{= data.name }}Controller.prototype = Object.create(Controller.prototype);
-  {{= data.name }}Controller.prototype.constructor = {{= data.name }}Controller;
+  {{= data.name }}.prototype = Object.create(Controller.prototype);
+  {{= data.name }}.prototype.constructor = {{= data.name }};
 
-  {{= data.name }}Controller.prototype.get = function(self, params, app) {
+  {{= data.name }}.prototype.get = function(self, params, app) {
 
     self.render();
 
   };
 
-  return {{= data.name }}Controller;
+  {{= data.name }}.prototype.post = function(self, params, app) {
+
+    Controller.prototype.post.apply(this, arguments);
+
+  };
+
+  {{= data.name }}.prototype.put = function(self, params, app) {
+
+    Controller.prototype.put.apply(this, arguments);
+
+  };
+
+  {{= data.name }}.prototype.delete = function(self, params, app) {
+
+    Controller.prototype.delete.apply(this, arguments);
+
+  };
+
+  return {{= data.name }};
 
 })();

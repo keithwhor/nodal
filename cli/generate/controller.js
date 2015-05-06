@@ -37,12 +37,13 @@ module.exports = (function() {
       var controllerPath = args[0][0].split('/');
       var cd = controllerDir;
 
-      var controllerName = inflect.classify(controllerPath.join('_') + '_controller');
-      controllerPath.pop();
+      var controllerName = inflect.classify(controllerPath.pop() + '_controller');
 
       controllerPath = controllerPath.map(function(v) {
         return inflect.underscore(v);
       });
+
+      var fullControllerName = inflect.classify(controllerPath.concat([controllerName]).join('_'));
 
       var createPath = [controllerDir].concat(controllerPath).join('/') + '/' + inflect.underscore(controllerName) + '.js';
 
@@ -55,7 +56,7 @@ module.exports = (function() {
         cd += '/' + controllerPath.shift();
       }
 
-      fs.writeFileSync(createPath, generateController(controllerName));
+      fs.writeFileSync(createPath, generateController(fullControllerName));
 
       console.log(colors.green.bold('Create: ') + createPath);
 
