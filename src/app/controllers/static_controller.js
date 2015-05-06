@@ -2,7 +2,7 @@ module.exports = (function() {
 
   var Nodal = require('nodal');
   var Controller = Nodal.Controller;
-  var Error404Controller = Nodal.require('app/controllers/error/error_404_controller.js');
+  var Error404Controller = Nodal.require('app/controllers/error/404_controller.js');
 
   function StaticController() {
     Controller.apply(this, arguments);

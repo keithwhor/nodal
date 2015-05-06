@@ -6,7 +6,7 @@ module.exports = (function() {
 
   var IndexController = Nodal.require('app/controllers/index_controller.js');
   var StaticController = Nodal.require('app/controllers/static_controller.js');
-  var Error404Controller = Nodal.require('app/controllers/error/error_404_controller.js');
+  var Error404Controller = Nodal.require('app/controllers/error/404_controller.js');
 
   router.route(/^\/?/, IndexController);
   router.route(/^\/static\/.*/, StaticController);

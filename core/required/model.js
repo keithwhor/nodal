@@ -243,62 +243,6 @@ module.exports = (function() {
     return true;
   };
 
-  Model.prototype.save = function(db, callback) {
-
-    if (!(db instanceof Database)) {
-      throw new Error('Can only save to a valid database');
-    }
-
-    var model = this;
-
-    if(typeof callback !== 'function') {
-      callback = function() {};
-    }
-
-    if (model.hasErrors()) {
-      setTimeout(callback.bind(model, model.getErrors(), model), 1);
-      return;
-    }
-
-    var columns, query;
-
-    if (!model.inStorage()) {
-
-      columns = model.fieldList().filter(function(v) {
-        return !model.isFieldPrimaryKey(v) && model.get(v) !== null;
-      });
-
-      query = db.adapter.generateInsertQuery(model.schema.table, columns);
-
-    } else {
-
-      columns = ['id'].concat(model.changedFields().filter(function(v) {
-        return !model.isFieldPrimaryKey(v);
-      }));
-
-      query = db.adapter.generateUpdateQuery(model.schema.table, columns);
-
-    }
-
-    db.query(
-      query,
-      columns.map(function(v) {
-        return db.adapter.sanitize(model.getFieldData(v).type, model.get(v));
-      }),
-      function(err, result) {
-
-        if (err) {
-          model.error('_query', err.message);
-        } else {
-          result.rows.length && model.load(result.rows[0], true);
-        }
-
-        callback.call(model, model.errorObject(), model);
-
-    });
-
-  };
-
   Model.prototype.schema = {
     table: '',
     columns: []

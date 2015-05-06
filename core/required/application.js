@@ -1,6 +1,7 @@
 module.exports = (function() {
 
   var Database = require('./db/database.js');
+  var Composer = require('./composer.js');
   var Router = require('./router.js');
   var SocketServer = require('./socket.js');
   var Template = require('./template.js');
@@ -34,6 +35,8 @@ module.exports = (function() {
     this.socket = null;
     this.server = null;
     this.auth = null;
+
+    this.composer = new Composer();
 
     this.middleware = new MiddlewareManager();
     this.initializers = new InitializerManager();
