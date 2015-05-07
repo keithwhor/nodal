@@ -1,4 +1,5 @@
-# Nodal: An API Server and Framework for node.js
+# Nodal [![Build Status](https://travis-ci.org/keithwhor/nodal.svg?branch=master)](https://travis-ci.org/keithwhor/nodal)
+## An API Server and Framework for node.js
 
 **v0.1.x is pre-release, and is intended for testing purposes only**
 
