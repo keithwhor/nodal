@@ -1,6 +1,6 @@
 {
   "name": "nodal",
-  "version": "0.1.42",
+  "version": "0.1.43",
   "description": "An API Server and Framework for node.js",
   "author": "Keith Horwood",
   "main": "core/module.js",
@@ -24,7 +24,7 @@
     "mocha": "*"
   },
   "scripts": {
-    "test": "node ./tests/runner.js"
+    "test": "mocha ./test/runner.js"
   },
   "repository": {
     "type": "git",
