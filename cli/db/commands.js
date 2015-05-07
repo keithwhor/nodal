@@ -13,7 +13,7 @@ var MIGRATION_PATH = './db/migrations';
 
 function composeQueryFunc(query) {
 
-  var dbCredentials = Nodal.Config.db.main;
+  var dbCredentials = Nodal.my.Config.db.main;
 
   var cfg = dbCredentials;
   var conString = 'postgres://' + cfg.user + ':' + cfg.password + '@' + cfg.host + ':' + cfg.port + '/postgres';
@@ -69,7 +69,7 @@ module.exports = {
 
   drop: function() {
 
-    var dbCredentials = Nodal.Config.db.main;
+    var dbCredentials = Nodal.my.Config.db.main;
 
     dropDatabase(
       dbCredentials.database,
@@ -84,7 +84,7 @@ module.exports = {
 
   create: function() {
 
-    var dbCredentials = Nodal.Config.db.main;
+    var dbCredentials = Nodal.my.Config.db.main;
 
     createDatabase(
       dbCredentials.database,
@@ -100,7 +100,7 @@ module.exports = {
 
   prepare: function() {
 
-    var dbCredentials = Nodal.Config.db.main;
+    var dbCredentials = Nodal.my.Config.db.main;
 
     var db = new Database();
     db.connect(dbCredentials);
@@ -124,7 +124,7 @@ module.exports = {
 
   migrate: function(args, flags) {
 
-    var dbCredentials = Nodal.Config.db.main;
+    var dbCredentials = Nodal.my.Config.db.main;
 
     var db = new Database();
     db.connect(dbCredentials);
@@ -191,7 +191,7 @@ module.exports = {
 
   rollback: function(args, flags) {
 
-    var dbCredentials = Nodal.Config.db.main;
+    var dbCredentials = Nodal.my.Config.db.main;
 
     var db = new Database();
     db.connect(dbCredentials);

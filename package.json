@@ -1,23 +1,27 @@
 {
   "name": "nodal",
-  "version": "0.1.41",
+  "version": "0.1.42",
   "description": "An API Server and Framework for node.js",
   "author": "Keith Horwood",
   "main": "core/module.js",
   "dependencies": {
-    "any-db": "latest",
-    "any-db-postgres": "latest",
-    "any-db-transaction": "latest",
-    "async": "latest",
-    "colors": "latest",
-    "dot": "latest",
-    "http-proxy": "latest",
-    "i": "latest",
-    "ncp": "latest",
-    "ws": "latest",
-    "pg": "latest",
-    "mime-types": "latest",
-    "bcrypt": "latest"
+    "any-db": "*",
+    "any-db-postgres": "*",
+    "any-db-transaction": "*",
+    "async": "*",
+    "colors": "*",
+    "dot": "*",
+    "http-proxy": "*",
+    "i": "*",
+    "ncp": "*",
+    "ws": "*",
+    "pg": "*",
+    "mime-types": "*",
+    "bcrypt": "*"
+  },
+  "devDependencies": {
+    "chai": "*",
+    "mocha": "*"
   },
   "scripts": {
     "test": "node ./tests/runner.js"

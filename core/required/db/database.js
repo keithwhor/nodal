@@ -6,7 +6,6 @@ module.exports = (function() {
   var colors = require('colors/safe');
 
   var PostgresAdapter = require('./adapters/postgres.js');
-  var Config = require('../config.js');
 
   function Database(cfg) {
 
@@ -46,10 +45,6 @@ module.exports = (function() {
   ];
 
   Database.prototype.log = function(sql, params) {
-
-    if (Config.env !== 'development') {
-      return;
-    }
 
     var colorFunc = this.__logColorFuncs[this._useLogColor];
 

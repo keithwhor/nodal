@@ -12,17 +12,17 @@ app.initializers.use(DefaultInitializer);
 app.middleware.use(GzipMiddleware);
 
 /* bind data layer */
-app.addDatabase('main', Nodal.Config.db.main);
+app.addDatabase('main', Nodal.my.Config.db.main);
 
 /* Add authorization */
 app.enableAuth();
-app.auth.setKey(Nodal.Config.secrets.auth.key);
+app.auth.setKey(Nodal.my.Config.secrets.auth.key);
 app.auth.definePermission('user', 1);
 app.auth.definePermission('admin', 10);
 
 /* Initialize App */
 app.initialize(function() {
 
-  app.listen(Nodal.Config.secrets.port);
+  app.listen(Nodal.my.Config.secrets.port);
 
 });

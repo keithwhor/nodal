@@ -3,7 +3,6 @@ module.exports = (function() {
   var url = require('url');
 
   var Template = require('./template.js');
-  var Config = require('./config.js');
 
   var Model = require('./model.js');
   var ComposerResult = require('./composer_result.js');
@@ -94,7 +93,7 @@ module.exports = (function() {
       if (e) {
         this.setHeader('Content-Type', 'text/plain');
         this.status(500);
-        this.end((Config.env !== 'production') ? (e.message || 'Unresolved error') : '500 - Internal Server Error');
+        this.end(e.message || 'Unresolved error');
         return;
       }
       this.end(data);

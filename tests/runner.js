@@ -1,16 +1,4 @@
 var Nodal = require('../core/module.js');
+var expect = require('chai').expect;
 
-var Database = Nodal.Database;
-var dbCredentials = require('./db/credentials.js');
-
-function testDatabase(adapter) {
-
-  var cfg = dbCredentials[adapter];
-
-  var db = new Database(cfg);
-
-  /* Test Migrations */
-
-  var testMigration = new Nodal.Migration();
-
-}
+expect(Nodal).to.be.an('object');
