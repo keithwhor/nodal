@@ -58,6 +58,11 @@ module.exports = (function() {
     return this._headers.hasOwnProperty(key) ? this._headers[key] : defaultValue;
   };
 
+  Controller.prototype.unauthorized = function() {
+    this.status(401);
+    this.render(API.error('Unauthorized'));
+  };
+
   Controller.prototype.render = function(data, templateData) {
 
     if(!data) { data = ''; }
@@ -70,7 +75,7 @@ module.exports = (function() {
     } else if (data instanceof Model || data instanceof ComposerResult) {
       this.getHeader('Content-Type') || this.setHeader('Content-Type', 'application/json');
       data = API.format(data);
-      data.meta.error && this.getStatus() || this.status(400);
+      data.meta.error && !this.getStatus() && this.status(400);
       data = JSON.stringify(data);
     } else if (typeof data === 'function') {
       this.getHeader('Content-Type') || this.setHeader('Content-Type', 'text/html');

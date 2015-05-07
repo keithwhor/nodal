@@ -61,7 +61,14 @@ module.exports = (function() {
     command: function(args, flags) {
 
       if (flags.hasOwnProperty('user')) {
-        args = [['User'], ['email', 'string'], ['password', 'string'], ['auth_token', 'string'], ['auth_permission', 'int']];
+        args = [
+          ['User'],
+          ['email', 'string'],
+          ['password', 'string'],
+          ['name', 'string'],
+          ['permission', 'int'],
+          ['ip_address', 'string']
+        ];
       }
 
       if (!args.length) {

@@ -122,9 +122,6 @@ module.exports = (function() {
 
   SchemaGenerator.prototype.alterColumn = function(table, column, type, properties) {
 
-    console.log('HI', table, column, type, properties);
-    console.log(properties);
-
     if (properties.primary_key) {
       delete properties.unique;
     }

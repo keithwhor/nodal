@@ -10,7 +10,7 @@ module.exports = (function() {
     this._modelConstructor = modelConstructor;
     this._table = modelConstructor.prototype.schema.table;
     this._columns = modelConstructor.prototype.schema.columns.map(function(v) { return v.name; });
-    this._stdColumns = modelConstructor.prototype.stdInterface.slice();
+    this._extColumns = modelConstructor.prototype.externalInterface.slice();
 
     this._select = {
       filters: [],
@@ -52,11 +52,12 @@ module.exports = (function() {
 
   };
 
-  ComposerQuery.prototype.stdQuery = function(callback) {
+  ComposerQuery.prototype.externalQuery = function(callback) {
 
     var db = this._db;
     var table = this._table;
-    var columns = this._stdColumns;
+    var columns = this._columns;
+    var extColumns = this._extColumns;
 
     var composerQuery = this;
 
@@ -78,15 +79,45 @@ module.exports = (function() {
         db.query(
           db.adapter.generateSelectQuery(
             table,
-            columns
+            extColumns
           ),
           [],
           function(err, result) {
 
-            callback.call(composerQuery, err, new ComposerResult(composerQuery, err, result));
+            var rows = result ? (result.rows || []).slice() : [];
+            callback.call(composerQuery, err, new ComposerResult(composerQuery, err, rows));
 
           }
         );
+
+      }
+    );
+
+  };
+
+  ComposerQuery.prototype.query = function(callback) {
+
+    var db = this._db;
+    var table = this._table;
+    var columns = this._columns;
+    var modelConstructor = this._modelConstructor;
+
+    var composerQuery = this;
+
+    db.query(
+      db.adapter.generateSelectQuery(
+        table,
+        columns
+      ),
+      [],
+      function(err, result) {
+
+        var rows = result ? (result.rows || []).slice() : [];
+        var models = rows.map(function(v) {
+          return new modelConstructor(v, true);
+        });
+
+        callback.call(composerQuery, err, models);
 
       }
     );

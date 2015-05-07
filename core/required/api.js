@@ -19,6 +19,16 @@ module.exports = (function() {
 
   };
 
+  APIConstructor.prototype.error = function(message) {
+
+    return {
+      resource: null,
+      meta: this.meta(0, 0, 0, message),
+      data: []
+    };
+
+  };
+
   APIConstructor.prototype.formatComposerResult = function(composerResult) {
 
     return {

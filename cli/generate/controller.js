@@ -11,10 +11,11 @@ module.exports = (function() {
 
   var controllerDir = './app/controllers';
 
-  function generateController(controllerName) {
+  function generateController(controllerName, forModel) {
 
     var controller = {
-      name: controllerName
+      name: controllerName,
+      for: forModel
     };
 
     return dot.template(
@@ -37,6 +38,18 @@ module.exports = (function() {
       var controllerPath = args[0][0].split('/');
       var cd = controllerDir;
 
+      var forModel = null;
+      if (flags.for) {
+
+        forModel = {
+          name: inflect.classify(flags.for),
+          path: 'app/models/' + inflect.underscore(inflect.classify(flags.for)) + '.js'
+        };
+
+        controllerPath.push(inflect.tableize(forModel.name));
+
+      }
+
       var controllerName = inflect.classify(controllerPath.pop() + '_controller');
 
       controllerPath = controllerPath.map(function(v) {
@@ -56,7 +69,7 @@ module.exports = (function() {
         cd += '/' + controllerPath.shift();
       }
 
-      fs.writeFileSync(createPath, generateController(fullControllerName));
+      fs.writeFileSync(createPath, generateController(fullControllerName, forModel));
 
       console.log(colors.green.bold('Create: ') + createPath);
 

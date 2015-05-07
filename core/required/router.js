@@ -102,6 +102,11 @@ module.exports = (function() {
       }
     });
 
+    var headers = {};
+    Object.keys(request.headers).forEach(function(key) {
+      headers[key] = request.headers[key];
+    });
+
     request.on('end', (function() {
 
       controller[method](
@@ -109,7 +114,9 @@ module.exports = (function() {
         {
           path: path,
           query: query,
-          body: this.parseBody(request.headers['content-type'], body)
+          body: this.parseBody(request.headers['content-type'], body),
+          ip_address: request.connection.remoteAddress,
+          headers: headers
         },
         app
       );

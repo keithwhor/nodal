@@ -1,6 +1,6 @@
 module.exports = (function() {
 
-  function ComposerResult(composerQuery, error, result) {
+  function ComposerResult(composerQuery, error, rows) {
 
     this.query = composerQuery;
 
@@ -8,9 +8,9 @@ module.exports = (function() {
 
       this.error = null;
       this.total = composerQuery._total;
-      this.count = result.rows.length;
+      this.count = rows.length;
       this.offset = composerQuery._select.limit.offset;
-      this.rows = result.rows.slice();
+      this.rows = rows;
 
     } else {
 

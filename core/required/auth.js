@@ -6,12 +6,23 @@ module.exports = (function() {
 
     this._permissions = {};
     this._key = '';
+    this._ttl = 60 * 60 * 24 * 365;
 
   }
 
   Auth.prototype.setKey = function(key) {
     this._key = key;
     return key;
+  };
+
+  Auth.prototype.setTTL = function(ttl) {
+    ttl = parseInt(ttl) || 0;
+    this._ttl = Math.max(ttl, 60) | 0;
+    return this._ttl;
+  };
+
+  Auth.prototype.getTTL = function() {
+    return this._ttl;
   };
 
   Auth.prototype.createToken = function() {

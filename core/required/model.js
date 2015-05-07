@@ -196,7 +196,7 @@ module.exports = (function() {
   Model.prototype.toStdObject = function() {
     var obj = {};
     var data = this._data;
-    this.stdInterface.forEach(function(key) {
+    this.externalInterface.forEach(function(key) {
       obj[key] = data[key];
     });
     return obj;
@@ -316,7 +316,7 @@ module.exports = (function() {
 
   Model.prototype.data = null;
 
-  Model.prototype.stdInterface = [
+  Model.prototype.externalInterface = [
     'id',
     'created_at'
   ];

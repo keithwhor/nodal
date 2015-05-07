@@ -1,8 +1,9 @@
 module.exports = (function() {
 
   var Nodal = require('nodal');
-  var Controller = Nodal.Controller;
-  var API = Nodal.API;
+  var Controller = Nodal.Controller;{{? data.for }}
+
+  var {{= data.for.name }} = Nodal.require('{{= data.for.path }}');{{?}}
 
   function {{= data.name }}() {
     Controller.apply(this, arguments);
@@ -13,7 +14,13 @@ module.exports = (function() {
 
   {{= data.name }}.prototype.get = function(self, params, app) {
 
-    self.render();
+    {{? data.for }}app.composer
+      .from(app.db('main'), {{= data.for.name }})
+      .stdQuery(function(err, result) {
+
+        self.render(result);
+
+      });{{??}}self.render();{{?}}
 
   };
 
