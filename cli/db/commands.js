@@ -132,7 +132,7 @@ module.exports = {
     var steps = flags.step | 0;
     if (!steps) { steps = 0; }
 
-    db.query('SELECT id FROM schema_migrations', function(err, result) {
+    db.query('SELECT id FROM schema_migrations', [], function(err, result) {
 
       if (err) {
         db.error('Could not get schema migrations, try `nodal db:prepare` first');
@@ -199,7 +199,7 @@ module.exports = {
     var steps = flags.step | 0;
     if (!steps) { steps = 1; }
 
-    db.query('SELECT id FROM schema_migrations', function(err, result) {
+    db.query('SELECT id FROM schema_migrations', [], function(err, result) {
 
       if (err) {
         db.error('Could not get schema migrations, try `nodal db:prepare` first');
