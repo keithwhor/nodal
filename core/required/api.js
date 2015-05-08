@@ -22,7 +22,6 @@ module.exports = (function() {
   APIConstructor.prototype.error = function(message) {
 
     return {
-      resource: null,
       meta: this.meta(0, 0, 0, {message: message}),
       data: []
     };
@@ -32,7 +31,6 @@ module.exports = (function() {
   APIConstructor.prototype.formatComposerResult = function(composerResult) {
 
     return {
-      resource: this.resource(composerResult.query._modelConstructor),
       meta: this.meta(
         composerResult.total,
         composerResult.count,
@@ -40,7 +38,8 @@ module.exports = (function() {
         (composerResult.error ? {
           message: 'There was an error with your query',
           details: composerResult.error
-        } : null)
+        } : null),
+        this.resource(composerResult.query._modelConstructor)
       ),
       data: composerResult.rows
     };
@@ -49,12 +48,13 @@ module.exports = (function() {
 
   APIConstructor.prototype.formatModel = function(model) {
     return {
-      resource: this.resource(model.constructor),
       meta: this.meta(1, 1, 0,
         (model.hasErrors() ? {
           message: 'There was an error with your request',
           details: model.errorObject()
-        } : null)),
+        } : null),
+        this.resource(model.constructor)
+      ),
       data: model.hasErrors() ? [] : [model.toStdObject()],
     };
   };
@@ -68,19 +68,21 @@ module.exports = (function() {
 
   };
 
-  APIConstructor.prototype.meta = function(total, count, offset, error) {
+  APIConstructor.prototype.meta = function(total, count, offset, error, resource) {
 
     if (error) {
       total = 0;
       count = 0;
       offset = 0;
+      resource = null;
     }
 
     return {
       total: total,
       count: count,
       offset: offset,
-      error: error
+      error: error,
+      resource: resource || null
     };
 
   };
