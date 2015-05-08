@@ -13,40 +13,24 @@ module.exports = (function() {
     this._extColumns = modelConstructor.prototype.externalInterface.slice();
 
     this._select = {
-      filters: [],
-      limit: {count: null, offset: 0},
-      order: []
+      where: []
     };
 
     this._total = 0;
 
   }
 
-  ComposerQuery.prototype.filter = function(filterObj) {
+  ComposerQuery.prototype.where = function(filterObj) {
 
-    this._select.filters.push(filterObj);
-    return this;
-
-  };
-
-  ComposerQuery.prototype.limit = function(offset, count) {
-
-    if (count === undefined) {
-      this._select.limit.count = offset;
-      return this;
+    if (this._select.where.length) {
+      throw new Error('Can only specify .where once per ComposerQuery');
     }
 
-    this._select.limit.offset = offset;
-    this._select.limit.count = count;
+    if (!(filterObj instanceof Array)) {
+      filterObj = [].slice.call(arguments);
+    }
 
-    return this;
-
-  };
-
-  ComposerQuery.prototype.order = function(columnName, dir) {
-
-    dir = {'ASC': 1, 'DESC': 1}[dir] ? dir : 'ASC';
-    this._select.order.push([columnName, dir]);
+    this._select.where = filterObj;
 
     return this;
 
@@ -61,12 +45,16 @@ module.exports = (function() {
 
     var composerQuery = this;
 
+    var multiFilter = db.adapter.createMultiFilter(table, this._select.where);
+    var params = db.adapter.getParamsFromMultiFilter(multiFilter);
+
     db.query(
       db.adapter.generateCountQuery(
         table,
-        columns[0]
+        columns[0],
+        multiFilter
       ),
-      [],
+      params,
       function(err, result) {
 
         if (err) {
@@ -79,9 +67,10 @@ module.exports = (function() {
         db.query(
           db.adapter.generateSelectQuery(
             table,
-            extColumns
+            extColumns,
+            multiFilter
           ),
-          [],
+          params,
           function(err, result) {
 
             var rows = result ? (result.rows || []).slice() : [];
@@ -104,12 +93,16 @@ module.exports = (function() {
 
     var composerQuery = this;
 
+    var multiFilter = db.adapter.createMultiFilter(table, this._select.where);
+    var params = db.adapter.getParamsFromMultiFilter(multiFilter);
+
     db.query(
       db.adapter.generateSelectQuery(
         table,
-        columns
+        columns,
+        multiFilter
       ),
-      [],
+      params,
       function(err, result) {
 
         var rows = result ? (result.rows || []).slice() : [];

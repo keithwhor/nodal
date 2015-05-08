@@ -22,6 +22,7 @@ developer needs to get a new node.js project started with very little overhead.
 - Templates
 - Migrations
 - Routing
+- Query Composition
 - Multiple database connections
 - Multiple environment configurations
 - Middleware (gzip/deflate middleware pre-packaged)
@@ -142,15 +143,17 @@ The following is an active development checklist (TODO):
 
 ### Models
 
-- Model querying
 - Model relationships (belongs_to, has_many)
 
 ### Misc.
 
 - Offload all SQL generation to DatabaseAdapter (in CLI)
 - Keep track of indices in schema.json
-- Task scheduler
-- Tests for all modules (!!!)
+- Tests for all modules (It has begun...)
+
+## TBD
+- Task scheduler (requires redis for more than one instance)
+- Easy authorization (requires redis for more than one instance)
 
 ## About
 

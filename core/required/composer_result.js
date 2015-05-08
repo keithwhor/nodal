@@ -9,7 +9,7 @@ module.exports = (function() {
       this.error = null;
       this.total = composerQuery._total;
       this.count = rows.length;
-      this.offset = composerQuery._select.limit.offset;
+      this.offset = 0; //composerQuery._select.limit.offset;
       this.rows = rows;
 
     } else {

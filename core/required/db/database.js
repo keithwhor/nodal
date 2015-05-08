@@ -99,7 +99,9 @@ module.exports = (function() {
     }
 
     this._connection.query(query, params, callback);
-    return;
+    this.log(query, params);
+
+    return true;
 
   };
 

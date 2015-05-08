@@ -138,24 +138,26 @@ module.exports = (function() {
 
   };
 
-  DatabaseAdapter.prototype.generateSelectQuery = function(table, columnNames) {
+  DatabaseAdapter.prototype.generateSelectQuery = function(table, columnNames, multiFilter) {
 
     return [
       'SELECT ',
         columnNames.map(this.escapeField.bind(this)).join(','),
       ' FROM ',
-        table
+        this.escapeField(table),
+        this.generateWhereClause(table, multiFilter)
     ].join('');
 
   };
 
-  DatabaseAdapter.prototype.generateCountQuery = function(table, columnName) {
+  DatabaseAdapter.prototype.generateCountQuery = function(table, columnName, multiFilter) {
 
     return [
       'SELECT COUNT(',
         this.escapeField(columnName),
       ') AS __total__ FROM ',
-        table
+        table,
+        this.generateWhereClause(table, multiFilter)
     ].join('');
 
   };
@@ -260,6 +262,98 @@ module.exports = (function() {
 
     return this.generateDropIndex(table, columnName);
 
+  };
+
+  DatabaseAdapter.prototype.comparisons = {
+    is: function(field, value) {
+      return [field, ' = ', value].join('');
+    },
+    not: function(field, value) {
+      return [field, ' <> ', value].join('');
+    },
+    lt: function(field, value) {
+      return [field, ' < ', value].join('');
+    },
+    lte: function(field, value) {
+      return [field, ' <= ', value].join('');
+    },
+    gt: function(field, value) {
+      return [field, ' > ', value].join('');
+    },
+    gte: function(field, value) {
+      return [field, ' >= ', value].join('');
+    },
+    like: function(field, value) {
+      return [field, ' LIKE \'%\' || ', value, ' || \'%\''].join('');
+    },
+    ilike: function(field, value) {
+      return [field, ' ILIKE \'%\' || ', value, ' || \'%\''].join('');
+    }
+  };
+
+  DatabaseAdapter.prototype.parseFilterObj = function(table, filterObj, offset) {
+
+    offset |= 0;
+    var self = this;
+
+    return Object.keys(filterObj).map(function(filter, i) {
+      var column = filter.split('__');
+      var comparator = column.length > 1 ? column.pop() : 'is';
+      column = column.join('__');
+      return {
+        columnName: column,
+        refName: [self.escapeField(table), self.escapeField(column)].join('.'),
+        comparator: comparator,
+        variable: '$' + (i + offset + 1),
+        value: filterObj[filter],
+        or: false
+      };
+    });
+
+  };
+
+  DatabaseAdapter.prototype.createMultiFilter = function(table, filterObjArray) {
+
+    var offset = 0;
+    var parse = this.parseFilterObj.bind(this);
+
+    return filterObjArray
+      .filter(function(v) {
+        return v;
+      }).map(function(v, i) {
+        v = parse(table, v, offset);
+        offset += v.length;
+        return v;
+      });
+
+  };
+
+  DatabaseAdapter.prototype.generateWhereClause = function(table, multiFilter) {
+
+    return (!multiFilter || !multiFilter.length) ? '': ' WHERE (' + multiFilter.map((function(filterObj) {
+      return this.generateAndClause(table, filterObj);
+    }).bind(this)).join(') OR (') + ')';
+
+  };
+
+  DatabaseAdapter.prototype.generateAndClause = function(table, filterObjArray) {
+
+    var comparisons = this.comparisons;
+
+    if (!filterObjArray.length) {
+      return '';
+    }
+
+    return filterObjArray.map(function(filterObj) {
+      return comparisons[filterObj.comparator](filterObj.refName, filterObj.variable);
+    }).join(' AND ');
+
+  };
+
+  DatabaseAdapter.prototype.getParamsFromMultiFilter = function(multiFilter) {
+    return [].concat.apply([], multiFilter).map(function(filterObj) {
+      return filterObj.value;
+    });
   };
 
   return DatabaseAdapter;
