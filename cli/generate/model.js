@@ -14,10 +14,11 @@ module.exports = (function() {
 
   var modelDir = './app/models';
 
-  function generateModelDefinition(modelName) {
+  function generateModelDefinition(modelName, columns) {
 
     var model = {
-      name: modelName
+      name: modelName,
+      columns: columns
     };
 
     return dot.template(
@@ -29,13 +30,13 @@ module.exports = (function() {
 
   }
 
-  function generateUserDefinition() {
+  function generateUserDefinition(columns) {
     return dot.template(
       fs.readFileSync(__dirname + '/templates/models/user.jst', {
         varname: 'data',
         strip: false
       }).toString()
-    )();
+    )({columns: columns});
   };
 
   function convertArgListToPropertyList(argList) {
@@ -89,9 +90,14 @@ module.exports = (function() {
       }
 
       if (flags.hasOwnProperty('user')) {
-        fs.writeFileSync(createPath, generateUserDefinition());
+        fs.writeFileSync(createPath, generateUserDefinition(
+          schemaObject.fields.map(function(v) { return v.name; })
+        ));
       } else {
-        fs.writeFileSync(createPath, generateModelDefinition(modelName));
+        fs.writeFileSync(createPath, generateModelDefinition(
+          modelName,
+          schemaObject.fields.map(function(v) { return v.name; })
+        ));
       }
 
       console.log(colors.green.bold('Create: ') + createPath);

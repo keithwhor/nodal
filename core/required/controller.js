@@ -122,7 +122,7 @@ module.exports = (function() {
 
   Controller.prototype.put = Controller.prototype.get;
 
-  Controller.prototype.delete = Controller.prototype.get;
+  Controller.prototype.del = Controller.prototype.get;
 
   return Controller;
 

@@ -14,7 +14,7 @@ module.exports = (function() {
 
     } else {
 
-      this.error = {'_query': error.message};
+      this.error = error.message;
       this.total = 0;
       this.count = 0;
       this.offset = 0;

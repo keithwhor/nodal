@@ -15,11 +15,12 @@ module.exports = (function() {
   {{= data.name }}.prototype.schema = Schema.{{= data.name }};
 
   {{= data.name }}.prototype.externalInterface = [
-    'id',
-    'created_at'
+{{~ data.columns :value:index}}    '{{= value }}'{{? data.rows.length - 1 !== index }},{{?}}{{~}}
   ];
 
-  /* Extend Model Below */
+  /* Extend {{= data.name }} Below */
+
+  /* Export {{= data.name }} */
 
   return {{= data.name }};
 

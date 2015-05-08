@@ -23,7 +23,7 @@ module.exports = (function() {
 
     return {
       resource: null,
-      meta: this.meta(0, 0, 0, message),
+      meta: this.meta(0, 0, 0, {message: message}),
       data: []
     };
 
@@ -37,7 +37,10 @@ module.exports = (function() {
         composerResult.total,
         composerResult.count,
         composerResult.offset,
-        composerResult.error
+        (composerResult.error ? {
+          message: 'There was an error with your query',
+          details: composerResult.error
+        } : null)
       ),
       data: composerResult.rows
     };
@@ -47,7 +50,11 @@ module.exports = (function() {
   APIConstructor.prototype.formatModel = function(model) {
     return {
       resource: this.resource(model.constructor),
-      meta: this.meta(1, 1, 0, model.errorObject()),
+      meta: this.meta(1, 1, 0,
+        (model.hasErrors() ? {
+          message: 'There was an error with your request',
+          details: model.errorObject()
+        } : null)),
       data: model.hasErrors() ? [] : [model.toStdObject()],
     };
   };
@@ -56,7 +63,7 @@ module.exports = (function() {
 
     return {
       name: modelConstructor.name,
-      children: []
+      fields: modelConstructor.prototype.externalInterface
     };
 
   };
