@@ -4,3 +4,8 @@ node_js:
   - "0.11"
   - "0.10"
   - "iojs"
+addons:
+  postgresql: "9.3"
+before_script:
+  - psql -c 'create database travis_ci_test;' -U postgres
+env: NODE_ENV=test

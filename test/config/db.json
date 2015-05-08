@@ -1,0 +1,25 @@
+{
+
+  "development": {
+    "main": {
+      "adapter": "postgres",
+      "host": "localhost",
+      "port": "5432",
+      "user": "postgres",
+      "password": "",
+      "database": "nodal_test"
+    }
+  },
+
+  "test": {
+    "main": {
+      "adapter": "postgres",
+      "host": "localhost",
+      "port": "5432",
+      "user": "postgres",
+      "password": "",
+      "database": "travis_ci_test"
+    }
+  }
+
+}

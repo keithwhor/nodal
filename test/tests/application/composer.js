@@ -1,4 +1,4 @@
-module.exports = function(app) {
+module.exports = function(Nodal, app) {
 
   var expect = require('chai').expect;
 

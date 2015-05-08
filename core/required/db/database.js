@@ -35,6 +35,13 @@ module.exports = (function() {
 
   };
 
+  Database.prototype.close = function() {
+
+    this._connection && this._connection.end();
+    this._connection = null;
+
+  };
+
   Database.prototype.__logColorFuncs = [
     function(str) {
       return colors.yellow.bold(str);
@@ -79,23 +86,19 @@ module.exports = (function() {
 
   Database.prototype.query = function(query, params, callback) {
 
+    if (arguments.length < 3) {
+      throw new Error('.query requires 3 arguments');
+    }
+
     if (!(params instanceof Array)) {
-      callback = params;
-      params = undefined;
+      throw new Error('params must be a valid array');
     }
 
     if(typeof callback !== 'function') {
-      callback = function() {};
+      throw new Error('Callback must be a function');
     }
 
-    this.log(query, params);
-
-    if (params) {
-      this._connection.query(query, params, callback);
-      return;
-    }
-
-    this._connection.query(query, callback);
+    this._connection.query(query, params, callback);
     return;
 
   };
@@ -123,39 +126,21 @@ module.exports = (function() {
 
     var queries = preparedArray.map(function(queryData, i) {
 
-      if (queryData[1]) {
+      queryData[1] = queryData[1] || [];
 
-        if (i > 0) {
+      if (i > 0) {
 
-          return function(result, next) {
-            db.log(queryData[0], queryData[1]);
-            transaction.query(queryData[0], queryData[1], next);
-          };
-
-        }
-
-        return function(next) {
+        return function(result, next) {
           db.log(queryData[0], queryData[1]);
           transaction.query(queryData[0], queryData[1], next);
         };
 
-      } else {
-
-        if (i > 0) {
-
-          return function(result, next) {
-            db.log(queryData[0]);
-            transaction.query(queryData[0], next);
-          };
-
-        }
-
-        return function(next) {
-          db.log(queryData[0]);
-          transaction.query(queryData[0], next);
-        };
-
       }
+
+      return function(next) {
+        db.log(queryData[0], queryData[1]);
+        transaction.query(queryData[0], queryData[1], next);
+      };
 
     });
 

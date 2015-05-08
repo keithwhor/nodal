@@ -1,10 +1,15 @@
-var Nodal = require('../../core/module.js');
-var expect = require('chai').expect;
+module.exports = (function(Nodal) {
 
-describe('Nodal.Application', function() {
+  var expect = require('chai').expect;
 
-  var app = new Nodal.Application();
+  describe('Nodal.Application', function() {
 
-  require('./application/composer.js')(app);
+    var app = new Nodal.Application();
+
+    require('./application/db.js')(Nodal, app);
+
+    require('./application/composer.js')(Nodal, app);
+
+  });
 
 });

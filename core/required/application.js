@@ -100,16 +100,14 @@ module.exports = (function() {
 
   Application.prototype.addDatabase = function(alias, connectionDetails) {
 
-    var db = new Database();
-    db.connect(connectionDetails);
-
     if (this._db[alias]) {
       throw new Error('Database aliased with "' + alias + '" already added to application.');
     }
 
+    var db = new Database();
     this._db[alias] = db;
 
-    return true;
+    return db.connect(connectionDetails);
 
   };
 

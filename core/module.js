@@ -19,7 +19,8 @@ module.exports = (function() {
       mime: require('mime-types'),
       inflect: require('i')()
     },
-    my: {}
+    my: {},
+    rootDirectory: process.cwd()
   };
 
   /* Lazy load my.Config and my.Schema */
@@ -30,13 +31,13 @@ module.exports = (function() {
   Object.defineProperties(Nodal.my, {
     Config: {
       get: function() {
-        return Config || (Config = require('./required/my/config.js'));
+        return Config || (Config = require('./required/my/config.js')(Nodal.rootDirectory));
       },
       enumerable: true
     },
     Schema: {
       get: function() {
-        return Schema || (Schema = require('./required/my/schema.js'));
+        return Schema || (Schema = require('./required/my/schema.js')(Nodal.rootDirectory));
       },
       enumerable: true
     }

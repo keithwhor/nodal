@@ -1,4 +1,4 @@
-module.exports = (function() {
+module.exports = (function(rootDirectory) {
 
   var fs = require('fs');
   var dot = require('dot');
@@ -13,7 +13,7 @@ module.exports = (function() {
 
   dot.templateSettings.varname = 'env';
 
-  var dir = process.cwd() + '/config';
+  var dir = rootDirectory + '/config';
   var configFiles = fs.readdirSync(dir);
 
   var ext = '.json';
@@ -41,4 +41,4 @@ module.exports = (function() {
 
   return config;
 
-})();
+});
