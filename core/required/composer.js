@@ -30,6 +30,10 @@ module.exports = (function() {
       filterObj = [].slice.call(arguments);
     }
 
+    filterObj = filterObj.filter(function(v) {
+      return Object.keys(v).length;
+    });
+
     this._select.where = filterObj;
 
     return this;
