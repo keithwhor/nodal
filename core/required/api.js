@@ -61,9 +61,21 @@ module.exports = (function() {
 
   APIConstructor.prototype.resource = function(modelConstructor) {
 
+    var columns = modelConstructor.prototype.schema.columns;
+    var lookup = [];
+    columns.forEach(function(v) { lookup[v.name] = v; });
+
+    var fields = modelConstructor.prototype.externalInterface.map(function(v) {
+      return {
+        name: v,
+        type: lookup[v].type,
+        array: !!(lookup[v].properties && lookup[v].properties.array)
+      };
+    });
+
     return {
       name: modelConstructor.name,
-      fields: modelConstructor.prototype.externalInterface
+      fields: fields
     };
 
   };

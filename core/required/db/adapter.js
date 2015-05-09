@@ -196,7 +196,7 @@ module.exports = (function() {
 
     var queries = [];
 
-    if (properties.hasOwnProperty('type')) {
+    if (type) {
       queries.push(
         this.generateAlterTableColumnType(
           table,

@@ -24,6 +24,9 @@ module.exports = (function() {
     int: {
       dbName: 'BIGINT'
     },
+    currency: {
+      dbName: 'BIGINT'
+    },
     float: {
       dbName: 'FLOAT'
     },
@@ -59,10 +62,13 @@ module.exports = (function() {
 
   };
 
-  PostgresAdapter.prototype.generateColumn = function(columnName, columnType, columnProperties) {
+  PostgresAdapter.prototype.generateColumn = function(columnName, columnType, columnProperties, isAlter) {
+
+    isAlter = !!isAlter;
 
     return [
       this.escapeField(columnName),
+      isAlter ? 'TYPE' : '',
       columnType,
       columnProperties.array ? 'ARRAY' : '',
       (columnProperties.primary_key || !columnProperties.nullable) ? 'NOT NULL' : ''
@@ -98,7 +104,7 @@ module.exports = (function() {
       'ALTER TABLE',
         this.escapeField(table),
       'ALTER COLUMN',
-        this.generateColumn(columnName, columnType, columnProperties)
+        this.generateColumn(columnName, columnType, columnProperties, true)
     ].join(' ');
 
   };

@@ -74,10 +74,6 @@ module.exports = (function() {
 
   Database.prototype.error = function(message) {
 
-    if (global.settings.ENV !== 'development') {
-      return;
-    }
-
     console.log(colors.red.bold('Database Error: ') + message);
 
     return true;

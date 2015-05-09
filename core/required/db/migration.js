@@ -87,17 +87,23 @@ module.exports = (function() {
 
   Migration.prototype.alterColumn = function(table, column, type, properties) {
 
+    properties = properties || {};
+
     this.schema.alterColumn(table, column, type, properties);
+
+    console.log('wat?', this.db.adapter.generateAlterTableQuery(table, column, type, properties));
 
     return this.db.adapter.generateAlterTableQuery(table, column, type, properties);
 
   };
 
-  Migration.prototype.addColumn = function(table, column, type, options) {
+  Migration.prototype.addColumn = function(table, column, type, properties) {
 
-    this.schema.addColumn(table, column, type, options);
+    properties = properties || {};
 
-    return this.db.adapter.generateAlterTableAddColumnQuery(table, column, type, options);
+    this.schema.addColumn(table, column, type, properties);
+
+    return this.db.adapter.generateAlterTableAddColumnQuery(table, column, type, properties);
 
   };
 

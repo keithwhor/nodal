@@ -9,6 +9,11 @@ module.exports = {
       return parseInt(v) || 0;
     }
   },
+  currency: {
+    convert: function(v) {
+      return parseInt(v) || 0;
+    }
+  },
   float: {
     convert: function(v) {
       return parseFloat(v) || 0;
