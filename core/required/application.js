@@ -163,7 +163,7 @@ module.exports = (function() {
     }
 
     var router = require(process.cwd() + '/app/routes.js');
-    this._forceTLS && router.forceTLS();
+    this._forceProxyTLS && router.forceProxyTLS();
 
     var server = http.createServer(router.delegate.bind(router, this)).listen(port);
 
