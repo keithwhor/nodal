@@ -13,10 +13,13 @@ module.exports = (function() {
     this._extColumns = modelConstructor.prototype.externalInterface.slice();
 
     this._select = {
-      where: []
+      where: [],
+      orderBy: [],
+      limit: null
     };
 
     this._total = 0;
+    this._defaultCount = 500;
 
   }
 
@@ -30,11 +33,60 @@ module.exports = (function() {
       filterObj = [].slice.call(arguments);
     }
 
-    filterObj = filterObj.filter(function(v) {
+    filterObj = filterObj.map((function(v) {
+      var copy = {};
+      Object.keys(v).forEach(function(k) {
+        copy[k] = v[k];
+      });
+      copy.hasOwnProperty('__order') &&
+        this.orderBy(copy.__order),
+        delete copy.__order;
+      (copy.hasOwnProperty('__offset') || copy.hasOwnProperty('__count')) &&
+        this.limit(copy.__offset || 0, copy.__count || this._defaultCount),
+        delete copy.__offset,
+        delete copy.__count;
+      return copy;
+    }).bind(this)).filter(function(v) {
       return Object.keys(v).length;
     });
 
     this._select.where = filterObj;
+
+    return this;
+
+  };
+
+  ComposerQuery.prototype.orderBy = function(orderObj) {
+
+    if (this._select.orderBy.length) {
+      throw new Error('Can only specify .orderBy once per ComposerQuery');
+    }
+
+    if (!(orderObj instanceof Array)) {
+      orderObj = [].slice.call(arguments);
+    }
+
+    orderObj = orderObj.map(function(v) {
+      v = v.split(' ');
+      return {columnName: v[0], direction: v[1] || 'ASC'};
+    });
+
+    this._select.orderBy = orderObj;
+
+    return this;
+
+  };
+
+  ComposerQuery.prototype.limit = function(offset, count) {
+
+    if (this._select.limit) {
+      throw new Error('Can only specify .limit once per ComposerQuery');
+    }
+
+    this._select.limit = {
+      offset: parseInt(offset) || 0,
+      count: parseInt(count) || this._defaultCount
+    };
 
     return this;
 
@@ -46,6 +98,7 @@ module.exports = (function() {
     var table = this._table;
     var columns = this._columns;
     var extColumns = this._extColumns;
+    var select = this._select;
 
     var composerQuery = this;
 
@@ -72,7 +125,9 @@ module.exports = (function() {
           db.adapter.generateSelectQuery(
             table,
             extColumns,
-            multiFilter
+            multiFilter,
+            select.orderBy,
+            select.limit
           ),
           params,
           function(err, result) {
@@ -94,6 +149,7 @@ module.exports = (function() {
     var table = this._table;
     var columns = this._columns;
     var modelConstructor = this._modelConstructor;
+    var select = this._select;
 
     var composerQuery = this;
 
@@ -104,7 +160,9 @@ module.exports = (function() {
       db.adapter.generateSelectQuery(
         table,
         columns,
-        multiFilter
+        multiFilter,
+        select.orderBy,
+        select.limit
       ),
       params,
       function(err, result) {

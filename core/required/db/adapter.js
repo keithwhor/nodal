@@ -138,14 +138,16 @@ module.exports = (function() {
 
   };
 
-  DatabaseAdapter.prototype.generateSelectQuery = function(table, columnNames, multiFilter) {
+  DatabaseAdapter.prototype.generateSelectQuery = function(table, columnNames, multiFilter, orderObjArray, limitObj) {
 
     return [
       'SELECT ',
         columnNames.map(this.escapeField.bind(this)).join(','),
       ' FROM ',
         this.escapeField(table),
-        this.generateWhereClause(table, multiFilter)
+        this.generateWhereClause(table, multiFilter),
+        this.generateOrderByClause(table, orderObjArray),
+        this.generateLimitClause(limitObj)
     ].join('');
 
   };
@@ -156,7 +158,7 @@ module.exports = (function() {
       'SELECT COUNT(',
         this.escapeField(columnName),
       ') AS __total__ FROM ',
-        table,
+        this.escapeField(table),
         this.generateWhereClause(table, multiFilter)
     ].join('');
 
@@ -354,6 +356,27 @@ module.exports = (function() {
     return [].concat.apply([], multiFilter).map(function(filterObj) {
       return filterObj.value;
     });
+  };
+
+  DatabaseAdapter.prototype.generateOrderByClause = function(table, orderObjArray) {
+
+    var tableEsc = this.escapeField(table);
+
+    return (!orderObjArray || !orderObjArray.length) ? '' : ' ORDER BY ' + orderObjArray.map((function(v) {
+      return [tableEsc, '.', this.escapeField(v.columnName), ' ', v.direction].join('');
+    }).bind(this)).join(', ');
+
+  };
+
+  DatabaseAdapter.prototype.generateLimitClause = function(limitObj) {
+
+    return (!limitObj) ? '' : [
+      ' LIMIT',
+      limitObj.offset,
+      ', ',
+      limitObj.count
+    ].join('');
+
   };
 
   return DatabaseAdapter;

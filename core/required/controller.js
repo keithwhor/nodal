@@ -57,9 +57,9 @@ module.exports = (function() {
     return this._headers.hasOwnProperty(key) ? this._headers[key] : defaultValue;
   };
 
-  Controller.prototype.unauthorized = function() {
+  Controller.prototype.unauthorized = function(msg) {
     this.status(401);
-    this.render(API.error('Unauthorized'));
+    this.render(API.error(msg || 'Unauthorized'));
   };
 
   Controller.prototype.render = function(data, templateData) {
