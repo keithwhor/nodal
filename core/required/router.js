@@ -2,7 +2,7 @@ module.exports = (function() {
 
   var url = require('url');
   var qs = require('querystring');
-  var Config = require('./my/config.js');
+  var Config = require('../module.js').my.Config;
 
   var Controller = require('./controller.js');
 
@@ -160,22 +160,24 @@ module.exports = (function() {
 
   Router.prototype.delegate = function(app, request, response) {
     var urlParts = url.parse(request.url, true);
+
     if (Config.env === 'production') {
-      console.log('force proxy?', this._forceProxyTLS);
-      console.log(request.headers);
       if (this._forceProxyTLS && request.headers['x-forwarded-proto'] !== 'https') {
         response.writeHead(302, {'Location': 'https://' + request.headers.host + request.url});
         response.end();
         return;
       }
     }
+
     var route = this.find(urlParts.pathname);
     if (route) {
       return route.execute(request, response, urlParts, app);
     }
     response.writeHead(404, {'Content-Type': 'text/plain'});
     response.end('404 Not Found');
+
     return;
+
   };
 
   return Router;
