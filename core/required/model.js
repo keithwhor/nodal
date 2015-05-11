@@ -309,6 +309,51 @@ module.exports = (function() {
 
   };
 
+  Model.prototype.destroy = function(db, callback) {
+
+    var model = this;
+
+    if (!(db instanceof Database)) {
+      throw new Error('Must provide a valid Database to save to');
+    }
+
+    if(typeof callback !== 'function') {
+      callback = function() {};
+    }
+
+    if (!model.inStorage()) {
+
+      setTimeout(callback.bind(model, {'_query': 'Model has not been saved'}, model), 1);
+      return;
+
+    }
+
+    columns = model.fieldList().filter(function(v) {
+      return model.isFieldPrimaryKey(v);
+    });
+
+    var query = db.adapter.generateDeleteQuery(model.schema.table, columns);
+
+    db.query(
+      query,
+      columns.map(function(v) {
+        return db.adapter.sanitize(model.getFieldData(v).type, model.get(v));
+      }),
+      function(err, result) {
+
+        if (err) {
+          model.error('_query', err.message);
+        } else {
+          model._inStorage = false;
+        }
+
+        callback.call(model, model.errorObject(), model);
+
+      }
+    );
+
+  };
+
   Model.prototype.schema = {
     table: '',
     columns: []

@@ -63,6 +63,11 @@ module.exports = (function() {
     return true;
   };
 
+  Controller.prototype.badRequest = function(msg) {
+    this.status(400);
+    this.render(API.error(msg || 'Bad Request'));
+  };
+
   Controller.prototype.render = function(data, templateData) {
 
     if(!data) { data = ''; }

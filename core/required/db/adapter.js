@@ -182,6 +182,20 @@ module.exports = (function() {
 
   };
 
+  DatabaseAdapter.prototype.generateDeleteQuery = function(table, columnNames) {
+
+    return [
+      'DELETE FROM ',
+        this.escapeField(table),
+      ' WHERE (',
+        columnNames.map(this.escapeField.bind(this)).join(','),
+      ') = (',
+        columnNames.map(function(v, i) { return '$' + (i + 1); }).join(','),
+      ') RETURNING *'
+    ].join('');
+
+  };
+
   DatabaseAdapter.prototype.generateInsertQuery = function(table, columnNames) {
     return [
       'INSERT INTO ',
