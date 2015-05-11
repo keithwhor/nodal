@@ -113,8 +113,8 @@ module.exports = (function() {
       var params = {
         path: path,
         query: query,
-        body: this.parseBody(request.headers['content-type'], body),
-        ip_address: request.connection.remoteAddress,
+        body: this.parseBody(headers['content-type'], body),
+        ip_address: headers['x-forwarded-for'] || request.connection.remoteAddress,
         headers: headers
       };
 
@@ -161,6 +161,8 @@ module.exports = (function() {
   Router.prototype.delegate = function(app, request, response) {
     var urlParts = url.parse(request.url, true);
     if (Config.env === 'production') {
+      console.log('force proxy?', this._forceProxyTLS);
+      console.log(request.headers);
       if (this._forceProxyTLS && request.headers['x-forwarded-proto'] !== 'https') {
         response.writeHead(302, {'Location': 'https://' + request.headers.host + request.url});
         response.end();
