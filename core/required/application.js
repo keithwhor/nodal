@@ -23,6 +23,8 @@ module.exports = (function() {
 
     this._proxy = null;
 
+    this._forceProxyTLS = false; // not related to above
+
     this._templates = {
       '!': new Template(this, function() { return '<!-- Invalid Template //-->'; })
     };
@@ -161,6 +163,8 @@ module.exports = (function() {
     }
 
     var router = require(process.cwd() + '/app/routes.js');
+    this._forceTLS && router.forceTLS();
+
     var server = http.createServer(router.delegate.bind(router, this)).listen(port);
 
     this.server = server;
@@ -196,6 +200,13 @@ module.exports = (function() {
       throw new Error('Application must socketListen before it can use commands');
     }
     this.socket.command.apply(this.socket, arguments);
+  };
+
+  Application.prototype.forceProxyTLS = function() {
+
+    this._forceProxyTLS = true;
+    this.router && this.router.forceProxyTLS();
+
   };
 
   return Application;

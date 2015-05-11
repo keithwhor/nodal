@@ -2,6 +2,7 @@ module.exports = (function() {
 
   var url = require('url');
   var qs = require('querystring');
+  var Config = require('./my/config.js');
 
   var Controller = require('./controller.js');
 
@@ -136,7 +137,12 @@ module.exports = (function() {
 
   function Router() {
     this._routes = [];
+    this._forceProxyTLS = false;
   }
+
+  Router.prototype.forceProxyTLS = function() {
+    this._forceProxyTLS = true;
+  };
 
   Router.prototype.route = function(regex, Controller) {
     this._routes.push(new Route(regex, Controller));
@@ -154,6 +160,13 @@ module.exports = (function() {
 
   Router.prototype.delegate = function(app, request, response) {
     var urlParts = url.parse(request.url, true);
+    if (Config.env === 'production') {
+      if (this._forceProxyTLS && request.headers['x-forwarded-proto'] !== 'https') {
+        response.writeHead(302, {'Location': 'https://' + request.headers.host + request.url});
+        response.end();
+        return;
+      }
+    }
     var route = this.find(urlParts.pathname);
     if (route) {
       return route.execute(request, response, urlParts, app);
