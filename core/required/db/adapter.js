@@ -266,7 +266,7 @@ module.exports = (function() {
 
   };
 
-  DatabaseAdapter.prototype.comparisons = {
+  DatabaseAdapter.prototype.comparators = {
     is: function(field, value) {
       return [field, ' = ', value].join('');
     },
@@ -298,16 +298,13 @@ module.exports = (function() {
     offset |= 0;
     var self = this;
 
-    return Object.keys(filterObj).map(function(filter, i) {
-      var column = filter.split('__');
-      var comparator = column.length > 1 ? column.pop() : 'is';
-      column = column.join('__');
+    return filterObj.map(function(filter, i) {
       return {
-        columnName: column,
-        refName: [self.escapeField(table), self.escapeField(column)].join('.'),
-        comparator: comparator,
+        columnName: filter.columnName,
+        refName: [self.escapeField(table), self.escapeField(filter.columnName)].join('.'),
+        comparator: filter.comparator,
         variable: '$' + (i + offset + 1),
-        value: filterObj[filter],
+        value: filter.value,
         or: false
       };
     });
@@ -340,14 +337,14 @@ module.exports = (function() {
 
   DatabaseAdapter.prototype.generateAndClause = function(table, filterObjArray) {
 
-    var comparisons = this.comparisons;
+    var comparators = this.comparators;
 
     if (!filterObjArray.length) {
       return '';
     }
 
     return filterObjArray.map(function(filterObj) {
-      return comparisons[filterObj.comparator](filterObj.refName, filterObj.variable);
+      return comparators[filterObj.comparator](filterObj.refName, filterObj.variable);
     }).join(' AND ');
 
   };

@@ -60,6 +60,7 @@ module.exports = (function() {
   Controller.prototype.unauthorized = function(msg) {
     this.status(401);
     this.render(API.error(msg || 'Unauthorized'));
+    return true;
   };
 
   Controller.prototype.render = function(data, templateData) {
@@ -109,6 +110,12 @@ module.exports = (function() {
     this._response.end(data);
 
     console.log(this._request.url + ' loaded in: ' + ((new Date()).valueOf() - this._initializeTime) + 'ms');
+
+  };
+
+  Controller.prototype.auth = function(self, params, app, authorize) {
+
+    authorize(true);
 
   };
 

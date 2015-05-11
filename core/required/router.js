@@ -109,16 +109,23 @@ module.exports = (function() {
 
     request.on('end', (function() {
 
-      controller[method](
+      var params = {
+        path: path,
+        query: query,
+        body: this.parseBody(request.headers['content-type'], body),
+        ip_address: request.connection.remoteAddress,
+        headers: headers
+      };
+
+      controller.auth(
         controller,
-        {
-          path: path,
-          query: query,
-          body: this.parseBody(request.headers['content-type'], body),
-          ip_address: request.connection.remoteAddress,
-          headers: headers
-        },
-        app
+        params,
+        app,
+        function(authorized, reason) {
+          return authorized ?
+            controller[method](controller, params, app) :
+            controller.unauthorized(reason);
+        }
       );
 
     }).bind(this));

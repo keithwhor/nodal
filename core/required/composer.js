@@ -12,6 +12,13 @@ module.exports = (function() {
     this._columns = modelConstructor.prototype.schema.columns.map(function(v) { return v.name; });
     this._extColumns = modelConstructor.prototype.externalInterface.slice();
 
+    var columnLookup = {};
+    this._columns.forEach(function(v) {
+      columnLookup[v] = true;
+    });
+
+    this._columnLookup = columnLookup;
+
     this._select = {
       where: [],
       orderBy: [],
@@ -33,26 +40,39 @@ module.exports = (function() {
       filterObj = [].slice.call(arguments);
     }
 
-    filterObj = filterObj.map((function(v) {
-      var copy = {};
-      Object.keys(v).forEach(function(k) {
-        copy[k] = v[k];
-      });
-      copy.hasOwnProperty('__order') &&
-        this.orderBy(copy.__order),
-        delete copy.__order;
-      (copy.hasOwnProperty('__offset') || copy.hasOwnProperty('__count')) &&
-        this.limit(copy.__offset || 0, copy.__count || this._defaultCount),
-        delete copy.__offset,
-        delete copy.__count;
-      return copy;
-    }).bind(this)).filter(function(v) {
-      return Object.keys(v).length;
+    filterObj = filterObj.map(this.parseFilters.bind(this)).filter(function(v) {
+      return v.length;
     });
 
     this._select.where = filterObj;
 
     return this;
+
+  };
+
+  ComposerQuery.prototype.parseFilters = function(filterObj) {
+
+    var comparators = this._db.adapter.comparators;
+    var columnLookup = this._columnLookup;
+
+    filterObj.hasOwnProperty('__order') &&
+      this.orderBy(filterObj.__order);
+
+    filterObj.hasOwnProperty('__offset') || filterObj.hasOwnProperty('__count') &&
+      this.limit(filterObj.__offset || 0, filterObj.__count || this._defaultCount);
+
+    return Object.keys(filterObj).map(function(filter) {
+      var column = filter.split('__');
+      var comparator = column.length > 1 ? column.pop() : 'is';
+      column = column.join('__');
+      return {
+        columnName: column,
+        comparator: comparator,
+        value: filterObj[filter],
+      };
+    }).filter(function(v) {
+      return columnLookup[v.columnName] && comparators[v.comparator];
+    });
 
   };
 
@@ -66,9 +86,13 @@ module.exports = (function() {
       orderObj = [].slice.call(arguments);
     }
 
+    var columnLookup = this._columnLookup;
+
     orderObj = orderObj.map(function(v) {
       v = v.split(' ');
       return {columnName: v[0], direction: v[1] || 'ASC'};
+    }).filter(function(v) {
+      return columnLookup[v.columnName];
     });
 
     this._select.orderBy = orderObj;
