@@ -1,5 +1,10 @@
 module.exports = (function() {
 
+  var types = require('pg').types;
+  types.setTypeParser(20, function(val) {
+    return val === null ? null : parseInt(val);
+  });
+
   var Nodal = {
     API: null,
     Application: null,

@@ -1,17 +1,17 @@
 module.exports = {
   serial: {
     convert: function(v) {
-      return parseInt(v) || 0;
+      return Math.max(Math.min(parseInt(v) || 0, Number.MAX_SAFE_INTEGER), Number.MIN_SAFE_INTEGER);
     }
   },
   int: {
     convert: function(v) {
-      return parseInt(v) || 0;
+      return Math.max(Math.min(parseInt(v) || 0, Number.MAX_SAFE_INTEGER), Number.MIN_SAFE_INTEGER);
     }
   },
   currency: {
     convert: function(v) {
-      return parseInt(v) || 0;
+      return Math.max(Math.min(parseInt(v) || 0, Number.MAX_SAFE_INTEGER), Number.MIN_SAFE_INTEGER);
     }
   },
   float: {
