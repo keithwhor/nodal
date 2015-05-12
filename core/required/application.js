@@ -29,6 +29,7 @@ module.exports = (function() {
       '!': new Template(this, function() { return '<!-- Invalid Template //-->'; })
     };
 
+    this._staticPath = '';
     this._static = {};
 
     this._db = {};
@@ -43,54 +44,66 @@ module.exports = (function() {
     this.middleware = new MiddlewareManager();
     this.initializers = new InitializerManager();
 
-    // process.on('SIGINT', (function() {
-    //
-    //   console.log('Gracefully exiting...');
-    //   var closed = [];
-    //   var fnKill = function() {
-    //     closed.pop();
-    //     (closed.length === 0) && process.kill();
-    //   };
-    //
-    //   if (this.server) {
-    //     closed.push();
-    //     this.server.close(fnKill);
-    //   }
-    //
-    //   if (this.socket) {
-    //     closed.push();
-    //     this.socket.close(fnKill);
-    //   }
-    //
-    // }).bind(this));
-
   }
 
   Application.prototype.initialize = function(callback) {
 
-    this.initializers.exec(callback.bind(this));
+    this.initializers.exec(this, callback.bind(this));
+
+  };
+
+  Application.prototype.loadStaticAssets = function(path) {
+
+    if (path[path.length - 1] === '/') {
+      path = path.substr(0, path.length - 1);
+    }
+
+    if (!path) {
+      throw new Error('Can not use root project directory as static path');
+    }
+
+    if (path.indexOf('..') > -1) {
+      throw new Error('Can not back-reference folders to use as static path');
+    }
+
+    function readDir(cwd, dirname, data) {
+
+      data = data || {};
+      var files = fs.readdirSync([cwd, dirname].join('/'));
+
+      files.forEach(function(v) {
+
+        var filename = [dirname, v].join('/');
+        var fullPath = [cwd, filename].join('/');
+
+        if (fs.statSync(fullPath).isDirectory()) {
+          readDir(cwd, filename, data);
+          return;
+        }
+
+        var ext = fullPath.substr(fullPath.lastIndexOf('.'));
+        data[filename] = {
+          mime: mime.lookup(ext) || 'application/octet-stream',
+          buffer: fs.readFileSync(fullPath)
+        };
+        return;
+
+      });
+
+      return data;
+
+    }
+
+    this._staticPath = path;
+    this._static = readDir(process.cwd(), path);
+
+    return true;
 
   };
 
   Application.prototype.static = function(name) {
 
-    if(this._static[name]) {
-      return this._static[name];
-    }
-
-    var filename = './static/' + name;
-
-    try {
-      this._static[name] = {
-        mime: mime.lookup(filename) || 'application/octet-stream',
-        buffer: fs.readFileSync(filename)
-      };
-      return this._static[name];
-    } catch(e) {
-      return null;
-    }
-
-    return null;
+    return this._static[[this._staticPath, name].join('/')] || null;
 
   };
 
@@ -155,6 +168,20 @@ module.exports = (function() {
 
   };
 
+  Application.prototype.requestHandler = function(request, response) {
+
+    if (this._forceProxyTLS &&
+        request.headers.hasOwnProperty('x-forwarded-proto') &&
+        request.headers['x-forwarded-proto'] !== 'https') {
+      response.writeHead(302, {'Location': 'https://' + request.headers.host + request.url});
+      response.end();
+      return;
+    }
+
+    this.router && this.router.delegate(this, request, response);
+
+  };
+
   Application.prototype.listen = function(port) {
 
     if (this.server) {
@@ -163,9 +190,8 @@ module.exports = (function() {
     }
 
     var router = require(process.cwd() + '/app/routes.js');
-    this._forceProxyTLS && router.forceProxyTLS();
 
-    var server = http.createServer(router.delegate.bind(router, this)).listen(port);
+    var server = http.createServer(this.requestHandler.bind(this)).listen(port);
 
     this.server = server;
     this.router = router;
@@ -205,7 +231,6 @@ module.exports = (function() {
   Application.prototype.forceProxyTLS = function() {
 
     this._forceProxyTLS = true;
-    this.router && this.router.forceProxyTLS();
 
   };
 

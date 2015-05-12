@@ -18,7 +18,7 @@ module.exports = (function() {
 
   };
 
-  InitializerManager.prototype.exec = function(fnComplete) {
+  InitializerManager.prototype.exec = function(app, fnComplete) {
 
     var mwa = [
       function(callback) {
@@ -27,7 +27,7 @@ module.exports = (function() {
     ].concat(
       this._initializers.map(function(initializer) {
         return function(callback) {
-          initializer.exec(callback);
+          initializer.exec(app, callback);
         };
       })
     );
