@@ -1,13 +1,15 @@
-module.exports = (function() {
+'use strict';
 
-  var Middleware = require('./middleware.js');
-  var async = require('async');
+  const Middleware = require('./middleware.js');
+  const async = require('async');
 
-  function MiddlewareManager() {
+module.exports = class MiddlewareManager {
+
+  constructor() {
     this._middleware = [];
   }
 
-  MiddlewareManager.prototype.use = function(middlewareConstructor) {
+  use(middlewareConstructor) {
 
     var middleware = new middlewareConstructor();
     if (!(middleware instanceof Middleware)) {
@@ -16,9 +18,9 @@ module.exports = (function() {
 
     this._middleware.push(middleware);
 
-  };
+  }
 
-  MiddlewareManager.prototype.exec = function(controller, data, fnComplete) {
+  exec(controller, data, fnComplete) {
 
     var mwa = [
       function(callback) {
@@ -36,8 +38,6 @@ module.exports = (function() {
 
     async.waterfall(mwa, fnComplete);
 
-  };
+  }
 
-  return MiddlewareManager;
-
-})();
+};

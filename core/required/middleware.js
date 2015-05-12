@@ -1,14 +1,12 @@
-module.exports = (function() {
+'use strict';
 
-  function Middleware() {}
+module.exports = class Middleware {
 
-  Middleware.prototype.exec = function(controller, data, fnComplete) {
+  exec(controller, data, fnComplete) {
 
     var err = null;
     return fnComplete(err, data);
 
-  };
+  }
 
-  return Middleware;
-
-})();
+};

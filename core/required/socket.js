@@ -1,8 +1,10 @@
-module.exports = (function() {
+'use strict';
 
-  var WebSocketServer = require('ws').Server;
+const WebSocketServer = require('ws').Server;
 
-  function SocketServer(port) {
+class SocketServer {
+
+  constructor(port) {
     this._port = port | 0;
     this._server = new WebSocketServer({port: this._port});
     this._availableIds = [];
@@ -16,14 +18,14 @@ module.exports = (function() {
 
   }
 
-  SocketServer.prototype.close = function(callback) {
+  close(callback) {
 
     this._server.on('close', callback.bind(this));
     this._server.close();
 
-  };
+  }
 
-  SocketServer.prototype.allocate = function(ws) {
+  allocate(ws) {
     var availableIds = this._availableIds;
     var clients = this._clients;
     var client;
@@ -35,21 +37,21 @@ module.exports = (function() {
       clients[client.id] = client;
     }
     return client;
-  };
+  }
 
-  SocketServer.prototype.deallocate = function(client) {
+  deallocate(client) {
     this._clients[client.id] = null;
     this._availableIds.push(client.id);
     return true;
-  };
+  }
 
-  SocketServer.prototype.connect = function(ws) {
+  connect(ws) {
     var client = this.allocate(ws);
     console.log('Socket Client ' + client.id + ' connected');
     return client;
-  };
+  }
 
-  SocketServer.prototype.receive = function(client, message) {
+  receive(client, message) {
     var data;
     try {
       data = JSON.parse(message);
@@ -63,45 +65,47 @@ module.exports = (function() {
         this.execute(client, data.command, {});
       }
     }
-  };
+  }
 
-  SocketServer.prototype.closeClient = function(client) {
+  closeClient(client) {
     this.deallocate(client);
     console.log('Socket Client ' + client.id + ' disconnected');
     return true;
-  };
+  }
 
-  SocketServer.prototype.broadcast = function(command, data) {
+  broadcast(command, data) {
     var clients = this._clients;
     for(var i = 0, len = clients.length; i < len; i++) {
       clients[i] && clients[i].send(command, data);
     }
     return true;
-  };
+  }
 
-  SocketServer.prototype.execute = function(client, command, data) {
+  execute(client, command, data) {
     if(this._commands[command]) {
       this._commands[command].call(this, this, client, data);
     } else {
       client.send({error: 'Invalid command'});
     }
-  };
+  }
 
-  SocketServer.prototype.command = function(command, callback) {
+  command(command, callback) {
     if(!command || typeof command !== 'string') { throw new Error('SocketServer requires valid command'); }
     if(typeof callback !== 'function') { throw new Error('SocketServer command requires valid callback'); }
     this._commands[command] = callback;
     return true;
-  };
+  }
 
-  /**/
+}
 
-  function SocketClient(ws, uniqid) {
+class SocketClient {
+
+  constructor(ws, uniqid) {
     this._ws = ws;
     this.id = uniqid;
   }
 
-  SocketClient.prototype.send = function(command, data) {
+  send(command, data) {
     if(typeof data === 'object') {
       try {
         data = JSON.stringify(data);
@@ -112,8 +116,8 @@ module.exports = (function() {
       data = {};
     }
     this._ws.send(JSON.stringify({command: command, data: data}));
-  };
+  }
 
-  return SocketServer;
+}
 
-})();
+module.exports = SocketServer;

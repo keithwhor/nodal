@@ -4,9 +4,16 @@
   "description": "An API Server and Framework for node.js",
   "author": "Keith Horwood",
   "main": "core/module.js",
+  "eslintConfig": {
+    "ecmaFeatures": {
+      "classes": true,
+    },
+    "rules": {
+      "quotes": "single"
+    }
+  },
   "engines": {
-      "node": ">= 0.12.0",
-      "iojs": ">= 2.0.1"
+    "iojs": ">= 2.0.1"
   },
   "dependencies": {
     "any-db": "*",

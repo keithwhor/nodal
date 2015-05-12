@@ -1,6 +1,8 @@
-module.exports = (function() {
+'use strict';
 
-  function ComposerResult(composerQuery, error, rows) {
+module.exports = class ComposerResult {
+
+  constructor(composerQuery, error, rows) {
 
     this.query = composerQuery;
 
@@ -24,6 +26,4 @@ module.exports = (function() {
 
   }
 
-  return ComposerResult;
-
-})();
+};

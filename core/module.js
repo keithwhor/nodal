@@ -1,120 +1,118 @@
-module.exports = (function() {
+'use strict';
 
-  var types = require('pg').types;
-  types.setTypeParser(20, function(val) {
-    return val === null ? null : parseInt(val);
-  });
+var types = require('pg').types;
+types.setTypeParser(20, function(val) {
+  return val === null ? null : parseInt(val);
+});
 
-  var Nodal = {
-    API: null,
-    Application: null,
-    Controller: null,
-    Database: null,
-    Initializer: null,
-    Middleware: null,
-    Migration: null,
-    Model: null,
-    Router: null,
-    SchemaGenerator: null,
-    my: {
-      Config: null,
-      Schema: null
-    }
-  };
+var Nodal = {
+  API: null,
+  Application: null,
+  Controller: null,
+  Database: null,
+  Initializer: null,
+  Middleware: null,
+  Migration: null,
+  Model: null,
+  Router: null,
+  SchemaGenerator: null,
+  my: {
+    Config: null,
+    Schema: null
+  }
+};
 
-  /* Lazy Loading */
+/* Lazy Loading */
 
-  var LazyNodal = {
-    my: {},
-    require: function(filename) {
-      return require(process.cwd() + '/' + filename);
-    },
-    include: {
-      bcrypt: require('bcrypt'),
-      mime: require('mime-types'),
-      inflect: require('i')()
-    },
-    rootDirectory: process.cwd()
-  };
+var LazyNodal = {
+  my: {},
+  require: function(filename) {
+    return require(process.cwd() + '/' + filename);
+  },
+  include: {
+    bcrypt: require('bcrypt'),
+    mime: require('mime-types'),
+    inflect: require('i')()
+  },
+  rootDirectory: process.cwd()
+};
 
-  Object.defineProperties(LazyNodal, {
-    API: {
-      get: function() {
-        return Nodal.API || (Nodal.API = require('./required/api.js'));
-      },
-      enumerable: true
+Object.defineProperties(LazyNodal, {
+  API: {
+    get: function() {
+      return Nodal.API || (Nodal.API = require('./required/api.js'));
     },
-    Application: {
-      get: function() {
-        return Nodal.Application || (Nodal.Application = require('./required/application.js'));
-      },
-      enumerable: true
+    enumerable: true
+  },
+  Application: {
+    get: function() {
+      return Nodal.Application || (Nodal.Application = require('./required/application.js'));
     },
-    Controller: {
-      get: function() {
-        return Nodal.Controller || (Nodal.Controller = require('./required/controller.js'));
-      },
-      enumerable: true
+    enumerable: true
+  },
+  Controller: {
+    get: function() {
+      return Nodal.Controller || (Nodal.Controller = require('./required/controller.js'));
     },
-    Database: {
-      get: function() {
-        return Nodal.Database || (Nodal.Database = require('./required/db/database.js'));
-      },
-      enumerable: true
+    enumerable: true
+  },
+  Database: {
+    get: function() {
+      return Nodal.Database || (Nodal.Database = require('./required/db/database.js'));
     },
-    Initializer: {
-      get: function() {
-        return Nodal.Initializer || (Nodal.Initializer = require('./required/initializer.js'));
-      },
-      enumerable: true
+    enumerable: true
+  },
+  Initializer: {
+    get: function() {
+      return Nodal.Initializer || (Nodal.Initializer = require('./required/initializer.js'));
     },
-    Middleware: {
-      get: function() {
-        return Nodal.Middleware || (Nodal.Middleware = require('./required/middleware.js'));
-      },
-      enumerable: true
+    enumerable: true
+  },
+  Middleware: {
+    get: function() {
+      return Nodal.Middleware || (Nodal.Middleware = require('./required/middleware.js'));
     },
-    Migration: {
-      get: function() {
-        return Nodal.Migration || (Nodal.Migration = require('./required/db/migration.js'));
-      },
-      enumerable: true
+    enumerable: true
+  },
+  Migration: {
+    get: function() {
+      return Nodal.Migration || (Nodal.Migration = require('./required/db/migration.js'));
     },
-    Model: {
-      get: function() {
-        return Nodal.Model || (Nodal.Model = require('./required/model.js'));
-      },
-      enumerable: true
+    enumerable: true
+  },
+  Model: {
+    get: function() {
+      return Nodal.Model || (Nodal.Model = require('./required/model.js'));
     },
-    Router: {
-      get: function() {
-        return Nodal.Router || (Nodal.Router = require('./required/router.js'));
-      },
-      enumerable: true
+    enumerable: true
+  },
+  Router: {
+    get: function() {
+      return Nodal.Router || (Nodal.Router = require('./required/router.js'));
     },
-    SchemaGenerator: {
-      get: function() {
-        return Nodal.SchemaGenerator || (Nodal.SchemaGenerator = require('./required/db/schema_generator.js'));
-      },
-      enumerable: true
-    }
-  });
+    enumerable: true
+  },
+  SchemaGenerator: {
+    get: function() {
+      return Nodal.SchemaGenerator || (Nodal.SchemaGenerator = require('./required/db/schema_generator.js'));
+    },
+    enumerable: true
+  }
+});
 
-  Object.defineProperties(LazyNodal.my, {
-    Config: {
-      get: function() {
-        return Nodal.my.Config || (Nodal.my.Config = require('./required/my/config.js')(LazyNodal.rootDirectory));
-      },
-      enumerable: true
+Object.defineProperties(LazyNodal.my, {
+  Config: {
+    get: function() {
+      return Nodal.my.Config || (Nodal.my.Config = require('./required/my/config.js')(LazyNodal.rootDirectory));
     },
-    Schema: {
-      get: function() {
-        return Nodal.my.Schema || (Nodal.my.Schema = require('./required/my/schema.js')(LazyNodal.rootDirectory));
-      },
-      enumerable: true
-    }
-  });
+    enumerable: true
+  },
+  Schema: {
+    get: function() {
+      return Nodal.my.Schema || (Nodal.my.Schema = require('./required/my/schema.js')(LazyNodal.rootDirectory));
+    },
+    enumerable: true
+  }
+});
 
-  return LazyNodal;
-
-})();
+module.exports = LazyNodal;

@@ -1,25 +1,27 @@
-module.exports = (function() {
+'use strict';
 
-  var Database = require('./db/database.js');
-  var Composer = require('./composer.js');
-  var Router = require('./router.js');
-  var SocketServer = require('./socket.js');
-  var Template = require('./template.js');
-  var Auth = require('./auth.js');
-  var MiddlewareManager = require('./middleware_manager.js');
-  var InitializerManager = require('./initializer_manager.js');
+const Database = require('./db/database.js');
+const Composer = require('./composer.js');
+const Router = require('./router.js');
+const SocketServer = require('./socket.js');
+const Template = require('./template.js');
+const Auth = require('./auth.js');
+const MiddlewareManager = require('./middleware_manager.js');
+const InitializerManager = require('./initializer_manager.js');
 
-  var dot = require('dot');
-  var fs = require('fs');
-  var http = require('http');
-  var httpProxy = require('http-proxy');
-  var mime = require('mime-types');
+const dot = require('dot');
+const fs = require('fs');
+const http = require('http');
+const httpProxy = require('http-proxy');
+const mime = require('mime-types');
 
-  // For templates
-  dot.templateSettings.varname = 'data';
-  dot.templateSettings.strip = false;
+// For templates
+dot.templateSettings.varname = 'data';
+dot.templateSettings.strip = false;
 
-  function Application() {
+module.exports = class Application {
+
+  constructor() {
 
     this._proxy = null;
 
@@ -46,13 +48,13 @@ module.exports = (function() {
 
   }
 
-  Application.prototype.initialize = function(callback) {
+  initialize(callback) {
 
     this.initializers.exec(this, callback.bind(this));
 
-  };
+  }
 
-  Application.prototype.loadStaticAssets = function(path) {
+  loadStaticAssets(path) {
 
     if (path[path.length - 1] === '/') {
       path = path.substr(0, path.length - 1);
@@ -99,21 +101,21 @@ module.exports = (function() {
 
     return true;
 
-  };
+  }
 
-  Application.prototype.static = function(name) {
+  static(name) {
 
     return this._static[[this._staticPath, name].join('/')] || null;
 
-  };
+  }
 
-  Application.prototype.enableAuth = function() {
+  enableAuth() {
 
     this.auth = new Auth();
 
-  };
+  }
 
-  Application.prototype.addDatabase = function(alias, connectionDetails) {
+  addDatabase(alias, connectionDetails) {
 
     if (this._db[alias]) {
       throw new Error('Database aliased with "' + alias + '" already added to application.');
@@ -124,15 +126,15 @@ module.exports = (function() {
 
     return db.connect(connectionDetails);
 
-  };
+  }
 
-  Application.prototype.db = function(alias) {
+  db(alias) {
 
     return this._db[alias] || null;
 
-  };
+  }
 
-  Application.prototype.template = function(name) {
+  template(name) {
 
     if(this._templates[name]) {
       return this._templates[name];
@@ -150,9 +152,9 @@ module.exports = (function() {
     }
     return this._templates['!'];
 
-  };
+  }
 
-  Application.prototype._proxyWebSocketRequests = function() {
+  _proxyWebSocketRequests() {
 
     if (this.server && this.socket && !this._proxy) {
 
@@ -166,9 +168,9 @@ module.exports = (function() {
 
     return true;
 
-  };
+  }
 
-  Application.prototype.requestHandler = function(request, response) {
+  requestHandler(request, response) {
 
     if (this._forceProxyTLS &&
         request.headers.hasOwnProperty('x-forwarded-proto') &&
@@ -180,9 +182,9 @@ module.exports = (function() {
 
     this.router && this.router.delegate(this, request, response);
 
-  };
+  }
 
-  Application.prototype.listen = function(port) {
+  listen(port) {
 
     if (this.server) {
       console.error('HTTP server already listening');
@@ -202,9 +204,9 @@ module.exports = (function() {
 
     return true;
 
-  };
+  }
 
-  Application.prototype.socketListen = function(port) {
+  socketListen(port) {
 
     if (this.socket) {
       console.error('WebSocket server already listening');
@@ -219,21 +221,19 @@ module.exports = (function() {
 
     return true;
 
-  };
+  }
 
-  Application.prototype.command = function() {
+  command() {
     if(!this.socket) {
       throw new Error('Application must socketListen before it can use commands');
     }
     this.socket.command.apply(this.socket, arguments);
-  };
+  }
 
-  Application.prototype.forceProxyTLS = function() {
+  forceProxyTLS() {
 
     this._forceProxyTLS = true;
 
-  };
+  }
 
-  return Application;
-
-})();
+};

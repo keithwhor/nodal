@@ -1,10 +1,12 @@
-module.exports = (function() {
+'use strict';
 
-  var Model = require('./model.js');
-  var Database = require('./db/database.js');
-  var ComposerResult = require('./composer_result.js');
+const Model = require('./model.js');
+const Database = require('./db/database.js');
+const ComposerResult = require('./composer_result.js');
 
-  function ComposerQuery(db, modelConstructor) {
+class ComposerQuery {
+
+  constructor(db, modelConstructor) {
 
     this._db = db;
     this._modelConstructor = modelConstructor;
@@ -30,7 +32,7 @@ module.exports = (function() {
 
   }
 
-  ComposerQuery.prototype.where = function(filterObj) {
+  where(filterObj) {
 
     if (this._select.where.length) {
       throw new Error('Can only specify .where once per ComposerQuery');
@@ -48,9 +50,9 @@ module.exports = (function() {
 
     return this;
 
-  };
+  }
 
-  ComposerQuery.prototype.parseFilters = function(filterObj) {
+  parseFilters(filterObj) {
 
     var comparators = this._db.adapter.comparators;
     var columnLookup = this._columnLookup;
@@ -74,9 +76,9 @@ module.exports = (function() {
       return columnLookup[v.columnName] && comparators[v.comparator];
     });
 
-  };
+  }
 
-  ComposerQuery.prototype.orderBy = function(orderObj) {
+  orderBy(orderObj) {
 
     if (this._select.orderBy.length) {
       throw new Error('Can only specify .orderBy once per ComposerQuery');
@@ -99,9 +101,9 @@ module.exports = (function() {
 
     return this;
 
-  };
+  }
 
-  ComposerQuery.prototype.limit = function(offset, count) {
+  limit(offset, count) {
 
     if (this._select.limit) {
       throw new Error('Can only specify .limit once per ComposerQuery');
@@ -114,9 +116,9 @@ module.exports = (function() {
 
     return this;
 
-  };
+  }
 
-  ComposerQuery.prototype.externalQuery = function(callback) {
+  externalQuery(callback) {
 
     var db = this._db;
     var table = this._table;
@@ -165,9 +167,9 @@ module.exports = (function() {
       }
     );
 
-  };
+  }
 
-  ComposerQuery.prototype.query = function(callback) {
+  query(callback) {
 
     var db = this._db;
     var table = this._table;
@@ -201,11 +203,13 @@ module.exports = (function() {
       }
     );
 
-  };
+  }
 
-  function Composer() {}
+}
 
-  Composer.prototype.from = function(db, modelConstructor) {
+module.exports = class Composer {
+
+  from(db, modelConstructor) {
 
     if (!(db instanceof Database)) {
       throw new Error('Composer queries require valid database');
@@ -217,8 +221,6 @@ module.exports = (function() {
 
     return new ComposerQuery(db, modelConstructor);
 
-  };
+  }
 
-  return Composer;
-
-})();
+};

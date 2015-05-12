@@ -1,15 +1,17 @@
-module.exports = (function() {
+'use strict';
 
-  var url = require('url');
+const url = require('url');
 
-  var Template = require('./template.js');
+const Template = require('./template.js');
 
-  var Model = require('./model.js');
-  var ComposerResult = require('./composer_result.js');
+const Model = require('./model.js');
+const ComposerResult = require('./composer_result.js');
 
-  var API = require('./api.js');
+const API = require('./api.js');
 
-  function Controller(request, response, middlewareManager) {
+module.exports = class Controller {
+
+  constructor(request, response, middlewareManager) {
 
     this._middlewareManager = middlewareManager;
     this._initializeTime = (new Date()).valueOf();
@@ -21,24 +23,24 @@ module.exports = (function() {
 
   }
 
-  Controller.prototype.request = function() {
+  request() {
     return this._request;
-  };
+  }
 
-  Controller.prototype.path = function() {
+  path() {
     return this._path;
-  };
+  }
 
-  Controller.prototype.getStatus = function() {
+  getStatus() {
     return this._status;
-  };
+  }
 
-  Controller.prototype.status = function(value) {
+  status(value) {
     this._status = value | 0;
     return this._status;
-  };
+  }
 
-  Controller.prototype.setHeaders = function(object) {
+  setHeaders(object) {
     var keys = Object.keys(object);
     var headers = {};
     for(var i = 0, len = keys.length; i < len; i++) {
@@ -46,29 +48,29 @@ module.exports = (function() {
     }
     this._headers = headers;
     return headers;
-  };
+  }
 
-  Controller.prototype.setHeader = function(key, value) {
+  setHeader(key, value) {
     this._headers[key] = value;
     return value;
-  };
+  }
 
-  Controller.prototype.getHeader = function(key, defaultValue) {
+  getHeader(key, defaultValue) {
     return this._headers.hasOwnProperty(key) ? this._headers[key] : defaultValue;
-  };
+  }
 
-  Controller.prototype.unauthorized = function(msg) {
+  unauthorized(msg) {
     this.status(401);
     this.render(API.error(msg || 'Unauthorized'));
     return true;
-  };
+  }
 
-  Controller.prototype.badRequest = function(msg) {
+  badRequest(msg) {
     this.status(400);
     this.render(API.error(msg || 'Bad Request'));
-  };
+  }
 
-  Controller.prototype.render = function(data, templateData) {
+  render(data, templateData) {
 
     if(!data) { data = ''; }
 
@@ -107,35 +109,45 @@ module.exports = (function() {
 
     return true;
 
-  };
+  }
 
-  Controller.prototype.end = function(data) {
+  end(data) {
 
     this._response.writeHead(this._status, this._headers);
     this._response.end(data);
 
     console.log(this._request.url + ' loaded in: ' + ((new Date()).valueOf() - this._initializeTime) + 'ms');
 
-  };
+  }
 
-  Controller.prototype.auth = function(self, params, app, authorize) {
+  auth(self, params, app, authorize) {
 
     authorize(true);
 
-  };
+  }
 
-  Controller.prototype.get = function() {
+  get() {
     this.status(501);
     this.setHeader('Content-Type', 'text/plain');
     this.render('501 - Not Implemented');
-  };
+  }
 
-  Controller.prototype.post = Controller.prototype.get;
+  put() {
+    this.status(501);
+    this.setHeader('Content-Type', 'text/plain');
+    this.render('501 - Not Implemented');
+  }
 
-  Controller.prototype.put = Controller.prototype.get;
+  post() {
+    this.status(501);
+    this.setHeader('Content-Type', 'text/plain');
+    this.render('501 - Not Implemented');
+  }
 
-  Controller.prototype.del = Controller.prototype.get;
+  del() {
+    this.status(501);
+    this.setHeader('Content-Type', 'text/plain');
+    this.render('501 - Not Implemented');
+  }
 
-  return Controller;
-
-})();
+};

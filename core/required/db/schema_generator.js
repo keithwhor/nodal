@@ -1,10 +1,12 @@
-module.exports = (function() {
+'use strict';
 
-  var Adapter = require('./adapter.js');
-  var fs = require('fs');
-  var inflect = require('i')();
+const Adapter = require('./adapter.js');
+const fs = require('fs');
+const inflect = require('i')();
 
-  function SchemaGenerator(db) {
+class SchemaGenerator {
+
+  constructor(db) {
 
     this.db = db;
 
@@ -15,20 +17,20 @@ module.exports = (function() {
 
   }
 
-  SchemaGenerator.prototype.load = function(filename) {
+  load(filename) {
     filename = filename || this._defaultPath;
     filename = process.cwd() + '/' + filename;
     return this.set(JSON.parse(fs.readFileSync(filename)));
-  };
+  }
 
-  SchemaGenerator.prototype.save = function(filename) {
+  save(filename) {
     filename = filename || this._defaultPath;
     filename = process.cwd() + '/' + filename;
     fs.writeFileSync(filename, this.generate());
     return true;
-  };
+  }
 
-  SchemaGenerator.prototype.mergeProperties = function(columnData, properties) {
+  mergeProperties(columnData, properties) {
 
     properties = properties || {};
 
@@ -53,9 +55,9 @@ module.exports = (function() {
 
     return columnData;
 
-  };
+  }
 
-  SchemaGenerator.prototype.set = function(schema) {
+  set(schema) {
 
     this.setMigrationId(schema.migration_id);
 
@@ -71,13 +73,13 @@ module.exports = (function() {
 
     return true;
 
-  };
+  }
 
-  SchemaGenerator.prototype.setMigrationId = function(id) {
+  setMigrationId(id) {
     this.migrationId = id;
-  };
+  }
 
-  SchemaGenerator.prototype.createTable = function(table, arrColumnData) {
+  createTable(table, arrColumnData) {
 
     var tableClass = inflect.classify(table);
 
@@ -108,9 +110,9 @@ module.exports = (function() {
 
     return arrColumnData;
 
-  };
+  }
 
-  SchemaGenerator.prototype.dropTable = function(table, columnData) {
+  dropTable(table, columnData) {
 
     var tableClass = inflect.classify(table);
 
@@ -118,9 +120,9 @@ module.exports = (function() {
 
     return true;
 
-  };
+  }
 
-  SchemaGenerator.prototype.alterColumn = function(table, column, type, properties) {
+  alterColumn(table, column, type, properties) {
 
     if (properties.primary_key) {
       delete properties.unique;
@@ -149,9 +151,9 @@ module.exports = (function() {
 
     return true;
 
-  };
+  }
 
-  SchemaGenerator.prototype.addColumn = function(table, column, type, properties) {
+  addColumn(table, column, type, properties) {
 
     if (properties.primary_key) {
       delete properties.unique;
@@ -186,9 +188,9 @@ module.exports = (function() {
 
     return true;
 
-  };
+  }
 
-  SchemaGenerator.prototype.dropColumn = function(table, column) {
+  dropColumn(table, column) {
 
     var tables = this.tables;
     var tableKey = Object.keys(tables).filter(function(t) {
@@ -211,9 +213,9 @@ module.exports = (function() {
 
     return true;
 
-  };
+  }
 
-  SchemaGenerator.prototype.renameColumn = function(table, column, newColumn) {
+  renameColumn(table, column, newColumn) {
 
     var tables = this.tables;
     var tableKey = Object.keys(tables).filter(function(t) {
@@ -238,9 +240,9 @@ module.exports = (function() {
 
     return true;
 
-  };
+  }
 
-  SchemaGenerator.prototype.generate = function() {
+  generate() {
 
     var tables = this.tables;
     var hasTables = !!Object.keys(tables).length;
@@ -290,8 +292,6 @@ module.exports = (function() {
       ''
     ]).join('\n');
 
-  };
+  }
 
-  return SchemaGenerator;
-
-})();
+};

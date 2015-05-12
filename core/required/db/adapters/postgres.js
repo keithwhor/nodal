@@ -1,68 +1,28 @@
-module.exports = (function() {
+'use strict';
 
-  var DatabaseAdapter = require('../adapter.js');
+const DatabaseAdapter = require('../adapter.js');
 
-  function PostgresAdapter() {
+class PostgresAdapter extends DatabaseAdapter {
 
-    DatabaseAdapter.apply(this, arguments);
+  constructor() {
+
+    super();
 
   }
 
-  PostgresAdapter.prototype = Object.create(DatabaseAdapter.prototype);
-  PostgresAdapter.prototype.constructor = PostgresAdapter;
-
-  PostgresAdapter.prototype.escapeFieldCharacter = '"';
-
-  PostgresAdapter.prototype.types = {
-    serial: {
-      dbName: 'BIGSERIAL',
-      properties: {
-        primary_key: true,
-        nullable: false
-      }
-    },
-    int: {
-      dbName: 'BIGINT'
-    },
-    currency: {
-      dbName: 'BIGINT'
-    },
-    float: {
-      dbName: 'FLOAT'
-    },
-    string: {
-      dbName: 'VARCHAR'
-    },
-    text: {
-      dbName: 'TEXT'
-    },
-    datetime: {
-      dbName: 'TIMESTAMP'
-    },
-    boolean: {
-      dbName: 'BOOLEAN'
-    }
-  };
-
-  PostgresAdapter.prototype.sanitizeType = {
-    boolean: function(v) {
-      return ['f', 't'][v | 0];
-    }
-  };
-
-  PostgresAdapter.prototype.generateArray = function(arr) {
+  generateArray(arr) {
 
     return '{' + arr.join(',') + '}';
 
-  };
+  }
 
-  PostgresAdapter.prototype.generateConnectionString = function(host, port, database, user, password) {
+  generateConnectionString(host, port, database, user, password) {
 
     return 'postgres://' + user + ':' + password + '@' + host + ':' + port + '/' + database;
 
-  };
+  }
 
-  PostgresAdapter.prototype.generateColumn = function(columnName, columnType, columnProperties, isAlter) {
+  generateColumn(columnName, columnType, columnProperties, isAlter) {
 
     isAlter = !!isAlter;
 
@@ -74,31 +34,31 @@ module.exports = (function() {
       (columnProperties.primary_key || !columnProperties.nullable) ? 'NOT NULL' : ''
     ].filter(function(v) { return !!v; }).join(' ');
 
-  };
+  }
 
-  PostgresAdapter.prototype.generateIndex = function(table, columnName) {
+  generateIndex(table, columnName) {
 
     return this.generateConstraint(table, columnName, 'index');
 
-  };
+  }
 
-  PostgresAdapter.prototype.generateConstraint = function(table, columnName, suffix) {
+  generateConstraint(table, columnName, suffix) {
     return this.escapeField([table, columnName, suffix].join('_'));
-  };
+  }
 
-  PostgresAdapter.prototype.generatePrimaryKey = function(table, columnName) {
+  generatePrimaryKey(table, columnName) {
 
     return ['CONSTRAINT ', this.generateConstraint(table, columnName, 'pk'), ' PRIMARY KEY(', this.escapeField(columnName), ')'].join('');
 
-  };
+  }
 
-  PostgresAdapter.prototype.generateUniqueKey = function(table, columnName) {
+  generateUniqueKey(table, columnName) {
 
     return ['CONSTRAINT ', this.generateConstraint(table, columnName, 'unique'), ' UNIQUE(', this.escapeField(columnName), ')'].join('');
 
-  };
+  }
 
-  PostgresAdapter.prototype.generateAlterTableColumnType = function(table, columnName, columnType, columnProperties) {
+  generateAlterTableColumnType(table, columnName, columnType, columnProperties) {
 
     return [
       'ALTER TABLE',
@@ -107,9 +67,9 @@ module.exports = (function() {
         this.generateColumn(columnName, columnType, columnProperties, true)
     ].join(' ');
 
-  };
+  }
 
-  PostgresAdapter.prototype.generateAlterTableAddPrimaryKey = function(table, columnName) {
+  generateAlterTableAddPrimaryKey(table, columnName) {
 
     return [
       'ALTER TABLE',
@@ -118,9 +78,9 @@ module.exports = (function() {
         this.generatePrimaryKey(table, columnName)
     ].join(' ');
 
-  };
+  }
 
-  PostgresAdapter.prototype.generateAlterTableDropPrimaryKey = function(table, columnName) {
+  generateAlterTableDropPrimaryKey(table, columnName) {
 
     return [
       'ALTER TABLE',
@@ -129,9 +89,9 @@ module.exports = (function() {
         this.generateConstraint(table, columnName, 'pk')
     ].join(' ');
 
-  };
+  }
 
-  PostgresAdapter.prototype.generateAlterTableAddUniqueKey = function(table, columnName) {
+  generateAlterTableAddUniqueKey(table, columnName) {
 
     return [
       'ALTER TABLE',
@@ -140,9 +100,9 @@ module.exports = (function() {
         this.generateUniqueKey(table, columnName)
     ].join(' ');
 
-  };
+  }
 
-  PostgresAdapter.prototype.generateAlterTableDropUniqueKey = function(table, columnName) {
+  generateAlterTableDropUniqueKey(table, columnName) {
 
     return [
       'ALTER TABLE',
@@ -151,9 +111,9 @@ module.exports = (function() {
         this.generateConstraint(table, columnName, 'unique')
     ].join(' ');
 
-  };
+  }
 
-  PostgresAdapter.prototype.generateAlterTableAddColumn = function(table, columnName, columnType, columnProperties) {
+  generateAlterTableAddColumn(table, columnName, columnType, columnProperties) {
 
     return [
       'ALTER TABLE',
@@ -162,9 +122,9 @@ module.exports = (function() {
         this.generateColumn(columnName, columnType, columnProperties)
     ].join(' ');
 
-  };
+  }
 
-  PostgresAdapter.prototype.generateAlterTableDropColumn = function(table, columnName) {
+  generateAlterTableDropColumn(table, columnName) {
 
     return [
       'ALTER TABLE',
@@ -173,9 +133,9 @@ module.exports = (function() {
         this.escapeField(columnName)
     ].join(' ');
 
-  };
+  }
 
-  PostgresAdapter.prototype.generateAlterTableRenameColumn = function(table, columnName, newColumnName) {
+  generateAlterTableRenameColumn(table, columnName, newColumnName) {
 
     return [
       'ALTER TABLE',
@@ -186,9 +146,9 @@ module.exports = (function() {
       this.escapeField(newColumnName)
     ].join(' ');
 
-  };
+  }
 
-  PostgresAdapter.prototype.generateCreateIndex = function(table, columnName, indexType) {
+  generateCreateIndex(table, columnName, indexType) {
 
     return [
       'CREATE INDEX',
@@ -200,16 +160,55 @@ module.exports = (function() {
       ['(', this.escapeField(columnName), ')'].join('')
     ].join(' ');
 
-  };
+  }
 
-  PostgresAdapter.prototype.generateDropIndex = function(table, columnName) {
+  generateDropIndex(table, columnName) {
 
     return [
       'DROP INDEX', this.generateIndex(table, columnName)
     ].join(' ');
 
-  };
+  }
 
-  return PostgresAdapter;
+}
 
-})();
+PostgresAdapter.prototype.sanitizeType = {
+  boolean: function(v) {
+    return ['f', 't'][v | 0];
+  }
+}
+
+PostgresAdapter.prototype.escapeFieldCharacter = '"';
+
+PostgresAdapter.prototype.types = {
+  serial: {
+    dbName: 'BIGSERIAL',
+    properties: {
+      primary_key: true,
+      nullable: false
+    }
+  },
+  int: {
+    dbName: 'BIGINT'
+  },
+  currency: {
+    dbName: 'BIGINT'
+  },
+  float: {
+    dbName: 'FLOAT'
+  },
+  string: {
+    dbName: 'VARCHAR'
+  },
+  text: {
+    dbName: 'TEXT'
+  },
+  datetime: {
+    dbName: 'TIMESTAMP'
+  },
+  boolean: {
+    dbName: 'BOOLEAN'
+  }
+};
+
+module.exports = PostgresAdapter;

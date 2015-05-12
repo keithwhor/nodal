@@ -1,11 +1,11 @@
-module.exports = (function() {
+'use strict';
 
-  var Model = require('./model.js');
-  var ComposerResult = require('./composer_result.js');
+const Model = require('./model.js');
+const ComposerResult = require('./composer_result.js');
 
-  function APIConstructor() {}
+module.exports = class APIConstructor {
 
-  APIConstructor.prototype.format = function(obj) {
+  format(obj) {
 
     if (obj instanceof Model) {
       return this.formatModel(obj);
@@ -17,18 +17,18 @@ module.exports = (function() {
 
     throw new Error('.format requires Model or ComposerResult');
 
-  };
+  }
 
-  APIConstructor.prototype.error = function(message) {
+  error(message) {
 
     return {
       meta: this.meta(0, 0, 0, {message: message}),
       data: []
     };
 
-  };
+  }
 
-  APIConstructor.prototype.formatComposerResult = function(composerResult) {
+  formatComposerResult(composerResult) {
 
     return {
       meta: this.meta(
@@ -44,9 +44,9 @@ module.exports = (function() {
       data: composerResult.rows
     };
 
-  };
+  }
 
-  APIConstructor.prototype.formatModel = function(model) {
+  formatModel(model) {
     return {
       meta: this.meta(1, 1, 0,
         (model.hasErrors() ? {
@@ -57,9 +57,9 @@ module.exports = (function() {
       ),
       data: model.hasErrors() ? [] : [model.toStdObject()],
     };
-  };
+  }
 
-  APIConstructor.prototype.resource = function(modelConstructor) {
+  resource(modelConstructor) {
 
     var columns = modelConstructor.prototype.schema.columns;
     var lookup = [];
@@ -78,9 +78,9 @@ module.exports = (function() {
       fields: fields
     };
 
-  };
+  }
 
-  APIConstructor.prototype.meta = function(total, count, offset, error, resource) {
+  meta(total, count, offset, error, resource) {
 
     if (error) {
       total = 0;
@@ -97,8 +97,6 @@ module.exports = (function() {
       resource: resource || null
     };
 
-  };
+  }
 
-  return new APIConstructor();
-
-})();
+};

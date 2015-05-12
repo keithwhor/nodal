@@ -1,12 +1,14 @@
-module.exports = (function() {
+'use strict';
 
-  var url = require('url');
-  var qs = require('querystring');
-  var Config = require('../module.js').my.Config;
+const url = require('url');
+const qs = require('querystring');
+// const Config = require('../module.js'.my.Config); // ?
 
-  var Controller = require('./controller.js');
+const Controller = require('./controller.js');
 
-  function Route(regex, controller) {
+class Route {
+
+  constructor(regex, controller) {
     this._regex = null;
     if(typeof regex === 'string') {
       this._regex = new RegExp(regex);
@@ -21,12 +23,12 @@ module.exports = (function() {
     this._controller = controller;
   }
 
-  Route.prototype.match = function(pathname) {
+  match(pathname) {
     var matches = this._regex.exec(pathname);
     return !!matches && matches[0] === pathname;
-  };
+  }
 
-  Route.prototype.parseQueryParameters = function(query) {
+  parseQueryParameters(query) {
 
     var obj = {};
 
@@ -61,9 +63,9 @@ module.exports = (function() {
 
     return obj;
 
-  };
+  }
 
-  Route.prototype.parseBody = function(contentType, body) {
+  parseBody(contentType, body) {
 
     var fn = {
       'application/x-www-form-urlencoded': (function(body) {
@@ -80,9 +82,9 @@ module.exports = (function() {
 
     return fn ? fn.call(this, body) : {raw: body, data: {}};
 
-  };
+  }
 
-  Route.prototype.execute = function(request, response, urlParts, app) {
+  execute(request, response, urlParts, app) {
 
     var controller = new this._controller(request, response, app.middleware);
 
@@ -133,17 +135,21 @@ module.exports = (function() {
 
     return true;
 
-  };
+  }
 
-  function Router() {
+}
+
+module.exports = class Router {
+
+  constructor() {
     this._routes = [];
   }
 
-  Router.prototype.route = function(regex, Controller) {
+  route(regex, Controller) {
     this._routes.push(new Route(regex, Controller));
-  };
+  }
 
-  Router.prototype.find = function(pathname) {
+  find(pathname) {
     routes = this._routes;
     for(var i = 0, len = routes.length; i < len; i++) {
       if(routes[i].match(pathname)) {
@@ -151,9 +157,9 @@ module.exports = (function() {
       }
     }
     return null;
-  };
+  }
 
-  Router.prototype.delegate = function(app, request, response) {
+  delegate(app, request, response) {
 
     var urlParts = url.parse(request.url, true);
 
@@ -165,8 +171,6 @@ module.exports = (function() {
     response.writeHead(404, {'Content-Type': 'text/plain'});
     response.end('404 Not Found');
 
-  };
+  }
 
-  return Router;
-
-})();
+};

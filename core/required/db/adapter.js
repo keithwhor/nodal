@@ -1,65 +1,41 @@
-module.exports = (function() {
+'use strict';
 
-  function DatabaseAdapter() {
+class DatabaseAdapter {
 
-  }
+  generateConnectionString(host, port, database, user, password) {}
 
-  DatabaseAdapter.prototype.typeProperties = [
-    'length',
-    'nullable',
-    'unique',
-    'primary_key',
-    'array',
-    'defaultValue'
-  ];
+  generateIndex() {}
+  generateConstraint() {}
 
-  DatabaseAdapter.prototype.typePropertyDefaults = {
-    length: null,
-    nullable: true,
-    unique: false,
-    primary_key: false,
-    array: false,
-    defaultValue: null
-  };
+  generateColumn(columnName, type, properties) {}
+  generatePrimaryKey(columnName, type, properties) {}
+  generateUniqueKey(columnName, type, properties) {}
 
-  DatabaseAdapter.prototype.types = {};
-  DatabaseAdapter.prototype.sanitizeType = {};
-  DatabaseAdapter.prototype.escapeFieldCharacter = '';
+  generateAlterTableColumnType(table, columnName, columnType, columnProperties) {}
+  generateAlterTableAddPrimaryKey(table, columnName) {}
+  generateAlterTableDropPrimaryKey(table, columnName) {}
+  generateAlterTableAddUniqueKey(table, columnName) {}
+  generateAlterTableDropUniqueKey(table, columnName) {}
 
-  DatabaseAdapter.prototype.generateConnectionString = function(host, port, database, user, password) {};
+  generateAlterTableAddColumn(table, columnName, columnType, columnProperties) {}
+  generateAlterTableDropColumn(table, columnName) {}
+  generateAlterTableRenameColumn(table, columnName, newColumnName) {}
 
-  DatabaseAdapter.prototype.generateIndex = function() {};
-  DatabaseAdapter.prototype.generateConstraint = function() {};
+  generateCreateIndex(table, columnName, indexType) {}
+  generateDropIndex(table, columnName) {}
 
-  DatabaseAdapter.prototype.generateColumn = function(columnName, type, properties) {};
-  DatabaseAdapter.prototype.generatePrimaryKey = function(columnName, type, properties) {};
-  DatabaseAdapter.prototype.generateUniqueKey = function(columnName, type, properties) {};
-
-  DatabaseAdapter.prototype.generateAlterTableColumnType = function(table, columnName, columnType, columnProperties) {};
-  DatabaseAdapter.prototype.generateAlterTableAddPrimaryKey = function(table, columnName) {};
-  DatabaseAdapter.prototype.generateAlterTableDropPrimaryKey = function(table, columnName) {};
-  DatabaseAdapter.prototype.generateAlterTableAddUniqueKey = function(table, columnName) {};
-  DatabaseAdapter.prototype.generateAlterTableDropUniqueKey = function(table, columnName) {};
-
-  DatabaseAdapter.prototype.generateAlterTableAddColumn = function(table, columnName, columnType, columnProperties) {};
-  DatabaseAdapter.prototype.generateAlterTableDropColumn = function(table, columnName) {};
-  DatabaseAdapter.prototype.generateAlterTableRenameColumn = function(table, columnName, newColumnName) {};
-
-  DatabaseAdapter.prototype.generateCreateIndex = function(table, columnName, indexType) {};
-  DatabaseAdapter.prototype.generateDropIndex = function(table, columnName) {};
-
-  DatabaseAdapter.prototype.sanitize = function(type, value) {
+  sanitize(type, value) {
 
     var fnSanitize = this.sanitizeType[type];
     return fnSanitize ? fnSanitize(value) : value;
 
-  };
+  }
 
-  DatabaseAdapter.prototype.escapeField = function(name) {
+  escapeField(name) {
     return ['', name, ''].join(this.escapeFieldCharacter);
-  };
+  }
 
-  DatabaseAdapter.prototype.getTypeProperties = function(typeName, optionalValues) {
+  getTypeProperties(typeName, optionalValues) {
 
     var type = this.types[typeName];
     var typeProperties = type ? (type.properties || {}) : {};
@@ -77,31 +53,31 @@ module.exports = (function() {
 
     return outputType;
 
-  };
+  }
 
-  DatabaseAdapter.prototype.getTypeDbName = function(typeName) {
+  getTypeDbName(typeName) {
     type = this.types[typeName];
     return type ? type.dbName : 'INTEGER';
-  };
+  }
 
-  DatabaseAdapter.prototype.generateColumnsStatement = function(table, columns) {
+  generateColumnsStatement(table, columns) {
     var self = this;
     return columns
       .map(function(columnData) {
         return self.generateColumn(columnData.name, self.getTypeDbName(columnData.type), self.getTypeProperties(columnData.type, columnData.properties));
       })
       .join(',');
-  };
+  }
 
-  DatabaseAdapter.prototype.generatePrimaryKeysStatement = function(table, columns) {
+  generatePrimaryKeysStatement(table, columns) {
     var self = this;
     return columns
       .filter(function(columnData) { return self.getTypeProperties(columnData.type, columnData.properties).primary_key; })
       .map(function(columnData) { return self.generatePrimaryKey(table, columnData.name); })
       .join(',');
-  };
+  }
 
-  DatabaseAdapter.prototype.generateUniqueKeysStatement = function(table, columns) {
+  generateUniqueKeysStatement(table, columns) {
     var self = this;
     return columns
       .filter(
@@ -112,9 +88,9 @@ module.exports = (function() {
       )
       .map(function(columnData) { return self.generateUniqueKey(table, columnData.name); })
       .join(',');
-  };
+  }
 
-  DatabaseAdapter.prototype.generateCreateTableQuery = function(table, columns) {
+  generateCreateTableQuery(table, columns) {
 
     return [
       'CREATE TABLE ',
@@ -128,17 +104,17 @@ module.exports = (function() {
       ')'
     ].join('');
 
-  };
+  }
 
-  DatabaseAdapter.prototype.generateDropTableQuery = function(table) {
+  generateDropTableQuery(table) {
 
     return [
       'DROP TABLE ', this.escapeField(table)
     ].join('');
 
-  };
+  }
 
-  DatabaseAdapter.prototype.generateSelectQuery = function(table, columnNames, multiFilter, orderObjArray, limitObj) {
+  generateSelectQuery(table, columnNames, multiFilter, orderObjArray, limitObj) {
 
     return [
       'SELECT ',
@@ -150,9 +126,9 @@ module.exports = (function() {
         this.generateLimitClause(limitObj)
     ].join('');
 
-  };
+  }
 
-  DatabaseAdapter.prototype.generateCountQuery = function(table, columnName, multiFilter) {
+  generateCountQuery(table, columnName, multiFilter) {
 
     return [
       'SELECT COUNT(',
@@ -162,9 +138,9 @@ module.exports = (function() {
         this.generateWhereClause(table, multiFilter)
     ].join('');
 
-  };
+  }
 
-  DatabaseAdapter.prototype.generateUpdateQuery = function(table, columnNames) {
+  generateUpdateQuery(table, columnNames) {
 
     var pkColumn = columnNames[0];
 
@@ -180,9 +156,9 @@ module.exports = (function() {
       ' RETURNING *'
     ].join('');
 
-  };
+  }
 
-  DatabaseAdapter.prototype.generateDeleteQuery = function(table, columnNames) {
+  generateDeleteQuery(table, columnNames) {
 
     return [
       'DELETE FROM ',
@@ -194,9 +170,9 @@ module.exports = (function() {
       ') RETURNING *'
     ].join('');
 
-  };
+  }
 
-  DatabaseAdapter.prototype.generateInsertQuery = function(table, columnNames) {
+  generateInsertQuery(table, columnNames) {
     return [
       'INSERT INTO ',
         this.escapeField(table),
@@ -206,9 +182,9 @@ module.exports = (function() {
         columnNames.map(function(v, i) { return '$' + (i + 1); }).join(','),
       ') RETURNING *'
     ].join('');
-  };
+  }
 
-  DatabaseAdapter.prototype.generateAlterTableQuery = function(table, columnName, type, properties) {
+  generateAlterTableQuery(table, columnName, type, properties) {
 
     var queries = [];
 
@@ -241,9 +217,9 @@ module.exports = (function() {
 
     return queries.join(';');
 
-  };
+  }
 
-  DatabaseAdapter.prototype.generateAlterTableAddColumnQuery = function(table, columnName, type, properties) {
+  generateAlterTableAddColumnQuery(table, columnName, type, properties) {
 
     return this.generateAlterTableAddColumn(
       table,
@@ -252,62 +228,35 @@ module.exports = (function() {
       this.getTypeProperties(type, properties)
     );
 
-  };
+  }
 
-  DatabaseAdapter.prototype.generateAlterTableDropColumnQuery = function(table, columnName) {
+  generateAlterTableDropColumnQuery(table, columnName) {
 
     return this.generateAlterTableDropColumn(table, columnName);
 
-  };
+  }
 
-  DatabaseAdapter.prototype.generateAlterTableRenameColumnQuery = function(table, columnName, newColumnName) {
+  generateAlterTableRenameColumnQuery(table, columnName, newColumnName) {
 
     return this.generateAlterTableRenameColumn(table, columnName, newColumnName);
 
-  };
+  }
 
-  DatabaseAdapter.prototype.generateCreateIndexQuery = function(table, columnName, index) {
+  generateCreateIndexQuery(table, columnName, index) {
 
     indexType = index || 'btree';
 
     return this.generateCreateIndex(table, columnName, indexType);
 
-  };
+  }
 
-  DatabaseAdapter.prototype.generateDropIndexQuery = function(table, columnName) {
+  generateDropIndexQuery(table, columnName) {
 
     return this.generateDropIndex(table, columnName);
 
-  };
+  }
 
-  DatabaseAdapter.prototype.comparators = {
-    is: function(field, value) {
-      return [field, ' = ', value].join('');
-    },
-    not: function(field, value) {
-      return [field, ' <> ', value].join('');
-    },
-    lt: function(field, value) {
-      return [field, ' < ', value].join('');
-    },
-    lte: function(field, value) {
-      return [field, ' <= ', value].join('');
-    },
-    gt: function(field, value) {
-      return [field, ' > ', value].join('');
-    },
-    gte: function(field, value) {
-      return [field, ' >= ', value].join('');
-    },
-    like: function(field, value) {
-      return [field, ' LIKE \'%\' || ', value, ' || \'%\''].join('');
-    },
-    ilike: function(field, value) {
-      return [field, ' ILIKE \'%\' || ', value, ' || \'%\''].join('');
-    }
-  };
-
-  DatabaseAdapter.prototype.parseFilterObj = function(table, filterObj, offset) {
+  parseFilterObj(table, filterObj, offset) {
 
     offset |= 0;
     var self = this;
@@ -323,9 +272,9 @@ module.exports = (function() {
       };
     });
 
-  };
+  }
 
-  DatabaseAdapter.prototype.createMultiFilter = function(table, filterObjArray) {
+  createMultiFilter(table, filterObjArray) {
 
     var offset = 0;
     var parse = this.parseFilterObj.bind(this);
@@ -339,17 +288,17 @@ module.exports = (function() {
         return v;
       });
 
-  };
+  }
 
-  DatabaseAdapter.prototype.generateWhereClause = function(table, multiFilter) {
+  generateWhereClause(table, multiFilter) {
 
     return (!multiFilter || !multiFilter.length) ? '': ' WHERE (' + multiFilter.map((function(filterObj) {
       return this.generateAndClause(table, filterObj);
     }).bind(this)).join(') OR (') + ')';
 
-  };
+  }
 
-  DatabaseAdapter.prototype.generateAndClause = function(table, filterObjArray) {
+  generateAndClause(table, filterObjArray) {
 
     var comparators = this.comparators;
 
@@ -361,15 +310,15 @@ module.exports = (function() {
       return comparators[filterObj.comparator](filterObj.refName, filterObj.variable);
     }).join(' AND ');
 
-  };
+  }
 
-  DatabaseAdapter.prototype.getParamsFromMultiFilter = function(multiFilter) {
+  getParamsFromMultiFilter(multiFilter) {
     return [].concat.apply([], multiFilter).map(function(filterObj) {
       return filterObj.value;
     });
-  };
+  }
 
-  DatabaseAdapter.prototype.generateOrderByClause = function(table, orderObjArray) {
+  generateOrderByClause(table, orderObjArray) {
 
     var tableEsc = this.escapeField(table);
 
@@ -377,9 +326,9 @@ module.exports = (function() {
       return [tableEsc, '.', this.escapeField(v.columnName), ' ', v.direction].join('');
     }).bind(this)).join(', ');
 
-  };
+  }
 
-  DatabaseAdapter.prototype.generateLimitClause = function(limitObj) {
+  generateLimitClause(limitObj) {
 
     return (!limitObj) ? '' : [
       ' LIMIT',
@@ -388,8 +337,57 @@ module.exports = (function() {
       limitObj.count
     ].join('');
 
-  };
+  }
 
-  return DatabaseAdapter;
+}
 
-})();
+DatabaseAdapter.prototype.typeProperties = [
+  'length',
+  'nullable',
+  'unique',
+  'primary_key',
+  'array',
+  'defaultValue'
+];
+
+DatabaseAdapter.prototype.typePropertyDefaults = {
+  length: null,
+  nullable: true,
+  unique: false,
+  primary_key: false,
+  array: false,
+  defaultValue: null
+};
+
+DatabaseAdapter.prototype.comparators = {
+  is: function(field, value) {
+    return [field, ' = ', value].join('');
+  },
+  not: function(field, value) {
+    return [field, ' <> ', value].join('');
+  },
+  lt: function(field, value) {
+    return [field, ' < ', value].join('');
+  },
+  lte: function(field, value) {
+    return [field, ' <= ', value].join('');
+  },
+  gt: function(field, value) {
+    return [field, ' > ', value].join('');
+  },
+  gte: function(field, value) {
+    return [field, ' >= ', value].join('');
+  },
+  like: function(field, value) {
+    return [field, ' LIKE \'%\' || ', value, ' || \'%\''].join('');
+  },
+  ilike: function(field, value) {
+    return [field, ' ILIKE \'%\' || ', value, ' || \'%\''].join('');
+  }
+};
+
+DatabaseAdapter.prototype.types = {};
+DatabaseAdapter.prototype.sanitizeType = {};
+DatabaseAdapter.prototype.escapeFieldCharacter = '';
+
+module.exports = DatabaseAdapter;

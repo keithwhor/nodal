@@ -1,13 +1,15 @@
-module.exports = (function() {
+'use strict';
 
-  var Initializer = require('./initializer.js');
-  var async = require('async');
+const Initializer = require('./initializer.js');
+const async = require('async');
 
-  function InitializerManager() {
+module.exports = class InitializerManager {
+
+  constructor() {
     this._initializers = [];
   }
 
-  InitializerManager.prototype.use = function(initializerConstructor) {
+  use(initializerConstructor) {
 
     var initializer = new initializerConstructor();
     if (!(initializer instanceof Initializer)) {
@@ -16,9 +18,9 @@ module.exports = (function() {
 
     this._initializers.push(initializer);
 
-  };
+  }
 
-  InitializerManager.prototype.exec = function(app, fnComplete) {
+  exec(app, fnComplete) {
 
     var mwa = [
       function(callback) {
@@ -42,8 +44,6 @@ module.exports = (function() {
 
     });
 
-  };
+  }
 
-  return InitializerManager;
-
-})();
+};

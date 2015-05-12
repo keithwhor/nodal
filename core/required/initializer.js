@@ -1,14 +1,12 @@
-module.exports = (function() {
+'use strict';
 
-  function Initializer() {}
+module.exports = class Initializer {
 
-  Initializer.prototype.exec = function(fnComplete) {
+  exec(fnComplete) {
 
     var err = null;
     return fnComplete(err, data);
 
-  };
+  }
 
-  return Initializer;
-
-})();
+};

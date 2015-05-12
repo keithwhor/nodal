@@ -1,13 +1,15 @@
-module.exports = (function() {
+'use strict';
 
-  var anyDB = require('any-db-postgres');
-  var beginTransaction = require('any-db-transaction');
-  var async = require('async');
-  var colors = require('colors/safe');
+const anyDB = require('any-db-postgres');
+const beginTransaction = require('any-db-transaction');
+const async = require('async');
+const colors = require('colors/safe');
 
-  var PostgresAdapter = require('./adapters/postgres.js');
+const PostgresAdapter = require('./adapters/postgres.js');
 
-  function Database(cfg) {
+class Database {
+
+  constructor(cfg) {
 
     this.adapter = new PostgresAdapter();
 
@@ -17,7 +19,7 @@ module.exports = (function() {
 
   }
 
-  Database.prototype.connect = function(cfg) {
+  connect(cfg) {
 
     var connection;
 
@@ -33,25 +35,16 @@ module.exports = (function() {
 
     return true;
 
-  };
+  }
 
-  Database.prototype.close = function() {
+  close() {
 
     this._connection && this._connection.end();
     this._connection = null;
 
-  };
+  }
 
-  Database.prototype.__logColorFuncs = [
-    function(str) {
-      return colors.yellow.bold(str);
-    },
-    function(str) {
-      return colors.white(str);
-    }
-  ];
-
-  Database.prototype.log = function(sql, params) {
+  log(sql, params) {
 
     var colorFunc = this.__logColorFuncs[this._useLogColor];
 
@@ -64,23 +57,23 @@ module.exports = (function() {
 
     return true;
 
-  };
+  }
 
-  Database.prototype.info = function(message) {
+  info(message) {
 
     console.log(colors.green.bold('Database Info: ') + message);
 
-  };
+  }
 
-  Database.prototype.error = function(message) {
+  error(message) {
 
     console.log(colors.red.bold('Database Error: ') + message);
 
     return true;
 
-  };
+  }
 
-  Database.prototype.query = function(query, params, callback) {
+  query(query, params, callback) {
 
     if (arguments.length < 3) {
       throw new Error('.query requires 3 arguments');
@@ -99,9 +92,9 @@ module.exports = (function() {
 
     return true;
 
-  };
+  }
 
-  Database.prototype.transaction = function(preparedArray, callback) {
+  transaction(preparedArray, callback) {
 
     if (!preparedArray.length) {
       throw new Error('Must give valid array of statements (with or without parameters)');
@@ -190,8 +183,17 @@ module.exports = (function() {
 
     });
 
-  };
+  }
 
-  return Database;
+}
 
-})();
+Database.prototype.__logColorFuncs = [
+  function(str) {
+    return colors.yellow.bold(str);
+  },
+  function(str) {
+    return colors.white(str);
+  }
+];
+
+module.exports = Database;

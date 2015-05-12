@@ -1,9 +1,11 @@
-module.exports = (function() {
+'use strict';
 
-  var DataTypes = require('./data_types.js');
-  var Database = require('./db/database.js');
+const DataTypes = require('./data_types.js');
+const Database = require('./db/database.js');
 
-  function Model(modelData, fromStorage) {
+class Model {
+
+  constructor(modelData, fromStorage) {
 
     this.initialize(fromStorage);
 
@@ -11,20 +13,20 @@ module.exports = (function() {
 
   }
 
-  Model.prototype.validates = function(field, message, fnAction) {
+  validates(field, message, fnAction) {
 
     this._validations = this._validations || {};
 
     this._validations[field] = this._validations[field] || [];
     this._validations[field].push({message: message, action: fnAction});
 
-  };
+  }
 
-  Model.prototype.inStorage = function() {
+  inStorage() {
     return this._inStorage;
-  };
+  }
 
-  Model.prototype.initialize = function(fromStorage) {
+  initialize(fromStorage) {
 
     this._inStorage = fromStorage;
 
@@ -57,39 +59,39 @@ module.exports = (function() {
 
     return true;
 
-  };
+  }
 
-  Model.prototype.hasChanged = function(field) {
+  hasChanged(field) {
     return field === undefined ? this.changedFields().length > 0 : !!this._changed[field];
-  };
+  }
 
-  Model.prototype.changedFields = function() {
+  changedFields() {
     var changed = this._changed;
     return Object.keys(changed).filter(function(v) {
       return changed[v];
     });
-  };
+  }
 
-  Model.prototype.errorObject = function() {
+  errorObject() {
     return this.hasErrors() ? this.getErrors() : null;
-  };
+  }
 
-  Model.prototype.hasErrors = function() {
+  hasErrors() {
 
     return Object.keys(this._errors).length > 0;
 
-  };
+  }
 
-  Model.prototype.getErrors = function() {
+  getErrors() {
     var obj = {};
     var errors = this._errors;
     Object.keys(errors).forEach(function(key) {
       obj[key] = errors[key];
     });
     return obj;
-  };
+  }
 
-  Model.prototype._validate = function(fieldList) {
+  _validate(fieldList) {
 
     var data = this._data;
 
@@ -114,9 +116,9 @@ module.exports = (function() {
 
     }).bind(this))).length > 0;
 
-  };
+  }
 
-  Model.prototype.load = function(data, fromStorage) {
+  load(data, fromStorage) {
 
     var self = this;
 
@@ -131,9 +133,9 @@ module.exports = (function() {
 
     return this;
 
-  };
+  }
 
-  Model.prototype.set = function(field, value, validate, logChange) {
+  set(field, value, validate, logChange) {
 
     validate = (validate === undefined) ? true : !!validate;
     logChange = (logChange === undefined) ? true : !!logChange;
@@ -178,81 +180,81 @@ module.exports = (function() {
 
     return value;
 
-  };
+  }
 
-  Model.prototype.get = function(key) {
+  get(key) {
     return this._data[key];
-  };
+  }
 
-  Model.prototype.toObject = function() {
+  toObject() {
     var obj = {};
     var data = this._data;
     Object.keys(data).forEach(function(key) {
       obj[key] = data[key];
     });
     return obj;
-  };
+  }
 
-  Model.prototype.toStdObject = function() {
+  toStdObject() {
     var obj = {};
     var data = this._data;
     this.externalInterface.forEach(function(key) {
       obj[key] = data[key];
     });
     return obj;
-  };
+  }
 
-  Model.prototype.tableName = function() {
+  tableName() {
     return this._table;
-  };
+  }
 
-  Model.prototype.hasField = function(field) {
+  hasField(field) {
     return !!this._fieldLookup[field];
-  };
+  }
 
-  Model.prototype.getFieldData = function(field) {
+  getFieldData(field) {
     return this._fieldLookup[field];
-  };
+  }
 
-  Model.prototype.getDataTypeOf = function(field) {
+  getDataTypeOf(field) {
     return DataTypes[this._fieldLookup[field].type];
-  };
+  }
 
-  Model.prototype.isFieldArray = function(field) {
+  isFieldArray(field) {
     var fieldData = this._fieldLookup[field];
     return !!(fieldData && fieldData.properties && fieldData.properties.array);
-  };
+  }
 
-  Model.prototype.isFieldPrimaryKey = function(field) {
+  isFieldPrimaryKey(field) {
     var fieldData = this._fieldLookup[field];
     return !!(fieldData && fieldData.properties && fieldData.properties.primary_key);
-  };
+  }
 
-  Model.prototype.fieldDefaultValue = function(field) {
+  fieldDefaultValue(field) {
     var fieldData = this._fieldLookup[field];
     return !!(fieldData && fieldData.properties && fieldData.properties.array);
-  };
+  }
 
-  Model.prototype.fieldList = function() {
+  fieldList() {
     return this._fieldArray.map(function(v) { return v.name; });
-  };
+  }
 
-  Model.prototype.fieldDefinitions = function() {
+  fieldDefinitions() {
     return this._fieldArray.slice();
-  };
+  }
 
-  Model.prototype.setError = function(key, message) {
+  setError(key, message) {
     this._errors[key] = this._errors[key] || [];
     this._errors[key].push(message);
     return true;
-  };
+  }
 
-  Model.prototype.clearError = function(key) {
+  clearError(key) {
     delete this._errors[key];
     return true;
-  };
+  }
 
-  Model.prototype.save = function(db, callback) {
+  save(db, callback) {
 
     var model = this;
 
@@ -261,7 +263,7 @@ module.exports = (function() {
     }
 
     if(typeof callback !== 'function') {
-      callback = function() {};
+      callback() {};
     }
 
     if (model.hasErrors()) {
@@ -307,9 +309,9 @@ module.exports = (function() {
       }
     );
 
-  };
+  }
 
-  Model.prototype.destroy = function(db, callback) {
+  destroy(db, callback) {
 
     var model = this;
 
@@ -318,7 +320,7 @@ module.exports = (function() {
     }
 
     if(typeof callback !== 'function') {
-      callback = function() {};
+      callback() {};
     }
 
     if (!model.inStorage()) {
@@ -352,20 +354,20 @@ module.exports = (function() {
       }
     );
 
-  };
+  }
 
-  Model.prototype.schema = {
-    table: '',
-    columns: []
-  };
+}
 
-  Model.prototype.data = null;
+Model.prototype.schema = {
+  table: '',
+  columns: []
+};
 
-  Model.prototype.externalInterface = [
-    'id',
-    'created_at'
-  ];
+Model.prototype.data = null;
 
-  return Model;
+Model.prototype.externalInterface = [
+  'id',
+  'created_at'
+];
 
-})();
+module.exports = Model;

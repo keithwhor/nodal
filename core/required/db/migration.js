@@ -1,14 +1,16 @@
-module.exports = (function() {
+'use strict';
 
-  var Database = require('./database.js');
-  var SchemaGenerator = require('./schema_generator.js');
+const Database = require('./database.js');
+const SchemaGenerator = require('./schema_generator.js');
 
-  var fs = require('fs');
+const fs = require('fs');
 
-  var colors = require('colors/safe');
-  var inflect = require('i')();
+const colors = require('colors/safe');
+const inflect = require('i')();
 
-  function Migration(db) {
+expor class Migration {
+
+  constructor(db) {
 
     if (!(db instanceof Database)) {
       throw new Error('Migration required valid database instance');
@@ -22,19 +24,19 @@ module.exports = (function() {
 
   }
 
-  Migration.prototype.up = function() {
+  up() {
 
     return [];
 
-  };
+  }
 
-  Migration.prototype.down = function() {
+  down() {
 
     return [];
 
-  };
+  }
 
-  Migration.prototype.executeUp = function(callback) {
+  executeUp(callback) {
 
     var schema = this.schema;
 
@@ -50,9 +52,9 @@ module.exports = (function() {
       callback(err);
     });
 
-  };
+  }
 
-  Migration.prototype.executeDown = function(callback, prevId) {
+  executeDown(callback, prevId) {
 
     var schema = this.schema;
     schema.load();
@@ -67,25 +69,25 @@ module.exports = (function() {
       callback(err);
     });
 
-  };
+  }
 
-  Migration.prototype.createTable = function(table, arrFieldData) {
+  createTable(table, arrFieldData) {
 
     arrFieldData = this.schema.createTable(table, arrFieldData);
 
     return this.db.adapter.generateCreateTableQuery(table, arrFieldData);
 
-  };
+  }
 
-  Migration.prototype.dropTable = function(table) {
+  dropTable(table) {
 
     this.schema.dropTable(table);
 
     return this.db.adapter.generateDropTableQuery(table);
 
-  };
+  }
 
-  Migration.prototype.alterColumn = function(table, column, type, properties) {
+  alterColumn(table, column, type, properties) {
 
     properties = properties || {};
 
@@ -95,9 +97,9 @@ module.exports = (function() {
 
     return this.db.adapter.generateAlterTableQuery(table, column, type, properties);
 
-  };
+  }
 
-  Migration.prototype.addColumn = function(table, column, type, properties) {
+  addColumn(table, column, type, properties) {
 
     properties = properties || {};
 
@@ -105,36 +107,34 @@ module.exports = (function() {
 
     return this.db.adapter.generateAlterTableAddColumnQuery(table, column, type, properties);
 
-  };
+  }
 
-  Migration.prototype.dropColumn = function(table, column) {
+  dropColumn(table, column) {
 
     this.schema.dropColumn(table, column);
 
     return this.db.adapter.generateAlterTableDropColumnQuery(table, column);
 
-  };
+  }
 
-  Migration.prototype.renameColumn = function(table, column, newColumn) {
+  renameColumn(table, column, newColumn) {
 
     this.schema.renameColumn(table, column, newColumn);
 
     return this.db.adapter.generateAlterTableRenameColumnQuery(table, column, newColumn);
 
-  };
+  }
 
-  Migration.prototype.createIndex = function(table, column, type) {
+  createIndex(table, column, type) {
 
     return this.db.adapter.generateCreateIndexQuery(table, column, type);
 
-  };
+  }
 
-  Migration.prototype.dropIndex = function(table, column) {
+  dropIndex(table, column) {
 
     return this.db.adapter.generateDropIndexQuery(table, column);
 
-  };
+  }
 
-  return Migration;
-
-})();
+};

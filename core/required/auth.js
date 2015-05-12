@@ -1,8 +1,10 @@
-module.exports = (function() {
+'use strict';
 
-  var crypto = require('crypto');
+const crypto = require('crypto');
 
-  function Auth() {
+module.exports = class Auth {
+
+  constructor() {
 
     this._permissions = {};
     this._key = '';
@@ -10,38 +12,36 @@ module.exports = (function() {
 
   }
 
-  Auth.prototype.setKey = function(key) {
+  setKey(key) {
     this._key = key;
     return key;
-  };
+  }
 
-  Auth.prototype.setTTL = function(ttl) {
+  setTTL(ttl) {
     ttl = parseInt(ttl) || 0;
     this._ttl = Math.max(ttl, 60) | 0;
     return this._ttl;
-  };
+  }
 
-  Auth.prototype.getTTL = function() {
+  getTTL() {
     return this._ttl;
-  };
+  }
 
-  Auth.prototype.createToken = function() {
+  createToken() {
 
     var value = [].slice.call(arguments).concat([new Date().valueOf()]).join('');
 
     return crypto.createHmac('md5', this._key).update(value).digest('hex');
 
-  };
+  }
 
-  Auth.prototype.definePermission = function(permissionName, value) {
+  definePermission(permissionName, value) {
     this._permissions[permissionName] = value | 0;
     return true;
-  };
+  }
 
-  Auth.prototype.permission = function(permissionName) {
+  permission(permissionName) {
     return this._permissions[permissionName] | 0;
-  };
+  }
 
-  return Auth;
-
-})();
+};

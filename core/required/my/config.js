@@ -1,7 +1,7 @@
-module.exports = (function(rootDirectory) {
+const fs = require('fs');
+const dot = require('dot');
 
-  var fs = require('fs');
-  var dot = require('dot');
+module.exports = function(rootDirectory) {
 
   var config = {
     env: process.env.NODE_ENV || 'development',
@@ -41,4 +41,4 @@ module.exports = (function(rootDirectory) {
 
   return config;
 
-});
+};
