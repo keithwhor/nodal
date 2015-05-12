@@ -1,9 +1,13 @@
 {
   "name": "nodal",
-  "version": "0.1.58",
+  "version": "0.1.59",
   "description": "An API Server and Framework for node.js",
   "author": "Keith Horwood",
   "main": "core/module.js",
+  "engines": {
+      "node": ">= 0.12.0",
+      "iojs": ">= 2.0.1"
+  },
   "dependencies": {
     "any-db": "*",
     "any-db-postgres": "*",
