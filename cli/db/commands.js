@@ -1,26 +1,28 @@
-var fs = require('fs');
-var pg = require('pg');
-var async = require('async');
-var Nodal = require('../../core/module.js');
+"use strict";
 
-var Database = Nodal.Database;
-var SchemaGenerator = Nodal.SchemaGenerator;
+let fs = require('fs');
+let pg = require('pg');
+let async = require('async');
+let Nodal = require('../../core/module.js');
 
-var colors = require('colors/safe');
+let Database = Nodal.Database;
+let SchemaGenerator = Nodal.SchemaGenerator;
 
-var MODEL_PATH = './app/models';
-var MIGRATION_PATH = './db/migrations';
+let colors = require('colors/safe');
+
+let MODEL_PATH = './app/models';
+let MIGRATION_PATH = './db/migrations';
 
 function composeQueryFunc(query) {
 
-  var dbCredentials = Nodal.my.Config.db.main;
+  let dbCredentials = Nodal.my.Config.db.main;
 
-  var cfg = dbCredentials;
-  var conString = 'postgres://' + cfg.user + ':' + cfg.password + '@' + cfg.host + ':' + cfg.port + '/postgres';
+  let cfg = dbCredentials;
+  let conString = 'postgres://' + cfg.user + ':' + cfg.password + '@' + cfg.host + ':' + cfg.port + '/postgres';
 
   return function rawQuery(callback) {
 
-    var client = new pg.Client(conString);
+    let client = new pg.Client(conString);
 
     client.connect(function(err) {
 
@@ -69,7 +71,7 @@ module.exports = {
 
   drop: function() {
 
-    var dbCredentials = Nodal.my.Config.db.main;
+    let dbCredentials = Nodal.my.Config.db.main;
 
     dropDatabase(
       dbCredentials.database,
@@ -84,7 +86,7 @@ module.exports = {
 
   create: function() {
 
-    var dbCredentials = Nodal.my.Config.db.main;
+    let dbCredentials = Nodal.my.Config.db.main;
 
     createDatabase(
       dbCredentials.database,
@@ -100,12 +102,12 @@ module.exports = {
 
   prepare: function() {
 
-    var dbCredentials = Nodal.my.Config.db.main;
+    let dbCredentials = Nodal.my.Config.db.main;
 
-    var db = new Database();
+    let db = new Database();
     db.connect(dbCredentials);
 
-    var schema = new SchemaGenerator(db);
+    let schema = new SchemaGenerator(db);
 
     db.transaction(
       'DROP SCHEMA public CASCADE;' +
@@ -124,12 +126,12 @@ module.exports = {
 
   migrate: function(args, flags) {
 
-    var dbCredentials = Nodal.my.Config.db.main;
+    let dbCredentials = Nodal.my.Config.db.main;
 
-    var db = new Database();
+    let db = new Database();
     db.connect(dbCredentials);
 
-    var steps = flags.step | 0;
+    let steps = flags.step | 0;
     if (!steps) { steps = 0; }
 
     db.query('SELECT id FROM schema_migrations', [], function(err, result) {
@@ -139,9 +141,9 @@ module.exports = {
         process.exit(0);
       }
 
-      var schema_ids = result.rows.map(function(v) { return v.id; });
+      let schema_ids = result.rows.map(function(v) { return v.id; });
 
-      var migrations = fs.readdirSync(MIGRATION_PATH).map(function(v) {
+      let migrations = fs.readdirSync(MIGRATION_PATH).map(function(v) {
         return {
           id: parseInt(v.substr(0, v.indexOf('__'))),
           migration: new (require(process.cwd() + '/' + MIGRATION_PATH + '/' + v))(db)
@@ -155,9 +157,9 @@ module.exports = {
         process.exit(0);
       }
 
-      var migrateFuncs = migrations.map(function(v) {
+      let migrateFuncs = migrations.map(function(v) {
 
-        var migrationInstance = v.migration;
+        let migrationInstance = v.migration;
 
         return function(callback) {
           migrationInstance.executeUp(callback);
@@ -191,12 +193,12 @@ module.exports = {
 
   rollback: function(args, flags) {
 
-    var dbCredentials = Nodal.my.Config.db.main;
+    let dbCredentials = Nodal.my.Config.db.main;
 
-    var db = new Database();
+    let db = new Database();
     db.connect(dbCredentials);
 
-    var steps = flags.step | 0;
+    let steps = flags.step | 0;
     if (!steps) { steps = 1; }
 
     db.query('SELECT id FROM schema_migrations', [], function(err, result) {
@@ -206,9 +208,9 @@ module.exports = {
         process.exit(0);
       }
 
-      var schema_ids = result.rows.map(function(v) { return v.id; });
+      let schema_ids = result.rows.map(function(v) { return v.id; });
 
-      var migrations = fs.readdirSync(MIGRATION_PATH).map(function(v) {
+      let migrations = fs.readdirSync(MIGRATION_PATH).map(function(v) {
         return {
           id: parseInt(v.substr(0, v.indexOf('__'))),
           migration: new (require(process.cwd() + '/' + MIGRATION_PATH + '/' + v))(db)
@@ -222,10 +224,10 @@ module.exports = {
         process.exit(0);
       }
 
-      var migrateFuncs = migrations.map(function(v, i) {
+      let migrateFuncs = migrations.map(function(v, i) {
 
-        var migrationInstance = v.migration;
-        var nextMigrationInstanceId = migrations[i + 1] ? migrations[i + 1].migration.id : null;
+        let migrationInstance = v.migration;
+        let nextMigrationInstanceId = migrations[i + 1] ? migrations[i + 1].migration.id : null;
 
         return function(callback) {
           migrationInstance.executeDown(callback, nextMigrationInstanceId);

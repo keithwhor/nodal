@@ -1,6 +1,6 @@
-module.exports = (function() {
+"use strict";
 
-  'use strict';
+module.exports = (function() {
 
   const Nodal = require('nodal');
   const Error404Controller = Nodal.require('app/controllers/error/404_controller.js');

@@ -1,43 +1,49 @@
-'use strict';
+"use strict";
 
-const Middleware = require('./middleware.js');
-const async = require('async');
+module.exports = (function() {
 
-module.exports = class MiddlewareManager {
+  const Middleware = require('./middleware.js');
+  const async = require('async');
 
-  constructor() {
-    this._middleware = [];
-  }
+  class MiddlewareManager {
 
-  use(middlewareConstructor) {
-
-    var middleware = new middlewareConstructor();
-    if (!(middleware instanceof Middleware)) {
-      throw new Error('Invalid Middleware');
+    constructor() {
+      this._middleware = [];
     }
 
-    this._middleware.push(middleware);
+    use(middlewareConstructor) {
 
-  }
-
-  exec(controller, data, fnComplete) {
-
-    var mwa = [
-      function(callback) {
-        callback(null, data);
+      let middleware = new middlewareConstructor();
+      if (!(middleware instanceof Middleware)) {
+        throw new Error('Invalid Middleware');
       }
-    ].concat(
-      this._middleware.map(function(middleware) {
-        return function(data, callback) {
-          middleware.exec(controller, data, function(err, data) {
-            callback(err, data);
-          });
-        };
-      })
-    );
 
-    async.waterfall(mwa, fnComplete);
+      this._middleware.push(middleware);
+
+    }
+
+    exec(controller, data, fnComplete) {
+
+      let mwa = [
+        function(callback) {
+          callback(null, data);
+        }
+      ].concat(
+        this._middleware.map(function(middleware) {
+          return function(data, callback) {
+            middleware.exec(controller, data, function(err, data) {
+              callback(err, data);
+            });
+          };
+        })
+      );
+
+      async.waterfall(mwa, fnComplete);
+
+    }
 
   }
 
-};
+  return MiddlewareManager;
+
+})();

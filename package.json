@@ -27,7 +27,7 @@
     "mocha": "*"
   },
   "scripts": {
-    "test": "mocha ./test/runner.js"
+    "test": "mocha ./test/runner.js --harmony_classes"
   },
   "repository": {
     "type": "git",

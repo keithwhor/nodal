@@ -1,12 +1,18 @@
-'use strict';
+"use strict";
 
-module.exports = class Middleware {
+module.exports = (function() {
 
-  exec(controller, data, fnComplete) {
+  class Middleware {
 
-    var err = null;
-    return fnComplete(err, data);
+    exec(controller, data, fnComplete) {
+
+      let err = null;
+      return fnComplete(err, data);
+
+    }
 
   }
 
-};
+  return Middleware;
+
+})();

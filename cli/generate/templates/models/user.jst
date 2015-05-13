@@ -1,6 +1,6 @@
-module.exports = (function() {
+"use strict";
 
-  'use strict';
+module.exports = (function() {
 
   const Nodal = require('nodal');
   const bcrypt = Nodal.include.bcrypt;
@@ -21,7 +21,7 @@ module.exports = (function() {
 
     save(db, callback) {
 
-      var user = this;
+      let user = this;
 
       if (!user.hasErrors() && user.hasChanged('password')) {
 
@@ -47,7 +47,7 @@ module.exports = (function() {
 
     verifyPassword(unencrypted, callback) {
 
-      var user = this;
+      let user = this;
 
       bcrypt.compare(unencrypted, user.get('password'), function(err, result) {
         callback.call(user, err, result);

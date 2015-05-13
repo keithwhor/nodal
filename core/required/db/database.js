@@ -1,6 +1,6 @@
-module.exports = (function() {
+"use strict";
 
-  'use strict';
+module.exports = (function() {
 
   const anyDB = require('any-db-postgres');
   const beginTransaction = require('any-db-transaction');
@@ -23,7 +23,7 @@ module.exports = (function() {
 
     connect(cfg) {
 
-      var connection;
+      let connection;
 
       if (cfg.connectionString) {
         connection = anyDB.createConnection(cfg.connectionString);
@@ -48,7 +48,7 @@ module.exports = (function() {
 
     log(sql, params) {
 
-      var colorFunc = this.__logColorFuncs[this._useLogColor];
+      let colorFunc = this.__logColorFuncs[this._useLogColor];
 
       console.log();
       console.log(colorFunc(sql));
@@ -114,10 +114,10 @@ module.exports = (function() {
         callback = function() {};
       }
 
-      var db = this;
-      var transaction = beginTransaction(this._connection);
+      let db = this;
+      let transaction = beginTransaction(this._connection);
 
-      var queries = preparedArray.map(function(queryData, i) {
+      let queries = preparedArray.map(function(queryData, i) {
 
         queryData[1] = queryData[1] || [];
 
@@ -137,7 +137,7 @@ module.exports = (function() {
 
       });
 
-      var transactionError = null;
+      let transactionError = null;
 
       transaction.on('rollback:start', function() {
 

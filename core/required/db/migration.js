@@ -1,6 +1,6 @@
-module.exports = (function() {
+"use strict";
 
-  'use strict';
+module.exports = (function() {
 
   const Database = require('./database.js');
   const SchemaGenerator = require('./schema_generator.js');
@@ -40,12 +40,12 @@ module.exports = (function() {
 
     executeUp(callback) {
 
-      var schema = this.schema;
+      let schema = this.schema;
 
       schema.load();
       schema.setMigrationId(this.id);
 
-      var up = this.up().concat([
+      let up = this.up().concat([
         'INSERT INTO "schema_migrations"("id") VALUES(' + this.id + ')'
       ]);
 
@@ -58,11 +58,11 @@ module.exports = (function() {
 
     executeDown(callback, prevId) {
 
-      var schema = this.schema;
+      let schema = this.schema;
       schema.load();
       schema.setMigrationId(prevId || null);
 
-      var down = this.down().concat([
+      let down = this.down().concat([
         'DELETE FROM "schema_migrations" WHERE id = ' + this.id
       ]);
 

@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 
+"use strict";
+
 (function() {
 
-  var colors = require('colors/safe');
-  var fs = require('fs');
+  let colors = require('colors/safe');
+  let fs = require('fs');
 
-  var command = process.argv.slice(2, 3).pop();
+  let command = process.argv.slice(2, 3).pop();
 
   command = command ? command : '_';
   command = {name: command.split(':')[0], value: command.split(':')[1] || '_'};
@@ -19,7 +21,7 @@
 
     (function() {
 
-      var ncp = require('ncp');
+      let ncp = require('ncp');
 
       ncp(__dirname + '/../src', './', function (err) {
         if (err) {
@@ -35,14 +37,14 @@
 
   }
 
-  var dbCommands = require('./db/commands.js');
-  var generateCommands = require('./generate/commands.js');
+  let dbCommands = require('./db/commands.js');
+  let generateCommands = require('./generate/commands.js');
 
-  var args = [];
-  var flags = {};
+  let args = [];
+  let flags = {};
 
   process.argv.slice(3).forEach(function(v) {
-    var values = v.split(':');
+    let values = v.split(':');
     if (v.substr(0, 2) === '--') {
       values[0] = values[0].substr(2);
       flags[values[0]] = values[1];
@@ -51,7 +53,7 @@
     }
   });
 
-  var commands = {
+  let commands = {
     _: {
       _: function(args, flags) {
         console.error(colors.red.bold('Error: ') + 'No command specified');
@@ -61,12 +63,12 @@
     s: {
       _: function(args, flags) {
 
-        var Nodal = require('../core/module.js');
+        let Nodal = require('../core/module.js');
 
-        var restart = false;
+        let restart = false;
 
-        var spawn = require('child_process').spawn;
-        var child = spawn('npm',  ['start'], {stdio: [process.stdin, process.stdout, process.stderr]});
+        let spawn = require('child_process').spawn;
+        let child = spawn('npm',  ['start'], {stdio: [process.stdin, process.stdout, process.stderr]});
 
         process.on('exit', function() {
           child && child.kill();
@@ -94,8 +96,8 @@
     }
   };
 
-  var cmd = commands[command.name];
-  var subCmd;
+  let cmd = commands[command.name];
+  let subCmd;
 
   if (cmd) {
     subCmd = cmd[command.value];

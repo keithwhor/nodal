@@ -1,17 +1,19 @@
+"use strict";
+
 module.exports = (function() {
 
-  var fs = require('fs');
-  var inflect = require('i')();
-  var colors = require('colors/safe');
-  var dot = require('dot');
+  let fs = require('fs');
+  let inflect = require('i')();
+  let colors = require('colors/safe');
+  let dot = require('dot');
 
   //dot.templateSettings.strip = false;
 
-  var migrationDir = './db/migrations';
+  let migrationDir = './db/migrations';
 
   function composeMigration(up, down) {
 
-    var hasInstructions = false;
+    let hasInstructions = false;
 
     if (up || down) {
       hasInstructions = true;
@@ -22,7 +24,7 @@ module.exports = (function() {
 
     return function(migrationName, id) {
 
-      var migration = {
+      let migration = {
           up: up,
           down: down,
           name: migrationName,
@@ -66,11 +68,11 @@ module.exports = (function() {
   function generateMigration(migrationName, up, down, id) {
 
     id = id || generateId(new Date());
-    var migrationFileName = id + '__' + inflect.underscore(migrationName) + '.js';
+    let migrationFileName = id + '__' + inflect.underscore(migrationName) + '.js';
 
     !fs.existsSync(migrationDir) && fs.mkdirSync(migrationDir);
 
-    var migrationPath = migrationDir + '/' + migrationFileName;
+    let migrationPath = migrationDir + '/' + migrationFileName;
 
     if (fs.existsSync(migrationPath)) {
       throw new Error('Migration already exists');
@@ -85,7 +87,7 @@ module.exports = (function() {
   return {
     command: function(args, flags) {
 
-      var migrationName = inflect.camelize(args[0][0]);
+      let migrationName = inflect.camelize(args[0][0]);
 
       if (!migrationName) {
         throw new Error('Migration name not specified');

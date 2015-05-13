@@ -1,6 +1,6 @@
-module.exports = (function() {
+"use strict";
 
-  'use strict';
+module.exports = (function() {
 
   const Nodal = require('nodal');
   const zlib = require('zlib');
@@ -13,8 +13,8 @@ module.exports = (function() {
 
     exec(controller, data, callback) {
 
-      var acceptEncoding = controller._request.headers['accept-encoding'] || '';
-      var canCompress = !!{
+      let acceptEncoding = controller._request.headers['accept-encoding'] || '';
+      let canCompress = !!{
         'text/plain': 1,
         'text/html': 1,
         'text/xml': 1,

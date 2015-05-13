@@ -1,8 +1,8 @@
-'use strict';
+"use strict";
 
 const fs = require('fs');
 
-module.exports = function(rootDirectory) {
+module.exports = (function(rootDirectory) {
 
   try {
     return JSON.parse(fs.readFileSync(rootDirectory + '/db/schema.json'));
@@ -10,4 +10,4 @@ module.exports = function(rootDirectory) {
     return {migration_id: null};
   }
 
-};
+});

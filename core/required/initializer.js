@@ -1,12 +1,18 @@
-'use strict';
+"use strict";
 
-module.exports = class Initializer {
+module.exports = (function() {
 
-  exec(fnComplete) {
+  class Initializer {
 
-    var err = null;
-    return fnComplete(err, data);
+    exec(fnComplete) {
+
+      let err = null;
+      return fnComplete(err, data);
+
+    }
 
   }
 
-};
+  return Initializer;
+
+})();

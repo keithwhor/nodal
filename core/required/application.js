@@ -1,239 +1,245 @@
-'use strict';
+"use strict";
 
-const Database = require('./db/database.js');
-const Composer = require('./composer.js');
-const Router = require('./router.js');
-const SocketServer = require('./socket.js');
-const Template = require('./template.js');
-const Auth = require('./auth.js');
-const MiddlewareManager = require('./middleware_manager.js');
-const InitializerManager = require('./initializer_manager.js');
+module.exports = (function() {
 
-const dot = require('dot');
-const fs = require('fs');
-const http = require('http');
-const httpProxy = require('http-proxy');
-const mime = require('mime-types');
+  const Database = require('./db/database.js');
+  const Composer = require('./composer.js');
+  const Router = require('./router.js');
+  const SocketServer = require('./socket.js');
+  const Template = require('./template.js');
+  const Auth = require('./auth.js');
+  const MiddlewareManager = require('./middleware_manager.js');
+  const InitializerManager = require('./initializer_manager.js');
 
-// For templates
-dot.templateSettings.varname = 'data';
-dot.templateSettings.strip = false;
+  const dot = require('dot');
+  const fs = require('fs');
+  const http = require('http');
+  const httpProxy = require('http-proxy');
+  const mime = require('mime-types');
 
-module.exports = class Application {
+  // For templates
+  dot.templateSettings.varname = 'data';
+  dot.templateSettings.strip = false;
 
-  constructor() {
+  class Application {
 
-    this._proxy = null;
+    constructor() {
 
-    this._forceProxyTLS = false; // not related to above
+      this._proxy = null;
 
-    this._templates = {
-      '!': new Template(this, function() { return '<!-- Invalid Template //-->'; })
-    };
+      this._forceProxyTLS = false; // not related to above
 
-    this._staticPath = '';
-    this._static = {};
+      this._templates = {
+        '!': new Template(this, function() { return '<!-- Invalid Template //-->'; })
+      };
 
-    this._db = {};
+      this._staticPath = '';
+      this._static = {};
 
-    this.router = null;
-    this.socket = null;
-    this.server = null;
-    this.auth = null;
+      this._db = {};
 
-    this.composer = new Composer();
+      this.router = null;
+      this.socket = null;
+      this.server = null;
+      this.auth = null;
 
-    this.middleware = new MiddlewareManager();
-    this.initializers = new InitializerManager();
+      this.composer = new Composer();
 
-  }
+      this.middleware = new MiddlewareManager();
+      this.initializers = new InitializerManager();
 
-  initialize(callback) {
-
-    this.initializers.exec(this, callback.bind(this));
-
-  }
-
-  loadStaticAssets(path) {
-
-    if (path[path.length - 1] === '/') {
-      path = path.substr(0, path.length - 1);
     }
 
-    if (!path) {
-      throw new Error('Can not use root project directory as static path');
+    initialize(callback) {
+
+      this.initializers.exec(this, callback.bind(this));
+
     }
 
-    if (path.indexOf('..') > -1) {
-      throw new Error('Can not back-reference folders to use as static path');
-    }
+    loadStaticAssets(path) {
 
-    function readDir(cwd, dirname, data) {
+      if (path[path.length - 1] === '/') {
+        path = path.substr(0, path.length - 1);
+      }
 
-      data = data || {};
-      var files = fs.readdirSync([cwd, dirname].join('/'));
+      if (!path) {
+        throw new Error('Can not use root project directory as static path');
+      }
 
-      files.forEach(function(v) {
+      if (path.indexOf('..') > -1) {
+        throw new Error('Can not back-reference folders to use as static path');
+      }
 
-        var filename = [dirname, v].join('/');
-        var fullPath = [cwd, filename].join('/');
+      function readDir(cwd, dirname, data) {
 
-        if (fs.statSync(fullPath).isDirectory()) {
-          readDir(cwd, filename, data);
+        data = data || {};
+        let files = fs.readdirSync([cwd, dirname].join('/'));
+
+        files.forEach(function(v) {
+
+          let filename = [dirname, v].join('/');
+          let fullPath = [cwd, filename].join('/');
+
+          if (fs.statSync(fullPath).isDirectory()) {
+            readDir(cwd, filename, data);
+            return;
+          }
+
+          let ext = fullPath.substr(fullPath.lastIndexOf('.'));
+          data[filename] = {
+            mime: mime.lookup(ext) || 'application/octet-stream',
+            buffer: fs.readFileSync(fullPath)
+          };
           return;
-        }
 
-        var ext = fullPath.substr(fullPath.lastIndexOf('.'));
-        data[filename] = {
-          mime: mime.lookup(ext) || 'application/octet-stream',
-          buffer: fs.readFileSync(fullPath)
-        };
+        });
+
+        return data;
+
+      }
+
+      this._staticPath = path;
+      this._static = readDir(process.cwd(), path);
+
+      return true;
+
+    }
+
+    static(name) {
+
+      return this._static[[this._staticPath, name].join('/')] || null;
+
+    }
+
+    enableAuth() {
+
+      this.auth = new Auth();
+
+    }
+
+    addDatabase(alias, connectionDetails) {
+
+      if (this._db[alias]) {
+        throw new Error('Database aliased with "' + alias + '" already added to application.');
+      }
+
+      let db = new Database();
+      this._db[alias] = db;
+
+      return db.connect(connectionDetails);
+
+    }
+
+    db(alias) {
+
+      return this._db[alias] || null;
+
+    }
+
+    template(name) {
+
+      if(this._templates[name]) {
+        return this._templates[name];
+      }
+
+      let filename = './app/templates/' + name + '.html';
+
+      let contents;
+      try {
+        contents = fs.readFileSync(filename);
+        this._templates[name] = new Template(this, dot.template(contents));
+        return this._templates[name];
+      } catch(e) {
+        console.log('Could not load template ' + name);
+      }
+      return this._templates['!'];
+
+    }
+
+    _proxyWebSocketRequests() {
+
+      if (this.server && this.socket && !this._proxy) {
+
+        this._proxy = httpProxy.createProxyServer({ws: true});
+
+        this.server.on('upgrade', (function (req, socket, head) {
+          this._proxy.ws(req, socket, head, {target: 'ws://localhost:' + this.socket._port});
+        }).bind(this));
+
+      }
+
+      return true;
+
+    }
+
+    requestHandler(request, response) {
+
+      if (this._forceProxyTLS &&
+          request.headers.hasOwnProperty('x-forwarded-proto') &&
+          request.headers['x-forwarded-proto'] !== 'https') {
+        response.writeHead(302, {'Location': 'https://' + request.headers.host + request.url});
+        response.end();
         return;
+      }
 
-      });
-
-      return data;
-
-    }
-
-    this._staticPath = path;
-    this._static = readDir(process.cwd(), path);
-
-    return true;
-
-  }
-
-  static(name) {
-
-    return this._static[[this._staticPath, name].join('/')] || null;
-
-  }
-
-  enableAuth() {
-
-    this.auth = new Auth();
-
-  }
-
-  addDatabase(alias, connectionDetails) {
-
-    if (this._db[alias]) {
-      throw new Error('Database aliased with "' + alias + '" already added to application.');
-    }
-
-    var db = new Database();
-    this._db[alias] = db;
-
-    return db.connect(connectionDetails);
-
-  }
-
-  db(alias) {
-
-    return this._db[alias] || null;
-
-  }
-
-  template(name) {
-
-    if(this._templates[name]) {
-      return this._templates[name];
-    }
-
-    var filename = './app/templates/' + name + '.html';
-
-    var contents;
-    try {
-      contents = fs.readFileSync(filename);
-      this._templates[name] = new Template(this, dot.template(contents));
-      return this._templates[name];
-    } catch(e) {
-      console.log('Could not load template ' + name);
-    }
-    return this._templates['!'];
-
-  }
-
-  _proxyWebSocketRequests() {
-
-    if (this.server && this.socket && !this._proxy) {
-
-      this._proxy = httpProxy.createProxyServer({ws: true});
-
-      this.server.on('upgrade', (function (req, socket, head) {
-        this._proxy.ws(req, socket, head, {target: 'ws://localhost:' + this.socket._port});
-      }).bind(this));
+      this.router && this.router.delegate(this, request, response);
 
     }
 
-    return true;
+    listen(port) {
 
-  }
+      if (this.server) {
+        console.error('HTTP server already listening');
+        return;
+      }
 
-  requestHandler(request, response) {
+      let router = require(process.cwd() + '/app/routes.js');
 
-    if (this._forceProxyTLS &&
-        request.headers.hasOwnProperty('x-forwarded-proto') &&
-        request.headers['x-forwarded-proto'] !== 'https') {
-      response.writeHead(302, {'Location': 'https://' + request.headers.host + request.url});
-      response.end();
-      return;
+      let server = http.createServer(this.requestHandler.bind(this)).listen(port);
+
+      this.server = server;
+      this.router = router;
+
+      this._proxyWebSocketRequests();
+
+      console.log('Nodal HTTP server listening on port ' + port);
+
+      return true;
+
     }
 
-    this.router && this.router.delegate(this, request, response);
+    socketListen(port) {
 
-  }
+      if (this.socket) {
+        console.error('WebSocket server already listening');
+        return;
+      }
 
-  listen(port) {
+      this.socket = new SocketServer(port);
 
-    if (this.server) {
-      console.error('HTTP server already listening');
-      return;
+      this._proxyWebSocketRequests();
+
+      console.log('Nodal WebSocket server listening on port ' + port);
+
+      return true;
+
     }
 
-    var router = require(process.cwd() + '/app/routes.js');
-
-    var server = http.createServer(this.requestHandler.bind(this)).listen(port);
-
-    this.server = server;
-    this.router = router;
-
-    this._proxyWebSocketRequests();
-
-    console.log('Nodal HTTP server listening on port ' + port);
-
-    return true;
-
-  }
-
-  socketListen(port) {
-
-    if (this.socket) {
-      console.error('WebSocket server already listening');
-      return;
+    command() {
+      if(!this.socket) {
+        throw new Error('Application must socketListen before it can use commands');
+      }
+      this.socket.command.apply(this.socket, arguments);
     }
 
-    this.socket = new SocketServer(port);
+    forceProxyTLS() {
 
-    this._proxyWebSocketRequests();
+      this._forceProxyTLS = true;
 
-    console.log('Nodal WebSocket server listening on port ' + port);
-
-    return true;
-
-  }
-
-  command() {
-    if(!this.socket) {
-      throw new Error('Application must socketListen before it can use commands');
     }
-    this.socket.command.apply(this.socket, arguments);
-  }
-
-  forceProxyTLS() {
-
-    this._forceProxyTLS = true;
 
   }
 
-};
+  return Application;
+
+})();

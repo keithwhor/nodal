@@ -1,6 +1,6 @@
-module.exports = (function() {
+"use strict";
 
-  'use strict';
+module.exports = (function() {
 
   const Model = require('./model.js');
   const ComposerResult = require('./composer_result.js');
@@ -63,11 +63,11 @@ module.exports = (function() {
 
     resource(modelConstructor) {
 
-      var columns = modelConstructor.prototype.schema.columns;
-      var lookup = [];
+      let columns = modelConstructor.prototype.schema.columns;
+      let lookup = [];
       columns.forEach(function(v) { lookup[v.name] = v; });
 
-      var fields = modelConstructor.prototype.externalInterface.map(function(v) {
+      let fields = modelConstructor.prototype.externalInterface.map(function(v) {
         return {
           name: v,
           type: lookup[v].type,

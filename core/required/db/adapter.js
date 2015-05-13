@@ -1,6 +1,6 @@
-module.exports = (function() {
+"use strict";
 
-  'use strict';
+module.exports = (function() {
 
   class DatabaseAdapter {
 
@@ -30,7 +30,7 @@ module.exports = (function() {
 
     sanitize(type, value) {
 
-      var fnSanitize = this.sanitizeType[type];
+      let fnSanitize = this.sanitizeType[type];
       return fnSanitize ? fnSanitize(value) : value;
 
     }
@@ -41,12 +41,12 @@ module.exports = (function() {
 
     getTypeProperties(typeName, optionalValues) {
 
-      var type = this.types[typeName];
-      var typeProperties = type ? (type.properties || {}) : {};
+      let type = this.types[typeName];
+      let typeProperties = type ? (type.properties || {}) : {};
 
       optionalValues = optionalValues || {};
 
-      var outputType = Object.create(this.typePropertyDefaults);
+      let outputType = Object.create(this.typePropertyDefaults);
       this.typeProperties.forEach(function(v) {
         if (optionalValues.hasOwnProperty(v)) {
           outputType[v] = optionalValues[v];
@@ -65,7 +65,7 @@ module.exports = (function() {
     }
 
     generateColumnsStatement(table, columns) {
-      var self = this;
+      let self = this;
       return columns
         .map(function(columnData) {
           return self.generateColumn(columnData.name, self.getTypeDbName(columnData.type), self.getTypeProperties(columnData.type, columnData.properties));
@@ -74,7 +74,7 @@ module.exports = (function() {
     }
 
     generatePrimaryKeysStatement(table, columns) {
-      var self = this;
+      let self = this;
       return columns
         .filter(function(columnData) { return self.getTypeProperties(columnData.type, columnData.properties).primary_key; })
         .map(function(columnData) { return self.generatePrimaryKey(table, columnData.name); })
@@ -82,11 +82,11 @@ module.exports = (function() {
     }
 
     generateUniqueKeysStatement(table, columns) {
-      var self = this;
+      let self = this;
       return columns
         .filter(
           function(columnData) {
-            var type = self.getTypeProperties(columnData.type, columnData.properties);
+            let type = self.getTypeProperties(columnData.type, columnData.properties);
             return (!type.primary_key && type.unique);
           }
         )
@@ -146,7 +146,7 @@ module.exports = (function() {
 
     generateUpdateQuery(table, columnNames) {
 
-      var pkColumn = columnNames[0];
+      let pkColumn = columnNames[0];
 
       return [
         'UPDATE ',
@@ -190,7 +190,7 @@ module.exports = (function() {
 
     generateAlterTableQuery(table, columnName, type, properties) {
 
-      var queries = [];
+      let queries = [];
 
       if (type) {
         queries.push(
@@ -263,7 +263,7 @@ module.exports = (function() {
     parseFilterObj(table, filterObj, offset) {
 
       offset |= 0;
-      var self = this;
+      let self = this;
 
       return filterObj.map(function(filter, i) {
         return {
@@ -280,8 +280,8 @@ module.exports = (function() {
 
     createMultiFilter(table, filterObjArray) {
 
-      var offset = 0;
-      var parse = this.parseFilterObj.bind(this);
+      let offset = 0;
+      let parse = this.parseFilterObj.bind(this);
 
       return filterObjArray
         .filter(function(v) {
@@ -304,7 +304,7 @@ module.exports = (function() {
 
     generateAndClause(table, filterObjArray) {
 
-      var comparators = this.comparators;
+      let comparators = this.comparators;
 
       if (!filterObjArray.length) {
         return '';
@@ -324,7 +324,7 @@ module.exports = (function() {
 
     generateOrderByClause(table, orderObjArray) {
 
-      var tableEsc = this.escapeField(table);
+      let tableEsc = this.escapeField(table);
 
       return (!orderObjArray || !orderObjArray.length) ? '' : ' ORDER BY ' + orderObjArray.map((function(v) {
         return [tableEsc, '.', this.escapeField(v.columnName), ' ', v.direction].join('');

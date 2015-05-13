@@ -1,15 +1,15 @@
-module.exports = (function() {
+"use strict";
 
-  'use strict';
+module.exports = (function() {
 
   const Nodal = require('nodal');
 
   class {{= data.name }} extends Nodal.Migration {
 
-  constructor(db) {
-    super(db);
-    this.id = {{= data.id }};
-  }
+    constructor(db) {
+      super(db);
+      this.id = {{= data.id }};
+    }
 
     up() {
 

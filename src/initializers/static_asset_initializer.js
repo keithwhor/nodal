@@ -1,7 +1,5 @@
 module.exports = (function() {
 
-  'use strict';
-
   const Nodal = require('nodal');
 
   class StaticAssetInitializer extends Nodal.Initializer {

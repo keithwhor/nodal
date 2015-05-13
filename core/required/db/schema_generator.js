@@ -1,6 +1,6 @@
-module.exports = (function() {
+"use strict";
 
-  'use strict';
+module.exports = (function() {
 
   const Adapter = require('./adapter.js');
   const fs = require('fs');
@@ -36,10 +36,10 @@ module.exports = (function() {
 
       properties = properties || {};
 
-      var defaults = this.db.adapter.typePropertyDefaults;
+      let defaults = this.db.adapter.typePropertyDefaults;
 
-      var oldProperties = this.db.adapter.getTypeProperties(columnData.type, columnData.properties) || {};
-      var newProperties = {};
+      let oldProperties = this.db.adapter.getTypeProperties(columnData.type, columnData.properties) || {};
+      let newProperties = {};
 
       this.db.adapter.typeProperties.forEach(function(v) {
         if (properties.hasOwnProperty(v) && properties[v] !== defaults[v]) {
@@ -63,7 +63,7 @@ module.exports = (function() {
 
       this.setMigrationId(schema.migration_id);
 
-      var tables = {};
+      let tables = {};
 
       Object.keys(schema).filter(function(k) {
         return k !== 'migration_id';
@@ -83,11 +83,11 @@ module.exports = (function() {
 
     createTable(table, arrColumnData) {
 
-      var tableClass = inflect.classify(table);
+      let tableClass = inflect.classify(table);
 
       arrColumnData = arrColumnData.slice();
 
-      var columns = arrColumnData.map(function(v) {
+      let columns = arrColumnData.map(function(v) {
         return v.name;
       });
 
@@ -99,7 +99,7 @@ module.exports = (function() {
         arrColumnData.push({name:'created_at', type: 'datetime'});
       }
 
-      var defaults = this.db.adapter.typePropertyDefaults;
+      let defaults = this.db.adapter.typePropertyDefaults;
 
       arrColumnData.forEach((function(columnData) {
         this.mergeProperties(columnData);
@@ -116,7 +116,7 @@ module.exports = (function() {
 
     dropTable(table, columnData) {
 
-      var tableClass = inflect.classify(table);
+      let tableClass = inflect.classify(table);
 
       delete this.tables[tableClass];
 
@@ -130,8 +130,8 @@ module.exports = (function() {
         delete properties.unique;
       }
 
-      var tables = this.tables;
-      var tableKey = Object.keys(tables).filter(function(t) {
+      let tables = this.tables;
+      let tableKey = Object.keys(tables).filter(function(t) {
         return tables[t].table === table;
       }).pop();
 
@@ -139,7 +139,7 @@ module.exports = (function() {
         throw new Error('Table "' + table + '" does not exist');
       }
 
-      var schemaFieldData = tables[tableKey].columns.filter(function(v) {
+      let schemaFieldData = tables[tableKey].columns.filter(function(v) {
         return v.name === column;
       }).pop();
 
@@ -161,8 +161,8 @@ module.exports = (function() {
         delete properties.unique;
       }
 
-      var tables = this.tables;
-      var tableKey = Object.keys(tables).filter(function(t) {
+      let tables = this.tables;
+      let tableKey = Object.keys(tables).filter(function(t) {
         return tables[t].table === table;
       }).pop();
 
@@ -170,9 +170,9 @@ module.exports = (function() {
         throw new Error('Table "' + table + '" does not exist');
       }
 
-      var tableSchema = tables[tableKey];
+      let tableSchema = tables[tableKey];
 
-      var schemaFieldData = tableSchema.columns.filter(function(v) {
+      let schemaFieldData = tableSchema.columns.filter(function(v) {
         return v.name === column;
       }).pop();
 
@@ -180,7 +180,7 @@ module.exports = (function() {
         throw new Error('Column "' + column + '" of table "' + table + '" already exists');
       }
 
-      var columnData = {
+      let columnData = {
         name: column,
         type: type,
         properties: properties
@@ -194,8 +194,8 @@ module.exports = (function() {
 
     dropColumn(table, column) {
 
-      var tables = this.tables;
-      var tableKey = Object.keys(tables).filter(function(t) {
+      let tables = this.tables;
+      let tableKey = Object.keys(tables).filter(function(t) {
         return tables[t].table === table;
       }).pop();
 
@@ -203,9 +203,9 @@ module.exports = (function() {
         throw new Error('Table "' + table + '" does not exist');
       }
 
-      var tableSchema = tables[tableKey];
+      let tableSchema = tables[tableKey];
 
-      var columnIndex = tableSchema.columns.map(function(v, i) { return v.name; }).indexOf(column);
+      let columnIndex = tableSchema.columns.map(function(v, i) { return v.name; }).indexOf(column);
 
       if (columnIndex === -1) {
         throw new Error('Column "' + column + '" of table "' + table + '" does not exist');
@@ -219,8 +219,8 @@ module.exports = (function() {
 
     renameColumn(table, column, newColumn) {
 
-      var tables = this.tables;
-      var tableKey = Object.keys(tables).filter(function(t) {
+      let tables = this.tables;
+      let tableKey = Object.keys(tables).filter(function(t) {
         return tables[t].table === table;
       }).pop();
 
@@ -228,9 +228,9 @@ module.exports = (function() {
         throw new Error('Table "' + table + '" does not exist');
       }
 
-      var tableSchema = tables[tableKey];
+      let tableSchema = tables[tableKey];
 
-      var schemaFieldData = tableSchema.columns.filter(function(v) {
+      let schemaFieldData = tableSchema.columns.filter(function(v) {
         return v.name === column;
       }).pop();
 
@@ -246,10 +246,10 @@ module.exports = (function() {
 
     generate() {
 
-      var tables = this.tables;
-      var hasTables = !!Object.keys(tables).length;
+      let tables = this.tables;
+      let hasTables = !!Object.keys(tables).length;
 
-      var fileData = [
+      let fileData = [
         '{',
         '',
         '  "migration_id": ' + this.migrationId + (hasTables ? ',' : ''),
@@ -260,7 +260,7 @@ module.exports = (function() {
         fileData = fileData.concat([
           '',
           Object.keys(tables).sort().map(function(t) {
-            var curTable = tables[t];
+            let curTable = tables[t];
             return [
               '  "' + t + '": {',
               '',
