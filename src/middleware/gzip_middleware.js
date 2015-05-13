@@ -1,15 +1,11 @@
-"use strict";
-
 module.exports = (function() {
+
+  "use strict";
 
   const Nodal = require('nodal');
   const zlib = require('zlib');
 
   class GzipMiddleware extends Nodal.Middleware {
-
-    constructor() {
-      super()
-    }
 
     exec(controller, data, callback) {
 

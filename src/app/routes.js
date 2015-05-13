@@ -1,6 +1,6 @@
-"use strict";
-
 module.exports = (function() {
+
+  "use strict";
 
   const Nodal = require('nodal');
   const router = new Nodal.Router();

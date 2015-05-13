@@ -1,15 +1,11 @@
-"use strict";
-
 module.exports = (function() {
+
+  "use strict";
 
   const Nodal = require('nodal');
   const Error404Controller = Nodal.require('app/controllers/error/404_controller.js');
 
   class StaticController extends Nodal.Controller {
-
-    constructor () {
-      super()
-    }
 
     get(self, params, app) {
 
