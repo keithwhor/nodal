@@ -1,199 +1,203 @@
-'use strict';
+module.exports = (function() {
 
-const anyDB = require('any-db-postgres');
-const beginTransaction = require('any-db-transaction');
-const async = require('async');
-const colors = require('colors/safe');
+  'use strict';
 
-const PostgresAdapter = require('./adapters/postgres.js');
+  const anyDB = require('any-db-postgres');
+  const beginTransaction = require('any-db-transaction');
+  const async = require('async');
+  const colors = require('colors/safe');
 
-class Database {
+  const PostgresAdapter = require('./adapters/postgres.js');
 
-  constructor(cfg) {
+  class Database {
 
-    this.adapter = new PostgresAdapter();
+    constructor(cfg) {
 
-    this._connection = null;
+      this.adapter = new PostgresAdapter();
 
-    this._useLogColor = 0;
+      this._connection = null;
 
-  }
+      this._useLogColor = 0;
 
-  connect(cfg) {
-
-    var connection;
-
-    if (cfg.connectionString) {
-      connection = anyDB.createConnection(cfg.connectionString);
-    } else {
-      connection = anyDB.createConnection(
-        this.adapter.generateConnectionString(cfg.host, cfg.port, cfg.database, cfg.user, cfg.password)
-      );
     }
 
-    this._connection = connection;
+    connect(cfg) {
 
-    return true;
+      var connection;
 
-  }
+      if (cfg.connectionString) {
+        connection = anyDB.createConnection(cfg.connectionString);
+      } else {
+        connection = anyDB.createConnection(
+          this.adapter.generateConnectionString(cfg.host, cfg.port, cfg.database, cfg.user, cfg.password)
+        );
+      }
 
-  close() {
+      this._connection = connection;
 
-    this._connection && this._connection.end();
-    this._connection = null;
+      return true;
 
-  }
-
-  log(sql, params) {
-
-    var colorFunc = this.__logColorFuncs[this._useLogColor];
-
-    console.log();
-    console.log(colorFunc(sql));
-    params && console.log(colorFunc(JSON.stringify(params)));
-    console.log();
-
-    this._useLogColor = (this._useLogColor + 1) % this.__logColorFuncs.length;
-
-    return true;
-
-  }
-
-  info(message) {
-
-    console.log(colors.green.bold('Database Info: ') + message);
-
-  }
-
-  error(message) {
-
-    console.log(colors.red.bold('Database Error: ') + message);
-
-    return true;
-
-  }
-
-  query(query, params, callback) {
-
-    if (arguments.length < 3) {
-      throw new Error('.query requires 3 arguments');
     }
 
-    if (!(params instanceof Array)) {
-      throw new Error('params must be a valid array');
+    close() {
+
+      this._connection && this._connection.end();
+      this._connection = null;
+
     }
 
-    if(typeof callback !== 'function') {
-      throw new Error('Callback must be a function');
+    log(sql, params) {
+
+      var colorFunc = this.__logColorFuncs[this._useLogColor];
+
+      console.log();
+      console.log(colorFunc(sql));
+      params && console.log(colorFunc(JSON.stringify(params)));
+      console.log();
+
+      this._useLogColor = (this._useLogColor + 1) % this.__logColorFuncs.length;
+
+      return true;
+
     }
 
-    this._connection.query(query, params, callback);
-    this.log(query, params);
+    info(message) {
 
-    return true;
+      console.log(colors.green.bold('Database Info: ') + message);
 
-  }
-
-  transaction(preparedArray, callback) {
-
-    if (!preparedArray.length) {
-      throw new Error('Must give valid array of statements (with or without parameters)');
     }
 
-    if (typeof preparedArray === 'string') {
-      preparedArray = preparedArray.split(';').filter(function(v) {
-        return !!v;
-      }).map(function(v) {
-        return [v];
-      });
+    error(message) {
+
+      console.log(colors.red.bold('Database Error: ') + message);
+
+      return true;
+
     }
 
-    if(typeof callback !== 'function') {
-      callback = function() {};
+    query(query, params, callback) {
+
+      if (arguments.length < 3) {
+        throw new Error('.query requires 3 arguments');
+      }
+
+      if (!(params instanceof Array)) {
+        throw new Error('params must be a valid array');
+      }
+
+      if(typeof callback !== 'function') {
+        throw new Error('Callback must be a function');
+      }
+
+      this._connection.query(query, params, callback);
+      this.log(query, params);
+
+      return true;
+
     }
 
-    var db = this;
-    var transaction = beginTransaction(this._connection);
+    transaction(preparedArray, callback) {
 
-    var queries = preparedArray.map(function(queryData, i) {
+      if (!preparedArray.length) {
+        throw new Error('Must give valid array of statements (with or without parameters)');
+      }
 
-      queryData[1] = queryData[1] || [];
+      if (typeof preparedArray === 'string') {
+        preparedArray = preparedArray.split(';').filter(function(v) {
+          return !!v;
+        }).map(function(v) {
+          return [v];
+        });
+      }
 
-      if (i > 0) {
+      if(typeof callback !== 'function') {
+        callback = function() {};
+      }
 
-        return function(result, next) {
+      var db = this;
+      var transaction = beginTransaction(this._connection);
+
+      var queries = preparedArray.map(function(queryData, i) {
+
+        queryData[1] = queryData[1] || [];
+
+        if (i > 0) {
+
+          return function(result, next) {
+            db.log(queryData[0], queryData[1]);
+            transaction.query(queryData[0], queryData[1], next);
+          };
+
+        }
+
+        return function(next) {
           db.log(queryData[0], queryData[1]);
           transaction.query(queryData[0], queryData[1], next);
         };
 
-      }
+      });
 
-      return function(next) {
-        db.log(queryData[0], queryData[1]);
-        transaction.query(queryData[0], queryData[1], next);
-      };
+      var transactionError = null;
 
-    });
+      transaction.on('rollback:start', function() {
 
-    var transactionError = null;
+        db.info('Rollback started...');
 
-    transaction.on('rollback:start', function() {
+      });
 
-      db.info('Rollback started...');
+      transaction.on('rollback:complete', function() {
 
-    });
+        db.info('Rollback complete!');
 
-    transaction.on('rollback:complete', function() {
+      });
 
-      db.info('Rollback complete!');
+      transaction.on('commit:start', function() {
 
-    });
+        db.info('Commit started...');
 
-    transaction.on('commit:start', function() {
+      });
 
-      db.info('Commit started...');
+      transaction.on('commit:complete', function() {
 
-    });
+        db.info('Commit complete!');
 
-    transaction.on('commit:complete', function() {
+      });
 
-      db.info('Commit complete!');
+      transaction.on('close', function() {
 
-    });
+        db.info('Transaction complete!');
 
-    transaction.on('close', function() {
+        callback(transactionError);
 
-      db.info('Transaction complete!');
+      });
 
-      callback(transactionError);
+      db.info('Transaction started...');
 
-    });
+      async.waterfall(queries, function(err) {
 
-    db.info('Transaction started...');
+        if (err) {
+          transactionError = err;
+          db.error(err.message);
+          transaction.rollback();
+        }
 
-    async.waterfall(queries, function(err) {
+        transaction.commit();
 
-      if (err) {
-        transactionError = err;
-        db.error(err.message);
-        transaction.rollback();
-      }
+      });
 
-      transaction.commit();
-
-    });
+    }
 
   }
 
-}
+  Database.prototype.__logColorFuncs = [
+    function(str) {
+      return colors.yellow.bold(str);
+    },
+    function(str) {
+      return colors.white(str);
+    }
+  ];
 
-Database.prototype.__logColorFuncs = [
-  function(str) {
-    return colors.yellow.bold(str);
-  },
-  function(str) {
-    return colors.white(str);
-  }
-];
+  return Database;
 
-module.exports = Database;
+})();
