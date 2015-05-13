@@ -144,12 +144,12 @@ module.exports = (function() {
 
       let filename = './app/templates/' + name;
 
-      let contents;
       try {
-        contents = fs.readFileSync(filename);
+        let contents = fs.readFileSync(filename);
         this._templates[name] = new Template(this, dot.template(contents));
         return this._templates[name];
       } catch(e) {
+        console.log(e);
         console.log('Could not load template ' + name);
       }
       return this._templates['!'];
