@@ -10,6 +10,7 @@ module.exports = (function() {
   let dot = require('dot');
 
   dot.templateSettings.strip = false;
+  dot.templateSettings.varname = 'data';
 
   let controllerDir = './app/controllers';
 
@@ -20,12 +21,11 @@ module.exports = (function() {
       for: forModel
     };
 
-    return dot.template(
-      fs.readFileSync(__dirname + '/templates/controller.jst', {
-        varname: 'data',
-        strip: false
-      }).toString()
-    )(controller);
+    var fn = dot.template(
+      fs.readFileSync(__dirname + '/templates/controller.jst').toString()
+    );
+
+    return fn(controller);
 
   }
 
