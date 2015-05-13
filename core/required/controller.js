@@ -81,7 +81,7 @@ module.exports = (function() {
       } else if (data instanceof Model || data instanceof ComposerResult) {
         this.getHeader('Content-Type') || this.setHeader('Content-Type', 'application/json');
         data = API.format(data);
-        data.meta.error && !this.getStatus() && this.status(400);
+        data.meta.error && this.getStatus() || this.status(400);
         data = JSON.stringify(data);
       } else if (typeof data === 'function') {
         this.getHeader('Content-Type') || this.setHeader('Content-Type', 'text/html');
@@ -95,6 +95,7 @@ module.exports = (function() {
       }
 
       this.getStatus() || this.status(200);
+      this.getHeader('X-Powered-By') || this.setHeader('X-Powered-By', 'Nodal');
 
       this._middlewareManager.exec(this, data, (function(e, data) {
         if (e) {
