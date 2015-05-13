@@ -1,13 +1,17 @@
+"use strict";
+
 module.exports = (function() {
 
-  function Initializer() {}
+  class Initializer {
 
-  Initializer.prototype.exec = function(fnComplete) {
+    exec(fnComplete) {
 
-    var err = null;
-    return fnComplete(err, data);
+      let err = null;
+      return fnComplete(err, data);
 
-  };
+    }
+
+  }
 
   return Initializer;
 

@@ -1,10 +1,12 @@
-var child_process = require('child_process');
+"use strict";
+
+let child_process = require('child_process');
 
 global.env = process.env.NODE_ENV || 'development';
 
 describe('Test Suite', function() {
 
-  var Nodal = require('../core/module.js');
+  let Nodal = require('../core/module.js');
   Nodal.rootDirectory = __dirname;
 
   before(function() {

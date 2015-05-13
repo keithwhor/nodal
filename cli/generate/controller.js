@@ -1,19 +1,21 @@
+"use strict";
+
 module.exports = (function() {
 
-  var fs = require('fs');
+  let fs = require('fs');
 
-  var colors = require('colors/safe');
-  var inflect = require('i')();
+  let colors = require('colors/safe');
+  let inflect = require('i')();
 
-  var dot = require('dot');
+  let dot = require('dot');
 
   dot.templateSettings.strip = false;
 
-  var controllerDir = './app/controllers';
+  let controllerDir = './app/controllers';
 
   function generateController(controllerName, forModel) {
 
-    var controller = {
+    let controller = {
       name: controllerName,
       for: forModel
     };
@@ -35,10 +37,10 @@ module.exports = (function() {
         return;
       }
 
-      var controllerPath = args[0][0].split('/');
-      var cd = controllerDir;
+      let controllerPath = args[0][0].split('/');
+      let cd = controllerDir;
 
-      var forModel = null;
+      let forModel = null;
       if (flags.for) {
 
         forModel = {
@@ -50,15 +52,15 @@ module.exports = (function() {
 
       }
 
-      var controllerName = inflect.classify(controllerPath.pop() + '_controller');
+      let controllerName = inflect.classify(controllerPath.pop() + '_controller');
 
       controllerPath = controllerPath.map(function(v) {
         return inflect.underscore(v);
       });
 
-      var fullControllerName = inflect.classify(controllerPath.concat([controllerName]).join('_'));
+      let fullControllerName = inflect.classify(controllerPath.concat([controllerName]).join('_'));
 
-      var createPath = [controllerDir].concat(controllerPath).join('/') + '/' + inflect.underscore(controllerName) + '.js';
+      let createPath = [controllerDir].concat(controllerPath).join('/') + '/' + inflect.underscore(controllerName) + '.js';
 
       if (fs.existsSync(createPath)) {
         throw new Error('Controller already exists');

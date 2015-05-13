@@ -1,20 +1,20 @@
 module.exports = (function() {
 
-  var Nodal = require('nodal');
-  var Controller = Nodal.Controller;
+  "use strict";
 
-  function IndexController() {
-    Controller.apply(this, arguments);
+  const Nodal = require('nodal');
+
+  class IndexController extends Nodal.Controller {
+
+    constructor() {
+      super();
+    }
+
+    get(self, params, app) {
+      self.render(app.template('index.html'), params);
+    }
+
   }
-
-  IndexController.prototype = Object.create(Controller.prototype);
-  IndexController.prototype.constructor = IndexController;
-
-  IndexController.prototype.get = function(self, params, app) {
-
-    self.render(app.template('index'), params);
-
-  };
 
   return IndexController;
 

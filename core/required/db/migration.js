@@ -1,137 +1,143 @@
+"use strict";
+
 module.exports = (function() {
 
-  var Database = require('./database.js');
-  var SchemaGenerator = require('./schema_generator.js');
+  const Database = require('./database.js');
+  const SchemaGenerator = require('./schema_generator.js');
 
-  var fs = require('fs');
+  const fs = require('fs');
 
-  var colors = require('colors/safe');
-  var inflect = require('i')();
+  const colors = require('colors/safe');
+  const inflect = require('i')();
 
-  function Migration(db) {
+  class Migration {
 
-    if (!(db instanceof Database)) {
-      throw new Error('Migration required valid database instance');
+    constructor(db) {
+
+      if (!(db instanceof Database)) {
+        throw new Error('Migration required valid database instance');
+      }
+
+      this.id = null;
+
+      this.db = db;
+
+      this.schema = new SchemaGenerator(db);
+
     }
 
-    this.id = null;
+    up() {
 
-    this.db = db;
+      return [];
 
-    this.schema = new SchemaGenerator(db);
+    }
 
-  }
+    down() {
 
-  Migration.prototype.up = function() {
+      return [];
 
-    return [];
+    }
 
-  };
+    executeUp(callback) {
 
-  Migration.prototype.down = function() {
+      let schema = this.schema;
 
-    return [];
+      schema.load();
+      schema.setMigrationId(this.id);
 
-  };
+      let up = this.up().concat([
+        'INSERT INTO "schema_migrations"("id") VALUES(' + this.id + ')'
+      ]);
 
-  Migration.prototype.executeUp = function(callback) {
+      this.db.transaction(up.join(';'), function(err) {
+        !err && schema.save();
+        callback(err);
+      });
 
-    var schema = this.schema;
+    }
 
-    schema.load();
-    schema.setMigrationId(this.id);
+    executeDown(callback, prevId) {
 
-    var up = this.up().concat([
-      'INSERT INTO "schema_migrations"("id") VALUES(' + this.id + ')'
-    ]);
+      let schema = this.schema;
+      schema.load();
+      schema.setMigrationId(prevId || null);
 
-    this.db.transaction(up.join(';'), function(err) {
-      !err && schema.save();
-      callback(err);
-    });
+      let down = this.down().concat([
+        'DELETE FROM "schema_migrations" WHERE id = ' + this.id
+      ]);
 
-  };
+      this.db.transaction(down.join(';'), function(err) {
+        !err && schema.save();
+        callback(err);
+      });
 
-  Migration.prototype.executeDown = function(callback, prevId) {
+    }
 
-    var schema = this.schema;
-    schema.load();
-    schema.setMigrationId(prevId || null);
+    createTable(table, arrFieldData) {
 
-    var down = this.down().concat([
-      'DELETE FROM "schema_migrations" WHERE id = ' + this.id
-    ]);
+      arrFieldData = this.schema.createTable(table, arrFieldData);
 
-    this.db.transaction(down.join(';'), function(err) {
-      !err && schema.save();
-      callback(err);
-    });
+      return this.db.adapter.generateCreateTableQuery(table, arrFieldData);
 
-  };
+    }
 
-  Migration.prototype.createTable = function(table, arrFieldData) {
+    dropTable(table) {
 
-    arrFieldData = this.schema.createTable(table, arrFieldData);
+      this.schema.dropTable(table);
 
-    return this.db.adapter.generateCreateTableQuery(table, arrFieldData);
+      return this.db.adapter.generateDropTableQuery(table);
 
-  };
+    }
 
-  Migration.prototype.dropTable = function(table) {
+    alterColumn(table, column, type, properties) {
 
-    this.schema.dropTable(table);
+      properties = properties || {};
 
-    return this.db.adapter.generateDropTableQuery(table);
+      this.schema.alterColumn(table, column, type, properties);
 
-  };
+      console.log('wat?', this.db.adapter.generateAlterTableQuery(table, column, type, properties));
 
-  Migration.prototype.alterColumn = function(table, column, type, properties) {
+      return this.db.adapter.generateAlterTableQuery(table, column, type, properties);
 
-    properties = properties || {};
+    }
 
-    this.schema.alterColumn(table, column, type, properties);
+    addColumn(table, column, type, properties) {
 
-    console.log('wat?', this.db.adapter.generateAlterTableQuery(table, column, type, properties));
+      properties = properties || {};
 
-    return this.db.adapter.generateAlterTableQuery(table, column, type, properties);
+      this.schema.addColumn(table, column, type, properties);
 
-  };
+      return this.db.adapter.generateAlterTableAddColumnQuery(table, column, type, properties);
 
-  Migration.prototype.addColumn = function(table, column, type, properties) {
+    }
 
-    properties = properties || {};
+    dropColumn(table, column) {
 
-    this.schema.addColumn(table, column, type, properties);
+      this.schema.dropColumn(table, column);
 
-    return this.db.adapter.generateAlterTableAddColumnQuery(table, column, type, properties);
+      return this.db.adapter.generateAlterTableDropColumnQuery(table, column);
 
-  };
+    }
 
-  Migration.prototype.dropColumn = function(table, column) {
+    renameColumn(table, column, newColumn) {
 
-    this.schema.dropColumn(table, column);
+      this.schema.renameColumn(table, column, newColumn);
 
-    return this.db.adapter.generateAlterTableDropColumnQuery(table, column);
+      return this.db.adapter.generateAlterTableRenameColumnQuery(table, column, newColumn);
 
-  };
+    }
 
-  Migration.prototype.renameColumn = function(table, column, newColumn) {
+    createIndex(table, column, type) {
 
-    this.schema.renameColumn(table, column, newColumn);
+      return this.db.adapter.generateCreateIndexQuery(table, column, type);
 
-    return this.db.adapter.generateAlterTableRenameColumnQuery(table, column, newColumn);
+    }
 
-  };
+    dropIndex(table, column) {
 
-  Migration.prototype.createIndex = function(table, column, type) {
+      return this.db.adapter.generateDropIndexQuery(table, column);
 
-    return this.db.adapter.generateCreateIndexQuery(table, column, type);
-
-  };
-
-  Migration.prototype.dropIndex = function(table, column) {
-
-    return this.db.adapter.generateDropIndexQuery(table, column);
+    }
 
   };
 

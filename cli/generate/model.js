@@ -1,22 +1,24 @@
+"use strict";
+
 module.exports = (function() {
 
-  var fs = require('fs');
-  var Database = require('../../core/module.js').Database;
+  let fs = require('fs');
+  let Database = require('../../core/module.js').Database;
 
-  var colors = require('colors/safe');
-  var inflect = require('i')();
+  let colors = require('colors/safe');
+  let inflect = require('i')();
 
-  var generateMigration = require('./migration.js').generate;
+  let generateMigration = require('./migration.js').generate;
 
-  var dot = require('dot');
+  let dot = require('dot');
 
   dot.templateSettings.strip = false;
 
-  var modelDir = './app/models';
+  let modelDir = './app/models';
 
   function generateModelDefinition(modelName, columns) {
 
-    var model = {
+    let model = {
       name: modelName,
       columns: columns
     };
@@ -41,7 +43,7 @@ module.exports = (function() {
 
   function convertArgListToPropertyList(argList) {
     return argList.slice(1).map(function(v) {
-      var obj = {name: inflect.underscore(v[0]), type: v[1]};
+      let obj = {name: inflect.underscore(v[0]), type: v[1]};
       if (v[2] && (v[2] === 'array')) {
         obj.properties = {array: true};
       }
@@ -77,13 +79,13 @@ module.exports = (function() {
         return;
       }
 
-      var modelName = inflect.classify(args[0][0]);
+      let modelName = inflect.classify(args[0][0]);
 
-      var schemaObject = generateModelSchemaObject(modelName, convertArgListToPropertyList(args));
+      let schemaObject = generateModelSchemaObject(modelName, convertArgListToPropertyList(args));
 
       !fs.existsSync(modelDir) && fs.mkdirSync(modelDir);
 
-      var createPath = modelDir + '/' + inflect.underscore(modelName) + '.js';
+      let createPath = modelDir + '/' + inflect.underscore(modelName) + '.js';
 
       if (fs.existsSync(createPath)) {
         throw new Error('Model already exists');

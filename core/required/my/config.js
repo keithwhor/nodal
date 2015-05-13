@@ -1,29 +1,31 @@
+"use strict";
+
+const fs = require('fs');
+const dot = require('dot');
+
 module.exports = (function(rootDirectory) {
 
-  var fs = require('fs');
-  var dot = require('dot');
-
-  var config = {
+  let config = {
     env: process.env.NODE_ENV || 'development',
   };
 
-  var credentials, secrets;
+  let credentials, secrets;
 
-  var varname = dot.templateSettings.varname;
+  let varname = dot.templateSettings.varname;
 
   dot.templateSettings.varname = 'env';
 
-  var dir = rootDirectory + '/config';
-  var configFiles = fs.readdirSync(dir);
+  let dir = rootDirectory + '/config';
+  let configFiles = fs.readdirSync(dir);
 
-  var ext = '.json';
+  let ext = '.json';
 
   configFiles.filter(function(filename) {
-    var name = filename.substr(0, filename.length - ext.length);
+    let name = filename.substr(0, filename.length - ext.length);
     return !config[name] && filename.substr(filename.length - ext.length) === ext;
   }).forEach(function(filename) {
 
-    var configData;
+    let configData;
 
     try {
       configData = fs.readFileSync([dir, filename].join('/'));

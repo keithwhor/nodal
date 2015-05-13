@@ -1,70 +1,67 @@
 module.exports = (function() {
 
-  var Nodal = require('nodal');
+  "use strict";
 
-  var Model = Nodal.Model;
-  var Schema = Nodal.my.Schema;
+  const Nodal = require('nodal');
+  const bcrypt = Nodal.include.bcrypt;
 
-  var bcrypt = Nodal.include.bcrypt;
+  class User extends Nodal.Model {
 
-  function User() {
+    constructor(modelData, fromStorage) {
 
-    this.validates('password', 'must be at least 5 characters in length', function(v) {
-      return v && v.length >= 5;
-    });
+      this.validates('password', 'must be at least 5 characters in length', function(v) {
+        return v && v.length >= 5;
+      });
 
-    Model.apply(this, arguments);
+      super(modelData, fromStorage);
+
+    }
+
+    /* Model Extensions */
+
+    save(db, callback) {
+
+      let user = this;
+
+      if (!user.hasErrors() && user.hasChanged('password')) {
+
+        bcrypt.hash(user.get('password'), 10, function(err, hash) {
+
+          if (err) {
+            user.setError('password', 'Could not encrypt password');
+          } else {
+            user.set('password', hash, false);
+          }
+
+          Model.prototype.save.call(user, db, callback);
+
+        });
+
+      } else {
+
+        Model.prototype.save.call(user, db, callback);
+
+      }
+
+    }
+
+    verifyPassword(unencrypted, callback) {
+
+      let user = this;
+
+      bcrypt.compare(unencrypted, user.get('password'), function(err, result) {
+        callback.call(user, err, result);
+      });
+
+    }
 
   }
 
-  User.prototype = Object.create(Model.prototype);
-  User.prototype.constructor = User;
-
-  User.prototype.schema = Schema.User;
+  User.prototype.schema = Nodal.my.Schema.User;
 
   User.prototype.externalInterface = [
 {{~ data.columns :value:index}}    '{{= value }}'{{? data.rows.length - 1 !== index }},{{?}}{{~}}
   ];
-
-  /* Extend User Below */
-
-  User.prototype.save = function(db, callback) {
-
-    var user = this;
-
-    if (!user.hasErrors() && user.hasChanged('password')) {
-
-      bcrypt.hash(user.get('password'), 10, function(err, hash) {
-
-        if (err) {
-          user.setError('password', 'Could not encrypt password');
-        } else {
-          user.set('password', hash, false);
-        }
-
-        Model.prototype.save.call(user, db, callback);
-
-      });
-
-    } else {
-
-      Model.prototype.save.call(user, db, callback);
-
-    }
-
-  };
-
-  User.prototype.verifyPassword = function(unencrypted, callback) {
-
-    var user = this;
-
-    bcrypt.compare(unencrypted, user.get('password'), function(err, result) {
-      callback.call(user, err, result);
-    });
-
-  };
-
-  /* Export User */
 
   return User;
 

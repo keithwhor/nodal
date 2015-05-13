@@ -1,48 +1,54 @@
+"use strict";
+
 module.exports = (function() {
 
-  var Initializer = require('./initializer.js');
-  var async = require('async');
+  const Initializer = require('./initializer.js');
+  const async = require('async');
 
-  function InitializerManager() {
-    this._initializers = [];
-  }
+  class InitializerManager {
 
-  InitializerManager.prototype.use = function(initializerConstructor) {
-
-    var initializer = new initializerConstructor();
-    if (!(initializer instanceof Initializer)) {
-      throw new Error('Invalid Initializer');
+    constructor() {
+      this._initializers = [];
     }
 
-    this._initializers.push(initializer);
+    use(initializerConstructor) {
 
-  };
-
-  InitializerManager.prototype.exec = function(app, fnComplete) {
-
-    var mwa = [
-      function(callback) {
-        callback(null);
-      }
-    ].concat(
-      this._initializers.map(function(initializer) {
-        return function(callback) {
-          initializer.exec(app, callback);
-        };
-      })
-    );
-
-    async.waterfall(mwa, function(err) {
-
-      if (err) {
-        throw err;
+      let initializer = new initializerConstructor();
+      if (!(initializer instanceof Initializer)) {
+        throw new Error('Invalid Initializer');
       }
 
-      fnComplete();
+      this._initializers.push(initializer);
 
-    });
+    }
 
-  };
+    exec(app, fnComplete) {
+
+      let mwa = [
+        function(callback) {
+          callback(null);
+        }
+      ].concat(
+        this._initializers.map(function(initializer) {
+          return function(callback) {
+            initializer.exec(app, callback);
+          };
+        })
+      );
+
+      async.waterfall(mwa, function(err) {
+
+        if (err) {
+          throw err;
+        }
+
+        fnComplete();
+
+      });
+
+    }
+
+  }
 
   return InitializerManager;
 

@@ -1,6 +1,8 @@
-module.exports = (function(rootDirectory) {
+"use strict";
 
-  var fs = require('fs');
+const fs = require('fs');
+
+module.exports = (function(rootDirectory) {
 
   try {
     return JSON.parse(fs.readFileSync(rootDirectory + '/db/schema.json'));

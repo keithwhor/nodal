@@ -1,28 +1,34 @@
-var Nodal = require('nodal');
+module.exports = (function() {
 
-var StaticAssetInitializer = Nodal.require('initializers/static_asset_initializer.js');
-var GzipMiddleware = Nodal.require('middleware/gzip_middleware.js');
+  "use strict";
 
-var app = new Nodal.Application();
+  const Nodal = require('nodal');
 
-/* use initializer */
-app.initializers.use(StaticAssetInitializer);
+  const StaticAssetInitializer = Nodal.require('initializers/static_asset_initializer.js');
+  const GzipMiddleware = Nodal.require('middleware/gzip_middleware.js');
 
-/* use middleware */
-app.middleware.use(GzipMiddleware);
+  const app = new Nodal.Application();
 
-/* bind data layer */
-app.addDatabase('main', Nodal.my.Config.db.main);
+  /* use initializer */
+  app.initializers.use(StaticAssetInitializer);
 
-/* Add authorization */
-app.enableAuth();
-app.auth.setKey(Nodal.my.Config.secrets.auth.key);
-app.auth.definePermission('user', 1);
-app.auth.definePermission('admin', 10);
+  /* use middleware */
+  app.middleware.use(GzipMiddleware);
 
-/* Initialize App */
-app.initialize(function() {
+  /* bind data layer */
+  app.addDatabase('main', Nodal.my.Config.db.main);
 
-  app.listen(Nodal.my.Config.secrets.port);
+  /* Add authorization */
+  app.enableAuth();
+  app.auth.setKey(Nodal.my.Config.secrets.auth.key);
+  app.auth.definePermission('user', 1);
+  app.auth.definePermission('admin', 10);
 
-});
+  /* Initialize App */
+  app.initialize(function() {
+
+    app.listen(Nodal.my.Config.secrets.port);
+
+  });
+
+})();

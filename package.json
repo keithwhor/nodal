@@ -1,12 +1,11 @@
 {
   "name": "nodal",
-  "version": "0.1.60",
+  "version": "0.2.0rc1",
   "description": "An API Server and Framework for node.js",
   "author": "Keith Horwood",
   "main": "core/module.js",
   "engines": {
-      "node": ">= 0.12.0",
-      "iojs": ">= 2.0.1"
+    "iojs": ">= 2.0.1"
   },
   "dependencies": {
     "any-db": "*",
@@ -28,7 +27,7 @@
     "mocha": "*"
   },
   "scripts": {
-    "test": "mocha ./test/runner.js"
+    "test": "mocha ./test/runner.js --harmony_classes"
   },
   "repository": {
     "type": "git",

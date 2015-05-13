@@ -1,11 +1,13 @@
+"use strict";
+
 module.exports = (function(Nodal) {
 
-  var expect = require('chai').expect;
+  let expect = require('chai').expect;
 
   describe('Nodal.Database', function() {
 
-    var db = new Nodal.Database();
-    var myTable = {
+    let db = new Nodal.Database();
+    let myTable = {
       table: 'test_objects',
       columns: [
         {name: 'id', type: 'serial'},
@@ -34,7 +36,7 @@ module.exports = (function(Nodal) {
 
       it('should throw an error if no params given', function() {
 
-        var e = null;
+        let e = null;
 
         try {
           db.query();
@@ -48,7 +50,7 @@ module.exports = (function(Nodal) {
 
       it('should throw an error if params not an array', function() {
 
-        var e = null;
+        let e = null;
 
         try {
           db.query('SELECT 1', true, function() {});
@@ -62,7 +64,7 @@ module.exports = (function(Nodal) {
 
       it('should throw an error if callback not a function', function() {
 
-        var e = null;
+        let e = null;
 
         try {
           db.query('SELECT 1', [], true);

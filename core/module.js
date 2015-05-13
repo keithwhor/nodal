@@ -1,11 +1,13 @@
+"use strict";
+
 module.exports = (function() {
 
-  var types = require('pg').types;
+  let types = require('pg').types;
   types.setTypeParser(20, function(val) {
     return val === null ? null : parseInt(val);
   });
 
-  var Nodal = {
+  let Nodal = {
     API: null,
     Application: null,
     Controller: null,
@@ -24,7 +26,7 @@ module.exports = (function() {
 
   /* Lazy Loading */
 
-  var LazyNodal = {
+  let LazyNodal = {
     my: {},
     require: function(filename) {
       return require(process.cwd() + '/' + filename);

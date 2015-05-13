@@ -1,29 +1,27 @@
 module.exports = (function() {
 
-  var Nodal = require('nodal');
-  var Controller = Nodal.Controller;
-  var Error404Controller = Nodal.require('app/controllers/error/404_controller.js');
+  "use strict";
 
-  function StaticController() {
-    Controller.apply(this, arguments);
-  }
+  const Nodal = require('nodal');
+  const Error404Controller = Nodal.require('app/controllers/error/404_controller.js');
 
-  StaticController.prototype = Object.create(Controller.prototype);
-  StaticController.prototype.constructor = StaticController;
+  class StaticController extends Nodal.Controller {
 
-  StaticController.prototype.get = function(self, params, app) {
+    get(self, params, app) {
 
-    var staticData = app.static(this.path().substr('/static/'.length));
+      let staticData = app.static(this.path().substr('/static/'.length));
 
-    if (!staticData) {
-      Error404Controller.prototype.get.apply(this, arguments);
-      return;
+      if (!staticData) {
+        Error404Controller.prototype.get.apply(this, arguments);
+        return;
+      }
+
+      self.setHeader('Content-Type', staticData.mime);
+      self.render(staticData.buffer);
+
     }
 
-    self.setHeader('Content-Type', staticData.mime);
-    self.render(staticData.buffer);
-
-  };
+  }
 
   return StaticController;
 

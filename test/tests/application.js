@@ -1,10 +1,12 @@
+"use strict";
+
 module.exports = (function(Nodal) {
 
-  var expect = require('chai').expect;
+  let expect = require('chai').expect;
 
   describe('Nodal.Application', function() {
 
-    var app = new Nodal.Application();
+    let app = new Nodal.Application();
 
     require('./application/db.js')(Nodal, app);
 

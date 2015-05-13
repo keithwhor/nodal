@@ -1,67 +1,64 @@
 module.exports = (function() {
 
-  var Nodal = require('nodal');
-  var Middleware = Nodal.Middleware;
+  "use strict";
 
-  var zlib = require('zlib');
+  const Nodal = require('nodal');
+  const zlib = require('zlib');
 
-  function GzipMiddleware() {
-    Middleware.apply(this, arguments);
-  }
+  class GzipMiddleware extends Nodal.Middleware {
 
-  GzipMiddleware.prototype = Object.create(Middleware.prototype);
-  GzipMiddleware.prototype.constructor = GzipMiddleware;
+    exec(controller, data, callback) {
 
-  GzipMiddleware.prototype.exec = function(controller, data, callback) {
+      let acceptEncoding = controller._request.headers['accept-encoding'] || '';
+      let canCompress = !!{
+        'text/plain': 1,
+        'text/html': 1,
+        'text/xml': 1,
+        'text/json': 1,
+        'text/javascript': 1,
+        'application/json': 1,
+        'application/xml': 1,
+        'application/javascript': 1,
+        'application/octet-stream': 1
+      }[controller.getHeader('Content-Type')];
 
-    var acceptEncoding = controller._request.headers['accept-encoding'] || '';
-    var canCompress = !!{
-      'text/plain': 1,
-      'text/html': 1,
-      'text/xml': 1,
-      'text/json': 1,
-      'text/javascript': 1,
-      'application/json': 1,
-      'application/xml': 1,
-      'application/javascript': 1,
-      'application/octet-stream': 1
-    }[controller.getHeader('Content-Type')];
+      if (canCompress) {
 
-    if (canCompress) {
+        if (acceptEncoding.match(/\bdeflate\b/)) {
 
-      if (acceptEncoding.match(/\bdeflate\b/)) {
+          zlib.deflate(data, function(err, result) {
+            if (!err) {
+              controller.setHeader('Content-Encoding', 'deflate');
+              callback(null, result);
+              return;
+            }
+            callback(null, data);
+          });
+          return true;
 
-        zlib.deflate(data, function(err, result) {
-          if (!err) {
-            controller.setHeader('Content-Encoding', 'deflate');
-            callback(null, result);
-            return;
-          }
-          callback(null, data);
-        });
-        return true;
+        } else if (acceptEncoding.match(/\bgzip\b/)) {
 
-      } else if (acceptEncoding.match(/\bgzip\b/)) {
+          zlib.gzip(result, function(err, result) {
+            if (!err) {
+              controller.setHeader('Content-Encoding', 'gzip');
+              callback(null, result);
+              return;
+            }
+            callback(null, data);
+          });
 
-        zlib.gzip(result, function(err, result) {
-          if (!err) {
-            controller.setHeader('Content-Encoding', 'gzip');
-            callback(null, result);
-            return;
-          }
-          callback(null, data);
-        });
+          return true;
 
-        return true;
+        }
 
       }
 
+      callback(null, data);
+      return false;
+
     }
 
-    callback(null, data);
-    return false;
-
-  };
+  }
 
   return GzipMiddleware;
 

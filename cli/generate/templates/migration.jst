@@ -1,34 +1,33 @@
 module.exports = (function() {
 
-  var Nodal = require('nodal');
-  var Migration = Nodal.Migration;
+  "use strict";
 
-  function {{= data.name }}(db) {
+  const Nodal = require('nodal');
 
-    Migration.apply(this, arguments);
+  class {{= data.name }} extends Nodal.Migration {
 
-    this.id = {{= data.id }};
+    constructor(db) {
+      super(db);
+      this.id = {{= data.id }};
+    }
+
+    up() {
+
+      return [{{? data.up.length}}
+{{~ data.up :value:index}}        {{= value }}{{? data.up.length - 1 !== index }},{{?}}{{~}}
+      {{?}}];
+
+    }
+
+    down() {
+
+      return [{{? data.down.length}}
+{{~ data.down :value:index}}        {{= value }}{{? data.down.length - 1 !== index }},{{?}}{{~}}
+      {{?}}];
+
+    }
 
   }
-
-  {{= data.name }}.prototype = Object.create(Migration.prototype);
-  {{= data.name }}.prototype.constructor = {{= data.name }};
-
-  {{= data.name }}.prototype.up = function() {
-
-    return [{{? data.up.length}}
-{{~ data.up :value:index}}      {{= value }}{{? data.up.length - 1 !== index }},{{?}}{{~}}
-    {{?}}];
-
-  };
-
-  {{= data.name }}.prototype.down = function() {
-
-    return [{{? data.down.length}}
-{{~ data.down :value:index}}      {{= value }}{{? data.down.length - 1 !== index }},{{?}}{{~}}
-    {{?}}];
-
-  };
 
   return {{= data.name }};
 
