@@ -332,7 +332,7 @@ module.exports = (function() {
 
       }
 
-      columns = model.fieldList().filter(function(v) {
+      let columns = model.fieldList().filter(function(v) {
         return model.isFieldPrimaryKey(v);
       });
 
