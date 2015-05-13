@@ -147,17 +147,12 @@ adapters, it is a priority to allow for other data layers soon.
 
 The following is an active development checklist (TODO):
 
-### Models
-
-- Model relationships (belongs_to, has_many)
-
-### Misc.
-
 - Offload all SQL generation to DatabaseAdapter (in CLI)
 - Keep track of indices in schema.json
 - Tests for all modules (It has begun...)
 
 ## TBD
+- Model relationships (belongs_to, has_many)
 - Task scheduler (requires redis for more than one instance)
 - Easy authorization (requires redis for more than one instance)
 

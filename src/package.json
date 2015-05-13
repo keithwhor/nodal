@@ -1,13 +1,13 @@
 {
   "name": "nodal-sample-application",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "description": "Nodal Sample Application",
   "main": "server.js",
   "engines": {
     "iojs": ">= 2.0.1"
   },
   "dependencies": {
-    "nodal": "git://github.com/keithwhor/nodal.git#es6"
+    "nodal": "latest"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
