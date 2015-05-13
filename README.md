@@ -3,7 +3,7 @@
 
 [![Build Status](https://travis-ci.org/keithwhor/nodal.svg?branch=master)](https://travis-ci.org/keithwhor/nodal)
 
-**v0.2.0rc* is pre-release, and is intended for testing purposes only**
+**v0.2.0-rc is pre-release, and is intended for testing purposes only**
 
 Nodal is an API Server and Framework for quickly generating RESTful API
 services in iojs.
@@ -138,7 +138,7 @@ up to however many migrations you have. `--step` can also be provided for
 ## More...
 
 Nodal is currently under *very* active development, so expect things to change
-constantly. The 0.1.x family (currently master branch) is pre-release.
+constantly. The 0.2.0-rc family (currently master branch) is pre-release.
 
 At present time, Nodal only supports PostgreSQL. With full support for SQL
 adapters, it is a priority to allow for other data layers soon.
@@ -171,6 +171,6 @@ Follow me on Twitter, [@keithwhor](http://twitter.com/keithwhor)
 Fork me on GitHub, [keithwhor](http://github.com/keithwhor)
 
 Thanks for checking out Nodal! Feel free to open issues related to any questions
-you might have. Please hold off on PRs for v0.1.x (unless under exceptional
+you might have. Please hold off on PRs for v0.2.0-rc (unless under exceptional
 circumstances) as things are apt to change very quickly - including major
 refactors and rewrites.
