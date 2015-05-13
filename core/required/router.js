@@ -144,7 +144,7 @@ module.exports = (function() {
   };
 
   Router.prototype.find = function(pathname) {
-    routes = this._routes;
+    var routes = this._routes;
     for(var i = 0, len = routes.length; i < len; i++) {
       if(routes[i].match(pathname)) {
         return routes[i];
