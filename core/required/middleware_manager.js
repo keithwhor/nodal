@@ -11,8 +11,6 @@ module.exports = class MiddlewareManager {
 
   use(middlewareConstructor) {
 
-    console.log(middlewareConstructor);
-
     var middleware = new middlewareConstructor();
     if (!(middleware instanceof Middleware)) {
       throw new Error('Invalid Middleware');

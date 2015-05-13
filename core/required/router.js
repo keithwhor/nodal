@@ -150,7 +150,7 @@ module.exports = class Router {
   }
 
   find(pathname) {
-    routes = this._routes;
+    let routes = this._routes;
     for(var i = 0, len = routes.length; i < len; i++) {
       if(routes[i].match(pathname)) {
         return routes[i];

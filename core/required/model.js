@@ -299,7 +299,7 @@ class Model {
       function(err, result) {
 
         if (err) {
-          model.error('_query', err.message);
+          model.setError('_query', err.message);
         } else {
           result.rows.length && model.load(result.rows[0], true);
         }
@@ -344,7 +344,7 @@ class Model {
       function(err, result) {
 
         if (err) {
-          model.error('_query', err.message);
+          model.setError('_query', err.message);
         } else {
           model._inStorage = false;
         }

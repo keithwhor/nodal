@@ -6,8 +6,8 @@ module.exports = (function() {
 
   class {{= data.name }} extends Nodal.Model {
 
-    constructor() {
-      super();
+    constructor(modelData, fromStorage) {
+      super(modelData, fromStorage);
     }
 
     /* Model Extensions */
