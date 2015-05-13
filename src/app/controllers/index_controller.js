@@ -6,10 +6,6 @@ module.exports = (function() {
 
   class IndexController extends Nodal.Controller {
 
-    constructor() {
-      super();
-    }
-
     get(self, params, app) {
       self.render(app.template('index.html'), params);
     }

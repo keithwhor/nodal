@@ -24,11 +24,29 @@
       let ncp = require('ncp');
 
       ncp(__dirname + '/../src', './', function (err) {
+
         if (err) {
-          return console.error(err);
+          console.error(err);
+          process.exit(0);
+          return
         }
-        console.log('Created new nodal project!');
-        process.exit(0);
+
+        console.log('Please enter your password to give Nodal permission to install')
+
+        let spawn = require('child_process').spawn;
+        let child = spawn('sudo',  ['npm', 'install']);
+
+        console.log('Installing packages in this directory...');
+
+        child.on('exit', function() {
+          console.log('Created new Nodal project!');
+          process.exit(0);
+        });
+
+        process.on('exit', function() {
+          child && child.kill();
+        });
+
       });
 
     })();
@@ -64,8 +82,6 @@
       _: function(args, flags) {
 
         let Nodal = require('../core/module.js');
-
-        let restart = false;
 
         let spawn = require('child_process').spawn;
         let child = spawn('npm',  ['start'], {stdio: [process.stdin, process.stdout, process.stderr]});

@@ -7,11 +7,6 @@ module.exports = (function() {
 
   class {{= data.name }} extends Nodal.Controller {
 
-    constructor() {
-      super();
-    }
-
-
     get(self, params, app) {
       {{? data.for }}app.composer
         .from(app.db('main'), {{= data.for.name }})
