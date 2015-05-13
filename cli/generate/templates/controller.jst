@@ -1,46 +1,41 @@
 module.exports = (function() {
 
-  var Nodal = require('nodal');
-  var Controller = Nodal.Controller;{{? data.for }}
+  'use strict';
 
-  var {{= data.for.name }} = Nodal.require('{{= data.for.path }}');{{?}}
+  const Nodal = require('nodal');{{? data.for }}
 
-  function {{= data.name }}() {
-    Controller.apply(this, arguments);
+  const {{= data.for.name }} = Nodal.require('{{= data.for.path }}');{{?}}
+
+  class {{= data.name }} extends Nodal.Controller {
+
+    constructor() {
+      super();
+    }
+
+
+    get(self, params, app) {
+      {{? data.for }}app.composer
+        .from(app.db('main'), {{= data.for.name }})
+        .stdQuery(function(err, result) {
+
+          self.render(result);
+
+        });{{??}}self.render();{{?}}
+    }
+
+    post(self, params, app) {
+      super(self, params, app);
+    }
+
+    put(self, params, app) {
+      super(self, params, app);
+    }
+
+    del(self, params, app) {
+      super(self, params, app);
+    }
+
   }
-
-  {{= data.name }}.prototype = Object.create(Controller.prototype);
-  {{= data.name }}.prototype.constructor = {{= data.name }};
-
-  {{= data.name }}.prototype.get = function(self, params, app) {
-
-    {{? data.for }}app.composer
-      .from(app.db('main'), {{= data.for.name }})
-      .stdQuery(function(err, result) {
-
-        self.render(result);
-
-      });{{??}}self.render();{{?}}
-
-  };
-
-  {{= data.name }}.prototype.post = function(self, params, app) {
-
-    Controller.prototype.post.apply(this, arguments);
-
-  };
-
-  {{= data.name }}.prototype.put = function(self, params, app) {
-
-    Controller.prototype.put.apply(this, arguments);
-
-  };
-
-  {{= data.name }}.prototype.del = function(self, params, app) {
-
-    Controller.prototype.del.apply(this, arguments);
-
-  };
 
   return {{= data.name }};
 

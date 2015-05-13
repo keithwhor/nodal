@@ -1,4 +1,4 @@
-module.exports = (function() {
+'use strict';
 
 module.exports = class Template {
 

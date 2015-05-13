@@ -1,7 +1,7 @@
 'use strict';
 
-  const Middleware = require('./middleware.js');
-  const async = require('async');
+const Middleware = require('./middleware.js');
+const async = require('async');
 
 module.exports = class MiddlewareManager {
 
@@ -10,6 +10,8 @@ module.exports = class MiddlewareManager {
   }
 
   use(middlewareConstructor) {
+
+    console.log(middlewareConstructor);
 
     var middleware = new middlewareConstructor();
     if (!(middleware instanceof Middleware)) {

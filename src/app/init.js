@@ -1,9 +1,11 @@
-var Nodal = require('nodal');
+'use strict';
 
-var StaticAssetInitializer = Nodal.require('initializers/static_asset_initializer.js');
-var GzipMiddleware = Nodal.require('middleware/gzip_middleware.js');
+const Nodal = require('nodal');
 
-var app = new Nodal.Application();
+const StaticAssetInitializer = Nodal.require('initializers/static_asset_initializer.js');
+const GzipMiddleware = Nodal.require('middleware/gzip_middleware.js');
+
+const app = new Nodal.Application();
 
 /* use initializer */
 app.initializers.use(StaticAssetInitializer);

@@ -1,26 +1,24 @@
 module.exports = (function() {
 
-  var Nodal = require('nodal');
+  'use strict';
 
-  var Model = Nodal.Model;
-  var Schema = Nodal.my.Schema;
+  const Nodal = require('nodal');
 
-  function {{= data.name }}() {
-    Model.apply(this, arguments);
+  class {{= data.name }} extends Nodal.Model {
+
+    constructor() {
+      super();
+    }
+
+    /* Model Extensions */
+
   }
 
-  {{= data.name }}.prototype = Object.create(Model.prototype);
-  {{= data.name }}.prototype.constructor = {{= data.name }};
-
-  {{= data.name }}.prototype.schema = Schema.{{= data.name }};
+  {{= data.name }}.prototype.schema = Nodal.my.Schema.{{= data.name }};
 
   {{= data.name }}.prototype.externalInterface = [
 {{~ data.columns :value:index}}    '{{= value }}'{{? data.rows.length - 1 !== index }},{{?}}{{~}}
   ];
-
-  /* Extend {{= data.name }} Below */
-
-  /* module.exports = {{= data.name }} */
 
   return {{= data.name }};
 

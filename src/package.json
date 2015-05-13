@@ -7,7 +7,7 @@
     "iojs": ">= 2.0.1"
   },
   "dependencies": {
-    "nodal": "latest"
+    "nodal": "git://github.com/keithwhor/nodal.git#es6"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

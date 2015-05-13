@@ -263,7 +263,7 @@ class Model {
     }
 
     if(typeof callback !== 'function') {
-      callback() {};
+      callback() = function() {};
     }
 
     if (model.hasErrors()) {
@@ -320,7 +320,7 @@ class Model {
     }
 
     if(typeof callback !== 'function') {
-      callback() {};
+      callback() = function() {};
     }
 
     if (!model.inStorage()) {

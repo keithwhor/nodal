@@ -1,12 +1,14 @@
 module.exports = (function() {
 
-  var Nodal = require('nodal');
+  'use strict';
 
-  var router = new Nodal.Router();
+  const Nodal = require('nodal');
 
-  var IndexController = Nodal.require('app/controllers/index_controller.js');
-  var StaticController = Nodal.require('app/controllers/static_controller.js');
-  var Error404Controller = Nodal.require('app/controllers/error/404_controller.js');
+  const router = new Nodal.Router();
+
+  const IndexController = Nodal.require('app/controllers/index_controller.js');
+  const StaticController = Nodal.require('app/controllers/static_controller.js');
+  const Error404Controller = Nodal.require('app/controllers/error/404_controller.js');
 
   router.route(/^\/?/, IndexController);
   router.route(/^\/static\/.*/, StaticController);

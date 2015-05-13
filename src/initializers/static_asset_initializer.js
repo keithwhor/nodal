@@ -1,21 +1,21 @@
 module.exports = (function() {
 
-  var Nodal = require('nodal');
-  var Initializer = Nodal.Initializer;
+  'use strict';
 
-  function StaticAssetInitializer() {
-    Initializer.apply(this, arguments);
+  const Nodal = require('nodal');
+
+  class StaticAssetInitializer extends Nodal.Initializer {
+
+    constructor() {
+      super();
+    }
+
+    exec(app, callback) {
+      app.loadStaticAssets('static');
+      callback(null);
+    }
+
   }
-
-  StaticAssetInitializer.prototype = Object.create(Initializer.prototype);
-  StaticAssetInitializer.prototype.constructor = StaticAssetInitializer;
-
-  StaticAssetInitializer.prototype.exec = function(app, callback) {
-
-    app.loadStaticAssets('static');
-    callback(null);
-
-  };
 
   return StaticAssetInitializer;
 
