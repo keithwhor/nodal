@@ -1,22 +1,28 @@
-# Nodal [![Build Status](https://travis-ci.org/keithwhor/nodal.svg?branch=master)](https://travis-ci.org/keithwhor/nodal)
-## An API Server and Framework for node.js
+# Nodal
+## A Next-Generation API Server and Framework for iojs
 
-**v0.1.x is pre-release, and is intended for testing purposes only**
+[![Build Status](https://travis-ci.org/keithwhor/nodal.svg?branch=master)](https://travis-ci.org/keithwhor/nodal)
+
+**v0.2.0rc* is pre-release, and is intended for testing purposes only**
 
 Nodal is an API Server and Framework for quickly generating RESTful API
-services in node.js.
+services in iojs.
 
 It is intended to be used for cross-platform applications with various
 client-side implementations or loosely-coupled services where responses to
 requests are generally limited to structured data. (Though there is
 support for HTML and static resources, they are not a priority.)
 
+Nodal makes use of modern ES6 idioms to make your application code concise and
+easy to follow.
+
 With a built-in command-line interface, models, controllers, templates,
 migrations and application architecture, Nodal provides all of the tools a
-developer needs to get a new node.js project started with very little overhead.
+developer needs to get a new iojs project started with very little overhead.
 
 ## Features
 
+- ES6
 - Models
 - Controllers
 - Templates
