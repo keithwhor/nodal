@@ -129,6 +129,8 @@ module.exports = {
     var db = new Database();
     db.connect(dbCredentials);
 
+    console.log(dbCredentials);
+
     var steps = flags.step | 0;
     if (!steps) { steps = 0; }
 
