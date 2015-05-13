@@ -142,7 +142,7 @@ module.exports = (function() {
         return this._templates[name];
       }
 
-      let filename = './app/templates/' + name + '.html';
+      let filename = './app/templates/' + name;
 
       let contents;
       try {

@@ -12,7 +12,7 @@ module.exports = (function() {
 
     get(self, params, app) {
       self.status(404);
-      self.render(app.template('error/404'), params);
+      self.render(app.template('error/404.html'), params);
     }
 
   }

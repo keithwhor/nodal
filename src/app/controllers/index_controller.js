@@ -11,7 +11,7 @@ module.exports = (function() {
     }
 
     get(self, params, app) {
-      self.render(app.template('index'), params);
+      self.render(app.template('index.html'), params);
     }
 
   }
