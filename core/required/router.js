@@ -26,8 +26,7 @@ module.exports = (function() {
     }
 
     match(pathname) {
-      let matches = this._regex.exec(pathname);
-      return !!matches && matches[0] === pathname;
+      return !!this._regex.exec(pathname);
     }
 
     parseQueryParameters(query) {
@@ -93,6 +92,7 @@ module.exports = (function() {
       let body = '';
       let query = this.parseQueryParameters(urlParts.query);
       let path = [].slice.call(urlParts.pathname.match(this._regex), 0);
+      let id = urlParts.pathname.substr(path[0].length) || null;
       let method = {
         'GET': 'get',
         'PUT': 'put',
@@ -116,6 +116,7 @@ module.exports = (function() {
 
         let params = {
           path: path,
+          id: id,
           query: query,
           body: this.parseBody(headers['content-type'], body),
           ip_address: headers['x-forwarded-for'] || request.connection.remoteAddress,

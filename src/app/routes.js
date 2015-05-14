@@ -13,7 +13,7 @@ module.exports = (function() {
 
   /* generator: end imports */
 
-  router.route(/^\/?/, IndexController);
+  router.route(/^\/?$/, IndexController);
   router.route(/^\/static\/.*/, StaticController);
 
   /* generator: begin routes */
