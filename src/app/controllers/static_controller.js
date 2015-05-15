@@ -16,6 +16,11 @@ module.exports = (function() {
         return;
       }
 
+      if (Nodal.my.Config.env === 'production') {
+        self.setHeader('Cache-Control', 'max-age=60');
+        self.setHeader('ETag', staticData.tag);
+      }
+
       self.setHeader('Content-Type', staticData.mime);
       self.render(staticData.buffer);
 

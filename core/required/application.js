@@ -16,6 +16,7 @@ module.exports = (function() {
   const http = require('http');
   const httpProxy = require('http-proxy');
   const mime = require('mime-types');
+  const crypto = require('crypto');
 
   // For templates
   dot.templateSettings.varname = 'data';
@@ -80,15 +81,19 @@ module.exports = (function() {
           let filename = [dirname, v].join('/');
           let fullPath = [cwd, filename].join('/');
 
-          if (fs.statSync(fullPath).isDirectory()) {
+          let stat = fs.statSync(fullPath);
+
+          if (stat.isDirectory()) {
             readDir(cwd, filename, data);
             return;
           }
 
           let ext = fullPath.substr(fullPath.lastIndexOf('.'));
+          let buffer = fs.readFileSync(fullPath);
           data[filename] = {
             mime: mime.lookup(ext) || 'application/octet-stream',
-            buffer: fs.readFileSync(fullPath)
+            buffer: buffer,
+            tag: crypto.createHash('md5').update(buffer.toString()).digest('hex')
           };
           return;
 
