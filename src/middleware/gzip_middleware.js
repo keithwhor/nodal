@@ -38,7 +38,7 @@ module.exports = (function() {
 
         } else if (acceptEncoding.match(/\bgzip\b/)) {
 
-          zlib.gzip(result, function(err, result) {
+          zlib.gzip(data, function(err, result) {
             if (!err) {
               controller.setHeader('Content-Encoding', 'gzip');
               callback(null, result);
