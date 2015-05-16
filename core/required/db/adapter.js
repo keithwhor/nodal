@@ -350,6 +350,7 @@ module.exports = (function() {
     'nullable',
     'unique',
     'primary_key',
+    'auto_increment',
     'array',
     'defaultValue'
   ];
@@ -359,6 +360,7 @@ module.exports = (function() {
     nullable: true,
     unique: false,
     primary_key: false,
+    auto_increment: false,
     array: false,
     defaultValue: null
   };

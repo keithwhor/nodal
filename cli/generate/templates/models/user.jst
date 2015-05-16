@@ -22,6 +22,7 @@ module.exports = (function() {
     save(db, callback) {
 
       let user = this;
+      let save = super.save.bind(this, db, callback);
 
       if (!user.hasErrors() && user.hasChanged('password')) {
 
@@ -33,13 +34,13 @@ module.exports = (function() {
             user.set('password', hash, false);
           }
 
-          Model.prototype.save.call(user, db, callback);
+          save();
 
         });
 
       } else {
 
-        Model.prototype.save.call(user, db, callback);
+        save();
 
       }
 

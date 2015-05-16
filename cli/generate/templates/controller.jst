@@ -10,7 +10,7 @@ module.exports = (function() {
     get(self, params, app) {
       {{? data.for }}app.composer
         .from(app.db('main'), {{= data.for.name }})
-        .stdQuery(function(err, result) {
+        .externalQuery(function(err, result) {
 
           self.render(result);
 

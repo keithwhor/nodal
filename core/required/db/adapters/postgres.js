@@ -76,7 +76,7 @@ module.exports = (function() {
 
     generateAlterTableColumnType(table, columnName, columnType, columnProperties) {
 
-      return [
+      let queries = [
         [
           'ALTER TABLE',
             this.escapeField(table),
@@ -87,7 +87,14 @@ module.exports = (function() {
             this.escapeField(table),
             this.generateAlterColumnSetNull(columnName, columnType, columnProperties)
         ].join(' '),
-      ].join(';')
+        this.generateDropSequenceQuery(table, columnName)
+      ]
+
+      if (columnProperties.auto_increment) {
+        queries.push(this.generateCreateSequenceQuery(table, columnName));
+      }
+
+      return queries.join(';');
 
     }
 
@@ -192,6 +199,66 @@ module.exports = (function() {
 
     }
 
+    generateSequence(table, columnName) {
+      return this.generateConstraint(table, columnName, 'seq');
+    }
+
+    generateCreateSequenceQuery(table, columnName) {
+
+      return [
+        [
+          'CREATE SEQUENCE',
+            this.generateSequence(table, columnName),
+          'START 1',
+          'OWNED BY',
+            [this.escapeField(table), this.escapeField(columnName)].join('.')
+        ].join(' '),
+        [
+          'SELECT setval(\'',
+            this.generateSequence(table, columnName),
+          '\', GREATEST(COALESCE(MAX(',
+            this.escapeField(columnName),
+          '), 0), 0) + 1, false) FROM ',
+            this.escapeField(table)
+        ].join('')
+      ].join(';');
+
+    }
+
+    generateDropSequenceQuery(table, columnName) {
+      return [
+        'DROP SEQUENCE IF EXISTS',
+        this.generateSequence(table, columnName)
+      ].join(' ');
+    }
+
+    generateCreateTableQuery(table, columns) {
+
+      // Create sequences along with table
+      let self = this;
+
+      return [
+        super.generateCreateTableQuery(table, columns),
+        columns.filter(function(columnData) {
+          return self.getTypeProperties(columnData.type, columnData.properties).auto_increment;
+        }).map(function(columnData) {
+          return [
+            self.generateCreateSequenceQuery(table, columnData.name),
+            [
+              'ALTER TABLE ',
+                self.escapeField(table),
+              ' ALTER COLUMN ',
+                self.escapeField(columnData.name),
+              ' SET DEFAULT nextval(\'',
+                self.generateSequence(table, columnData.name),
+              '\')'
+            ].join('')
+          ].join(';');
+        })
+      ].join(';');
+
+    }
+
   }
 
   PostgresAdapter.prototype.sanitizeType = {
@@ -204,10 +271,11 @@ module.exports = (function() {
 
   PostgresAdapter.prototype.types = {
     serial: {
-      dbName: 'BIGSERIAL',
+      dbName: 'BIGINT',
       properties: {
         primary_key: true,
-        nullable: false
+        nullable: false,
+        auto_increment: true
       }
     },
     int: {

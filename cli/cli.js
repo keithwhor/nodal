@@ -34,7 +34,7 @@
         console.log('Please enter your password to give Nodal permission to install')
 
         let spawn = require('child_process').spawn;
-        let child = spawn('sudo',  ['npm', 'install']);
+        let child = spawn('npm',  ['install']);
 
         console.log('Installing packages in this directory...');
 
@@ -108,7 +108,9 @@
       },
       model: generateCommands.model,
       migration: generateCommands.migration,
-      controller: generateCommands.controller
+      controller: generateCommands.controller,
+      initializer: generateCommands.initializer,
+      middleware: generateCommands.middleware
     }
   };
 
