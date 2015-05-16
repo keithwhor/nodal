@@ -95,9 +95,8 @@ module.exports = (function(Nodal) {
 
       it('should be able to create a table', function(done) {
 
-        db.query(
+        db.transaction(
           db.adapter.generateCreateTableQuery(myTable.table, myTable.columns),
-          [],
           function(err, result) {
             expect(err).to.equal(null);
             done();
