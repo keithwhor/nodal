@@ -122,7 +122,7 @@ module.exports = (function() {
 
     }
 
-    addDatabase(alias, connectionDetails) {
+    useDatabase(alias, connectionDetails) {
 
       if (this._db[alias]) {
         throw new Error('Database aliased with "' + alias + '" already added to application.');

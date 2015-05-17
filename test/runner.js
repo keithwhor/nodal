@@ -26,6 +26,8 @@ describe('Test Suite', function() {
 
   require('./tests/database.js')(Nodal);
 
+  require('./tests/model.js')(Nodal);
+
   require('./tests/application.js')(Nodal);
 
 });

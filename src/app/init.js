@@ -16,7 +16,7 @@ module.exports = (function() {
   app.middleware.use(GzipMiddleware);
 
   /* bind data layer */
-  // app.addDatabase('main', Nodal.my.Config.db.main);
+  // app.useDatabase('main', Nodal.my.Config.db.main);
 
   /* Add authorization */
   app.enableAuth();

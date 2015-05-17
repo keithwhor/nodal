@@ -1,6 +1,6 @@
-"use strict";
-
 module.exports = (function(Nodal) {
+
+  "use strict";
 
   let expect = require('chai').expect;
 

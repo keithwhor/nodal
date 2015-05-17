@@ -9,28 +9,37 @@ module.exports = (function() {
 
     constructor(modelData, fromStorage) {
 
-      this.initialize(fromStorage);
+      this._validations = {};
 
+      this.preInitialize();
+      this.initialize();
       modelData && this.load(modelData, fromStorage);
+      this.postInitialize();
 
     }
 
     validates(field, message, fnAction) {
-
-      this._validations = this._validations || {};
 
       this._validations[field] = this._validations[field] || [];
       this._validations[field].push({message: message, action: fnAction});
 
     }
 
+    preInitialize() {
+      return true;
+    }
+
+    postInitialize() {
+      return true;
+    }
+
     inStorage() {
       return this._inStorage;
     }
 
-    initialize(fromStorage) {
+    initialize() {
 
-      this._inStorage = fromStorage;
+      this._inStorage = false;
 
       this._table = this.schema.table;
       this._fieldArray = this.schema.columns.slice();
@@ -54,8 +63,6 @@ module.exports = (function() {
       this._data = data;
       this._changed = changed;
       this._errors = {};
-
-      this._validations = this._validations || {};
 
       this._validate();
 
@@ -123,6 +130,7 @@ module.exports = (function() {
     load(data, fromStorage) {
 
       let self = this;
+      this._inStorage = !!fromStorage;
 
       !fromStorage && self.set('created_at', new Date());
 

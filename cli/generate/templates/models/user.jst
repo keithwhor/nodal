@@ -7,13 +7,11 @@ module.exports = (function() {
 
   class User extends Nodal.Model {
 
-    constructor(modelData, fromStorage) {
+    preInitialize() {
 
       this.validates('password', 'must be at least 5 characters in length', function(v) {
         return v && v.length >= 5;
       });
-
-      super(modelData, fromStorage);
 
     }
 

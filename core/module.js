@@ -10,6 +10,7 @@ module.exports = (function() {
   let Nodal = {
     API: null,
     Application: null,
+    Composer: null,
     Controller: null,
     Database: null,
     Initializer: null,
@@ -49,6 +50,12 @@ module.exports = (function() {
     Application: {
       get: function() {
         return Nodal.Application || (Nodal.Application = require('./required/application.js'));
+      },
+      enumerable: true
+    },
+    Composer: {
+      get: function() {
+        return Nodal.Composer || (Nodal.Composer = require('./required/composer.js'));
       },
       enumerable: true
     },
