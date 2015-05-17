@@ -13,7 +13,8 @@ module.exports = (function() {
       this.db = db;
 
       this.migrationId = null;
-      this.tables = {};
+      this.models = {};
+      this.indices = [];
 
       this._defaultPath = 'db/schema.json';
 
@@ -62,16 +63,8 @@ module.exports = (function() {
     set(schema) {
 
       this.setMigrationId(schema.migration_id);
-
-      let tables = {};
-
-      Object.keys(schema).filter(function(k) {
-        return k !== 'migration_id';
-      }).forEach(function(k) {
-        tables[k] = schema[k];
-      });
-
-      this.tables = tables;
+      this.models = schema.models || {};
+      this.indices = schema.indices || [];
 
       return true;
 
@@ -105,7 +98,7 @@ module.exports = (function() {
         this.mergeProperties(columnData);
       }).bind(this));
 
-      this.tables[tableClass] = {
+      this.models[tableClass] = {
         table: table,
         columns: arrColumnData
       };
@@ -118,7 +111,7 @@ module.exports = (function() {
 
       let tableClass = inflect.classify(table);
 
-      delete this.tables[tableClass];
+      delete this.models[tableClass];
 
       return true;
 
@@ -130,16 +123,16 @@ module.exports = (function() {
         delete properties.unique;
       }
 
-      let tables = this.tables;
-      let tableKey = Object.keys(tables).filter(function(t) {
-        return tables[t].table === table;
+      let models = this.models;
+      let modelKey = Object.keys(models).filter(function(t) {
+        return models[t].table === table;
       }).pop();
 
-      if (!tableKey) {
+      if (!modelKey) {
         throw new Error('Table "' + table + '" does not exist');
       }
 
-      let schemaFieldData = tables[tableKey].columns.filter(function(v) {
+      let schemaFieldData = models[modelKey].columns.filter(function(v) {
         return v.name === column;
       }).pop();
 
@@ -161,18 +154,18 @@ module.exports = (function() {
         delete properties.unique;
       }
 
-      let tables = this.tables;
-      let tableKey = Object.keys(tables).filter(function(t) {
-        return tables[t].table === table;
+      let models = this.models;
+      let modelKey = Object.keys(models).filter(function(t) {
+        return models[t].table === table;
       }).pop();
 
-      if (!tableKey) {
+      if (!modelKey) {
         throw new Error('Table "' + table + '" does not exist');
       }
 
-      let tableSchema = tables[tableKey];
+      let modelSchema = models[modelKey];
 
-      let schemaFieldData = tableSchema.columns.filter(function(v) {
+      let schemaFieldData = modelSchema.columns.filter(function(v) {
         return v.name === column;
       }).pop();
 
@@ -186,7 +179,7 @@ module.exports = (function() {
         properties: properties
       };
 
-      tableSchema.columns.push(columnData);
+      modelSchema.columns.push(columnData);
 
       return true;
 
@@ -194,24 +187,24 @@ module.exports = (function() {
 
     dropColumn(table, column) {
 
-      let tables = this.tables;
-      let tableKey = Object.keys(tables).filter(function(t) {
-        return tables[t].table === table;
+      let models = this.models;
+      let modelKey = Object.keys(models).filter(function(t) {
+        return models[t].table === table;
       }).pop();
 
-      if (!tableKey) {
+      if (!modelKey) {
         throw new Error('Table "' + table + '" does not exist');
       }
 
-      let tableSchema = tables[tableKey];
+      let modelSchema = models[modelKey];
 
-      let columnIndex = tableSchema.columns.map(function(v, i) { return v.name; }).indexOf(column);
+      let columnIndex = modelSchema.columns.map(function(v, i) { return v.name; }).indexOf(column);
 
       if (columnIndex === -1) {
         throw new Error('Column "' + column + '" of table "' + table + '" does not exist');
       }
 
-      tableSchema.columns.splice(columnIndex, 1);
+      modelSchema.columns.splice(columnIndex, 1);
 
       return true;
 
@@ -219,18 +212,18 @@ module.exports = (function() {
 
     renameColumn(table, column, newColumn) {
 
-      let tables = this.tables;
-      let tableKey = Object.keys(tables).filter(function(t) {
-        return tables[t].table === table;
+      let models = this.models;
+      let modelKey = Object.keys(models).filter(function(t) {
+        return models[t].table === table;
       }).pop();
 
-      if (!tableKey) {
+      if (!modelKey) {
         throw new Error('Table "' + table + '" does not exist');
       }
 
-      let tableSchema = tables[tableKey];
+      let modelSchema = models[modelKey];
 
-      let schemaFieldData = tableSchema.columns.filter(function(v) {
+      let schemaFieldData = modelSchema.columns.filter(function(v) {
         return v.name === column;
       }).pop();
 
@@ -244,32 +237,81 @@ module.exports = (function() {
 
     }
 
+    createIndex(table, column, type) {
+
+      if (this.indices.filter(function(v) {
+        return v.table === table && v.column === column;
+      }).length) {
+        throw new Error('Index already exists on column "' + column + '" of table "' + table + '"');
+      }
+
+      this.indices.push({table: table, column: column, type: type});
+
+      return true
+
+    }
+
+    dropIndex(table, column) {
+
+      this.indices = this.indices.filter(function(v) {
+        return !(v.table === table && v.column === column);
+      });
+
+      return true;
+
+    }
+
     generate() {
 
-      let tables = this.tables;
-      let hasTables = !!Object.keys(tables).length;
+      let models = this.models;
+      let indices = this.indices;
+      let hasModels = !!Object.keys(models).length;
+      let hasIndices = indices.length;
 
       let fileData = [
         '{',
         '',
-        '  "migration_id": ' + this.migrationId + (hasTables ? ',' : ''),
+        '  "migration_id": ' + this.migrationId + ((hasModels || hasIndices) ? ',' : ''),
       ];
 
-      if (hasTables) {
+      if (hasIndices) {
 
         fileData = fileData.concat([
           '',
-          Object.keys(tables).sort().map(function(t) {
-            let curTable = tables[t];
+          '  "indices": [',
+            indices.map(function(indexData) {
+              return [
+                '    {',
+                  [
+                    '"table": "' + indexData.table + '"',
+                    '"column": "' + indexData.column + '"',
+                    (indexData.type ? '"type": "' + indexData.type+ '"' : '')
+                  ].filter(function(v) { return !!v; }).join(', '),
+                '}',
+              ].join('');
+            }).join('\n'),
+          '  ]' + (hasModels ? ',' : ''),
+        ]);
+
+      }
+
+      if (hasModels) {
+
+        fileData = fileData.concat([
+          '',
+          '  "models": {',
+          '',
+          Object.keys(models).sort().map(function(t) {
+            let curTable = models[t];
             return [
-              '  "' + t + '": {',
+              '    "' + t + '": {',
               '',
-              '    "table": "' + curTable.table + '",',
+              '      "table": "' + curTable.table + '",',
               '',
-              '    "columns": [',
+              '      "columns": [',
               curTable.columns.map(function(columnData) {
                 return [
-                  '      ',
+                  '        ',
                   '{',
                     [
                       '"name": "' + columnData.name + '"',
@@ -279,11 +321,13 @@ module.exports = (function() {
                   '}'
                 ].join('');
               }).join(',\n'),
-              '    ]',
+              '      ]',
               '',
-              '  }'
+              '    }'
             ].join('\n');
-          }).join(',\n\n')
+          }).join(',\n\n'),
+          '',
+          '  }'
         ]);
 
       }

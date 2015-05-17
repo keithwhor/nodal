@@ -18,6 +18,33 @@ module.exports = (function() {
 
     }
 
+    generateClearDatabaseQuery() {
+
+      return [
+        'DROP SCHEMA public CASCADE',
+        'CREATE SCHEMA public'
+      ].join(';')
+
+    }
+
+    generateCreateDatabaseQuery(name) {
+
+      return [
+        'CREATE DATABASE',
+        this.escapeField(name)
+      ].join(' ');
+
+    }
+
+    generateDropDatabaseQuery(name) {
+
+      return [
+        'DROP DATABASE IF EXISTS',
+        this.escapeField(name)
+      ].join(' ');
+
+    }
+
     generateColumn(columnName, columnType, columnProperties) {
 
       return [
@@ -50,6 +77,26 @@ module.exports = (function() {
         'NOT NULL'
       ].join(' ');
 
+    }
+
+    generateAlterColumnDropDefault(columnName, columnType, columnProperties) {
+
+      return [
+        'ALTER COLUMN',
+        this.escapeField(columnName),
+        'DROP DEFAULT'
+      ].join(' ');
+
+    }
+
+    generateAlterColumnSetDefaultSeq(columnName, seqName) {
+      return [
+        'ALTER COLUMN ',
+          this.escapeField(columnName),
+        ' SET DEFAULT nextval(\'',
+          seqName,
+        '\')'
+      ].join('');
     }
 
     generateIndex(table, columnName) {
@@ -87,11 +134,21 @@ module.exports = (function() {
             this.escapeField(table),
             this.generateAlterColumnSetNull(columnName, columnType, columnProperties)
         ].join(' '),
+        [
+          'ALTER TABLE',
+            this.escapeField(table),
+            this.generateAlterColumnDropDefault(columnName)
+        ].join(' '),
         this.generateDropSequenceQuery(table, columnName)
       ]
 
       if (columnProperties.auto_increment) {
         queries.push(this.generateCreateSequenceQuery(table, columnName));
+        queries.push([
+          'ALTER TABLE',
+            this.escapeField(table),
+            this.generateAlterColumnSetDefaultSeq(columnName, this.generateSequence(table, columnName))
+        ].join(' '));
       }
 
       return queries.join(';');
@@ -179,11 +236,13 @@ module.exports = (function() {
 
     generateCreateIndex(table, columnName, indexType) {
 
+      indexType = this.indexTypes.indexOf(indexType) > -1 ? indexType : this.indexTypes[0];
+
       return [
         'CREATE INDEX',
           this.generateIndex(table, columnName),
         'ON',
-          table,
+          this.escapeField(table),
         'USING',
           indexType,
         ['(', this.escapeField(columnName), ')'].join('')
@@ -245,14 +304,10 @@ module.exports = (function() {
           return [
             self.generateCreateSequenceQuery(table, columnData.name),
             [
-              'ALTER TABLE ',
+              'ALTER TABLE',
                 self.escapeField(table),
-              ' ALTER COLUMN ',
-                self.escapeField(columnData.name),
-              ' SET DEFAULT nextval(\'',
-                self.generateSequence(table, columnData.name),
-              '\')'
-            ].join('')
+                self.generateAlterColumnSetDefaultSeq(columnData.name, self.generateSequence(table, columnData.name))
+            ].join(' ')
           ].join(';');
         })
       ].join(';');
@@ -268,6 +323,13 @@ module.exports = (function() {
   }
 
   PostgresAdapter.prototype.escapeFieldCharacter = '"';
+
+  PostgresAdapter.prototype.indexTypes = [
+    'btree',
+    'hash',
+    'gist',
+    'gin'
+  ];
 
   PostgresAdapter.prototype.types = {
     serial: {

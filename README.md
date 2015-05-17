@@ -3,10 +3,10 @@
 
 [![Build Status](https://travis-ci.org/keithwhor/nodal.svg?branch=master)](https://travis-ci.org/keithwhor/nodal)
 
-**v0.2.0-rc is pre-release, and is intended for testing purposes only**
+**v0.2.x is pre-release, suggested for use in development only**
 
 Nodal is an API Server and Framework for quickly generating RESTful API
-services in iojs.
+services in [iojs](https://iojs.org/).
 
 It is intended to be used for cross-platform applications with various
 client-side implementations or loosely-coupled services where responses to
@@ -46,7 +46,7 @@ prototyping.
 
 ## Installation
 
-To install the latest version of Nodal, make sure you have node.js installed.
+To install the latest version of Nodal, make sure you have [iojs](https://iojs.org/) installed.
 
 You can then run:
 
@@ -88,6 +88,7 @@ Supported data types are:
 ```
 serial
 int
+currency
 float
 string
 text
@@ -137,23 +138,21 @@ up to however many migrations you have. `--step` can also be provided for
 
 ## More...
 
-Nodal is currently under *very* active development, so expect things to change
-constantly. The 0.2.0-rc family (currently master branch) is pre-release.
+Nodal is *very* active development, with version 0.2.x representing a
+pre-release version. The plan is to transition 0.2.x to 1.x once the intended
+feature set is included, the architecture is solidified and test coverage is
+thorough.
 
 At present time, Nodal only supports PostgreSQL. With full support for SQL
 adapters, it is a priority to allow for other data layers soon.
 
-## Active Development
+## Project Direction
 
-The following is an active development checklist (TODO):
+The following features are in development on Nodal 0.2.x
 
-- Offload all SQL generation to DatabaseAdapter (in CLI)
-- Keep track of indices in schema.json
-- Tests for all modules (It has begun...)
-
-## TBD
-- Model relationships (belongs_to, has_many)
-- Task scheduler (requires redis for more than one instance)
+- Test coverage (in progress)
+- Model relationships (links to other models)
+- Task scheduler
 - Easy authorization (requires redis for more than one instance)
 
 ## About
@@ -166,6 +165,9 @@ Follow me on Twitter, [@keithwhor](http://twitter.com/keithwhor)
 Fork me on GitHub, [keithwhor](http://github.com/keithwhor)
 
 Thanks for checking out Nodal! Feel free to open issues related to any questions
-you might have. Please hold off on PRs for v0.2.0-rc (unless under exceptional
-circumstances) as things are apt to change very quickly - including major
-refactors and rewrites.
+you might have. Suggestions for project direction are helpful as well, if
+there's anything you believe Nodal is missing.
+
+PRs are welcome but will be screened thoroughly for code style
+as well as how they fit into the overall architecture. I will be picky.
+Suggestions for active areas of cleanup / improvement are on tests and the CLI.

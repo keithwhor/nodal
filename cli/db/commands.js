@@ -13,57 +13,14 @@ let colors = require('colors/safe');
 let MODEL_PATH = './app/models';
 let MIGRATION_PATH = './db/migrations';
 
-function composeQueryFunc(query) {
+function errorHandler(err) {
 
-  let dbCredentials = Nodal.my.Config.db.main;
+  if (err) {
+    console.error(colors.red.bold('ERROR: ') + err.message);
+    process.exit(0);
+  }
 
-  let cfg = dbCredentials;
-  let conString = 'postgres://' + cfg.user + ':' + cfg.password + '@' + cfg.host + ':' + cfg.port + '/postgres';
-
-  return function rawQuery(callback) {
-
-    let client = new pg.Client(conString);
-
-    client.connect(function(err) {
-
-      if(err) {
-        callback(err);
-        return;
-      }
-
-      client.query(query, function(err, result) {
-
-        client.end();
-        callback(err);
-
-      });
-
-    });
-
-  };
-
-}
-
-function dropDatabase(databaseName, callback) {
-  return composeQueryFunc('DROP DATABASE IF EXISTS "' + databaseName + '"')(callback);
-}
-
-function createDatabase(databaseName, callback) {
-  return composeQueryFunc('CREATE DATABASE "' + databaseName + '"')(callback);
-}
-
-function errorHandler(callback) {
-
-  return function(err) {
-
-    if (err) {
-      console.error(colors.red.bold('ERROR: ') + err.message);
-      return;
-    }
-
-    callback.apply(this, [].slice.call(arguments, 1));
-
-  };
+  return true;
 
 }
 
@@ -72,31 +29,38 @@ module.exports = {
   drop: function() {
 
     let dbCredentials = Nodal.my.Config.db.main;
+    let cfg = dbCredentials;
+    let conString = 'postgres://' + cfg.user + ':' + cfg.password + '@' + cfg.host + ':' + cfg.port + '/postgres';
 
-    dropDatabase(
-      dbCredentials.database,
-      errorHandler(function() {
+    let db = new Database();
+    db.connect({connectionString: conString});
 
-        Database.prototype.info('Dropped database "' + dbCredentials.database + '"');
+    db.query(db.adapter.generateDropDatabaseQuery(dbCredentials.database), [], function(err, result) {
 
-      })
-    );
+      errorHandler(err);
+      db.info('Dropped database "' + dbCredentials.database + '"');
+      process.exit(0);
+
+    });
 
   },
 
   create: function() {
 
     let dbCredentials = Nodal.my.Config.db.main;
+    let cfg = dbCredentials;
+    let conString = 'postgres://' + cfg.user + ':' + cfg.password + '@' + cfg.host + ':' + cfg.port + '/postgres';
 
-    createDatabase(
-      dbCredentials.database,
-      errorHandler(function() {
+    let db = new Database();
+    db.connect({connectionString: conString});
 
-        Database.prototype.info('Created empty database "' + dbCredentials.database + '"');
-        process.exit(0);
+    db.query(db.adapter.generateCreateDatabaseQuery(dbCredentials.database), [], function(err, result) {
 
-      })
-    );
+      errorHandler(err);
+      db.info('Created empty database "' + dbCredentials.database + '"');
+      process.exit(0);
+
+    });
 
   },
 
@@ -110,16 +74,20 @@ module.exports = {
     let schema = new SchemaGenerator(db);
 
     db.transaction(
-      'DROP SCHEMA public CASCADE;' +
-      'CREATE SCHEMA public;' +
-      'CREATE TABLE "schema_migrations"("id" BIGINT NOT NULL, PRIMARY KEY("id"))',
-      errorHandler(function(result) {
+      [
+        db.adapter.generateClearDatabaseQuery(),
+        db.adapter.generateCreateTableQuery('schema_migrations', [
+          {name: 'id', type: 'int', properties: {nullable: false, primary_key: true}}
+        ])
+      ].join(';'),
+      function(err, result) {
 
-        Database.prototype.info('Prepared database for migrations');
+        errorHandler(err);
+        Database.prototype.info('Prepared database "' + dbCredentials.database + '" for migrations');
         schema.save();
         process.exit(0);
 
-      })
+      }
     );
 
   },
@@ -134,7 +102,7 @@ module.exports = {
     let steps = flags.step | 0;
     if (!steps) { steps = 0; }
 
-    db.query('SELECT id FROM schema_migrations', [], function(err, result) {
+    db.query(db.adapter.generateSelectQuery('schema_migrations', ['id']), [], function(err, result) {
 
       if (err) {
         db.error('Could not get schema migrations, try `nodal db:prepare` first');
@@ -201,7 +169,7 @@ module.exports = {
     let steps = flags.step | 0;
     if (!steps) { steps = 1; }
 
-    db.query('SELECT id FROM schema_migrations', [], function(err, result) {
+    db.query(db.adapter.generateSelectQuery('schema_migrations', ['id']), [], function(err, result) {
 
       if (err) {
         db.error('Could not get schema migrations, try `nodal db:prepare` first');

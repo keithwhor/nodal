@@ -1,0 +1,20 @@
+module.exports = (function() {
+
+  "use strict";
+
+  const Nodal = require('nodal');
+
+  class {{= data.name }}Initializer extends Nodal.Initializer {
+
+    exec(app, callback) {
+
+      callback(null);
+      return false;
+
+    }
+
+  }
+
+  return {{= data.name }}Initializer;
+
+})();

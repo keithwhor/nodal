@@ -6,6 +6,10 @@ module.exports = (function() {
 
     generateConnectionString(host, port, database, user, password) {}
 
+    generateClearDatabaseQuery() {}
+    generateCreateDatabaseQuery() {}
+    generateDropDatabaseQuery() {}
+
     generateIndex() {}
     generateConstraint() {}
 
@@ -246,9 +250,9 @@ module.exports = (function() {
 
     }
 
-    generateCreateIndexQuery(table, columnName, index) {
+    generateCreateIndexQuery(table, columnName, indexType) {
 
-      indexType = index || 'btree';
+      indexType = indexType || 'btree';
 
       return this.generateCreateIndex(table, columnName, indexType);
 
@@ -364,6 +368,8 @@ module.exports = (function() {
     array: false,
     defaultValue: null
   };
+
+  DatabaseAdapter.prototype.indexTypes = [];
 
   DatabaseAdapter.prototype.comparators = {
     is: function(field, value) {

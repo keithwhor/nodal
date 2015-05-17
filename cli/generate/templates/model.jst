@@ -14,7 +14,7 @@ module.exports = (function() {
 
   }
 
-  {{= data.name }}.prototype.schema = Nodal.my.Schema.{{= data.name }};
+  {{= data.name }}.prototype.schema = Nodal.my.Schema.models.{{= data.name }};
 
   {{= data.name }}.prototype.externalInterface = [
 {{~ data.columns :value:index}}    '{{= value }}'{{? data.rows.length - 1 !== index }},{{?}}{{~}}

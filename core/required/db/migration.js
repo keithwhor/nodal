@@ -95,8 +95,6 @@ module.exports = (function() {
 
       this.schema.alterColumn(table, column, type, properties);
 
-      console.log('wat?', this.db.adapter.generateAlterTableQuery(table, column, type, properties));
-
       return this.db.adapter.generateAlterTableQuery(table, column, type, properties);
 
     }
@@ -129,11 +127,15 @@ module.exports = (function() {
 
     createIndex(table, column, type) {
 
+      this.schema.createIndex(table, column, type);
+
       return this.db.adapter.generateCreateIndexQuery(table, column, type);
 
     }
 
     dropIndex(table, column) {
+
+      this.schema.dropIndex(table, column);
 
       return this.db.adapter.generateDropIndexQuery(table, column);
 
