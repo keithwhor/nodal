@@ -562,6 +562,30 @@ The following features are in development on Nodal 0.2.x
 - Task scheduler
 - Easy authorization (requires redis for more than one instance)
 
+## Why Nodal?
+
+The short answer is because building stuff is fun. ;)
+
+The JavaScript community is very fragmented, and for the most part, that's
+actually a fantastic thing. A lot of innovation comes from a lot of different
+groups with wildly different agendas. The problem is that it's kind of hard to
+figure out where to start. I know the things I need in an application to make my
+life easy - and I know they all exist within the npm ecosystem. But if I'm going
+to start picking and choosing, how do I know what's best? How do I ensure I
+build a consistent, stable architecture? Library implementations can all differ
+fundamentally, making the code you have to write seem inconsistent or confusing
+to tie the different pieces together.
+
+To somebody coming from Django or Rails, this can seem exhausting. I think
+JavaScript should be as inclusive and welcoming as possible.
+
+The wonderful thing about ES6 is it provides clear solutions for how to
+implement inheritance and in doing so, allows us to begin creating strong idioms
+for application architecture in JavaScript. What interests me is having code
+that any developer can understand and architecture that is easy to reason about.
+This is the goal of Nodal. To be clear, concise, consistent, easy to learn and
+full-featured.
+
 ## About
 
 Nodal is under active development and maintained by
