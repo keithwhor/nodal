@@ -79,7 +79,7 @@ be available at `localhost:3000` under default configurations. A 404 page and
 static resources page are also available. (Static resources are stored in
   your `./static/` directory.)
 
-If you want to get set up with some users, proceed with the following:
+### Connect your database, create a RESTful resource
 
 First, Make sure you have Postgres installed. On OSX I'm a fan of
 [Postgres.app](http://postgresapp.com/).
