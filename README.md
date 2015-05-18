@@ -15,12 +15,13 @@ support for HTML and static resources, they are not a priority.)
 
 With a built-in command-line interface, models, controllers, templates,
 migrations and application architecture, Nodal provides all of the tools a
-developer needs to get a new iojs project started with very little overhead.
+developer needs to get a new iojs project started in a very short amount of
+time.
 
-Writing your server software in Nodal should feel natural coming from other
-MVC frameworks such as Django and Rails. While Nodal certainly borrows many
-concepts from these frameworks (standing on the shoulders of giants), it has a
-distinct architecture and decisions about feature implementation vary.
+Writing your server software in Nodal should feel somewhat natural coming from
+other MVC frameworks such as Django and Rails. While Nodal certainly borrows
+many concepts from these frameworks (standing on the shoulders of giants), it
+has a distinct architecture and decisions about feature implementation vary.
 
 ## Features
 
@@ -48,7 +49,8 @@ prototyping.
 
 ## Installation
 
-To install the latest version of Nodal, make sure you have [iojs](https://iojs.org/) installed.
+To install the latest version of Nodal, make sure you have
+[iojs](https://iojs.org/) installed.
 
 You can then run:
 
@@ -73,13 +75,14 @@ through the process. Nodal will create a project directory for you in your
 current directory based on your project name.
 
 Now you can run `nodal s` to start your server, and voila! Your index page will
-be available at `localhost:3000` under default configurations.
+be available at `localhost:3000` under default configurations. A 404 page and
+static resources page are also available. (Static resources are stored in
+  your `./static/` directory.)
 
 If you want to get set up with some users, proceed with the following:
 
-First, Make sure you have Postgres installed
-
-On OSX, use [Postgres.app](http://postgresapp.com/)
+First, Make sure you have Postgres installed. On OSX I'm a fan of
+[Postgres.app](http://postgresapp.com/).
 
 Next, create a "postgres" superuser with no password if one does not already exist
 ```
