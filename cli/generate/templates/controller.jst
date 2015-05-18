@@ -8,25 +8,88 @@ module.exports = (function() {
   class {{= data.name }} extends Nodal.Controller {
 
     get(self, params, app) {
-      {{? data.for }}app.composer
-        .from(app.db('main'), {{= data.for.name }})
-        .externalQuery(function(err, result) {
 
-          self.render(result);
+      {{? data.for }}if (params.id) {
 
-        });{{??}}self.render();{{?}}
+        app.composer
+          .from(app.db('main'), {{= data.for.name }})
+          .find(params.id, function(err, model) {
+
+            if (err) {
+              self.badRequest('Resource does not exist');
+              return;
+            }
+
+            self.render(model);
+
+          });
+
+      } else {
+
+        app.composer
+          .from(app.db('main'), {{= data.for.name }})
+          .where(params.query)
+          .externalQuery(function(err, result) {
+
+            self.render(result);
+
+          });
+
+      }{{??}}self.render();{{?}}
+
     }
 
     post(self, params, app) {
-      super.post(self, params, app);
+
+      {{? data.for }}new {{= data.for.name }}(params.body.data).save(app.db('main'), function(err, model) {
+
+          self.render(model);
+
+      });{{??}}super.post(self, params, app);{{?}}
+
     }
 
     put(self, params, app) {
-      super.put(self, params, app);
+
+      {{? data.for }}app.composer
+        .from(app.db('main'), {{= data.for.name }})
+        .find(params.id, function(err, model) {
+
+          if (err) {
+            self.badRequest('Resource does not exist');
+            return;
+          }
+
+          model.read(params.body.data);
+          model.save(app.db('main'), function(err, model) {
+
+            self.render(model);
+
+          });
+
+        });{{??}}super.put(self, params, app);{{?}}
+
     }
 
     del(self, params, app) {
-      super.del(self, params, app);
+
+      {{? data.for }}app.composer
+        .from(app.db('main'), {{= data.for.name }})
+        .find(params.id, function(err, model) {
+
+          if (err) {
+            self.badRequest('Resource does not exist');
+            return;
+          }
+
+          model.destroy(app.db('main'), function(err, model) {
+
+            self.render(model);
+
+          });
+
+        });{{??}}super.del(self, params, app);{{?}}
+
     }
 
   }

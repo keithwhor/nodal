@@ -9,7 +9,7 @@ module.exports = (function() {
 
     get(self, params, app) {
 
-      let staticData = app.static(this.path().substr('/static/'.length));
+      let staticData = app.static(params.path[1]);
 
       if (!staticData) {
         Error404Controller.prototype.get.apply(this, arguments);

@@ -131,6 +131,7 @@ module.exports = (function() {
 
       let self = this;
       this._inStorage = !!fromStorage;
+      fromStorage && (this._errors = {}); // clear errors if in storage
 
       !fromStorage && self.set('created_at', new Date());
 
@@ -142,6 +143,20 @@ module.exports = (function() {
       });
 
       return this;
+
+    }
+
+    read(data) {
+
+      let self = this;
+
+      self.fieldList().filter(function(key) {
+        return data.hasOwnProperty(key);
+      }).forEach(function(key) {
+        self.set(key, data[key]);
+      });
+
+      return self;
 
     }
 

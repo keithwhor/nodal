@@ -120,6 +120,41 @@ module.exports = (function() {
 
     }
 
+    find(id, callback) {
+
+      let db = this._db;
+      let table = this._table;
+      let columns = this._columns;
+      let modelConstructor = this._modelConstructor;
+
+      let composerQuery = this;
+
+      let multiFilter = db.adapter.createMultiFilter(table, [this.parseFilters({id: parseInt(id)})]);
+      let params = db.adapter.getParamsFromMultiFilter(multiFilter);
+
+      db.query(
+        db.adapter.generateSelectQuery(
+          table,
+          columns,
+          multiFilter
+        ),
+        params,
+        function(err, result) {
+
+          let rows = result ? (result.rows || []).slice() : [];
+          let model = rows.map(function(v) {
+            return new modelConstructor(v, true);
+          }).pop() || null;
+
+          err = err || (model ? null : {message: 'Resource does not exist'});
+
+          callback.call(composerQuery, err, model);
+
+        }
+      );
+
+    }
+
     externalQuery(callback) {
 
       let db = this._db;

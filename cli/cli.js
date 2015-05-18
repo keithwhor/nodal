@@ -4,8 +4,13 @@
 
 (function() {
 
-  let colors = require('colors/safe');
-  let fs = require('fs');
+  const colors = require('colors/safe');
+  const fs = require('fs');
+  const prompt = require('prompt');
+  const inflect = require('i')();
+
+  prompt.message = '';
+  prompt.delimiter = '';
 
   let command = process.argv.slice(2, 3).pop();
 
@@ -14,8 +19,8 @@
 
   if (command.name !== 'new' && !fs.existsSync(process.cwd() + '/.nodal')) {
 
-    console.error(colors.red.bold('Error: ') + 'Nodal project not initialized. Use `nodal new` to initialize a project.');
-    process.exit(0);
+    console.error(colors.red.bold('Error: ') + 'No Nodal project found here. Use `nodal new` to initialize a project.');
+    process.exit(1);
 
   } else if (command.name === 'new') {
 
@@ -23,28 +28,87 @@
 
       let ncp = require('ncp');
 
-      ncp(__dirname + '/../src', './', function (err) {
+      console.log('');
+      console.log('Welcome to Nodal!');
+      console.log('');
+      console.log('Let\'s get some information about your project...');
+      console.log('');
+
+      var schema = {
+        properties: {
+          name: {
+            default: 'my-nodal-project'
+          },
+          author: {
+            default: 'mysterious author'
+          }
+        }
+      };
+
+      prompt.get(schema, function (err, promptResult) {
 
         if (err) {
-          console.error(err);
-          process.exit(0);
-          return
+          process.exit(1);
         }
 
-        console.log('Please enter your password to give Nodal permission to install')
+        promptResult.simpleName = promptResult.name.replace(/\s/gi, '-');
+        let dirname = inflect.underscore(promptResult.name);
 
-        let spawn = require('child_process').spawn;
-        let child = spawn('npm',  ['install']);
+        console.log('');
+        console.log('Creating directory "' + dirname + '"...');
+        console.log('');
 
-        console.log('Installing packages in this directory...');
+        if (fs.existsSync('./' + dirname)) {
+          console.log(colors.bold.red('Directory "' + dirname + '" already exists, try a different project name'));
+          process.exit(1);
+        }
+        fs.mkdirSync('./' + dirname);
 
-        child.on('exit', function() {
-          console.log('Created new Nodal project!');
-          process.exit(0);
-        });
+        console.log('Copying Nodal directory structure and files...');
+        console.log('');
 
-        process.on('exit', function() {
-          child && child.kill();
+        ncp(__dirname + '/../src', './' + dirname, function (err) {
+
+          if (err) {
+            console.error(err);
+            process.exit(0);
+            return
+          }
+
+          let dot = require('dot');
+
+          dot.templateSettings.strip = false;
+          dot.templateSettings.varname = 'data';
+
+          fs.writeFileSync('./' + dirname + '/package.json', dot.template(
+            fs.readFileSync(__dirname + '/package.json.jst').toString()
+          )(promptResult));
+
+          let spawn = require('child_process').spawn;
+          let child = spawn('npm',  ['install'], {cwd: process.cwd() + '/' + dirname, stdio: [process.stdin, process.stdout, process.stderr]});
+
+          console.log('Installing packages in this directory...');
+          console.log('');
+
+          child.on('exit', function() {
+            console.log('');
+            console.log(colors.bold.green('All done!'));
+            console.log('');
+            console.log('Your new Nodal project, ' + colors.bold(promptResult.name) + ', is ready to go! :)');
+            console.log('');
+            console.log('Have fun ' + promptResult.author + ', and check out https://github.com/keithwhor/nodal for the most up-to-date Nodal information')
+            console.log('');
+            console.log(colors.bold('Pro tip: ') + 'You can try running your server right away with:');
+            console.log('');
+            console.log('  cd ' + dirname + ' && nodal s');
+            console.log('');
+            process.exit(0);
+          });
+
+          process.on('exit', function() {
+            child && child.kill();
+          });
+
         });
 
       });
@@ -123,11 +187,11 @@
       subCmd(args, flags);
     } else {
       console.error(colors.red.bold('Error: ') + 'Sub command "' + command.value + '" of "' + command.name + '" not found');
-      process.exit(0);
+      process.exit(1);
     }
   } else {
     console.error(colors.red.bold('Error: ') + 'Command "' + command.name + '" not found');
-    process.exit(0);
+    process.exit(1);
   }
 
 })();

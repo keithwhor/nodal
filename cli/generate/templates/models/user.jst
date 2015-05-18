@@ -58,8 +58,8 @@ module.exports = (function() {
 
   User.prototype.schema = Nodal.my.Schema.models.User;
 
-  User.prototype.externalInterface = [
-{{~ data.columns :value:index}}    '{{= value }}'{{? data.rows.length - 1 !== index }},{{?}}{{~}}
+  User.prototype.externalInterface = [{{~ data.columns :value:index}}
+    '{{= value }}'{{? data.columns.length - 1 !== index }},{{?}}{{~}}
   ];
 
   return User;

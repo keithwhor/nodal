@@ -1,6 +1,6 @@
 {
   "name": "nodal",
-  "version": "0.2.0rc9",
+  "version": "0.2.0rc10",
   "description": "An API Server and Framework for node.js",
   "author": "Keith Horwood",
   "main": "core/module.js",
@@ -20,7 +20,8 @@
     "ws": "~0.7.1",
     "pg": "~4.3.0",
     "mime-types": "~2.0.11",
-    "bcrypt": "~0.8.3"
+    "bcrypt": "~0.8.3",
+    "prompt": "~0.2.14"
   },
   "devDependencies": {
     "chai": "~2.3.0",

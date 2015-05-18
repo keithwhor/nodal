@@ -4,10 +4,10 @@
     "main": {
       "adapter": "postgres",
       "host": "localhost",
-      "port": "",
-      "user": "",
+      "port": "5432",
+      "user": "postgres",
       "password": "",
-      "database": ""
+      "database": "nodal_development"
     }
   },
 

@@ -5,20 +5,22 @@
 
 **v0.2.x is pre-release, suggested for use in development only**
 
-Nodal is an API Server and Framework for quickly generating RESTful API
-services in [iojs](https://iojs.org/).
+Nodal is an opinionated API Server and Framework for quickly generating
+RESTful API services in [iojs](https://iojs.org/).
 
 It is intended to be used for cross-platform applications with various
 client-side implementations or loosely-coupled services where responses to
 requests are generally limited to structured data. (Though there is
 support for HTML and static resources, they are not a priority.)
 
-Nodal makes use of modern ES6 idioms to make your application code concise and
-easy to follow.
-
 With a built-in command-line interface, models, controllers, templates,
 migrations and application architecture, Nodal provides all of the tools a
 developer needs to get a new iojs project started with very little overhead.
+
+Writing your server software in Nodal should feel natural coming from other
+MVC frameworks such as Django and Rails. While Nodal certainly borrows many
+concepts from these frameworks (standing on the shoulders of giants), it has a
+distinct architecture and decisions about feature implementation vary.
 
 ## Features
 
@@ -56,29 +58,297 @@ $ sudo npm install nodal -g
 
 And voila! You now have access to the Nodal command-line interface.
 
+If you're intending on data layer integration, Nodal only supports Postgres at
+present time. I personally recommend using
+[Postgres.app](http://postgresapp.com/) for your dev environment if you're
+running OSX.
+
 ## Getting Started
 
-Getting started with Nodal is simple. Create your project folder and run
-`nodal new` to instantiate a new project in the folder.
+Docs are a work in progress, so if you want to just dive in, follow these simple
+instructions to start hacking away with Nodal. ;)
 
-Here's an example:
-
-```
-$ cd ~
-$ mkdir my_nodal_project
-$ cd my_nodal_project
-$ nodal new
-```
+Getting started with Nodal is simple. Just run `nodal new` and follow the
+instructions. Nodal will create a project directory for you in your current
+directory based on your project name.
 
 Now you can run `nodal s` to start your server, and voila! Your index page will
 be available at `localhost:3000` under default configurations.
 
-## Creating your first Nodal model
+If you want to get set up with some users, proceed with the following:
 
-You can create a model `Dog` with fields `name` and `age` using:
+1. Make sure you have Postgres installed
+
+On OSX, use [Postgres.app](http://postgresapp.com/)
+
+2. Create a "postgres" superuser with no password if one does not already exist
+```
+$ createuser postgres -s
+```
+
+3. Open your `app/init.js` file and uncomment the line:
+```
+// app.useDatabase('main', Nodal.my.Config.db.main);
+```
+
+4. Run the following commands:
+```
+$ nodal db:create
+$ nodal db:prepare
+$ nodal g:model --user
+$ nodal g:controller v1 --for:User
+$ nodal db:migrate
+```
+
+Now run your server again using `nodal s`, and you should be able to run GET,
+POST, PUT, and DELETE requests to `localhost:3000/v1/users`.
+
+Look in `app/routes.js`, `app/controllers/v1/users_controller.js`,
+`app/models/user.js`, `app/db/schema.json` and `app/db/migrations` to see what
+went on behind the scenes. :)
+
+# Documentation
+
+## Directory Structure
+
+Nodal uses the following directory structure:
 
 ```
-$ nodal g:model Dog name:string age:int
+-- [app]
+  \-- [controllers]
+  \-- [models]
+  \-- [templates]
+  \-- init.js
+  \-- routes.js
+-- [config]
+-- [db]
+-- [initializers]
+-- [middleware]
+-- [static]
+-- .nodal
+-- Procfile
+-- server.js
+```
+
+Most of these directories will be pre-populated with some boilerplate examples
+so you can begin getting comfortable with the application architecture.
+
+## Configuration
+
+(The following assumes you're including Nodal using
+`const Nodal = require('nodal');`)
+
+While Nodal for the most part favors convention-over-configuration, you can set
+environment-specific secrets in the `config` folder by
+creating `.json` files with your application secrets. These will be loaded into
+your `Nodal.my.Config` object based on their filenames, with the environment
+dictated by your processes `NODE_ENV` value (defaults to `'development'`).
+
+For example, the `db.json` values associated with `"development"` will get
+loaded into `Nodal.my.Config.db` when you run Nodal locally.
+
+## init.js
+
+init.js is the bootstrapping script for your server.
+
+You should use it to assign initializers, middleware, bind your data layers, and
+prepare your application to listen for incoming connections.
+
+**If you want to use a data layer, make sure you un-comment app.useDatabase!**
+
+```javascript
+module.exports = (function() {
+
+  "use strict";
+
+  const Nodal = require('nodal');
+
+  const StaticAssetInitializer = Nodal.require('initializers/static_asset_initializer.js');
+  const GzipMiddleware = Nodal.require('middleware/gzip_middleware.js');
+
+  const app = new Nodal.Application();
+
+  /* use initializer */
+  app.initializers.use(StaticAssetInitializer);
+
+  /* use middleware */
+  app.middleware.use(GzipMiddleware);
+
+  /* bind data layer */
+  // app.useDatabase('main', Nodal.my.Config.db.main);
+
+  /* Initialize App */
+  app.initialize(function() {
+
+    app.listen(Nodal.my.Config.secrets.port);
+
+  });
+
+})();
+```
+
+As shown here, Nodal comes pre-packaged with an initializer and middleware.
+
+The `StaticAssetInitializer` pre-loads all static assets into RAM at present time
+(be wary of this constraint) before the application begins listening for
+connections. All Initializers will be run, in the order they're added, upon a
+call to `app.initialize()`.
+
+The `GzipMiddleware` uses deflate/gzip compression on page renders, if
+applicable. Middleware, in regards to Nodal, intercepts `Controller#render`
+calls and applies transformations and state changes to the controller and
+associated rendering data.
+
+## Routes
+
+Routes are located in `app/routes.js`. You must import each `Controller` you
+wish to use separately, and tell the router what regular expression to match
+compare the request url against.
+
+As an example,
+
+```javascript
+const IndexController = Nodal.require('app/controllers/index_controller.js');
+
+router.route(/^\/?$/, IndexController);
+```
+
+*Any match* to the provided regular expression will cause the router to proceed
+with following the route to the controller.
+
+Routes are ordered by priority, with routes declared first getting match
+precedence over routes declared subsequently. If no route is matched to a
+request, Nodal will fall back basic plaintext 404 error.
+
+You'll also notice the use of `Nodal.require`, which acts as a wrapper for
+`require`, automatically targeting the root directory of your application.
+
+## Controllers
+
+New controllers can be generated with:
+
+```
+$ nodal g:controller name
+```
+
+or, if you want a controller to be associated with a model,
+
+```
+$ nodal g:controller namespace --for:model_name
+```
+
+For example, `nodal g:controller test` would create
+`./app/controllers/test_controller.js`, `nodal g:controller ns/test` would
+create `./app/controllers/ns/test_controller.js`, and
+`nodal g:controller ns --for:test` would create
+`./app/controllers/ns/test_controller.js` that contains a `require` for a model
+named `Test`.
+
+One of the first things you'll notice about your Nodal project is that you
+already have some controllers set up, mainly an `IndexController`, an
+`Error404Controller` and a `StaticController`.
+
+We'll examine `controllers/error/404_controller.js` to begin:
+
+```javascript
+module.exports = (function() {
+
+  "use strict";
+
+  const Nodal = require('nodal');
+
+  class Error404Controller extends Nodal.Controller {
+
+    get(self, params, app) {
+      self.status(404);
+      self.render(app.template('error/404.html'), params);
+    }
+
+  }
+
+  return Error404Controller;
+
+})();
+```
+
+As seen here, the `get` method is associated with an HTTP GET request.
+
+Currently supported request types are `GET`, `POST`, `PUT` and `DELETE` via
+`get`, `post`, `put` and `del`, respectively. All four methods take the same
+parameters.
+
+### self
+
+The `self` parameter contains a reference to the controller. The reason for this
+is to avoid having to use `let self = this` in the body of your function in
+preparation for asynchronous processing.
+
+### params
+
+`params` is an object with the following properties: `path`, `id`, `query`,
+  `body`, `ip_address`, `headers`.
+
+`params.path` is an Array containing the result of a regex match to your route,
+including capturing groups. For example, the route `/^\/static\/(.*)/` with the
+request url as `/static/image.jpg` would have a `params.path` value of
+`['/static/image.jpg', 'image.jpg']`.
+
+`params.id` is the part of your request url that isn't matched by your route,
+if applicable. For example, if your route was `/^\/users\/?/` with the request
+url `/users/52`, `params.id` would have a value of `'52'`.
+
+`params.query` is an object containing your query string parameters,
+  if applicable.
+
+`params.body` is an object containing any HTTP POST body data, if applicable.
+
+### app
+
+App refers to your main application object as defined in `init.js`,
+which has references to your databases, the query composer and additional
+features.
+
+## Templates
+
+Templates are all compiled using the lightweight
+[doT.js](http://olado.github.io/doT/index.html) templating engine and can be
+accessed through `app.template(path)` where path is the relative path of your
+template within the `templates` directory. If you pass a template to a
+`Controller#render` call, the second argument of the call is used as the `data`
+object in the template.
+
+There is no intention to add to the complexity of templates, as Nodal is
+intended to primarily be used as an API server.
+
+## Database (and Multiple Connections)
+
+Set up your database in `init.js` by adding the line:
+
+```javascript
+app.useDatabase('main', Nodal.my.Config.db.main);
+```
+
+This will allow you to access your `'main'` database instance via
+`app.db('main')`. Multiple databases can be aliased using the
+`Application#useDatabase` method.
+
+## Models and Migrations
+
+Models and migrations go hand-in-hand. While you can create models that are
+migration-independent, that's a little more advanced, so let's keep them coupled
+for now.
+
+If you want to jump in to some code and look at a pre-fabricated model, Nodal
+has a built-in user model that can be generated using:
+
+```
+$ nodal g:model --user
+```
+
+Otherwise, create your first Model manually. :)
+
+```
+$ nodal g:model Person name:string age:int
 ```
 
 Which will generate the necessary model and migration.
@@ -103,15 +373,89 @@ generated automatically using:
 $ nodal g:model HasAnArray arr_of_ints:int:array arr_of_strings:string:array
 ```
 
-## Running your first Nodal migration
+Your `Person` model will look a little something like this:
+
+```javascript
+module.exports = (function() {
+
+  "use strict";
+
+  const Nodal = require('nodal');
+
+  class Person extends Nodal.Model {
+
+    preInitialize() {}
+    postInitialize() {}
+
+    /* Model Extensions */
+
+  }
+
+  Person.prototype.schema = Nodal.my.Schema.models.Person;
+
+  Person.prototype.externalInterface = [
+    'id',
+    'name',
+    'age',
+    'created_at'
+  ];
+
+  return Person;
+
+})();
+```
+
+### Model#preInitialize
+
+This method is run before the model is initialized (values set, data loaded).
+It is intended to be used for preparing your model validations. An example
+would be:
+
+```javascript
+preInitialize() {
+
+  this.validates(
+    'name',
+    'must be at least five characters in length',
+    function(value) {
+      return value && value.length > 5;
+    }
+  );
+
+}
+```
+
+### Model#postInitialize
+
+This method is run after data is loaded and validations are run.
+
+### Model.prototype.schema
+
+A reference to your schema (containing table and column data) for your model
+
+### Model.prototype.externalInterface
+
+These are a list of whitelisted or "secure" fields that are allowed to be shown
+on the external interface of your API (an API response). The query composer
+uses this property with `Composer#externalQuery`.
+
+## Migrations
 
 Now that you've created the model and migration file (from the last step),
 prepare your database. First set your local connection details in
-`db/credentials.json` (only PostgreSQL is currently supported), then run:
+`config/db.json` (only PostgreSQL is currently supported), then run:
 
 ```
 $ nodal db:create
 $ nodal db:prepare
+```
+
+If you run into issues with these commands (under default configurations),
+and you're using [Postgres.app](http://postgresapp.com/), run the following in
+your command line:
+
+```
+$ createuser postgres -s
 ```
 
 This will create the database specified and then prepare it for migrations.
@@ -124,7 +468,7 @@ Now run:
 $ nodal db:migrate
 ```
 
-And your `dogs` table from the previous step should have been created.
+And your `persons` table from the previous step should have been created.
 
 If you want to undo a change, use:
 
@@ -136,7 +480,7 @@ Note that `--step:1` is an optional flag. The default rollback count is `1`,
 up to however many migrations you have. `--step` can also be provided for
 `db:migrate`.
 
-## More...
+# More...
 
 Nodal is *very* active development, with version 0.2.x representing a
 pre-release version. The plan is to transition 0.2.x to 1.x once the intended

@@ -13,6 +13,7 @@ module.exports = (function() {
   let dot = require('dot');
 
   dot.templateSettings.strip = false;
+  dot.templateSettings.varname = 'data';
 
   let modelDir = './app/models';
 
@@ -55,7 +56,7 @@ module.exports = (function() {
 
     return {
       table: inflect.tableize(modelName),
-      fields: propertyList
+      columns: propertyList
     };
 
   }
@@ -93,19 +94,27 @@ module.exports = (function() {
 
       if (flags.hasOwnProperty('user')) {
         fs.writeFileSync(createPath, generateUserDefinition(
-          schemaObject.fields.map(function(v) { return v.name; })
+          ['id'].concat(
+            schemaObject.columns.map(function(v) { return v.name; }).filter(function(v) {
+              return ['ip_address', 'permission', 'password'].indexOf(v) === -1;
+            }),
+            ['created_at']
+          )
         ));
       } else {
         fs.writeFileSync(createPath, generateModelDefinition(
           modelName,
-          schemaObject.fields.map(function(v) { return v.name; })
+          ['id'].concat(
+            schemaObject.columns.map(function(v) { return v.name; }),
+            ['created_at']
+          )
         ));
       }
 
       console.log(colors.green.bold('Create: ') + createPath);
 
       generateMigration('Create' + modelName,
-        ['this.createTable(\"' + schemaObject.table + '\", ' + JSON.stringify(schemaObject.fields) + ')'],
+        ['this.createTable(\"' + schemaObject.table + '\", ' + JSON.stringify(schemaObject.columns) + ')'],
         ['this.dropTable(\"' + schemaObject.table + '\")']
       );
 

@@ -7,7 +7,8 @@ module.exports = (function() {
   let colors = require('colors/safe');
   let dot = require('dot');
 
-  //dot.templateSettings.strip = false;
+  dot.templateSettings.strip = false;
+  dot.templateSettings.varname = 'data';
 
   let migrationDir = './db/migrations';
 

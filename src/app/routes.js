@@ -11,12 +11,14 @@ module.exports = (function() {
 
   /* generator: begin imports */
 
+
   /* generator: end imports */
 
   router.route(/^\/?$/, IndexController);
-  router.route(/^\/static\/.*/, StaticController);
+  router.route(/^\/static\/(.*)/, StaticController);
 
   /* generator: begin routes */
+
 
   /* generator: end routes */
 
