@@ -1,11 +1,25 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Nodal Project</title>
-    <style>
-    </style>
-  </head>
+  {{= this.partial('head.html', data) }}
   <body>
-    Welcome to your Nodal Project!
+    Welcome to your Nodal Project, <b>{{= data.name }}</b>!
+    <br><br>
+    View the controller that renders this template to change the data sent to
+    it, or modify the template directly.<br><br>
+    We really recommend you start playing with creating RESTful API endpoints
+    using the built in commands:<br>
+<pre>nodal db:create
+nodal db:prepare
+nodal g:model --user
+nodal g:controller v1 --for:user
+nodal db:migrate</pre><br>
+    To get a good feeling about how Nodal works and its intended use. :)<br>
+    <b>Make sure you have Postgres installed, app.useDatabase is
+    uncommented in ./app/init.js, and your login credentials are correct!</b>
+    <br><br>
+    Query parameter ?test is equal to: {{= data.test }}<br>
+    Try changing it in the address bar (add <i>?test=5</i> to the end
+    of your url, for example)<br><br>
+    Happy developing!
   </body>
 </html>

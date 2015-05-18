@@ -57,7 +57,7 @@ module.exports = (function() {
           } : null),
           this.resource(model.constructor)
         ),
-        data: model.hasErrors() ? [] : [model.toStdObject()],
+        data: model.hasErrors() ? [] : [model.toExternalObject()],
       };
     }
 

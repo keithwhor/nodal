@@ -11,33 +11,22 @@ module.exports = (function() {
 
       this._validations = {};
 
-      this.preInitialize();
-      this.initialize();
-      modelData && this.load(modelData, fromStorage);
-      this.postInitialize();
+      this.__preInitialize__();
+      this.__initialize__();
+      modelData && this.__load__(modelData, fromStorage);
+      this.__postInitialize__();
 
     }
 
-    validates(field, message, fnAction) {
-
-      this._validations[field] = this._validations[field] || [];
-      this._validations[field].push({message: message, action: fnAction});
-
-    }
-
-    preInitialize() {
+    __preInitialize__() {
       return true;
     }
 
-    postInitialize() {
+    __postInitialize__() {
       return true;
     }
 
-    inStorage() {
-      return this._inStorage;
-    }
-
-    initialize() {
+    __initialize__() {
 
       this._inStorage = false;
 
@@ -64,9 +53,20 @@ module.exports = (function() {
       this._changed = changed;
       this._errors = {};
 
-      this._validate();
+      this.__validate__();
 
       return true;
+
+    }
+
+    inStorage() {
+      return this._inStorage;
+    }
+
+    validates(field, message, fnAction) {
+
+      this._validations[field] = this._validations[field] || [];
+      this._validations[field].push({message: message, action: fnAction});
 
     }
 
@@ -100,7 +100,7 @@ module.exports = (function() {
       return obj;
     }
 
-    _validate(fieldList) {
+    __validate__(fieldList) {
 
       let data = this._data;
 
@@ -127,7 +127,7 @@ module.exports = (function() {
 
     }
 
-    load(data, fromStorage) {
+    __load__(data, fromStorage) {
 
       let self = this;
       this._inStorage = !!fromStorage;
@@ -201,7 +201,7 @@ module.exports = (function() {
       }
 
       this._changed[field] = changed;
-      validate && (!logChange || changed) && this._validate([field]);
+      validate && (!logChange || changed) && this.__validate__([field]);
 
       return value;
 
@@ -220,7 +220,7 @@ module.exports = (function() {
       return obj;
     }
 
-    toStdObject() {
+    toExternalObject() {
       let obj = {};
       let data = this._data;
       this.externalInterface.forEach(function(key) {
@@ -326,7 +326,7 @@ module.exports = (function() {
           if (err) {
             model.setError('_query', err.message);
           } else {
-            result.rows.length && model.load(result.rows[0], true);
+            result.rows.length && model.__load__(result.rows[0], true);
           }
 
           callback.call(model, model.errorObject(), model);

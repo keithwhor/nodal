@@ -7,7 +7,10 @@ module.exports = (function() {
   class IndexController extends Nodal.Controller {
 
     get(self, params, app) {
-      self.render(app.template('index.html'), params);
+      self.render(app.template('index.html'), {
+        test: params.query.test,
+        name: 'My Nodal Application'
+      });
     }
 
   }

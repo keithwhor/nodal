@@ -81,8 +81,8 @@ static resources page are also available. (Static resources are stored in
 
 ### Connect your database, create a RESTful resource
 
-First, Make sure you have Postgres installed. On OSX I'm a fan of
-[Postgres.app](http://postgresapp.com/).
+First, Make sure you have Postgres installed. (OSX developers check out
+  [Postgres.app](http://postgresapp.com/).)
 
 Next, create a "postgres" superuser with no password if one does not already exist
 ```
@@ -388,8 +388,8 @@ module.exports = (function() {
 
   class Person extends Nodal.Model {
 
-    preInitialize() {}
-    postInitialize() {}
+    __preInitialize__() {}
+    __postInitialize__() {}
 
     /* Model Extensions */
 
@@ -409,14 +409,14 @@ module.exports = (function() {
 })();
 ```
 
-### Model#preInitialize
+### Model#__preInitialize__
 
 This method is run before the model is initialized (values set, data loaded).
 It is intended to be used for preparing your model validations. An example
 would be:
 
 ```javascript
-preInitialize() {
+__preInitialize__() {
 
   this.validates(
     'name',
@@ -429,7 +429,7 @@ preInitialize() {
 }
 ```
 
-### Model#postInitialize
+### Model#__postInitialize__
 
 This method is run after data is loaded and validations are run.
 
@@ -539,6 +539,8 @@ thorough.
 At present time, Nodal only supports PostgreSQL. With full support for SQL
 adapters, it is a priority to allow for other data layers soon.
 
+Docs will be fleshed out ASAP! Thanks for your patience. :)
+
 ## Project Direction
 
 The following features are in development on Nodal 0.2.x
@@ -557,7 +559,9 @@ Follow me on Twitter, [@keithwhor](http://twitter.com/keithwhor)
 
 Fork me on GitHub, [keithwhor](http://github.com/keithwhor)
 
-Thanks for checking out Nodal! Feel free to open issues related to any questions
+Thanks for checking out Nodal!
+
+Feel free to open issues related to any questions
 you might have. Suggestions for project direction are helpful as well, if
 there's anything you believe Nodal is missing.
 
