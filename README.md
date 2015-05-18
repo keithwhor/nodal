@@ -442,9 +442,12 @@ uses this property with `Composer#externalQuery`.
 
 ## Migrations
 
-Now that you've created the model and migration file (from the last step),
-prepare your database. First set your local connection details in
-`config/db.json` (only PostgreSQL is currently supported), then run:
+If you've followed the previous step, you already have a migration. You can
+also create an empty migrate using `nodal g:migration MigrationName`.
+
+Since you have a migration ready, it's time to prepare your database. First set
+your local connection details in `config/db.json` (only PostgreSQL is currently
+supported), then run:
 
 ```
 $ nodal db:create
@@ -463,7 +466,49 @@ This will create the database specified and then prepare it for migrations.
 Note that `db:prepare` will *always* reset all migrations and your schema. Be
 careful!
 
-Now run:
+### Ready to migrate!
+
+From the previous step, we'll see that we have a migration in `db/migrations/`
+that looks something like this:
+
+```javascript
+module.exports = (function() {
+
+  "use strict";
+
+  const Nodal = require('nodal');
+
+  class CreatePerson extends Nodal.Migration {
+
+    constructor(db) {
+      super(db);
+      this.id = 2015051801423419;
+    }
+
+    up() {
+
+      return [
+        this.createTable("people", [{"name":"name","type":"string"},{"name":"age","type":"int"}])
+      ];
+
+    }
+
+    down() {
+
+      return [
+        this.dropTable("people")
+      ];
+
+    }
+
+  }
+
+  return CreatePerson;
+
+})();
+```
+
+How do we run it? easy!
 
 ```
 $ nodal db:migrate
