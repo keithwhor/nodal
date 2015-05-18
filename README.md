@@ -6,12 +6,17 @@
 **v0.2.x is pre-release, suggested for use in development only**
 
 Nodal is an opinionated API Server and Framework for quickly generating
-RESTful API services in [iojs](https://iojs.org/).
+RESTful API services in [iojs](https://iojs.org/) using modern ES6 syntax
+and idioms.
+
+With the rise of client-side Single Page Applications, Nodal helps keep your
+concerns separated and focuses on being able to easily develop your back-end
+API with light support for static resources and templating where the need
+arises.
 
 It is intended to be used for cross-platform applications with various
-client-side implementations or loosely-coupled services where responses to
-requests are generally limited to structured data. (Though there is
-support for HTML and static resources, they are not a priority.)
+client-side implementations (SPAs, mobile apps) or loosely-coupled services
+where responses to requests are generally limited to structured data.
 
 With a built-in command-line interface, models, controllers, templates,
 migrations and application architecture, Nodal provides all of the tools a
@@ -313,6 +318,13 @@ which has references to your databases, the query composer and additional
 features.
 
 ## Templates
+
+Nodal is strongly opinionated on view implementation in order to maintain a
+streamlined application. API responses (from models or sets of model results)
+are highly structured and adhere to a strict format to maintain consistency.
+There is no formal "View" object, with objects (and Models) being automatically
+converted to JSON. Externally viewable model properties are included in the
+model definition. This tight coupling is intentional.
 
 Templates are all compiled using the lightweight
 [doT.js](http://olado.github.io/doT/index.html) templating engine and can be
