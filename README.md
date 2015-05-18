@@ -1,5 +1,5 @@
 # Nodal
-## A Next-Generation API Server and Framework for iojs
+## An ES6 API Server and Framework for iojs
 
 [![Build Status](https://travis-ci.org/keithwhor/nodal.svg?branch=master)](https://travis-ci.org/keithwhor/nodal)
 
@@ -68,30 +68,30 @@ running OSX.
 Docs are a work in progress, so if you want to just dive in, follow these simple
 instructions to start hacking away with Nodal. ;)
 
-Getting started with Nodal is simple. Just run `nodal new` and follow the
-instructions. Nodal will create a project directory for you in your current
-directory based on your project name.
+Getting started with Nodal is simple. Just run `nodal new` and you'll be guided
+through the process. Nodal will create a project directory for you in your
+current directory based on your project name.
 
 Now you can run `nodal s` to start your server, and voila! Your index page will
 be available at `localhost:3000` under default configurations.
 
 If you want to get set up with some users, proceed with the following:
 
-1. Make sure you have Postgres installed
+First, Make sure you have Postgres installed
 
 On OSX, use [Postgres.app](http://postgresapp.com/)
 
-2. Create a "postgres" superuser with no password if one does not already exist
+Next, create a "postgres" superuser with no password if one does not already exist
 ```
 $ createuser postgres -s
 ```
 
-3. Open your `app/init.js` file and uncomment the line:
+Open your `app/init.js` file and uncomment the line:
 ```
 // app.useDatabase('main', Nodal.my.Config.db.main);
 ```
 
-4. Run the following commands:
+Finally, run the following commands:
 ```
 $ nodal db:create
 $ nodal db:prepare
@@ -142,7 +142,8 @@ While Nodal for the most part favors convention-over-configuration, you can set
 environment-specific secrets in the `config` folder by
 creating `.json` files with your application secrets. These will be loaded into
 your `Nodal.my.Config` object based on their filenames, with the environment
-dictated by your processes `NODE_ENV` value (defaults to `'development'`).
+dictated by the `NODE_ENV` environment variable of your process (defaults to
+  `'development'`).
 
 For example, the `db.json` values associated with `"development"` will get
 loaded into `Nodal.my.Config.db` when you run Nodal locally.
