@@ -409,7 +409,7 @@ module.exports = (function() {
 })();
 ```
 
-### Model#__preInitialize__
+### Model#\_\_preInitialize\_\_
 
 This method is run before the model is initialized (values set, data loaded).
 It is intended to be used for preparing your model validations. An example
@@ -429,7 +429,7 @@ __preInitialize__() {
 }
 ```
 
-### Model#__postInitialize__
+### Model#\_\_postInitialize\_\_
 
 This method is run after data is loaded and validations are run.
 
