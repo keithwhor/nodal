@@ -18,7 +18,7 @@ module.exports = (function(Nodal) {
 
     class TestObject extends Nodal.Model {
 
-      preInitialize() {
+      __preInitialize__() {
 
         this.validates('test', 'should be at least five characters long', function(value) {
 
