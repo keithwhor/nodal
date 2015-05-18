@@ -561,6 +561,7 @@ The following features are in development on Nodal 0.2.x
 - Model relationships (links to other models)
 - Task scheduler
 - Easy authorization (requires redis for more than one instance)
+- WebSocket integration (commands responses, requires redis for more than one instance)
 
 ## Why Nodal?
 
