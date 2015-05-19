@@ -122,16 +122,37 @@ module.exports = (function() {
 
     }
 
-    useDatabase(alias, connectionDetails) {
+    useRouter(router) {
+
+      if (!(router instanceof Router)) {
+        throw new Error('useRouter requires valid Router instance');
+      }
+
+      this.router = router;
+
+      return true;
+
+    }
+
+    useDatabase(db, alias) {
+
+      if (typeof alias !== 'string') {
+
+        throw new Error('Alias required as the second argument of useDatabase');
+
+      }
 
       if (this._db[alias]) {
         throw new Error('Database aliased with "' + alias + '" already added to application.');
       }
 
-      let db = new Database();
+      if (!(db instanceof Database)) {
+        throw new Error('useDatabase requires valid Database instance');
+      }
+
       this._db[alias] = db;
 
-      return db.connect(connectionDetails);
+      return true;
 
     }
 
@@ -187,7 +208,30 @@ module.exports = (function() {
         return;
       }
 
-      this.router && this.router.delegate(this, request, response);
+      let error;
+
+      if (this.router) {
+
+        try {
+
+          this.router.delegate(this, request, response);
+          return;
+
+        } catch(e) {
+
+          error = e.message;
+
+        }
+
+      } else {
+
+        error = 'No router assigned';
+
+      }
+
+      response.writeHead(500, {'Content-Type': 'text/plain'});
+      response.end('500 - Internal Server Error' + (error ? ': ' + error : ''));
+      return;
 
     }
 
@@ -198,13 +242,8 @@ module.exports = (function() {
         return;
       }
 
-      let router = require(process.cwd() + '/app/routes.js');
-
       let server = http.createServer(this.requestHandler.bind(this)).listen(port);
-
       this.server = server;
-      this.router = router;
-
       this._proxyWebSocketRequests();
 
       console.log('Nodal HTTP server listening on port ' + port);

@@ -50,7 +50,7 @@ module.exports = (function() {
       ');'
     ].join('');
 
-    let routes = fs.readFileSync('./app/routes.js').toString();
+    let routes = fs.readFileSync('./app/router.js').toString();
 
     routes = routes.split('\n');
 
@@ -94,9 +94,9 @@ module.exports = (function() {
 
     }
 
-    fs.writeFileSync('./app/routes.js', routes.join('\n'));
+    fs.writeFileSync('./app/router.js', routes.join('\n'));
 
-    console.log(colors.green.bold('Modify: ') + './app/routes.js');
+    console.log(colors.green.bold('Modify: ') + './app/router.js');
 
 
   }
