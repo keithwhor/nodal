@@ -7,18 +7,25 @@ module.exports = (function(Nodal) {
   describe('Nodal.Application', function() {
 
     let app = new Nodal.Application();
+    let db = new Nodal.Database();
+
+    before(function() {
+
+      db.connect(Nodal.my.Config.db.main);
+      
+    });
 
     after(function() {
 
-      app.db('main') && app.db('main').close();
+      db.close();
 
     });
 
     describe('#useDatabase', function() {
 
-      it('Should successfully connect to database from my.Config', function() {
+      it('Should successfully associate db with alias "main"', function() {
 
-        expect(app.useDatabase('main', Nodal.my.Config.db.main)).to.equal(true);
+        expect(app.useDatabase(db, 'main')).to.equal(true);
 
       });
 

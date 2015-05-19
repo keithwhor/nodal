@@ -12,13 +12,14 @@ describe('Test Suite', function() {
   before(function() {
     if (global.env === 'development') {
       // child_process.execSync('createuser postgres -s -q');
+      child_process.execSync('psql -c \'drop database if exists nodal_test;\' -U postgres');
       child_process.execSync('psql -c \'create database nodal_test;\' -U postgres');
     }
   });
 
   after(function() {
     if (global.env === 'development') {
-      child_process.execSync('psql -c \'drop database nodal_test;\' -U postgres');
+      child_process.execSync('psql -c \'drop database if exists nodal_test;\' -U postgres');
     }
   });
 
