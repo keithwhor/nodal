@@ -14,7 +14,7 @@ concerns separated and focuses on being able to easily develop your back-end
 API with light support for static resources and templating where the need
 arises.
 
-With a built-in command-line interface, models, controllers, templates,
+Boasting a built-in command-line interface, models, controllers, templates,
 migrations and application architecture, Nodal provides all of the tools a
 developer needs to get a new iojs project started in a very short amount of
 time.
