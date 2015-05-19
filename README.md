@@ -43,42 +43,12 @@ Additionally, a built-in CLI that supports:
 Nodal comes configured to deploy to Heroku easily (using git) for rapid
 prototyping.
 
-## Installation
-
-To install the latest version of Nodal, make sure you have
-[iojs](https://iojs.org/) installed.
-
-You can then run:
-
-```
-$ sudo npm install nodal -g
-```
-
-And voila! You now have access to the Nodal command-line interface.
-
-If you're intending on data layer integration, Nodal only supports Postgres at
-present time. I personally recommend using
-[Postgres.app](http://postgresapp.com/) for your dev environment if you're
-running OSX.
-
-## Getting Started
-
-Docs are a work in progress, so if you want to just dive in, follow these simple
-instructions to start hacking away with Nodal. ;)
-
-Getting started with Nodal is simple. Just run `nodal new` and you'll be guided
-through the process. Nodal will create a project directory for you in your
-current directory based on your project name.
-
-Now you can run `nodal s` to start your server, and voila! Your index page will
-be available at `localhost:3000` under default configurations. A 404 page and
-static resources page are also available. (Static resources are stored in
-  your `./static/` directory.)
-
 # Table of Contents
 
-1. [Create a RESTful resource](#create-a-restful-resource)
-2. [Documentation](#documentation)
+1. [Installation](#installation)
+2. [Getting Started](#getting-started)
+3. [Create a RESTful resource](#create-a-restful-resource)
+4. [Documentation](#documentation)
     - [Directory Structure](#directory-structure)
     - [Configuration](#configuration)
     - [Initialization](#initialization)
@@ -98,12 +68,44 @@ static resources page are also available. (Static resources are stored in
         * [Model.prototype.externalInterface](#model.prototype.externalinterface)
     - [Migrations](#migrations)
         * [Ready to migrate](#ready-to-migrate)
-3. [Appendix](#appendix)
+5. [Appendix](#appendix)
     - [Project Direction](#project-direction)
     - [Why Nodal](#why-nodal)
     - [About](#about)
 
-### <a id="restful"></a>Create a RESTful resource
+# Installation
+
+To install the latest version of Nodal, make sure you have
+[iojs](https://iojs.org/) installed.
+
+You can then run:
+
+```
+$ sudo npm install nodal -g
+```
+
+And voila! You now have access to the Nodal command-line interface.
+
+If you're intending on data layer integration, Nodal only supports Postgres at
+present time. I personally recommend using
+[Postgres.app](http://postgresapp.com/) for your dev environment if you're
+running OSX.
+
+# Getting Started
+
+Docs are a work in progress, so if you want to just dive in, follow these simple
+instructions to start hacking away with Nodal. ;)
+
+Getting started with Nodal is simple. Just run `nodal new` and you'll be guided
+through the process. Nodal will create a project directory for you in your
+current directory based on your project name.
+
+Now you can run `nodal s` to start your server, and voila! Your index page will
+be available at `localhost:3000` under default configurations. A 404 page and
+static resources page are also available. (Static resources are stored in
+  your `./static/` directory.)
+
+# Create a RESTful resource
 
 First, Make sure you have Postgres installed. (OSX developers check out
   [Postgres.app](http://postgresapp.com/).)
