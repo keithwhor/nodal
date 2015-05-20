@@ -59,7 +59,7 @@ prototyping.
             + [method parameter params](#method-parameter-params)
             + [method parameter app](#method-parameter-app)
     - [Templates](#templates)
-    - [Database](#database)
+    - [Databases](#databases)
     - [Models](#models)
         * [Model methods](#model-methods)
             + [\_\_preInitialize\_\_](#__preinitialize__)
@@ -576,7 +576,7 @@ up to however many migrations you have. `--step` can also be provided for
 
 # Appendix
 
-Nodal is *very* active development, with version 0.2.x representing a
+Nodal is under *very* active development, with version 0.2.x representing a
 pre-release version. The plan is to transition 0.2.x to 1.x once the intended
 feature set is included, the architecture is solidified and test coverage is
 thorough.
