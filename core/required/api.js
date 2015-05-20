@@ -45,7 +45,7 @@ module.exports = (function() {
             message: 'There was an error with your query',
             details: composerResult.error
           } : null),
-          this.resource(composerResult.query._modelConstructor)
+          this.resourceFromModel(composerResult.query._modelConstructor)
         ),
         data: composerResult.rows
       };
@@ -59,7 +59,7 @@ module.exports = (function() {
             message: 'There was an error with your request',
             details: model.errorObject()
           } : null),
-          this.resource(model.constructor)
+          this.resourceFromModel(model.constructor)
         ),
         data: model.hasErrors() ? [] : [model.toExternalObject()],
       };
@@ -67,16 +67,8 @@ module.exports = (function() {
 
     formatArray(arr) {
       return {
-        meta: this.meta(arr.length, arr.length, 0, null, this.resource(arr)),
+        meta: this.meta(arr.length, arr.length, 0, null, this.resourceFromArray(arr)),
         data: arr
-      }
-    }
-
-    resource(obj) {
-      if (obj instanceof Model) {
-        return this.resourceFromModel(obj);
-      } else if (obj instanceof Array) {
-        return this.resourceFromArray(obj);
       }
     }
 
@@ -88,17 +80,18 @@ module.exports = (function() {
           'boolean': 'boolean',
           'string': 'string',
           'number': 'float'
-        }[v] || (v instanceof Date) ? 'datetime' : 'string';
+        }[(typeof v)] || ((v instanceof Date) ? 'datetime' : 'string');
       };
 
       let fields = [];
 
       if (arr.length && arr[0] && typeof arr[0] === 'object') {
-        fields = Object.keys(arr[0]).map(function(v, i) {
+        let datum = arr[0];
+        fields = Object.keys(datum).map(function(v, i) {
 
           return {
-            name: 'field_' + i,
-            type: getType(v),
+            name: v,
+            type: getType(datum[v]),
             array: (v instanceof Array)
           }
 
