@@ -81,7 +81,7 @@ module.exports = (function() {
       } else if (data instanceof Model || data instanceof ComposerResult) {
         this.getHeader('Content-Type') || this.setHeader('Content-Type', 'application/json');
         data = API.format(data);
-        data.meta.error && this.getStatus() || this.status(400);
+        data.meta.error && !this.getStatus() && this.status(400);
         data = JSON.stringify(data);
       } else if (typeof data === 'function') {
         this.getHeader('Content-Type') || this.setHeader('Content-Type', 'text/html');

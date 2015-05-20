@@ -17,7 +17,11 @@ module.exports = (function() {
         return this.formatComposerResult(obj);
       }
 
-      throw new Error('.format requires Model or ComposerResult');
+      if (obj instanceof Array) {
+        return this.formatArray(obj);
+      }
+
+      throw new Error('.format requires Model, ComposerResult, or Array of data');
 
     }
 
@@ -61,7 +65,54 @@ module.exports = (function() {
       };
     }
 
-    resource(modelConstructor) {
+    formatArray(arr) {
+      return {
+        meta: this.meta(arr.length, arr.length, 0, null, this.resource(arr)),
+        data: arr
+      }
+    }
+
+    resource(obj) {
+      if (obj instanceof Model) {
+        return this.resourceFromModel(obj);
+      } else if (obj instanceof Array) {
+        return this.resourceFromArray(obj);
+      }
+    }
+
+    resourceFromArray(arr) {
+
+      function getType(v) {
+        v = (v instanceof Array) ? v[0] : v;
+        return {
+          'boolean': 'boolean',
+          'string': 'string',
+          'number': 'float'
+        }[v] || (v instanceof Date) ? 'datetime' : 'string';
+      };
+
+      let fields = [];
+
+      if (arr.length && arr[0] && typeof arr[0] === 'object') {
+        fields = Object.keys(arr[0]).map(function(v, i) {
+
+          return {
+            name: 'field_' + i,
+            type: getType(v),
+            array: (v instanceof Array)
+          }
+
+        });
+      }
+
+      return {
+        name: 'object',
+        fields: fields
+      }
+
+    }
+
+    resourceFromModel(modelConstructor) {
 
       let columns = modelConstructor.prototype.schema.columns;
       let lookup = [];
