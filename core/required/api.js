@@ -53,6 +53,7 @@ module.exports = (function() {
     }
 
     formatModel(model) {
+
       return {
         meta: this.meta(1, 1, 0,
           (model.hasErrors() ? {
@@ -63,13 +64,16 @@ module.exports = (function() {
         ),
         data: model.hasErrors() ? [] : [model.toExternalObject()],
       };
+      
     }
 
     formatArray(arr) {
+
       return {
         meta: this.meta(arr.length, arr.length, 0, null, this.resourceFromArray(arr)),
         data: arr
       }
+
     }
 
     resourceFromArray(arr) {
