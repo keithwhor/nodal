@@ -85,28 +85,35 @@
           )(promptResult));
 
           let spawn = require('child_process').spawn;
-          let child = spawn('npm',  ['install'], {cwd: process.cwd() + '/' + dirname, stdio: [process.stdin, process.stdout, process.stderr]});
 
-          console.log('Installing packages in this directory...');
-          console.log('');
+          let child = spawn('npm', ['cache', 'clean'], {cwd: process.cwd() + '/' + dirname, stdio: [process.stdin, process.stdout, process.stderr]});
 
           child.on('exit', function() {
-            console.log('');
-            console.log(colors.bold.green('All done!'));
-            console.log('');
-            console.log('Your new Nodal project, ' + colors.bold(promptResult.name) + ', is ready to go! :)');
-            console.log('');
-            console.log('Have fun ' + promptResult.author + ', and check out https://github.com/keithwhor/nodal for the most up-to-date Nodal information')
-            console.log('');
-            console.log(colors.bold('Pro tip: ') + 'You can try running your server right away with:');
-            console.log('');
-            console.log('  cd ' + dirname + ' && nodal s');
-            console.log('');
-            process.exit(0);
-          });
 
-          process.on('exit', function() {
-            child && child.kill();
+            let child = spawn('npm',  ['install'], {cwd: process.cwd() + '/' + dirname, stdio: [process.stdin, process.stdout, process.stderr]});
+
+            console.log('Installing packages in this directory...');
+            console.log('');
+
+            child.on('exit', function() {
+              console.log('');
+              console.log(colors.bold.green('All done!'));
+              console.log('');
+              console.log('Your new Nodal project, ' + colors.bold(promptResult.name) + ', is ready to go! :)');
+              console.log('');
+              console.log('Have fun ' + promptResult.author + ', and check out https://github.com/keithwhor/nodal for the most up-to-date Nodal information')
+              console.log('');
+              console.log(colors.bold('Pro tip: ') + 'You can try running your server right away with:');
+              console.log('');
+              console.log('  cd ' + dirname + ' && nodal s');
+              console.log('');
+              process.exit(0);
+            });
+
+            process.on('exit', function() {
+              child && child.kill();
+            });
+
           });
 
         });
