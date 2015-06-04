@@ -14,8 +14,9 @@ nodal g:model --user
 nodal g:controller v1 --for:user
 nodal db:migrate</pre><br>
     To get a good feeling about how Nodal works and its intended use. :)<br>
-    <b>Make sure you have Postgres installed, app.useDatabase is
-    uncommented in ./app/init.js, and your login credentials are correct!</b>
+    <b>Make sure you have Postgres installed, this.useDatabase and your
+      database imports are uncommented in ./app/app.js, and your login
+      credentials are correct!</b>
     <br><br>
     Query parameter ?test is equal to: {{= data.test }}<br>
     Try changing it in the address bar (add <i>?test=5</i> to the end

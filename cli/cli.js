@@ -146,7 +146,6 @@
       _: function(args, flags) {
 
         let Nodal = require('../core/module.js');
-
         let spawn = require('child_process').spawn;
         let child = spawn('npm',  ['start'], {stdio: [process.stdin, process.stdout, process.stderr]});
 

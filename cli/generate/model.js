@@ -93,6 +93,7 @@ module.exports = (function() {
       }
 
       if (flags.hasOwnProperty('user')) {
+
         fs.writeFileSync(createPath, generateUserDefinition(
           ['id'].concat(
             schemaObject.columns.map(function(v) { return v.name; }).filter(function(v) {
@@ -101,6 +102,7 @@ module.exports = (function() {
             ['created_at']
           )
         ));
+
       } else {
         fs.writeFileSync(createPath, generateModelDefinition(
           modelName,
@@ -117,6 +119,25 @@ module.exports = (function() {
         ['this.createTable(\"' + schemaObject.table + '\", ' + JSON.stringify(schemaObject.columns) + ')'],
         ['this.dropTable(\"' + schemaObject.table + '\")']
       );
+
+      if (flags.hasOwnProperty('user')) {
+
+        console.log('Installing additional packages in this directory...');
+        console.log('');
+
+        let spawn = require('child_process').spawn;
+        let child = spawn('npm',  ['install', 'bcrypt', '--save'], {cwd: process.cwd(), stdio: [process.stdin, process.stdout, process.stderr]});
+
+        child.on('exit', function() {
+
+          child && child.kill();
+          process.exit(0);
+
+        });
+
+        return;
+
+      }
 
       process.exit(0);
 

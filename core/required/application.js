@@ -26,6 +26,14 @@ module.exports = (function() {
 
     constructor() {
 
+      this.__create__();
+      this.__setup__();
+      this.__start__();
+
+    }
+
+    __create__() {
+
       this._proxy = null;
 
       this._forceProxyTLS = false; // not related to above
@@ -51,9 +59,195 @@ module.exports = (function() {
 
     }
 
-    initialize(callback) {
+    __destroy__(done) {
 
-      this.initializers.exec(this, callback.bind(this));
+      let cwd = process.cwd();
+      let self = this;
+
+      let fnComplete = function() {
+
+        Object.keys(require.cache).filter(function(v) {
+          return v.indexOf(cwd) === 0 &&
+            v.substr(cwd.length).indexOf('/node_modules/') !== 0;
+        }).forEach(function(key) {
+          delete require.cache[key];
+        });
+
+        Object.keys(self).forEach(function(v) {
+          delete self[v];
+        });
+
+        done.call(this);
+
+      };
+
+      if (this.server) {
+        this.server.__destroy__();
+        this.server.close(fnComplete);
+        return;
+      }
+
+      setTimeout(fnComplete, 1);
+
+    }
+
+    __setup__() {}
+    __initialize__() {}
+
+    __start__() {
+
+      let fn = this.__initialize__;
+
+      if ((process.env.NODE_ENV || 'development') === 'development') {
+
+        fn = function(err) {
+
+          this.__watch__();
+          this.__initialize__(err);
+
+        }
+
+      }
+
+      this.initializers.exec(this, fn.bind(this));
+
+    }
+
+    restart() {
+
+      this.__destroy__(function() {
+
+        require([process.cwd(), 'server.js'].join('/'));
+
+      });
+
+    }
+
+    __watch__(path) {
+
+      function watchDir(cwd, dirname, watchers) {
+
+        if (!watchers) {
+
+          watchers = Object.create(null);
+          watchers.directories = Object.create(null);
+          watchers.interval = null;
+
+        }
+
+        let path = [cwd, dirname].join('');
+        let files = fs.readdirSync(path);
+
+        watchers.directories[path] = Object.create(null);
+
+        files.forEach(function(v) {
+
+          if (v === 'node_modules' || v.indexOf('.git') === 0) {
+            return;
+          }
+
+          let filename = [dirname, v].join('/');
+          let fullPath = [cwd, filename].join('/');
+
+          let stat = fs.statSync(fullPath);
+
+          if (stat.isDirectory()) {
+            watchDir(cwd, filename, watchers);
+            return;
+          }
+
+          watchers.directories[path][v] = stat;
+
+        });
+
+        return watchers;
+
+      }
+
+      let watchers = watchDir(process.cwd(), path || '');
+      let self = this;
+
+      watchers.iterate = function(changes) {
+
+        changes.forEach(function(v) {
+          console.log(v.event[0].toUpperCase() + v.event.substr(1) + ': ' + v.path);
+        });
+
+        if (changes.length) {
+          watchers.interval && clearInterval(watchers.interval);
+          self.restart();
+        }
+
+      };
+
+      watchers.interval = setInterval(function() {
+
+        /* let t = new Date().valueOf();
+
+        console.log('Checking project tree...'); */
+
+        let changes = [];
+
+        Object.keys(watchers.directories).forEach(function(dirPath) {
+
+          let dir = watchers.directories[dirPath];
+          let files = fs.readdirSync(dirPath);
+          let added = [];
+
+          let contents = Object.create(null);
+
+          files.forEach(function(v) {
+
+            if (v === 'node_modules' || v.indexOf('.git') === 0) {
+              return;
+            }
+
+            let fullPath = [dirPath, v].join('/');
+            let stat = fs.statSync(fullPath);
+
+            if (stat.isDirectory()) {
+              return;
+            }
+
+            if (!dir[v]) {
+              added.push([v, stat]);
+              changes.push({event: 'added', path: fullPath});
+              return;
+            }
+
+            if (stat.mtime.toString() !== dir[v].mtime.toString()) {
+              dir[v] = stat;
+              changes.push({event: 'modified', path: fullPath});
+            }
+
+            contents[v] = true;
+
+          });
+
+          Object.keys(dir).forEach(function(v) {
+
+            let fullPath = [dirPath, v].join('/');
+
+            if (!contents[v]) {
+              delete dir[v];
+              changes.push({event: 'removed', path: fullPath});
+            }
+
+          });
+
+          added.forEach(function(v) {
+            dir[v[0]] = v[1];
+          });
+
+        });
+
+        watchers.iterate(changes);
+
+        /* t = (new Date).valueOf() - t;
+
+        console.log('Project tree walked. Took ' + t + 'ms'); */
+
+      }, 1000);
 
     }
 
@@ -200,6 +394,8 @@ module.exports = (function() {
 
     requestHandler(request, response) {
 
+      let error;
+
       if (this._forceProxyTLS &&
           request.headers.hasOwnProperty('x-forwarded-proto') &&
           request.headers['x-forwarded-proto'] !== 'https') {
@@ -207,8 +403,6 @@ module.exports = (function() {
         response.end();
         return;
       }
-
-      let error;
 
       if (this.router) {
 
@@ -243,6 +437,36 @@ module.exports = (function() {
       }
 
       let server = http.createServer(this.requestHandler.bind(this)).listen(port);
+
+      let clients = [];
+      let availableIds = [];
+
+      server.on('connection', function(socket) {
+
+        if (availableIds.length) {
+          socket.__id = availableIds.shift();
+        } else {
+          socket.__id = clients.length;
+          clients.push(socket);
+        }
+
+        socket.on('close', function() {
+          clients[socket.__id] = null;
+          availableIds.push(socket.__id);
+        });
+
+      });
+
+      server.__destroy__ = function() {
+
+        clients.filter(function(socket) {
+          return !!socket;
+        }).forEach(function(socket) {
+          socket.destroy();
+        });
+
+      };
+
       this.server = server;
       this._proxyWebSocketRequests();
 

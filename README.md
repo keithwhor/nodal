@@ -3,7 +3,7 @@
 
 [![Build Status](https://travis-ci.org/keithwhor/nodal.svg?branch=master)](https://travis-ci.org/keithwhor/nodal)
 
-**v0.2.x is pre-release, suggested for use in development only**
+**v0.3.x is pre-release, suggested for use in development only**
 
 Nodal is an opinionated API Server and Framework for quickly generating
 RESTful API services in [iojs](https://iojs.org/) using modern ES6 syntax
@@ -42,6 +42,17 @@ Additionally, a built-in CLI that supports:
 
 Nodal comes configured to deploy to Heroku easily (using git) for rapid
 prototyping.
+
+## Updates from 0.2.x
+
+- Removed bcrypt from the core packages (only needed if you add in a user model)
+- Added CLI generation for initializers, middleware
+- Routes are automatically created when controllers are made
+- Refactored Application instantiation to be more idiomatic
+- Server now runs as a daemon in a development environment (automatically
+  reloads upon file changes in your application root directory)
+- Application errors will no longer terminate your process, a Dummy Application
+  will show the error message visibly upon HTTP request
 
 # Table of Contents
 
@@ -115,11 +126,17 @@ Next, create a "postgres" superuser with no password if one does not already exi
 $ createuser postgres -s
 ```
 
-Open your `app/init.js` file and uncomment the lines:
+Open your `app/app.js` file and uncomment the lines:
 ```javascript
 // const db = Nodal.require('db/main.js');
-// app.useDatabase(db, 'main');
 ```
+
+And
+
+```javascript
+// this.useDatabase(db, 'main');
+```
+
 
 Finally, run the following commands:
 ```
@@ -148,6 +165,7 @@ Nodal uses the following directory structure:
   \-- [controllers]
   \-- [models]
   \-- [templates]
+  \-- app.js
   \-- init.js
   \-- routes.js
 -- [config]
@@ -182,10 +200,33 @@ loaded into `Nodal.my.Config.db` when you run Nodal locally.
 
 `app/init.js` is the bootstrapping script for your server.
 
-You should use it to assign initializers, middleware, bind your data layers, and
-prepare your application to listen for incoming connections.
+For the most part it can remain untouched, but if you need to define global
+variables or configure any other software that should run with your application,
+do so here. It's pretty straightforward.
 
-**If you want to use a data layer, make sure you un-comment app.useDatabase!**
+```javascript
+module.exports = (function() {
+
+  "use strict";
+
+  /* Use this file to define globals, etc. */
+
+  const Nodal = require('nodal');
+
+  const App = Nodal.require('app/app.js');
+  let app = new App();
+
+})();
+```
+
+In order to configure what your application actually does when it's instantiated,
+check out `app/app.js`.
+
+Here you can extend the basic Application class and assign initializers,
+middleware, bind your data layers, and prepare your application to listen for
+incoming connections.
+
+**If you want to use a data layer, make sure you un-comment this.useDatabase!**
 
 ```javascript
 module.exports = (function() {
@@ -193,30 +234,46 @@ module.exports = (function() {
   "use strict";
 
   const Nodal = require('nodal');
-  const app = new Nodal.Application();
 
-  /* use initializer */
+  /* Import Initializers */
   const StaticAssetInitializer = Nodal.require('initializers/static_asset_initializer.js');
-  app.initializers.use(StaticAssetInitializer);
 
-  /* use middleware */
+  /* Import Middleware */
   const GzipMiddleware = Nodal.require('middleware/gzip_middleware.js');
-  app.middleware.use(GzipMiddleware);
 
-  /* use router */
+  /* Import Router */
   const router = Nodal.require('app/router.js');
-  app.useRouter(router);
 
-  /* use database, assign an alias */
+  /* Import Database */
   // const db = Nodal.require('db/main.js');
-  // app.useDatabase(db, 'main');
 
-  /* Initialize App */
-  app.initialize(function() {
+  class App extends Nodal.Application {
 
-    app.listen(Nodal.my.Config.secrets.port);
+    __setup__() {
 
-  });
+      /* Initializers */
+      this.initializers.use(StaticAssetInitializer);
+
+      /* Middleware */
+      this.middleware.use(GzipMiddleware);
+
+      /* Router */
+      this.useRouter(router);
+
+      /* Database */
+      // this.useDatabase(db, 'main');
+
+    }
+
+    __initialize__() {
+
+      this.listen(Nodal.my.Config.secrets.port);
+
+    }
+
+  }
+
+  return App;
 
 })();
 ```
@@ -225,13 +282,17 @@ As shown here, Nodal comes pre-packaged with an initializer and middleware.
 
 The `StaticAssetInitializer` pre-loads all static assets into RAM at present time
 (be wary of this constraint) before the application begins listening for
-connections. All Initializers will be run, in the order they're added, upon a
-call to `app.initialize()`.
+connections.
 
 The `GzipMiddleware` uses deflate/gzip compression on page renders, if
 applicable. Middleware, in regards to Nodal, intercepts `Controller#render`
 calls and applies transformations and state changes to the controller and
 associated rendering data.
+
+`Application#__setup__` is run upon application instantiation.
+`Application#__initialize__` is run after your initializers are run. You'll want
+to bind your initializers and configure your app in `__setup__`, and begin
+listening to incoming connections on `__initialize__`.
 
 ## Router
 
@@ -576,8 +637,8 @@ up to however many migrations you have. `--step` can also be provided for
 
 # Appendix
 
-Nodal is under *very* active development, with version 0.2.x representing a
-pre-release version. The plan is to transition 0.2.x to 1.x once the intended
+Nodal is under *very* active development, with version 0.3.x representing a
+pre-release version. The plan is to transition 0.3.x to 1.x once the intended
 feature set is included, the architecture is solidified and test coverage is
 thorough.
 
@@ -588,7 +649,7 @@ Docs will be fleshed out ASAP! Thanks for your patience. :)
 
 ## Project Direction
 
-The following features are in development on Nodal 0.2.x
+The following features are in development on Nodal 0.3.x
 
 - Test coverage (in progress)
 - Model relationships (links to other models)

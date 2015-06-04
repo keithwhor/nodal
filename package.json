@@ -1,11 +1,11 @@
 {
   "name": "nodal",
-  "version": "0.2.3",
+  "version": "0.3.0-rc1",
   "description": "An API Server and Framework for node.js",
   "author": "Keith Horwood",
   "main": "core/module.js",
   "engines": {
-    "iojs": ">= 2.0.1"
+    "iojs": "2.2.1"
   },
   "dependencies": {
     "any-db": "~2.1.0",
@@ -20,7 +20,6 @@
     "ws": "~0.7.1",
     "pg": "~4.3.0",
     "mime-types": "~2.0.11",
-    "bcrypt": "~0.8.3",
     "prompt": "~0.2.14"
   },
   "devDependencies": {

@@ -13,6 +13,7 @@ module.exports = (function() {
     Composer: null,
     Controller: null,
     Database: null,
+    Dummy: null,
     Initializer: null,
     Middleware: null,
     Migration: null,
@@ -33,7 +34,6 @@ module.exports = (function() {
       return require(process.cwd() + '/' + filename);
     },
     include: {
-      bcrypt: require('bcrypt'),
       mime: require('mime-types'),
       inflect: require('i')()
     },
@@ -68,6 +68,12 @@ module.exports = (function() {
     Database: {
       get: function() {
         return Nodal.Database || (Nodal.Database = require('./required/db/database.js'));
+      },
+      enumerable: true
+    },
+    Dummy: {
+      get: function() {
+        return Nodal.Dummy || (Nodal.Dummy = require('./required/dummy.js'));
       },
       enumerable: true
     },
