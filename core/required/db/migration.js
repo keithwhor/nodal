@@ -1,6 +1,6 @@
-"use strict";
-
 module.exports = (function() {
+
+  "use strict";
 
   const Database = require('./database.js');
   const SchemaGenerator = require('./schema_generator.js');
@@ -14,7 +14,7 @@ module.exports = (function() {
 
     constructor(db) {
 
-      if (!(db instanceof Database)) {
+      if (!db) {
         throw new Error('Migration required valid database instance');
       }
 
