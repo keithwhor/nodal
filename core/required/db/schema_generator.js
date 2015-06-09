@@ -74,9 +74,26 @@ module.exports = (function() {
       this.migrationId = id;
     }
 
-    createTable(table, arrColumnData) {
+    findClass(table) {
 
-      let tableClass = inflect.classify(table);
+      let models = this.models;
+      return Object.keys(models).filter(function(v) {
+        return models[v].table === table;
+      }).pop();
+
+    }
+
+    createTable(table, arrColumnData, modelName) {
+
+      let tableClass = modelName || inflect.classify(table);
+
+      if (this.models[tableClass]) {
+        throw new Error('Model with name "' + tableClass + '" already exists in your schema');
+      }
+
+      if (this.findClass(table)) {
+        throw new Error('Table with name "' + table + '" already exists in your schema.');
+      }
 
       arrColumnData = arrColumnData.slice();
 
@@ -107,13 +124,38 @@ module.exports = (function() {
 
     }
 
-    dropTable(table, columnData) {
+    dropTable(table) {
 
-      let tableClass = inflect.classify(table);
+      let tableClass = this.findClass(table);
+
+      if (!tableClass) {
+        throw new Error('Table "' + table + '" does not exist in your schema');
+      }
 
       delete this.models[tableClass];
 
       return true;
+
+    }
+
+    renameTable(table, newTableName, renameModel, newModelName) {
+
+      let tableClass = this.findClass(table);
+
+      if (!tableClass) {
+        throw new Error('Table "' + table + '" does not exist in your schema');
+      }
+
+      this.models[tableClass].table = newTableName;
+
+      if (renameModel) {
+        let newClass = newModelName || inflect.classify(newTableName);
+        this.models[newClass] = this.models[tableClass];
+        delete this.models[tableClass];
+        tableClass = newClass;
+      }
+
+      return this.models[tableClass];
 
     }
 

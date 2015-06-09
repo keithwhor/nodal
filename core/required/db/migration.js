@@ -73,9 +73,9 @@ module.exports = (function() {
 
     }
 
-    createTable(table, arrFieldData) {
+    createTable(table, arrFieldData, modelName) {
 
-      arrFieldData = this.schema.createTable(table, arrFieldData);
+      arrFieldData = this.schema.createTable(table, arrFieldData, modelName);
 
       return this.db.adapter.generateCreateTableQuery(table, arrFieldData);
 
@@ -86,6 +86,14 @@ module.exports = (function() {
       this.schema.dropTable(table);
 
       return this.db.adapter.generateDropTableQuery(table);
+
+    }
+
+    renameTable(table, newTableName, renameModel, newModelName) {
+
+      let modelSchema = this.schema.renameTable(table, newTableName, renameModel, newModelName);
+
+      return this.db.adapter.generateAlterTableRename(table, newTableName, modelSchema.columns);
 
     }
 

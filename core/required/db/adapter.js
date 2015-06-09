@@ -19,6 +19,8 @@ module.exports = (function() {
     generatePrimaryKey(columnName, type, properties) {}
     generateUniqueKey(columnName, type, properties) {}
 
+    generateAlterTableRename(table, newTableName) {}
+
     generateAlterTableColumnType(table, columnName, columnType, columnProperties) {}
     generateAlterTableAddPrimaryKey(table, columnName) {}
     generateAlterTableDropPrimaryKey(table, columnName) {}
@@ -77,24 +79,52 @@ module.exports = (function() {
         .join(',');
     }
 
-    generatePrimaryKeysStatement(table, columns) {
+    getAutoIncrementKeys(columns) {
+
+      let self = this;
+      return columns.filter(function(columnData) {
+        return self.getTypeProperties(columnData.type, columnData.properties).auto_increment;
+      });
+
+    };
+
+    getPrimaryKeys(columns) {
+
       let self = this;
       return columns
-        .filter(function(columnData) { return self.getTypeProperties(columnData.type, columnData.properties).primary_key; })
-        .map(function(columnData) { return self.generatePrimaryKey(table, columnData.name); })
+        .filter(function(columnData) {
+          return self.getTypeProperties(columnData.type, columnData.properties).primary_key;
+        });
+
+
+    }
+
+    getUniqueKeys(columns) {
+
+      let self = this;
+      return columns
+        .filter(function(columnData) {
+          let type = self.getTypeProperties(columnData.type, columnData.properties);
+          return (!type.primary_key && type.unique);
+        });
+
+    }
+
+    generatePrimaryKeysStatement(table, columns) {
+      let self = this;
+      return this.getPrimaryKeys(columns)
+        .map(function(columnData) {
+          return self.generatePrimaryKey(table, columnData.name);
+        })
         .join(',');
     }
 
     generateUniqueKeysStatement(table, columns) {
       let self = this;
-      return columns
-        .filter(
-          function(columnData) {
-            let type = self.getTypeProperties(columnData.type, columnData.properties);
-            return (!type.primary_key && type.unique);
-          }
-        )
-        .map(function(columnData) { return self.generateUniqueKey(table, columnData.name); })
+      return this.getUniqueKeys(columns)
+        .map(function(columnData) {
+          self.generateUniqueKey(table, columnData.name);
+        })
         .join(',');
     }
 

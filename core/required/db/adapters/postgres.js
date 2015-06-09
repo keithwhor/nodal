@@ -121,6 +121,44 @@ module.exports = (function() {
 
     }
 
+    generateAlterTableRename(table, newTableName, columns) {
+
+      let self = this;
+
+      return [
+        [
+          'ALTER TABLE',
+            this.escapeField(table),
+          'RENAME TO',
+            this.escapeField(newTableName)
+        ].join(' '),
+      ].concat(
+        this.getPrimaryKeys(columns).map(function(columnData) {
+          return [
+            'ALTER TABLE',
+              self.escapeField(newTableName),
+            'RENAME CONSTRAINT',
+              self.generateConstraint(table, columnData.name, 'pk'),
+            'TO',
+              self.generateConstraint(newTableName, columnData.name, 'pk')
+          ].join(' ');
+        }),
+        this.getUniqueKeys(columns).map(function(columnData) {
+          return [
+            'ALTER TABLE',
+              self.escapeField(newTableName),
+            'RENAME CONSTRAINT',
+              self.generateConstraint(table, columnData.name, 'unique'),
+            'TO',
+              self.generateConstraint(newTableName, columnData.name, 'unique')
+          ].join(' ');
+        }),
+        this.getAutoIncrementKeys(columns).map(function(columnData) {
+          return self.generateRenameSequenceQuery(table, columnData.name, newTableName, columnData.name);
+        })
+      ).join(';');
+    }
+
     generateAlterTableColumnType(table, columnName, columnType, columnProperties) {
 
       let queries = [
@@ -284,6 +322,17 @@ module.exports = (function() {
 
     }
 
+    generateRenameSequenceQuery(table, columnName, newTable, newColumnName) {
+
+      return [
+        'ALTER SEQUENCE',
+          this.generateSequence(table, columnName),
+        'RENAME TO',
+          this.generateSequence(newTable, newColumnName)
+      ].join(' ');
+
+    }
+
     generateDropSequenceQuery(table, columnName) {
       return [
         'DROP SEQUENCE IF EXISTS',
@@ -298,9 +347,7 @@ module.exports = (function() {
 
       return [
         super.generateCreateTableQuery(table, columns),
-        columns.filter(function(columnData) {
-          return self.getTypeProperties(columnData.type, columnData.properties).auto_increment;
-        }).map(function(columnData) {
+        this.getAutoIncrementKeys(columns).map(function(columnData) {
           return [
             self.generateCreateSequenceQuery(table, columnData.name),
             [
