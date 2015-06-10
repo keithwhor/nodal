@@ -1,4 +1,3 @@
 .DS_Store
 node_modules/
-db/schema.json
 npm-debug.log
