@@ -2,7 +2,7 @@
 
 module.exports = (function() {
 
-  const anyDB = require('any-db-postgres');
+  const anyDB = require('any-db');
   const beginTransaction = require('any-db-transaction');
   const async = require('async');
   const colors = require('colors/safe');
@@ -26,10 +26,11 @@ module.exports = (function() {
       let connection;
 
       if (cfg.connectionString) {
-        connection = anyDB.createConnection(cfg.connectionString);
+        connection = anyDB.createPool(cfg.connectionString, {min: 2, max: 20});
       } else {
-        connection = anyDB.createConnection(
-          this.adapter.generateConnectionString(cfg.host, cfg.port, cfg.database, cfg.user, cfg.password)
+        connection = anyDB.createPool(
+          this.adapter.generateConnectionString(cfg.host, cfg.port, cfg.database, cfg.user, cfg.password),
+          {min: 2, max: 20}
         );
       }
 

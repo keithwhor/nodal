@@ -19,6 +19,8 @@ module.exports = (function() {
     Migration: null,
     Model: null,
     Router: null,
+    Scheduler: null,
+    SchedulerTask: null,
     SchemaGenerator: null,
     my: {
       Config: null,
@@ -104,6 +106,18 @@ module.exports = (function() {
     Router: {
       get: function() {
         return Nodal.Router || (Nodal.Router = require('./required/router.js'));
+      },
+      enumerable: true
+    },
+    Scheduler: {
+      get: function() {
+        return Nodal.Scheduler || (Nodal.Scheduler = require('./required/scheduler/scheduler.js'));
+      },
+      enumerable: true
+    },
+    SchedulerTask: {
+      get: function() {
+        return Nodal.Task || (Nodal.Task = require('./required/scheduler/task.js'));
       },
       enumerable: true
     },

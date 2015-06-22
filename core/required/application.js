@@ -1,6 +1,6 @@
-"use strict";
-
 module.exports = (function() {
+
+  'use strict';
 
   const Database = require('./db/database.js');
   const Composer = require('./composer.js');
