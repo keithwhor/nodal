@@ -48,9 +48,11 @@ module.exports = (function(Nodal) {
 
     });
 
-    after(function() {
+    after(function(done) {
 
-      db.close();
+      db.close(function() {
+        done();
+      });
 
     });
 

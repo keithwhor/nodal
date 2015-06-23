@@ -40,10 +40,14 @@ module.exports = (function() {
 
     }
 
-    close() {
+    close(callback) {
 
-      this._connection && this._connection.end();
-      this._connection = null;
+      this._connection && this._connection.close((function(err) {
+        this._connection = null;
+        callback.call(this);
+      }).bind(this));
+
+      return true;
 
     }
 

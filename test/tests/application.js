@@ -12,12 +12,14 @@ module.exports = (function(Nodal) {
     before(function() {
 
       db.connect(Nodal.my.Config.db.main);
-      
+
     });
 
-    after(function() {
+    after(function(done) {
 
-      db.close();
+      db.close(function() {
+        done();
+      });
 
     });
 
