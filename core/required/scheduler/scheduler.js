@@ -47,7 +47,7 @@ module.exports = (function() {
         throw new Error('SchedulerEntry#perform must be provided with a valid SchedulerTask.');
       }
 
-      this._task = new Task(this._scheduler._app);
+      this._task = new Task();
 
     }
 
