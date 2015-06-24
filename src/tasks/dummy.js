@@ -6,7 +6,13 @@ module.exports = (function() {
 
   class DummyTask extends Nodal.SchedulerTask {
 
-    exec() {
+    __initialize__(app) {
+
+      console.log('Dummy task initialized');
+
+    }
+
+    exec(app) {
 
       console.log('Dummy task executed');
 

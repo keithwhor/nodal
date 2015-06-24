@@ -4,13 +4,14 @@ module.exports = (function() {
 
   class SchedulerTask {
 
-    constructor() {
+    constructor(app) {
+
+      this.__initialize__(app);
 
     }
 
-    exec() {
-
-    }
+    __initialize__(app) {}
+    exec(app) {}
 
   }
 

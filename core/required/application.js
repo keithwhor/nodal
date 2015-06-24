@@ -10,6 +10,7 @@ module.exports = (function() {
   const Auth = require('./auth.js');
   const MiddlewareManager = require('./middleware_manager.js');
   const InitializerManager = require('./initializer_manager.js');
+  const Scheduler = require('./scheduler/scheduler.js');
 
   const dot = require('dot');
   const fs = require('fs');
@@ -51,6 +52,7 @@ module.exports = (function() {
       this.socket = null;
       this.server = null;
       this.auth = null;
+      this.scheduler = null;
 
       this.composer = new Composer();
 
@@ -80,6 +82,10 @@ module.exports = (function() {
         done.call(this);
 
       };
+
+      if (this.scheduler) {
+        this.scheduler.stop();
+      }
 
       if (this.server) {
         this.server.__destroy__();
@@ -313,6 +319,20 @@ module.exports = (function() {
     enableAuth() {
 
       this.auth = new Auth();
+
+    }
+
+    useScheduler(scheduler) {
+
+      if (!(scheduler instanceof Scheduler)) {
+        throw new Error('useScheduler requires valid Scheduler instance');
+      }
+
+      scheduler.setApp(this);
+      scheduler.start();
+
+      this.scheduler = scheduler;
+      return true;
 
     }
 

@@ -6,8 +6,9 @@ module.exports = (function() {
 
   class SchedulerEntry {
 
-    constructor() {
+    constructor(scheduler) {
 
+      this._scheduler = scheduler;
       this._task = null;
       this.timeouts = [];
       this.intervals = [];
@@ -23,18 +24,18 @@ module.exports = (function() {
 
     }
 
-    __init__(times) {
+    __initialize__(times) {
 
       let timeLength = this.timeLength;
       let minInterval = this.minInterval;
 
       this.times = times.filter(function(v) {
 
-        return !!parseInt(v);
+        return typeof(v) === 'number';
 
       }).map(function(v) {
 
-        return Math.min(Math.max(0, parseInt(v)), timeLength) * 1000 * minInterval;
+        return Math.min(Math.max(0, parseInt(v) || 0), timeLength) * 1000 * minInterval;
 
       });
 
@@ -46,13 +47,13 @@ module.exports = (function() {
         throw new Error('SchedulerEntry#perform must be provided with a valid SchedulerTask.');
       }
 
-      this._task = new Task();
+      this._task = new Task(this._scheduler._app);
 
     }
 
     exec() {
 
-      this._task && this._task.exec();
+      this._task && this._task.exec(this._scheduler._app);
 
     }
 
@@ -93,14 +94,14 @@ module.exports = (function() {
 
   class MinutelyEntry extends SchedulerEntry {
 
-    constructor(times) {
+    constructor(scheduler, times) {
 
-      super();
+      super(scheduler);
 
       this.minInterval = 1;
       this.timeLength = 60;
 
-      this.__init__(times);
+      this.__initialize__(times);
 
     }
 
@@ -114,14 +115,14 @@ module.exports = (function() {
 
   class HourlyEntry extends SchedulerEntry {
 
-    constructor(times) {
+    constructor(scheduler, times) {
 
-      super();
+      super(scheduler);
 
       this.minInterval = 60;
       this.timeLength = 60 * 60;
 
-      this.__init__(times);
+      this.__initialize__(times);
 
     }
 
@@ -135,14 +136,14 @@ module.exports = (function() {
 
   class DailyEntry extends SchedulerEntry {
 
-    constructor(times) {
+    constructor(scheduler, times) {
 
-      super();
+      super(scheduler);
 
       this.minInterval = 60 * 60;
       this.timeLength = 60 * 60 * 24;
 
-      this.__init__(times);
+      this.__initialize__(times);
 
     }
 
@@ -158,20 +159,24 @@ module.exports = (function() {
 
     constructor() {
 
+      this._app = null;
       this.entries = [];
-      this.__initialize__();
-      this.start();
 
     }
-
-    __initialize__() {}
 
     _entry(entryConstructor, args) {
 
       let times = [].slice.call(args);
-      let entry = new entryConstructor(times);
+      let entry = new entryConstructor(this, times);
       this.entries.push(entry);
       return entry;
+
+    }
+
+    setApp(app) {
+
+      this._app = app;
+      return true;
 
     }
 

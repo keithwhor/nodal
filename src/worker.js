@@ -1,3 +1,3 @@
 'use strict';
 
-require('./scheduler/init.js');
+require('./app/worker.js');

@@ -1,1 +1,2 @@
 web: node server.js --harmony_classes
+worker: node worker.js --harmony_classes

@@ -58,15 +58,28 @@ module.exports = (function() {
       return this._headers.hasOwnProperty(key) ? this._headers[key] : defaultValue;
     }
 
+    badRequest(msg) {
+      this.status(400);
+      this.render(API.error(msg || 'Bad Request'));
+      return true;
+    }
+
     unauthorized(msg) {
       this.status(401);
       this.render(API.error(msg || 'Unauthorized'));
       return true;
     }
 
-    badRequest(msg) {
-      this.status(400);
-      this.render(API.error(msg || 'Bad Request'));
+    notFound(msg) {
+      this.status(404);
+      this.render(API.error(msg || 'Not Found'));
+      return true;
+    }
+
+    error(msg) {
+      this.status(500);
+      this.render(API.error(msg || 'Internal Server Error'));
+      return true;
     }
 
     render(data, templateData) {
