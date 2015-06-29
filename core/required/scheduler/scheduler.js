@@ -35,7 +35,11 @@ module.exports = (function() {
 
       }).map(function(v) {
 
-        return Math.min(Math.max(0, parseInt(v) || 0), timeLength) * 1000 * minInterval;
+        return Math.min(Math.max(0, parseFloat(v) || 0), timeLength) * 1000 * minInterval;
+
+      }).filter(function(v, i, arr) {
+
+        return arr.indexOf(v) === i;
 
       });
 
@@ -64,12 +68,14 @@ module.exports = (function() {
       let getDateOffset = this.getDateOffset.bind(this);
       let intervals = [];
 
+      let name = this.constructor.name;
+
       let timeouts = this.times.map(function(v) {
 
         let cur = new Date();
         let start = getDateOffset(cur);
         let offset = (start.valueOf() + v) - cur.valueOf();
-        offset = offset < 0 ? 1000 * timeLength + offset : offset;
+        offset = offset < 0 ? (1000 * timeLength) + offset : offset;
 
         return setTimeout(function() {
           exec();
@@ -155,6 +161,27 @@ module.exports = (function() {
 
   }
 
+  class WeeklyEntry extends SchedulerEntry {
+
+    constructor(scheduler, times) {
+
+      super(scheduler);
+
+      this.minInterval = 60 * 60 * 24;
+      this.timeLength = 60 * 60 * 24 * 7;
+
+      this.__initialize__(times);
+
+    }
+
+    getDateOffset(cur) {
+
+      return new Date(Date.UTC(cur.getUTCFullYear(), cur.getUTCMonth(), cur.getUTCDate() - cur.getUTCDay()));
+
+    }
+
+  }
+
   class Scheduler {
 
     constructor() {
@@ -195,6 +222,12 @@ module.exports = (function() {
     daily() {
 
       return this._entry(DailyEntry, arguments);
+
+    }
+
+    weekly() {
+
+      return this._entry(WeeklyEntry, arguments);
 
     }
 
