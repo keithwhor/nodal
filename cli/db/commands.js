@@ -26,6 +26,48 @@ function errorHandler(err) {
 
 module.exports = {
 
+  upgrade: function() {
+
+    let dbCredentials = Nodal.my.Config.db.main;
+    let cfg = dbCredentials;
+    let conString = 'postgres://' + cfg.user + ':' + cfg.password + '@' + cfg.host + ':' + cfg.port + '/' + cfg.database;
+
+    let db = new Database();
+    db.connect({connectionString: conString});
+
+    db.query(
+      db.adapter.generateAlterTableAddColumnQuery(
+        'schema_migrations',
+        'schema',
+        'string',
+        {}
+      ),
+      [],
+      function(err, result) {
+
+        errorHandler(err);
+        db.info('Added column "schema" to "schema_migrations"');
+
+        let schema = new SchemaGenerator(db);
+        schema.load();
+
+        db.query(
+          db.adapter.generateUpdateQuery('schema_migrations', ['id', 'schema']),
+          [schema.migrationId, schema.generate()],
+          function(err, result) {
+
+            errorHandler(err);
+            db.info('populated most recent "schema" in "schema_migrations"');
+            process.exit(0);
+
+          }
+        )
+
+      }
+    );
+
+  },
+
   drop: function() {
 
     let dbCredentials = Nodal.my.Config.db.main;
@@ -77,7 +119,8 @@ module.exports = {
       [
         db.adapter.generateClearDatabaseQuery(),
         db.adapter.generateCreateTableQuery('schema_migrations', [
-          {name: 'id', type: 'int', properties: {nullable: false, primary_key: true}}
+          {name: 'id', type: 'int', properties: {nullable: false, primary_key: true}},
+          {name: 'schema', type: 'string'}
         ])
       ].join(';'),
       function(err, result) {

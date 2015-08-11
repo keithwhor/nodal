@@ -23,7 +23,23 @@ module.exports = (function() {
     load(filename) {
       filename = filename || this._defaultPath;
       filename = process.cwd() + '/' + filename;
-      return this.set(JSON.parse(fs.readFileSync(filename)));
+      return this.read(fs.readFileSync(filename));
+    }
+
+    fetch(callback) {
+
+      this.db.query('SELECT "schema_migrations"."schema" FROM "schema_migrations" ORDER BY "id" DESC LIMIT 1', [], (function(err, result) {
+
+        if (err) {
+          return callback(err);
+        }
+
+        result.rows && result.rows.length && this.read(result.rows[0].schema);
+
+        callback(null);
+
+      }).bind(this));
+
     }
 
     save(filename) {
@@ -301,6 +317,10 @@ module.exports = (function() {
 
       return true;
 
+    }
+
+    read(json) {
+      return this.set(JSON.parse(json));
     }
 
     generate() {

@@ -166,6 +166,7 @@
       _: function(args, flags) {
         console.log('Please specify an action');
       },
+      upgrade: dbCommands.upgrade,
       create: dbCommands.create,
       drop: dbCommands.drop,
       prepare: dbCommands.prepare,

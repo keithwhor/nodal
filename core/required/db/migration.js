@@ -42,34 +42,49 @@ module.exports = (function() {
 
       let schema = this.schema;
 
-      schema.load();
-      schema.setMigrationId(this.id);
+      schema.fetch((function(err) {
 
-      let up = this.up().concat([
-        'INSERT INTO "schema_migrations"("id") VALUES(' + this.id + ')'
-      ]);
+        if (err) {
+          return callback(err);
+        }
 
-      this.db.transaction(up.join(';'), function(err) {
-        !err && schema.save();
-        callback(err);
-      });
+        schema.setMigrationId(this.id);
+
+        let up = this.up().concat([
+          'INSERT INTO "schema_migrations"("id", "schema") VALUES(' + this.id + ', \'' + schema.generate() + '\')'
+        ]);
+
+        this.db.transaction(up.join(';'), function(err) {
+          !err && schema.save();
+          return callback(err);
+        });
+
+      }).bind(this));
 
     }
 
     executeDown(callback, prevId) {
 
       let schema = this.schema;
-      schema.load();
-      schema.setMigrationId(prevId || null);
 
-      let down = this.down().concat([
-        'DELETE FROM "schema_migrations" WHERE id = ' + this.id
-      ]);
+      schema.fetch((function(err) {
 
-      this.db.transaction(down.join(';'), function(err) {
-        !err && schema.save();
-        callback(err);
-      });
+        if (err) {
+          return callback(err);
+        }
+
+        schema.setMigrationId(prevId || null);
+
+        let down = this.down().concat([
+          'DELETE FROM "schema_migrations" WHERE id = ' + this.id
+        ]);
+
+        this.db.transaction(down.join(';'), function(err) {
+          !err && schema.save();
+          callback(err);
+        });
+
+      }).bind(this));
 
     }
 
