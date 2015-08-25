@@ -56,8 +56,21 @@ module.exports = (function() {
     }
 
     setHeader(key, value) {
+
+      key = key.split('-').map(function(v) {
+        return v[0].toUpperCase() + v.substr(1);
+      }).join('-');
+
+      if (key === 'Content-Type' && (
+        value === 'application/json' ||
+        (value.indexOf('text/') === 0 && value.indexOf(';') === -1)
+      )) {
+        value = value + '; charset=utf-8';
+      }
+
       this._headers[key] = value;
       return value;
+
     }
 
     getHeader(key, defaultValue) {
