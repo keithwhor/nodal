@@ -61,9 +61,10 @@ module.exports = (function() {
         return v[0].toUpperCase() + v.substr(1);
       }).join('-');
 
-      if (key === 'Content-Type' && (
+      if (key === 'Content-Type' && value.indexOf(';') === -1 && (
+        value === 'application/javascript' ||
         value === 'application/json' ||
-        (value.indexOf('text/') === 0 && value.indexOf(';') === -1)
+        value.indexOf('text/') === 0
       )) {
         value = value + '; charset=utf-8';
       }
