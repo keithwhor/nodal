@@ -9,6 +9,8 @@ module.exports = (function() {
 
     exec(controller, data, callback) {
 
+      let contentType = controller.getHeader('Content-Type', '').split(';')[0];
+
       let acceptEncoding = controller._request.headers['accept-encoding'] || '';
       let canCompress = !!{
         'text/plain': 1,
@@ -20,7 +22,7 @@ module.exports = (function() {
         'application/xml': 1,
         'application/javascript': 1,
         'application/octet-stream': 1
-      }[controller.getHeader('Content-Type')];
+      }[contentType];
 
       if (canCompress) {
 
