@@ -26,19 +26,7 @@ module.exports = (function() {
 
       if (canCompress) {
 
-        if (acceptEncoding.match(/\bdeflate\b/)) {
-
-          zlib.deflate(data, function(err, result) {
-            if (!err) {
-              controller.setHeader('Content-Encoding', 'deflate');
-              callback(null, result);
-              return;
-            }
-            callback(null, data);
-          });
-          return true;
-
-        } else if (acceptEncoding.match(/\bgzip\b/)) {
+        if (acceptEncoding.match(/\bgzip\b/)) {
 
           zlib.gzip(data, function(err, result) {
             if (!err) {
@@ -49,6 +37,18 @@ module.exports = (function() {
             callback(null, data);
           });
 
+          return true;
+
+        } else if(acceptEncoding.match(/\bdeflate\b/)) {
+
+          zlib.deflate(data, function(err, result) {
+            if (!err) {
+              controller.setHeader('Content-Encoding', 'deflate');
+              callback(null, result);
+              return;
+            }
+            callback(null, data);
+          });
           return true;
 
         }
