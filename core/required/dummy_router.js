@@ -2,7 +2,6 @@ module.exports = function(err) {
 
   "use strict";
 
-  const Application = require('./application.js');
   const Controller = require('./controller.js');
   const Router = require('./router.js');
 
@@ -25,26 +24,9 @@ module.exports = function(err) {
 
   }
 
-  class DummyApp extends Application {
+  const DummyRouter = new Router();
+  DummyRouter.route(/.*/, DummyController);
 
-    __setup__() {
-
-      let router = new Router();
-      router.route(/.*/, DummyController);
-
-      this.useRouter(router);
-
-    }
-
-    __initialize__() {
-
-      let config = require('./my/config.js')(process.cwd());
-      this.listen(config.secrets.port);
-
-    }
-
-  }
-
-  return new DummyApp();
+  return DummyRouter;
 
 };

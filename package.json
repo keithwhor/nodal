@@ -1,6 +1,6 @@
 {
   "name": "nodal",
-  "version": "0.3.0-rc19",
+  "version": "0.3.0-rc20",
   "description": "An API Server and Framework for node.js",
   "author": "Keith Horwood",
   "main": "core/module.js",

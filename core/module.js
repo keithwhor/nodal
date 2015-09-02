@@ -13,7 +13,7 @@ module.exports = (function() {
     Composer: null,
     Controller: null,
     Database: null,
-    Dummy: null,
+    DummyRouter: null,
     Initializer: null,
     Middleware: null,
     Migration: null,
@@ -73,9 +73,9 @@ module.exports = (function() {
       },
       enumerable: true
     },
-    Dummy: {
+    DummyRouter: {
       get: function() {
-        return Nodal.Dummy || (Nodal.Dummy = require('./required/dummy.js'));
+        return Nodal.DummyRouter || (Nodal.DummyRouter = require('./required/dummy_router.js'));
       },
       enumerable: true
     },

@@ -12,6 +12,8 @@ module.exports = (function() {
   const InitializerManager = require('./initializer_manager.js');
   const Scheduler = require('./scheduler/scheduler.js');
 
+  const dummyRouter = require('./dummy_router.js');
+
   const dot = require('dot');
   const fs = require('fs');
   const http = require('http');
@@ -100,6 +102,12 @@ module.exports = (function() {
     __setup__() {}
     __initialize__() {}
 
+    __error__(err) {
+
+      this.useRouter(dummyRouter(err));
+
+    }
+
     __start__() {
 
       let fn = this.__initialize__;
@@ -109,11 +117,18 @@ module.exports = (function() {
         fn = function(err) {
 
           this.__watch__();
-          this.__initialize__(err);
+
+          if (err) {
+            this.__error__(err);
+          }
+
+          this.__initialize__();
 
         }
 
       }
+
+      console.log('Intializers running');
 
       this.initializers.exec(this, fn.bind(this));
 
