@@ -12,6 +12,7 @@ module.exports = (function() {
     Application: null,
     Composer: null,
     Controller: null,
+    Daemon: null,
     Database: null,
     DummyRouter: null,
     Initializer: null,
@@ -64,6 +65,12 @@ module.exports = (function() {
     Controller: {
       get: function() {
         return Nodal.Controller || (Nodal.Controller = require('./required/controller.js'));
+      },
+      enumerable: true
+    },
+    Daemon: {
+      get: function() {
+        return Nodal.Daemon || (Nodal.Daemon = require('./required/daemon.js'));
       },
       enumerable: true
     },

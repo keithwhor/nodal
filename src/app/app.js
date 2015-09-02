@@ -34,12 +34,6 @@ module.exports = (function() {
 
     }
 
-    __initialize__() {
-
-      this.listen(Nodal.my.Config.secrets.port);
-
-    }
-
   }
 
   return App;
