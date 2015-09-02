@@ -7,16 +7,6 @@ module.exports = (function() {
 
   const fs = require('fs');
 
-  class DummyApp extends Application {
-
-    __setup__() {
-
-      this.useRouter(dummyRouter(err));
-
-    }
-
-  }
-
   class Daemon {
 
     constructor(path) {
@@ -35,8 +25,13 @@ module.exports = (function() {
 
       let self = this;
       let init = function() {
-        self.watch('', self.restart.bind(self));
+
+        if ((process.env.NODE_ENV || 'development') === 'development') {
+          self.watch('', self.restart.bind(self));
+        }
+
         callback.call(self, this);
+        
       };
 
       try {
@@ -51,6 +46,16 @@ module.exports = (function() {
         this._app = new App();
 
       } catch(err) {
+
+        class DummyApp extends Application {
+
+          __setup__() {
+
+            this.useRouter(dummyRouter(err));
+
+          }
+
+        }
 
         DummyApp.prototype.__initialize__ = init;
         this._app = new DummyApp();
