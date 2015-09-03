@@ -44,7 +44,7 @@ module.exports = (function() {
 
       this._connection && this._connection.close((function(err) {
         this._connection = null;
-        callback.call(this);
+        callback.call(this, err);
       }).bind(this));
 
       return true;

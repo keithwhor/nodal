@@ -20,6 +20,7 @@ module.exports = (function() {
   const httpProxy = require('http-proxy');
   const mime = require('mime-types');
   const crypto = require('crypto');
+  const async = require('async');
 
   // For templates
   dot.templateSettings.varname = 'data';
@@ -68,7 +69,7 @@ module.exports = (function() {
       let cwd = process.cwd();
       let self = this;
 
-      let fnComplete = function() {
+      let fnComplete = function(err) {
 
         Object.keys(self).forEach(function(v) {
           delete self[v];
@@ -82,13 +83,31 @@ module.exports = (function() {
         this.scheduler.stop();
       }
 
+      let cleanup = [];
+
       if (this.server) {
-        this.server.__destroy__();
-        this.server.close(fnComplete);
-        return;
+
+        let server = this.server;
+
+        cleanup.push(function(callback) {
+          server.__destroy__();
+          server.close(callback);
+        });
+
       }
 
-      setTimeout(fnComplete, 1);
+      let db = this._db;
+
+      cleanup = cleanup.concat(Object.keys(db).map(function(k) {
+        return function(callback) {
+          db[k].close(callback);
+        }
+      }));
+
+      async.series(
+        cleanup,
+        fnComplete
+      );
 
     }
 
