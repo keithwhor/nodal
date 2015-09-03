@@ -369,7 +369,7 @@ module.exports = (function() {
     generateLimitClause(limitObj) {
 
       return (!limitObj) ? '' : [
-        ' LIMIT',
+        ' LIMIT ',
         limitObj.offset,
         ', ',
         limitObj.count

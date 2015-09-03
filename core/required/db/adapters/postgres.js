@@ -361,6 +361,17 @@ module.exports = (function() {
 
     }
 
+    generateLimitClause(limitObj) {
+
+      return (!limitObj) ? '' : [
+        ' LIMIT ',
+        limitObj.count,
+        ' OFFSET ',
+        limitObj.offset
+      ].join('');
+
+    }
+
   }
 
   PostgresAdapter.prototype.sanitizeType = {

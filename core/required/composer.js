@@ -107,6 +107,11 @@ module.exports = (function() {
 
     limit(offset, count) {
 
+      if (typeof(count) === 'undefined') {
+        count = offset;
+        offset = 0;
+      }
+
       if (this._select.limit) {
         throw new Error('Can only specify .limit once per ComposerQuery');
       }
