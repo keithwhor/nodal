@@ -31,7 +31,7 @@ module.exports = (function() {
         }
 
         callback.call(self, this);
-        
+
       };
 
       try {

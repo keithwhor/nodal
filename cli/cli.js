@@ -182,6 +182,42 @@
       controller: generateCommands.controller,
       initializer: generateCommands.initializer,
       middleware: generateCommands.middleware
+    },
+    task: {
+      _: function(args, flags) {
+
+        let taskName = args[0] && args[0][0] || '';
+        let cwd = process.cwd();
+        let taskPath = cwd + '/tasks/' + taskName + '.js';
+
+        if (!fs.existsSync(taskPath)) {
+          console.log('Task "' + taskName + '" does not exist');
+          process.exit(1);
+        }
+
+        const Daemon = new require('../core/required/daemon.js');
+        let daemon = new Daemon('./app/app.js');
+
+        daemon.start(function(app) {
+
+          const Task = require(taskPath);
+          let task = new Task();
+
+          task.exec(app, function(err) {
+
+            if (err) {
+              console.log('Error executing task: ' + err.message);
+            } else {
+              console.log('Task complete!');
+            }
+
+            process.exit(0);
+
+          });
+
+        });
+
+      }
     }
   };
 
