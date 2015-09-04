@@ -7,7 +7,7 @@ module.exports = (function() {
 
   class APIConstructor {
 
-    format(obj) {
+    format(obj, summary) {
 
       if (obj instanceof Model) {
         return this.formatModel(obj);
@@ -18,7 +18,7 @@ module.exports = (function() {
       }
 
       if (obj instanceof Array) {
-        return this.formatArray(obj);
+        return this.formatArray(obj, summary);
       }
 
       throw new Error('.format requires Model, ComposerResult, or Array of data');
@@ -45,6 +45,7 @@ module.exports = (function() {
             message: 'There was an error with your query',
             details: composerResult.error
           } : null),
+          this.formatSummary(composerResult.rows, composerResult.query._modelConstructor.prototype.summary),
           this.resourceFromModel(composerResult.query._modelConstructor)
         ),
         data: composerResult.rows
@@ -52,7 +53,53 @@ module.exports = (function() {
 
     }
 
+    formatSummary(data, summaryObject) {
+
+      if (!(data instanceof Array)) {
+        data = [];
+      }
+
+      summaryObject = summaryObject || {};
+      let outputObject = {};
+
+      Object.keys(summaryObject).forEach(function(k) {
+
+        let summaryType = summaryObject[k];
+        let summary;
+
+        if (typeof(summaryType) === 'function') {
+
+          summary = summaryType(
+            data.map(function(rowData) {
+              return rowData[k];
+            })
+          );
+
+        } else if (summaryType === 'sum') {
+
+          summary = data.reduce(function(p, c) {
+            return p + c[k];
+          }, 0);
+
+        } else if (summaryType === 'avg') {
+
+          summary = (data.reduce(function(p, c) {
+            return p + c[k];
+          }, 0) / data.length) || 0;
+
+        }
+
+        outputObject[k] = summary;
+
+      });
+
+      return outputObject;
+
+    }
+
     formatModel(model) {
+
+      let rows = model.hasErrors() ? [] : [model.toExternalObject()];
 
       return {
         meta: this.meta(1, 1, 0,
@@ -60,17 +107,18 @@ module.exports = (function() {
             message: 'There was an error with your request',
             details: model.errorObject()
           } : null),
+          this.formatSummary(rows, model.summary),
           this.resourceFromModel(model.constructor)
         ),
-        data: model.hasErrors() ? [] : [model.toExternalObject()],
+        data: rows
       };
-      
+
     }
 
-    formatArray(arr) {
+    formatArray(arr, summary) {
 
       return {
-        meta: this.meta(arr.length, arr.length, 0, null, this.resourceFromArray(arr)),
+        meta: this.meta(arr.length, arr.length, 0, null, this.formatSummary(arr, summary), this.resourceFromArray(arr)),
         data: arr
       }
 
@@ -130,7 +178,7 @@ module.exports = (function() {
 
     }
 
-    meta(total, count, offset, error, resource) {
+    meta(total, count, offset, error, summary, resource) {
 
       if (error) {
         total = 0;
@@ -144,6 +192,7 @@ module.exports = (function() {
         count: count,
         offset: offset,
         error: error,
+        summary: summary || {},
         resource: resource || null
       };
 
