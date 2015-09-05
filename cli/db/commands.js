@@ -159,9 +159,17 @@ module.exports = {
           id: parseInt(v.substr(0, v.indexOf('__'))),
           migration: new (require(process.cwd() + '/' + MIGRATION_PATH + '/' + v))(db)
         };
-      }).filter(function(v) {
+      });
+
+      console.log(schema_ids);
+      console.log(migrations);
+
+      migrations = migrations.filter(function(v) {
         return schema_ids.indexOf(v.id) === -1;
       });
+
+      console.log(schema_ids);
+      console.log(migrations);
 
       if (migrations.length === 0) {
         console.log('No pending migrations');
