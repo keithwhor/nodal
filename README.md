@@ -76,7 +76,7 @@ prototyping.
 # Installation
 
 To install the latest version of Nodal, make sure you have
-[iojs](https://iojs.org/) installed.
+[iojs](https://iojs.org/) or [Node.js (>= 4.0.0)](http://nodejs.org) installed.
 
 You can then run:
 
