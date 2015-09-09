@@ -1,12 +1,12 @@
 # Nodal
-## An ES6 API Server and Framework for iojs
+## An ES6 API Server and Framework for Node 4.x
 
 [![Build Status](https://travis-ci.org/keithwhor/nodal.svg?branch=master)](https://travis-ci.org/keithwhor/nodal)
 
-**v0.3.x is pre-release, suggested for use in development only**
+**v0.4.x is pre-release, suggested for use in development only**
 
 Nodal is an opinionated API Server and Framework for quickly generating
-RESTful API services in [iojs](https://iojs.org/) using modern ES6 syntax
+RESTful API services in [Node.js (4.x)](https://nodejs.org/) using modern ES6 syntax
 and idioms.
 
 With the rise of client-side Single Page Applications, Nodal helps keep your
@@ -16,7 +16,7 @@ arises.
 
 Boasting a built-in command-line interface, models, controllers, templates,
 migrations and application architecture, Nodal provides all of the tools a
-developer needs to get a new iojs project started in a very short amount of
+developer needs to get a new Node.js project started in a very short amount of
 time.
 
 ## Features
@@ -42,17 +42,6 @@ Additionally, a built-in CLI that supports:
 
 Nodal comes configured to deploy to Heroku easily (using git) for rapid
 prototyping.
-
-## Updates from 0.2.x
-
-- Removed bcrypt from the core packages (only needed if you add in a user model)
-- Added CLI generation for initializers, middleware
-- Routes are automatically created when controllers are made
-- Refactored Application instantiation to be more idiomatic
-- Server now runs as a daemon in a development environment (automatically
-  reloads upon file changes in your application root directory)
-- Application errors will no longer terminate your process, a Dummy Application
-  will show the error message visibly upon HTTP request
 
 # Table of Contents
 
@@ -198,26 +187,31 @@ loaded into `Nodal.my.Config.db` when you run Nodal locally.
 
 ## Initialization
 
-`app/init.js` is the bootstrapping script for your server.
-
-For the most part it can remain untouched, but if you need to define global
-variables or configure any other software that should run with your application,
-do so here. It's pretty straightforward.
+`./server.js` is the bootstrapping script for your server. It runs a `Daemon`
+that will keep your process alive (on development) and live-reload changes.
 
 ```javascript
 module.exports = (function() {
 
-  "use strict";
-
-  /* Use this file to define globals, etc. */
+  'use strict';
 
   const Nodal = require('nodal');
 
-  const App = Nodal.require('app/app.js');
-  let app = new App();
+  let daemon = new Nodal.Daemon('./app/app.js');
+
+  daemon.start(function(app) {
+
+    app.listen(Nodal.my.Config.secrets.port);
+
+  });
 
 })();
 ```
+
+The Daemon is directed to your Application prototype (described below) and then
+runs it. Upon each Application initializer firing, the method provided to
+`daemon.start` will be executed. (In the default case, listening on whatever
+  port is provided to `./config/secrets.json`.)
 
 In order to configure what your application actually does when it's instantiated,
 check out `app/app.js`.
@@ -265,12 +259,6 @@ module.exports = (function() {
 
     }
 
-    __initialize__() {
-
-      this.listen(Nodal.my.Config.secrets.port);
-
-    }
-
   }
 
   return App;
@@ -289,10 +277,11 @@ applicable. Middleware, in regards to Nodal, intercepts `Controller#render`
 calls and applies transformations and state changes to the controller and
 associated rendering data.
 
-`Application#__setup__` is run upon application instantiation.
-`Application#__initialize__` is run after your initializers are run. You'll want
-to bind your initializers and configure your app in `__setup__`, and begin
-listening to incoming connections on `__initialize__`.
+`Application#__setup__` is run upon application instantiation. You'll want
+to bind your initializers and configure your app in `__setup__`. When your
+`Daemon` starts your application, `__setup__` will be run, followed by
+Initializers, and then finally the method provided in `Daemon#start`
+(in `./server.js`).
 
 ## Router
 
@@ -317,6 +306,9 @@ request, Nodal will fall back basic plaintext 404 error.
 
 You'll also notice the use of `Nodal.require`, which acts as a wrapper for
 `require`, automatically targeting the root directory of your application.
+
+Note that routes are *automatically* created for controllers when using Nodal's
+CLI.
 
 ## Controllers
 
@@ -649,15 +641,14 @@ Docs will be fleshed out ASAP! Thanks for your patience. :)
 
 ## Project Direction
 
-The following features are in development on Nodal 0.3.x
+The following features are in development on Nodal 0.4.x
 
 - Test coverage (in progress)
 - Model relationships (links to other models)
-- Task scheduler
 - Easy authorization (requires redis for more than one instance)
 - WebSocket integration (commands responses, requires redis for more than one instance)
 
-## Why Nodal
+## Why Nodal?
 
 The short answer is because building stuff is fun. ;)
 
