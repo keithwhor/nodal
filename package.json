@@ -1,11 +1,11 @@
 {
   "name": "nodal",
-  "version": "0.3.1-rc6",
+  "version": "0.4.0-rc1",
   "description": "An API Server and Framework for node.js",
   "author": "Keith Horwood",
   "main": "core/module.js",
   "engines": {
-    "iojs": "2.2.1"
+    "node": "4.0.0"
   },
   "dependencies": {
     "any-db": "~2.1.0",
@@ -18,7 +18,7 @@
     "http-proxy": "~1.11.1",
     "i": "~0.3.3",
     "ncp": "~2.0.0",
-    "ws": "~0.7.1",
+    "ws": "~0.8.0",
     "pg": "~4.4.0",
     "node-pg-types": "git://github.com/keithwhor/node-pg-types.git",
     "mime-types": "~2.0.11",
