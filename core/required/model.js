@@ -395,6 +395,11 @@ module.exports = (function() {
     'created_at'
   ];
 
+  Model.prototype.aggregateBy = {
+    'id': 'count',
+    'created_at': 'max'
+  };
+
   return Model;
 
 })();

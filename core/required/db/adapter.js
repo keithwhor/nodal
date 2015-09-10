@@ -1,6 +1,8 @@
-"use strict";
-
 module.exports = (function() {
+
+  'use strict';
+
+  const Aggregator = require('../aggregator.js');
 
   class DatabaseAdapter {
 
@@ -148,6 +150,22 @@ module.exports = (function() {
 
       return [
         'DROP TABLE ', this.escapeField(table)
+      ].join('');
+
+    }
+
+    generateGroupedSelectQuery(table, columnNames, aggregateObj, multiFilter, orderObjArray, limitObj) {
+
+      // TODO: Implement properly
+
+      return [
+        'SELECT ',
+          columnNames.map(this.escapeField.bind(this)).join(','),
+        ' FROM ',
+          this.escapeField(table),
+          this.generateWhereClause(table, multiFilter),
+          this.generateOrderByClause(table, orderObjArray),
+          this.generateLimitClause(limitObj)
       ].join('');
 
     }
@@ -426,6 +444,14 @@ module.exports = (function() {
     ilike: function(field, value) {
       return [field, ' ILIKE \'%\' || ', value, ' || \'%\''].join('');
     }
+  };
+
+  DatabaseAdapter.prototype.aggregates = {
+    'sum': str => `SUM(${str})`,
+    'avg': str => `AVG(${str})`,
+    'min': str => `MIN(${str})`,
+    'max': str => `MAX(${str})`,
+    'count': str => `COUNT(${str})`,
   };
 
   DatabaseAdapter.prototype.types = {};

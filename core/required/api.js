@@ -1,9 +1,10 @@
-"use strict";
-
 module.exports = (function() {
+
+  'use strict';
 
   const Model = require('./model.js');
   const ComposerResult = require('./composer_result.js');
+  const Aggregator = require('./aggregator.js');
 
   class APIConstructor {
 
@@ -45,7 +46,7 @@ module.exports = (function() {
             message: 'There was an error with your query',
             details: composerResult.error
           } : null),
-          this.formatSummary(composerResult.rows, composerResult.query._modelConstructor.prototype.summary),
+          this.formatSummary(composerResult.rows, composerResult.query._modelConstructor.prototype.aggregateBy),
           this.resourceFromModel(composerResult.query._modelConstructor)
         ),
         data: composerResult.rows
@@ -53,44 +54,17 @@ module.exports = (function() {
 
     }
 
-    formatSummary(data, summaryObject) {
+    formatSummary(data, aggregateBy) {
 
       if (!(data instanceof Array)) {
         data = [];
       }
 
-      summaryObject = summaryObject || {};
+      aggregateBy = aggregateBy || {};
       let outputObject = {};
 
-      Object.keys(summaryObject).forEach(function(k) {
-
-        let summaryType = summaryObject[k];
-        let summary;
-
-        if (typeof(summaryType) === 'function') {
-
-          summary = summaryType(
-            data.map(function(rowData) {
-              return rowData[k];
-            })
-          );
-
-        } else if (summaryType === 'sum') {
-
-          summary = data.reduce(function(p, c) {
-            return p + c[k];
-          }, 0);
-
-        } else if (summaryType === 'avg') {
-
-          summary = (data.reduce(function(p, c) {
-            return p + c[k];
-          }, 0) / data.length) || 0;
-
-        }
-
-        outputObject[k] = summary;
-
+      Object.keys(aggregateBy).forEach(k => {
+        outputObject[k] = (new Aggregator(k)).aggregate(aggregateBy[k], data);
       });
 
       return outputObject;
