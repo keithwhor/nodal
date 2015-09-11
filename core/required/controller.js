@@ -5,7 +5,8 @@ module.exports = (function() {
   const url = require('url');
   const Template = require('./template.js');
   const Model = require('./model.js');
-  const ComposerResult = require('./composer_result.js');
+  const ComposerResult = require('./composer/composer_result.js');
+  const ComposerRecord = require('./composer/record.js');
   const API = require('./api.js');
 
   class Controller {
@@ -111,7 +112,7 @@ module.exports = (function() {
       } else if (data instanceof Template) {
         this.getHeader('Content-Type') || this.setHeader('Content-Type', 'text/html');
         data = data.render(templateData);
-      } else if (data instanceof Model || data instanceof ComposerResult) {
+      } else if (data instanceof Model || data instanceof ComposerResult || data instanceof ComposerRecord) {
         this.getHeader('Content-Type') || this.setHeader('Content-Type', 'application/json');
         data = API.format(data);
         data.meta.error && !this.getStatus() && this.status(400);

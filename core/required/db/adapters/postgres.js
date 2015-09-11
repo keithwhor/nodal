@@ -363,12 +363,9 @@ module.exports = (function() {
 
     generateLimitClause(limitObj) {
 
-      return (!limitObj) ? '' : [
-        ' LIMIT ',
-        limitObj.count,
-        ' OFFSET ',
-        limitObj.offset
-      ].join('');
+      return (!limitObj) ? '' :
+        (limitObj.count ? `LIMIT ${limitObj.count}` : '') +
+        (limitObj.offset ? ` OFFSET ${limitObj.offset}` : '');
 
     }
 

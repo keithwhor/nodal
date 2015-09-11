@@ -3,8 +3,10 @@ module.exports = (function() {
   'use strict';
 
   const Model = require('./model.js');
-  const ComposerResult = require('./composer_result.js');
+  const ComposerResult = require('./composer/composer_result.js');
   const Aggregator = require('./aggregator.js');
+
+  const ComposerRecord = require('./composer/record.js');
 
   class APIConstructor {
 
@@ -12,13 +14,11 @@ module.exports = (function() {
 
       if (obj instanceof Model) {
         return this.formatModel(obj);
-      }
-
-      if (obj instanceof ComposerResult) {
+      } else if (obj instanceof ComposerResult) {
         return this.formatComposerResult(obj);
-      }
-
-      if (obj instanceof Array) {
+      } else if (obj instanceof ComposerRecord) {
+        return this.formatComposerRecord(obj);
+      } else if (obj instanceof Array) {
         return this.formatArray(obj, summary);
       }
 
@@ -50,6 +50,25 @@ module.exports = (function() {
           this.resourceFromModel(composerResult.query._modelConstructor)
         ),
         data: composerResult.rows
+      };
+
+    }
+
+    formatComposerRecord(composerRecord) {
+
+      return {
+        meta: this.meta(
+          composerRecord.total,
+          composerRecord.count,
+          composerRecord.offset,
+          (composerRecord.error ? {
+            message: 'There was an error with your query',
+            details: composerRecord.error
+          } : null),
+          composerRecord.summary,
+          composerRecord.resource
+        ),
+        data: composerRecord.data
       };
 
     }

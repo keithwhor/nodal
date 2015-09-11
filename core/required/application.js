@@ -3,7 +3,7 @@ module.exports = (function() {
   'use strict';
 
   const Database = require('./db/database.js');
-  const Composer = require('./composer.js');
+  const Composer = require('./composer/composer.js');
   const Router = require('./router.js');
   const SocketServer = require('./socket.js');
   const Template = require('./template.js');

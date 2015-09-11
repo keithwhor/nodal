@@ -154,30 +154,80 @@ module.exports = (function() {
 
     }
 
-    generateGroupedSelectQuery(table, columnNames, aggregateObj, multiFilter, orderObjArray, limitObj) {
-
-      // TODO: Implement properly
+    generateNestedSelectQuery(selectQuery, table, columnNames, multiFilter, orderObjArray, limitObj, paramOffset) {
 
       return [
         'SELECT ',
-          columnNames.map(this.escapeField.bind(this)).join(','),
+          columnNames.map(field => `${this.escapeField(table)}.${this.escapeField(field)}`).join(','),
         ' FROM ',
+          '(',
+            selectQuery,
+          ') AS ',
           this.escapeField(table),
-          this.generateWhereClause(table, multiFilter),
+          this.generateWhereClause(table, multiFilter, paramOffset),
           this.generateOrderByClause(table, orderObjArray),
           this.generateLimitClause(limitObj)
       ].join('');
 
     }
 
-    generateSelectQuery(table, columnNames, multiFilter, orderObjArray, limitObj) {
+    generateSelectQuery(table, columnNames, multiFilter, orderObjArray, limitObj, paramOffset) {
 
       return [
         'SELECT ',
-          columnNames.map(this.escapeField.bind(this)).join(','),
+          columnNames.map(field => `${this.escapeField(table)}.${this.escapeField(field)}`).join(','),
         ' FROM ',
           this.escapeField(table),
-          this.generateWhereClause(table, multiFilter),
+          this.generateWhereClause(table, multiFilter, paramOffset),
+          this.generateOrderByClause(table, orderObjArray),
+          this.generateLimitClause(limitObj)
+      ].join('');
+
+    }
+
+    generateNestedGroupedSelectQuery(selectQuery, groupByArray, columnAggregateBy, table, columnNames, multiFilter, orderObjArray, limitObj, paramOffset) {
+
+      return [
+        'SELECT ',
+          columnNames.map(field => {
+            return [
+              this.aggregate(columnAggregateBy[field])(
+                `${this.escapeField(table)}.${this.escapeField(field)}`
+              ),
+              'AS',
+              this.escapeField(field)
+            ].join(' ');
+          }).join(','),
+        ' FROM ',
+          '(',
+            selectQuery,
+          ') AS ',
+          this.escapeField(table),
+          this.generateWhereClause(table, multiFilter, paramOffset),
+          this.generateGroupByClause(table, groupByArray),
+          this.generateOrderByClause(table, orderObjArray),
+          this.generateLimitClause(limitObj)
+      ].join('');
+
+    }
+
+    generateGroupedSelectQuery(groupByArray, columnAggregateBy, table, columnNames, multiFilter, orderObjArray, limitObj, paramOffset) {
+
+      return [
+        'SELECT ',
+          columnNames.map(field => {
+            return [
+              this.aggregate(columnAggregateBy[field])(
+                `${this.escapeField(table)}.${this.escapeField(field)}`
+              ),
+              'AS',
+              this.escapeField(field)
+            ].join(' ');
+          }).join(','),
+        ' FROM ',
+          this.escapeField(table),
+          this.generateWhereClause(table, multiFilter, paramOffset),
+          this.generateGroupByClause(table, groupByArray),
           this.generateOrderByClause(table, orderObjArray),
           this.generateLimitClause(limitObj)
       ].join('');
@@ -322,9 +372,7 @@ module.exports = (function() {
           columnName: filter.columnName,
           refName: [self.escapeField(table), self.escapeField(filter.columnName)].join('.'),
           comparator: filter.comparator,
-          variable: '$' + (i + offset + 1),
-          value: filter.value,
-          or: false
+          value: filter.value
         };
       });
 
@@ -346,11 +394,13 @@ module.exports = (function() {
 
     }
 
-    generateWhereClause(table, multiFilter) {
+    generateWhereClause(table, multiFilter, paramOffset) {
 
-      return (!multiFilter || !multiFilter.length) ? '': ' WHERE (' + multiFilter.map((function(filterObj) {
+      paramOffset = Math.max(0, parseInt(paramOffset) || 0);
+
+      return ((!multiFilter || !multiFilter.length) ? '': ' WHERE (' + multiFilter.map((function(filterObj) {
         return this.generateAndClause(table, filterObj);
-      }).bind(this)).join(') OR (') + ')';
+      }).bind(this)).join(') OR (') + ')').replace(/__VAR__/g, () => `\$${1 + (paramOffset++)}`);
 
     }
 
@@ -363,7 +413,7 @@ module.exports = (function() {
       }
 
       return filterObjArray.map(function(filterObj) {
-        return comparators[filterObj.comparator](filterObj.refName, filterObj.variable);
+        return comparators[filterObj.comparator](filterObj.refName);
       }).join(' AND ');
 
     }
@@ -376,11 +426,19 @@ module.exports = (function() {
 
     generateOrderByClause(table, orderObjArray) {
 
-      let tableEsc = this.escapeField(table);
+      return (!orderObjArray || !orderObjArray.length) ? '' : ' ORDER BY ' + orderObjArray.map(v => {
+        let columnStr = `${this.escapeField(table)}.${this.escapeField(v.columnName)}`;
+        return (v.format ? v.format(columnStr) : columnStr)  + ` ${v.direction}`;
+      }).join(', ');
 
-      return (!orderObjArray || !orderObjArray.length) ? '' : ' ORDER BY ' + orderObjArray.map((function(v) {
-        return [tableEsc, '.', this.escapeField(v.columnName), ' ', v.direction].join('');
-      }).bind(this)).join(', ');
+    }
+
+    generateGroupByClause(table, groupByArray) {
+
+      return (!groupByArray || !groupByArray.length) ? '' : ' GROUP BY ' + groupByArray.map(v => {
+        let columnStr = `${this.escapeField(table)}.${this.escapeField(v.columnName)}`;
+        return (v.format ? v.format(columnStr) : columnStr);
+      }).join(', ');
 
     }
 
@@ -392,6 +450,14 @@ module.exports = (function() {
         ', ',
         limitObj.count
       ].join('');
+
+    }
+
+    aggregate(aggregator) {
+
+      return (this.aggregates.hasOwnProperty(aggregator) ?
+        this.aggregates[aggregator] :
+        this.aggregates[this.defaultAggregator]);
 
     }
 
@@ -420,39 +486,25 @@ module.exports = (function() {
   DatabaseAdapter.prototype.indexTypes = [];
 
   DatabaseAdapter.prototype.comparators = {
-    is: function(field, value) {
-      return [field, ' = ', value].join('');
-    },
-    not: function(field, value) {
-      return [field, ' <> ', value].join('');
-    },
-    lt: function(field, value) {
-      return [field, ' < ', value].join('');
-    },
-    lte: function(field, value) {
-      return [field, ' <= ', value].join('');
-    },
-    gt: function(field, value) {
-      return [field, ' > ', value].join('');
-    },
-    gte: function(field, value) {
-      return [field, ' >= ', value].join('');
-    },
-    like: function(field, value) {
-      return [field, ' LIKE \'%\' || ', value, ' || \'%\''].join('');
-    },
-    ilike: function(field, value) {
-      return [field, ' ILIKE \'%\' || ', value, ' || \'%\''].join('');
-    }
+    is: field => `${field} = __VAR__`,
+    not: field => `${field} <> __VAR__`,
+    lt: field => `${field} < __VAR__`,
+    lte: field => `${field} <= __VAR__`,
+    gt: field => `${field} > __VAR__`,
+    gte: field => `${field} >= __VAR__`,
+    like: field => `${field} LIKE '%' || __VAR__ || '%'`,
+    ilike: field => `${field} ILIKE '%' || __VAR__ || '%'`
   };
 
   DatabaseAdapter.prototype.aggregates = {
-    'sum': str => `SUM(${str})`,
-    'avg': str => `AVG(${str})`,
-    'min': str => `MIN(${str})`,
-    'max': str => `MAX(${str})`,
-    'count': str => `COUNT(${str})`,
+    'sum': field => `SUM(${field})`,
+    'avg': field => `AVG(${field})`,
+    'min': field => `MIN(${field})`,
+    'max': field => `MAX(${field})`,
+    'count': field => `COUNT(${field})`,
   };
+
+  DatabaseAdapter.prototype.defaultAggregator = 'max';
 
   DatabaseAdapter.prototype.types = {};
   DatabaseAdapter.prototype.sanitizeType = {};

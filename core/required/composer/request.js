@@ -2,11 +2,9 @@ module.exports = (function() {
 
   'use strict';
 
-  const Model = require('./model.js');
-  const Database = require('./db/database.js');
-  const ComposerResult = require('./composer_result.js');
+  const ComposerQuery = require('./query.js');
 
-  class ComposerQuery {
+  class ComposerRequest {
 
     constructor(db, modelConstructor) {
 
@@ -15,6 +13,8 @@ module.exports = (function() {
       this._table = modelConstructor.prototype.schema.table;
       this._columns = modelConstructor.prototype.schema.columns.map(function(v) { return v.name; });
       this._extColumns = modelConstructor.prototype.externalInterface.slice();
+
+      this._query = [];
 
       let columnLookup = {};
       this._columns.forEach(function(v) {
@@ -34,10 +34,17 @@ module.exports = (function() {
 
     }
 
+    begin() {
+
+      this._query = [];
+      return new ComposerQuery(this);
+
+    }
+
     where(filterObj) {
 
       if (this._select.where.length) {
-        throw new Error('Can only specify .where once per ComposerQuery');
+        throw new Error('Can only specify .where once per ComposerRequest');
       }
 
       if (!(filterObj instanceof Array)) {
@@ -83,7 +90,7 @@ module.exports = (function() {
     orderBy(orderObj) {
 
       if (this._select.orderBy.length) {
-        throw new Error('Can only specify .orderBy once per ComposerQuery');
+        throw new Error('Can only specify .orderBy once per ComposerRequest');
       }
 
       if (!(orderObj instanceof Array)) {
@@ -94,7 +101,7 @@ module.exports = (function() {
 
       orderObj = orderObj.map(function(v) {
         v = v.split(' ');
-        return {columnName: v[0], direction: v[1] || 'ASC'};
+        return {columnName: v[0], direction: v[1] || 'ASC', format: v => v};
       }).filter(function(v) {
         return columnLookup[v.columnName];
       });
@@ -113,7 +120,7 @@ module.exports = (function() {
       }
 
       if (this._select.limit) {
-        throw new Error('Can only specify .limit once per ComposerQuery');
+        throw new Error('Can only specify .limit once per ComposerRequest');
       }
 
       this._select.limit = {
@@ -249,24 +256,6 @@ module.exports = (function() {
 
   }
 
-  class Composer {
-
-    from(db, modelConstructor) {
-
-      if (!(db instanceof Database)) {
-        throw new Error('Composer queries require valid database');
-      }
-
-      if (!Model.prototype.isPrototypeOf(modelConstructor.prototype)) {
-        throw new Error('Composer queries require valid Model constructor');
-      }
-
-      return new ComposerQuery(db, modelConstructor);
-
-    }
-
-  };
-
-  return Composer;
+  return ComposerRequest;
 
 })();

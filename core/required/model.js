@@ -400,6 +400,31 @@ module.exports = (function() {
     'created_at': 'max'
   };
 
+  Model.toResource = function(resourceColumns) {
+
+    if (!resourceColumns || !resourceColumns.length) {
+      resourceColumns = this.prototype.schema.columns.map(v => v.name);
+    }
+
+    let columns = this.prototype.schema.columns;
+    let lookup = [];
+    columns.forEach(v => lookup[v.name] = v);
+
+    let fields = resourceColumns.map(v => {
+      return {
+        name: v,
+        type: lookup[v].type,
+        array: !!(lookup[v].properties && lookup[v].properties.array)
+      };
+    });
+
+    return {
+      name: this.name,
+      fields: fields
+    };
+
+  }
+
   return Model;
 
 })();

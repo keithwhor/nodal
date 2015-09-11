@@ -1,11 +1,14 @@
-"use strict";
-
 module.exports = (function() {
+
+  'use strict';
 
   let types = require('pg').types;
   types.setTypeParser(20, function(val) {
     return val === null ? null : parseInt(val);
-  });
+  }); // 64-bit integer
+  types.setTypeParser(1700, function(val) {
+    return val === null ? null : parseFloat(val);
+  }); // type NUMERIC
 
   let Nodal = {
     API: null,
@@ -58,7 +61,7 @@ module.exports = (function() {
     },
     Composer: {
       get: function() {
-        return Nodal.Composer || (Nodal.Composer = require('./required/composer.js'));
+        return Nodal.Composer || (Nodal.Composer = require('./required/composer/composer.js'));
       },
       enumerable: true
     },
