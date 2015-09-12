@@ -3,6 +3,7 @@ module.exports = (function() {
   'use strict';
 
   const ComposerQuery = require('./query.js');
+  const ComposerResult = require('./composer_result');
 
   class ComposerRequest {
 
