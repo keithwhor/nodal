@@ -72,6 +72,20 @@ module.exports = (function() {
 
     }
 
+    distinct(data) {
+
+      let k = this._field;
+
+      let map = new Map();
+
+      data.forEach(function(row) {
+        map.set(row[k], true);
+      });
+
+      return map.size;
+
+    }
+
   }
 
   Aggregator.prototype.aggregates = [
@@ -79,7 +93,8 @@ module.exports = (function() {
     'avg',
     'min',
     'max',
-    'count'
+    'count',
+    'distinct'
   ];
 
   Aggregator.prototype.defaultAggregate = 'max';

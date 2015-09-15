@@ -502,9 +502,10 @@ module.exports = (function() {
     'min': field => `MIN(${field})`,
     'max': field => `MAX(${field})`,
     'count': field => `COUNT(${field})`,
+    'distinct': field => `COUNT(DISTINCT(${field}))`
   };
 
-  DatabaseAdapter.prototype.defaultAggregator = 'max';
+  DatabaseAdapter.prototype.defaultAggregator = 'count';
 
   DatabaseAdapter.prototype.types = {};
   DatabaseAdapter.prototype.sanitizeType = {};

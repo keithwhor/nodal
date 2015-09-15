@@ -281,6 +281,10 @@ module.exports = (function() {
 
     save(db, callback) {
 
+      if (this.readOnly) {
+        throw new Error(this.constructor.name + ' is marked as readOnly, can not save');
+      }
+
       let model = this;
 
       if (!(db instanceof Database)) {
@@ -338,6 +342,10 @@ module.exports = (function() {
 
     destroy(db, callback) {
 
+      if (this.readOnly) {
+        throw new Error(this.constructor.name + ' is marked as readOnly, can not destroy');
+      }
+
       let model = this;
 
       if (!(db instanceof Database)) {
@@ -388,6 +396,8 @@ module.exports = (function() {
     columns: []
   };
 
+  Model.prototype.readOnly = false;
+
   Model.prototype.data = null;
 
   Model.prototype.externalInterface = [
@@ -397,7 +407,7 @@ module.exports = (function() {
 
   Model.prototype.aggregateBy = {
     'id': 'count',
-    'created_at': 'max'
+    'created_at': 'min'
   };
 
   Model.toResource = function(resourceColumns) {
