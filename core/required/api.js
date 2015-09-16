@@ -4,8 +4,6 @@ module.exports = (function() {
 
   const Model = require('./model.js');
   const ComposerResult = require('./composer/composer_result.js');
-  const Aggregator = require('./aggregator.js');
-
   const ComposerRecord = require('./composer/record.js');
 
   class APIConstructor {
@@ -46,7 +44,7 @@ module.exports = (function() {
             message: 'There was an error with your query',
             details: composerResult.error
           } : null),
-          this.formatSummary(composerResult.rows, composerResult.query._modelConstructor.prototype.aggregateBy),
+          this.formatSummary(),
           this.resourceFromModel(composerResult.query._modelConstructor)
         ),
         data: composerResult.rows
@@ -73,20 +71,11 @@ module.exports = (function() {
 
     }
 
-    formatSummary(data, aggregateBy) {
+    formatSummary() {
 
-      if (!(data instanceof Array)) {
-        data = [];
-      }
+      // TODO: deprecate
 
-      aggregateBy = aggregateBy || {};
-      let outputObject = {};
-
-      Object.keys(aggregateBy).forEach(k => {
-        outputObject[k] = (new Aggregator(k)).aggregate(aggregateBy[k], data);
-      });
-
-      return outputObject;
+      return {};
 
     }
 
@@ -100,7 +89,7 @@ module.exports = (function() {
             message: 'There was an error with your request',
             details: model.errorObject()
           } : null),
-          this.formatSummary(rows, model.summary),
+          this.formatSummary(),
           this.resourceFromModel(model.constructor)
         ),
         data: rows
@@ -108,10 +97,10 @@ module.exports = (function() {
 
     }
 
-    formatArray(arr, summary) {
+    formatArray(arr) {
 
       return {
-        meta: this.meta(arr.length, arr.length, 0, null, this.formatSummary(arr, summary), this.resourceFromArray(arr)),
+        meta: this.meta(arr.length, arr.length, 0, null, this.formatSummary(), this.resourceFromArray(arr)),
         data: arr
       }
 
@@ -180,14 +169,17 @@ module.exports = (function() {
         resource = null;
       }
 
-      return {
+      let meta = {
         total: total,
         count: count,
         offset: offset,
-        error: error,
-        summary: summary || {},
-        resource: resource || null
+        error: error
       };
+
+      summary && (meta.summary = summary);
+      resource && (meta.resource = resource);
+
+      return meta;
 
     }
 

@@ -457,7 +457,7 @@ module.exports = (function() {
 
       return (this.aggregates.hasOwnProperty(aggregator) ?
         this.aggregates[aggregator] :
-        this.aggregates[this.defaultAggregator]);
+        this.aggregates[Aggregator.prototype.defaultAggregate]);
 
     }
 
@@ -502,10 +502,9 @@ module.exports = (function() {
     'min': field => `MIN(${field})`,
     'max': field => `MAX(${field})`,
     'count': field => `COUNT(${field})`,
-    'distinct': field => `COUNT(DISTINCT(${field}))`
+    'distinct': field => `COUNT(DISTINCT(${field}))`,
+    'none': field => `NULL`
   };
-
-  DatabaseAdapter.prototype.defaultAggregator = 'count';
 
   DatabaseAdapter.prototype.types = {};
   DatabaseAdapter.prototype.sanitizeType = {};

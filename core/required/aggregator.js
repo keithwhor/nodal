@@ -6,98 +6,23 @@ module.exports = (function() {
 
     constructor(field) {
 
-      this._field = field;
-
-    }
-
-    aggregate(type, data) {
-
-      if (typeof type === 'function') {
-        return type(data, this._field);
-      }
-
-      type = (this.aggregates.indexOf(type) === -1) ? this.defaultAggregate : type;
-
-      return this[type](data);
-
-    }
-
-    sum(data) {
-
-      let k = this._field;
-
-      return data.reduce(function(p, c) {
-        return p + c[k];
-      }, 0);
-
-    }
-
-    avg(data) {
-
-      let k = this._field;
-
-      return (data.reduce(function(p, c) {
-        return p + c[k];
-      }, 0) / data.length) || 0;
-
-    }
-
-    min(data) {
-
-      let k = this._field;
-
-      return data.reduce(function(min, v) {
-
-        return (min === undefined) ? v[k] : (min < v[k] ? min : v[k]);
-
-      });
-
-    }
-
-    max(data) {
-
-      let k = this._field;
-
-      return data.reduce(function(min, v) {
-
-        return (min === undefined) ? v[k] : (min > v[k] ? min : v[k]);
-
-      });
-
-    }
-
-    count(data) {
-
-      return data.length;
-
-    }
-
-    distinct(data) {
-
-      let k = this._field;
-
-      let map = new Map();
-
-      data.forEach(function(row) {
-        map.set(row[k], true);
-      });
-
-      return map.size;
+      // what?
 
     }
 
   }
 
-  Aggregator.prototype.aggregates = [
-    'sum',
-    'avg',
-    'min',
-    'max',
-    'count',
-    'distinct'
-  ];
+  Aggregator.prototype.aggregates = {
+    sum: (data, key) => data.reduce((prev, row) => prev + parseFloat(row[key]), 0),
+    avg: (data, key) => data.reduce((prev, row) => prev + parseFloat(row[key]), 0) / data.length,
+    min: (data, key) => data.reduce((min, row) => (min === undefined) ? row[key] : (min < row[key] ? max : row[key])),
+    max: (data, key) => data.reduce((max, row) => (max === undefined) ? row[key] : (max > row[key] ? max : row[key])),
+    count: (data, key) => data.filter(row => row[k] !== null).length,
+    distinct: (data, key) => data.reduce((map, row) => (map.set(row[k], true), map), new Map()).size,
+    none: (data, key) => null
+  };
 
-  Aggregator.prototype.defaultAggregate = 'max';
+  Aggregator.prototype.defaultAggregate = 'none';
 
   return Aggregator;
 

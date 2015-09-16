@@ -19,6 +19,8 @@ module.exports = (function() {
       this._count = 0;
       this._offset = 0;
 
+      this._aggregate = false; // Group, but everything
+
     }
 
     __aggregateOrder__() {
@@ -78,10 +80,13 @@ module.exports = (function() {
 
       let generate;
 
-      if (!this._groupBy.length) {
+      if (!this._groupBy.length && !this._aggregate) {
+
         generate = base ? db.adapter.generateSelectQuery.bind(db.adapter) :
           db.adapter.generateNestedSelectQuery.bind(db.adapter, sql);
+
       } else {
+
         generate = base ? db.adapter.generateGroupedSelectQuery.bind(
             db.adapter,
             this._groupBy,
@@ -93,6 +98,7 @@ module.exports = (function() {
             this._groupBy,
             modelConstructor.prototype.aggregateBy
           );
+
       }
 
       return {
@@ -106,6 +112,26 @@ module.exports = (function() {
         ),
         params: params
       };
+
+    }
+
+    copy() {
+
+      let copy = new this.constructor(this._query, this._request);
+
+      Object.keys(this).forEach(k => copy[k] = this[k] instanceof Array ? this[k].slice() : this[k]);
+
+      return copy;
+
+    }
+
+    aggregate() {
+
+      let copy = this.copy();
+      copy._groupBy = [];
+      copy._aggregate = true;
+
+      return copy;
 
     }
 
@@ -152,6 +178,10 @@ module.exports = (function() {
     }
 
     groupBy(field, formatFunc) {
+
+      if (this._aggregate) {
+        throw new Error('Can not call .groupBy on an aggregate query');
+      }
 
       if (!this._request._columnLookup[field]) {
         return this;
@@ -209,19 +239,23 @@ module.exports = (function() {
 
     }
 
-    end(callback) {
+    __prepareQuery__(isSummary) {
 
       let query = this._query.slice();
       query.push(this);
 
-      let genTable = i => `__T${i}__`;
-      let grouped = !!query.filter(q => q._groupBy.length).length;
+      let queryCount = query.length;
+
+      let genTable = i => `t${i}`;
+      let grouped = !!query.filter(q => q._groupBy.length || q._aggregate).length;
       let columns = query.reduce((prev, query) => {
         return query._columns.length ? query._columns.slice() : prev;
       }, []);
       let returnModels = grouped && (columns.length === this._request._columns.length);
 
-      let queryConcat = query.reduce((prev, query, i) => {
+      let preparedQuery = query.reduce((prev, query, i) => {
+        // If it's a summary, convert the last query to an aggregate query.
+        query = ((i === queryCount - 1) && isSummary) ? query.aggregate() : query;
         let select = query.__toSQL__(i && genTable(i), columns, prev.sql, prev.params.length);
         return {
           sql: select.sql,
@@ -229,24 +263,63 @@ module.exports = (function() {
         }
       }, {params: []});
 
-      let db = this._request._db;
+      preparedQuery.grouped = grouped;
+      preparedQuery.models = returnModels;
+      preparedQuery.columns = columns;
+
+      return preparedQuery;
+
+    }
+
+    __query__(pQuery, callback) {
+
+      this._request._db.query(
+        pQuery.sql,
+        pQuery.params,
+        callback
+      );
+
+      return this;
+
+    }
+
+    end(callback, summary) {
+
       let modelConstructor = this._request._modelConstructor;
 
-      db.query(
-        queryConcat.sql,
-        queryConcat.params,
+      let pQuery = this.__prepareQuery__();
+
+      this.__query__(
+        pQuery,
         (err, result) => {
 
           let rows = result ? (result.rows || []).slice() : [];
           let models = null;
 
-          returnModels && (models = rows.map(function(v) {
+          pQuery.models && (models = rows.map(function(v) {
             return new modelConstructor(v, true);
           }));
 
-          let record = new ComposerRecord(err, rows, modelConstructor.toResource(columns));
+          let record = new ComposerRecord(err, rows, modelConstructor.toResource(pQuery.columns), summary);
 
           callback.call(this._request, err, record, models);
+
+        }
+      );
+
+      return this;
+
+    }
+
+    summarize(callback) {
+
+      let pQuery = this.__prepareQuery__(true);
+
+      this.__query__(
+        pQuery,
+        (err, result) => {
+
+          this.end(callback, !err && result.rows && result.rows.length ? result.rows[0] : null);
 
         }
       );
