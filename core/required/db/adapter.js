@@ -158,7 +158,13 @@ module.exports = (function() {
 
       return [
         'SELECT ',
-          columnNames.map(field => `${this.escapeField(table)}.${this.escapeField(field)}`).join(','),
+          columnNames.map(field => {
+            if (field.alias) {
+              let columns = field.columns.map(c => `${this.escapeField(table)}.${this.escapeField(c)}`)
+              return `${field.transform.apply(null, columns)} AS ${field.alias}`;
+            }
+            return `${this.escapeField(table)}.${this.escapeField(field)}`;
+          }).join(','),
         ' FROM ',
           '(',
             selectQuery,
@@ -175,7 +181,13 @@ module.exports = (function() {
 
       return [
         'SELECT ',
-          columnNames.map(field => `${this.escapeField(table)}.${this.escapeField(field)}`).join(','),
+          columnNames.map(field => {
+            if (field.alias) {
+              let columns = field.columns.map(c => `${this.escapeField(table)}.${this.escapeField(c)}`)
+              return `${field.transform.apply(null, columns)} AS ${field.alias}`;
+            }
+            return `${this.escapeField(table)}.${this.escapeField(field)}`;
+          }).join(','),
         ' FROM ',
           this.escapeField(table),
           this.generateWhereClause(table, multiFilter, paramOffset),
@@ -190,10 +202,14 @@ module.exports = (function() {
       return [
         'SELECT ',
           columnNames.map(field => {
+            if (field.alias) {
+              let columns = field.columns.map(c => {
+                return this.aggregate(columnAggregateBy[c])(`${this.escapeField(table)}.${this.escapeField(c)}`)
+              });
+              return `${field.transform.apply(null, columns)} AS ${field.alias}`;
+            }
             return [
-              this.aggregate(columnAggregateBy[field])(
-                `${this.escapeField(table)}.${this.escapeField(field)}`
-              ),
+              this.aggregate(columnAggregateBy[field])(`${this.escapeField(table)}.${this.escapeField(field)}`),
               'AS',
               this.escapeField(field)
             ].join(' ');
@@ -216,10 +232,14 @@ module.exports = (function() {
       return [
         'SELECT ',
           columnNames.map(field => {
+            if (field.alias) {
+              let columns = field.columns.map(c => {
+                return this.aggregate(columnAggregateBy[c])(`${this.escapeField(table)}.${this.escapeField(c)}`)
+              });
+              return `${field.transform.apply(null, columns)} AS ${field.alias}`;
+            }
             return [
-              this.aggregate(columnAggregateBy[field])(
-                `${this.escapeField(table)}.${this.escapeField(field)}`
-              ),
+              this.aggregate(columnAggregateBy[field])(`${this.escapeField(table)}.${this.escapeField(field)}`),
               'AS',
               this.escapeField(field)
             ].join(' ');

@@ -3,6 +3,7 @@ module.exports = (function() {
   'use strict';
 
   const ComposerRecord = require('./record.js');
+  const utilities = require('../utilities.js');
 
   class ComposerQuery {
 
@@ -16,6 +17,8 @@ module.exports = (function() {
       this._columns = [];
       this._orderBy = [];
       this._groupBy = [];
+      this._transformations = {};
+
       this._count = 0;
       this._offset = 0;
 
@@ -124,15 +127,26 @@ module.exports = (function() {
 
       let genTable = i => `t${i}`;
       let grouped = !!query.filter(q => q._groupBy.length || q._aggregate).length;
-      let columns = query.reduce((prev, query) => {
-        return query._columns.length ? query._columns.slice() : prev;
-      }, []);
+
+      let columns = Array.from(query.reduce((set, query) => {
+        console.log('columns', query._columns);
+        query._columns.forEach(c => set.add(c));
+        return set;
+      }, new Set())).map(c => this._transformations[c] || c);
+
+      console.log(columns);
+
       let returnModels = grouped && (columns.length === this._request._columns.length);
 
       let preparedQuery = query.reduce((prev, query, i) => {
         // If it's a summary, convert the last query to an aggregate query.
         query = ((i === queryCount - 1) && isSummary) ? query.aggregate() : query;
-        let select = query.__toSQL__(i && genTable(i), columns, prev.sql, prev.params.length);
+        let select = query.__toSQL__(
+          i && genTable(i),
+          columns,
+          prev.sql,
+          prev.params.length
+        );
         return {
           sql: select.sql,
           params: prev.params.concat(select.params)
@@ -176,6 +190,30 @@ module.exports = (function() {
       copy._aggregate = true;
 
       return copy;
+
+    }
+
+    transform(alias, transformFn, type, isArray) {
+
+      if (typeof transformFn === 'string') {
+        transformFn = new Function(transformFn, `return ${transformFn};`);
+      }
+
+      if (typeof transformFn !== 'function') {
+        throw new Error('.transform requires valid transformation function');
+      }
+
+      let columns = utilities.getFunctionParameters(transformFn);
+
+      this._transformations[alias] = {
+        alias: alias,
+        columns: columns,
+        transform: transformFn,
+        type: type,
+        array: isArray
+      };
+
+      return this;
 
     }
 
@@ -265,17 +303,17 @@ module.exports = (function() {
 
     external() {
 
-      return this.values(this._request._modelConstructor.prototype.externalInterface);
+      return this.interface(this._request._modelConstructor.prototype.externalInterface);
 
     }
 
-    values(columns) {
+    interface(columns) {
 
       if (!(columns instanceof Array)) {
         columns = [].slice.call(arguments);
       }
 
-      columns = columns.filter(column => this._request._columnLookup[column])
+      columns = columns.filter(column => this._request._columnLookup[column] || this._transformations[column])
 
       this._columns = columns;
 

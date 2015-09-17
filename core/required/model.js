@@ -421,10 +421,20 @@ module.exports = (function() {
     columns.forEach(v => lookup[v.name] = v);
 
     let fields = resourceColumns.map(v => {
+      // if it's a transformation
+      if (v.alias) {
+        return {
+          name: v.alias,
+          type: v.type !== undefined ? v.type : (lookup[v.columns[0]] ? lookup[v.columns[0]].type : 'string'),
+          array: v.array !== undefined ? v.array : (lookup[v.columns[0]] ? !!(lookup[v.columns[0]].properties && lookup[v.columns[0]].properties.array) : false),
+          transform: true
+        };
+      }
+      // otherwise...
       return {
         name: v,
-        type: lookup[v].type,
-        array: !!(lookup[v].properties && lookup[v].properties.array)
+        type: lookup[v] ? lookup[v].type : 'string',
+        array: lookup[v] ? !!(lookup[v].properties && lookup[v].properties.array) : false
       };
     });
 
