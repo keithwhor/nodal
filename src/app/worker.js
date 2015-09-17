@@ -1,10 +1,23 @@
 module.exports = (function() {
 
-  'use strict';
+  "use strict";
 
   const Nodal = require('nodal');
-  const Scheduler = Nodal.require('schedulers/main.js');
 
-  let scheduler = new Scheduler();
+  /* Import Database */
+  // const db = Nodal.require('db/main.js');
+
+  class WorkerApp extends Nodal.Application {
+
+    __setup__() {
+
+      /* Database */
+      // this.useDatabase(db, 'main');
+
+    }
+
+  }
+
+  return WorkerApp;
 
 })();

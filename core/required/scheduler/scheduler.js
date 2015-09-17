@@ -63,23 +63,22 @@ module.exports = (function() {
 
     start() {
 
-      let timeLength = this.timeLength;
-      let exec = this.exec.bind(this);
-      let getDateOffset = this.getDateOffset.bind(this);
       let intervals = [];
 
       let name = this.constructor.name;
 
-      let timeouts = this.times.map(function(v) {
+      let timeouts = this.times.map(v => {
 
         let cur = new Date();
-        let start = getDateOffset(cur);
+        let start = this.getDateOffset(cur);
         let offset = (start.valueOf() + v) - cur.valueOf();
-        offset = offset < 0 ? (1000 * timeLength) + offset : offset;
+        offset = offset < 0 ? (1000 * this.timeLength) + offset : offset;
 
-        return setTimeout(function() {
-          exec();
-          intervals.push(setInterval(exec, 1000 * timeLength));
+        console.log(`${this._task.constructor.name} will execute in ${Math.round(offset/1000)} seconds`);
+
+        return setTimeout(() => {
+          this.exec();
+          intervals.push(setInterval(this.exec.bind(this), 1000 * this.timeLength));
         }, offset);
 
       });
