@@ -184,6 +184,7 @@ module.exports = (function() {
 
       let copy = this.copy();
       copy._groupBy = [];
+      copy._orderBy = [];
       copy._aggregate = true;
 
       return copy;
@@ -235,6 +236,10 @@ module.exports = (function() {
     }
 
     orderBy(field, direction, formatFunc) {
+
+      if (this._aggregate) {
+        throw new Error('Can not call .orderBy on an aggregate query');
+      }
 
       if (!this._request._columnLookup[field]) {
         return this;
