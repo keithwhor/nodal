@@ -129,12 +129,9 @@ module.exports = (function() {
       let grouped = !!query.filter(q => q._groupBy.length || q._aggregate).length;
 
       let columns = Array.from(query.reduce((set, query) => {
-        console.log('columns', query._columns);
         query._columns.forEach(c => set.add(c));
         return set;
       }, new Set())).map(c => this._transformations[c] || c);
-
-      console.log(columns);
 
       let returnModels = grouped && (columns.length === this._request._columns.length);
 
