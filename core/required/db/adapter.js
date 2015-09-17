@@ -503,7 +503,9 @@ module.exports = (function() {
     'max': field => `MAX(${field})`,
     'count': field => `COUNT(${field})`,
     'distinct': field => `COUNT(DISTINCT(${field}))`,
-    'none': field => `NULL`
+    'none': field => `NULL`,
+    'min_date': field => `MIN(DATE_TRUNC('day', ${field}))`,
+    'max_date': field => `MAX(DATE_TRUNC('day', ${field}))`
   };
 
   DatabaseAdapter.prototype.types = {};

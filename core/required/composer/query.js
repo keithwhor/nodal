@@ -115,6 +115,50 @@ module.exports = (function() {
 
     }
 
+    __prepareQuery__(isSummary) {
+
+      let query = this._query.slice();
+      query.push(this);
+
+      let queryCount = query.length;
+
+      let genTable = i => `t${i}`;
+      let grouped = !!query.filter(q => q._groupBy.length || q._aggregate).length;
+      let columns = query.reduce((prev, query) => {
+        return query._columns.length ? query._columns.slice() : prev;
+      }, []);
+      let returnModels = grouped && (columns.length === this._request._columns.length);
+
+      let preparedQuery = query.reduce((prev, query, i) => {
+        // If it's a summary, convert the last query to an aggregate query.
+        query = ((i === queryCount - 1) && isSummary) ? query.aggregate() : query;
+        let select = query.__toSQL__(i && genTable(i), columns, prev.sql, prev.params.length);
+        return {
+          sql: select.sql,
+          params: prev.params.concat(select.params)
+        }
+      }, {params: []});
+
+      preparedQuery.grouped = grouped;
+      preparedQuery.models = returnModels;
+      preparedQuery.columns = columns;
+
+      return preparedQuery;
+
+    }
+
+    __query__(pQuery, callback) {
+
+      this._request._db.query(
+        pQuery.sql,
+        pQuery.params,
+        callback
+      );
+
+      return this;
+
+    }
+
     copy() {
 
       let copy = new this.constructor(this._query, this._request);
@@ -234,50 +278,6 @@ module.exports = (function() {
       columns = columns.filter(column => this._request._columnLookup[column])
 
       this._columns = columns;
-
-      return this;
-
-    }
-
-    __prepareQuery__(isSummary) {
-
-      let query = this._query.slice();
-      query.push(this);
-
-      let queryCount = query.length;
-
-      let genTable = i => `t${i}`;
-      let grouped = !!query.filter(q => q._groupBy.length || q._aggregate).length;
-      let columns = query.reduce((prev, query) => {
-        return query._columns.length ? query._columns.slice() : prev;
-      }, []);
-      let returnModels = grouped && (columns.length === this._request._columns.length);
-
-      let preparedQuery = query.reduce((prev, query, i) => {
-        // If it's a summary, convert the last query to an aggregate query.
-        query = ((i === queryCount - 1) && isSummary) ? query.aggregate() : query;
-        let select = query.__toSQL__(i && genTable(i), columns, prev.sql, prev.params.length);
-        return {
-          sql: select.sql,
-          params: prev.params.concat(select.params)
-        }
-      }, {params: []});
-
-      preparedQuery.grouped = grouped;
-      preparedQuery.models = returnModels;
-      preparedQuery.columns = columns;
-
-      return preparedQuery;
-
-    }
-
-    __query__(pQuery, callback) {
-
-      this._request._db.query(
-        pQuery.sql,
-        pQuery.params,
-        callback
-      );
 
       return this;
 
