@@ -72,7 +72,6 @@ module.exports = (function() {
       let base = !table;
 
       table = table || this._request._table;
-      columns = columns.length ? columns : this._request._columns;
 
       let db = this._request._db;
 
@@ -133,7 +132,9 @@ module.exports = (function() {
         return set;
       }, new Set())).map(c => this._transformations[c] || c);
 
-      let returnModels = grouped && (columns.length === this._request._columns.length);
+      columns = columns.length ? columns : this._request._columns;
+
+      let returnModels = !grouped && (columns.length === this._request._columns.length);
 
       let preparedQuery = query.reduce((prev, query, i) => {
         // If it's a summary, convert the last query to an aggregate query.
