@@ -103,6 +103,8 @@ module.exports = (function() {
 
       }
 
+      console.log('orderBy?', this._orderBy);
+
       return {
         sql: generate(
           table,
@@ -252,7 +254,7 @@ module.exports = (function() {
 
       this._orderBy.push({
         columnName: field,
-        direction: ({'asc': 'ASC', 'desc': 'DESC'}[direction] || 'ASC'),
+        direction: ({'asc': 'ASC', 'desc': 'DESC'}[(direction + '').toLowerCase()] || 'ASC'),
         format: formatFunc
       });
 
