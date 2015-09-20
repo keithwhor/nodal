@@ -97,6 +97,12 @@ module.exports = (function() {
       return true;
     }
 
+    tooManyRequests(msg) {
+      this.status(429);
+      this.render(API.error(msg || 'Too Many Requests'));
+      return true;
+    }
+
     error(msg) {
       this.status(500);
       this.render(API.error(msg || 'Internal Server Error'));
