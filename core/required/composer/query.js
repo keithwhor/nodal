@@ -291,13 +291,13 @@ module.exports = (function() {
 
       if (count === undefined) {
         count = offset;
-        offset = offset;
+        offset = 0;
       }
 
       count = parseInt(count);
       offset = parseInt(offset);
 
-      this._count = Math.min(count, this._count);
+      this._count = this._count ? Math.min(count, this._count) : Math.max(count, 0);
       this._offset += offset;
 
       return this;
