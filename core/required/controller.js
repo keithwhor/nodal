@@ -79,33 +79,33 @@ module.exports = (function() {
       return this._headers.hasOwnProperty(key) ? this._headers[key] : defaultValue;
     }
 
-    badRequest(msg) {
+    badRequest(msg, details) {
       this.status(400);
-      this.render(API.error(msg || 'Bad Request'));
+      this.render(API.error(msg || 'Bad Request', details));
       return true;
     }
 
-    unauthorized(msg) {
+    unauthorized(msg, details) {
       this.status(401);
-      this.render(API.error(msg || 'Unauthorized'));
+      this.render(API.error(msg || 'Unauthorized', details));
       return true;
     }
 
-    notFound(msg) {
+    notFound(msg, details) {
       this.status(404);
-      this.render(API.error(msg || 'Not Found'));
+      this.render(API.error(msg || 'Not Found', details));
       return true;
     }
 
-    tooManyRequests(msg) {
+    tooManyRequests(msg, details) {
       this.status(429);
-      this.render(API.error(msg || 'Too Many Requests'));
+      this.render(API.error(msg || 'Too Many Requests', details));
       return true;
     }
 
-    error(msg) {
+    error(msg, details) {
       this.status(500);
-      this.render(API.error(msg || 'Internal Server Error'));
+      this.render(API.error(msg || 'Internal Server Error', details));
       return true;
     }
 

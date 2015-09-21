@@ -24,10 +24,10 @@ module.exports = (function() {
 
     }
 
-    error(message) {
+    error(message, details) {
 
       return {
-        meta: this.meta(0, 0, 0, {message: message}),
+        meta: this.meta(0, 0, 0, {message: message, details: details}),
         data: []
       };
 
@@ -149,7 +149,7 @@ module.exports = (function() {
         return {
           name: v,
           type: lookup[v].type,
-          array: !!(lookup[v].properties && lookup[v].properties.array)
+          array: (lookup[v].properties && lookup[v].properties.array) ? true : undefined
         };
       });
 
