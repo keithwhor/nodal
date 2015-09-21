@@ -34,11 +34,7 @@ module.exports = {
   datetime: {
     convert: function(v) {
       if(!(v instanceof Date)) {
-        if(!isNaN(parseInt(v))) {
-          v = new Date(parseInt(v));
-        } else {
-          v = new Date(v);
-        }
+        v = new Date(v);
         if(v.toString() === 'Invalid Date') {
           v = new Date(0);
         }

@@ -103,8 +103,6 @@ module.exports = (function() {
 
       }
 
-      console.log('orderBy?', this._orderBy);
-
       return {
         sql: generate(
           table,

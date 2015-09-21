@@ -148,9 +148,13 @@ module.exports = (function() {
 
     generateDropTableQuery(table) {
 
-      return [
-        'DROP TABLE ', this.escapeField(table)
-      ].join('');
+      return `DROP TABLE ${this.escapeField(table)}`
+
+    }
+
+    generateTruncateTableQuery(table) {
+
+      return `TRUNCATE TABLE ${this.escapeField(table)} RESTART IDENTITY`;
 
     }
 
