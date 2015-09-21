@@ -192,7 +192,7 @@ module.exports = (function() {
 
     }
 
-    transform(alias, transformFn, type, isArray) {
+    transform(alias, transformFn, type, isArray, useAggregate) {
 
       if (typeof transformFn === 'string') {
         transformFn = new Function(transformFn, `return ${transformFn};`);
@@ -209,10 +209,17 @@ module.exports = (function() {
         columns: columns,
         transform: transformFn,
         type: type,
-        array: isArray
+        array: isArray,
+        useAggregate: !!useAggregate
       };
 
       return this;
+
+    }
+
+    stransform(alias, transformFn, type, isArray) {
+
+      return this.transform(alias, transformFn, type, isArray, true);
 
     }
 
@@ -269,6 +276,7 @@ module.exports = (function() {
       }
 
       if (!this._request._columnLookup[field]) {
+        throw new Error(`Model has no column: "${field}"`);
         return this;
       }
 

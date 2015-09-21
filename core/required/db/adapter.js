@@ -2,8 +2,6 @@ module.exports = (function() {
 
   'use strict';
 
-  const Aggregator = require('../aggregator.js');
-
   class DatabaseAdapter {
 
     generateConnectionString(host, port, database, user, password) {}
@@ -165,7 +163,7 @@ module.exports = (function() {
           columnNames.map(field => {
             if (field.alias) {
               let columns = field.columns.map(c => `${this.escapeField(table)}.${this.escapeField(c)}`)
-              return `${field.transform.apply(null, columns)} AS ${field.alias}`;
+              return `(${field.transform.apply(null, columns)}) AS ${field.alias}`;
             }
             return `${this.escapeField(table)}.${this.escapeField(field)}`;
           }).join(','),
@@ -188,7 +186,7 @@ module.exports = (function() {
           columnNames.map(field => {
             if (field.alias) {
               let columns = field.columns.map(c => `${this.escapeField(table)}.${this.escapeField(c)}`)
-              return `${field.transform.apply(null, columns)} AS ${field.alias}`;
+              return `(${field.transform.apply(null, columns)}) AS ${field.alias}`;
             }
             return `${this.escapeField(table)}.${this.escapeField(field)}`;
           }).join(','),
@@ -203,20 +201,19 @@ module.exports = (function() {
 
     generateNestedGroupedSelectQuery(selectQuery, groupByArray, columnAggregateBy, table, columnNames, multiFilter, orderObjArray, limitObj, paramOffset) {
 
+      let doNotAggregate = {};
+      groupByArray.filter(g => g.format === null).forEach(g => doNotAggregate[g.columnName] = false);
+      let escapeField = f => `${this.escapeField(table)}.${this.escapeField(f)}`;
+      let formatField = (f, u) => (doNotAggregate[f] || !u) ? escapeField(f) : this.aggregate(columnAggregateBy[f])(escapeField(f));
+
       return [
         'SELECT ',
           columnNames.map(field => {
             if (field.alias) {
-              let columns = field.columns.map(c => {
-                return this.aggregate(columnAggregateBy[c])(`${this.escapeField(table)}.${this.escapeField(c)}`)
-              });
-              return `${field.transform.apply(null, columns)} AS ${field.alias}`;
+              let columns = field.columns.map(f => formatField(f, field.useAggregate));
+              return `(${field.transform.apply(null, columns)}) AS ${field.alias}`;
             }
-            return [
-              this.aggregate(columnAggregateBy[field])(`${this.escapeField(table)}.${this.escapeField(field)}`),
-              'AS',
-              this.escapeField(field)
-            ].join(' ');
+            return `(${formatField(field, true)}) AS ${this.escapeField(field)}`
           }).join(','),
         ' FROM ',
           '(',
@@ -233,20 +230,19 @@ module.exports = (function() {
 
     generateGroupedSelectQuery(groupByArray, columnAggregateBy, table, columnNames, multiFilter, orderObjArray, limitObj, paramOffset) {
 
+      let doNotAggregate = {};
+      groupByArray.filter(g => g.format === null).forEach(g => doNotAggregate[g.columnName] = false);
+      let escapeField = f => `${this.escapeField(table)}.${this.escapeField(f)}`;
+      let formatField = (f, u) => (doNotAggregate[f] || !u) ? escapeField(f) : this.aggregate(columnAggregateBy[f])(escapeField(f));
+
       return [
         'SELECT ',
           columnNames.map(field => {
             if (field.alias) {
-              let columns = field.columns.map(c => {
-                return this.aggregate(columnAggregateBy[c])(`${this.escapeField(table)}.${this.escapeField(c)}`)
-              });
-              return `${field.transform.apply(null, columns)} AS ${field.alias}`;
+              let columns = field.columns.map(f => formatField(f, field.useAggregate));
+              return `(${field.transform.apply(null, columns)}) AS ${field.alias}`;
             }
-            return [
-              this.aggregate(columnAggregateBy[field])(`${this.escapeField(table)}.${this.escapeField(field)}`),
-              'AS',
-              this.escapeField(field)
-            ].join(' ');
+            return `(${formatField(field, true)}) AS ${this.escapeField(field)}`
           }).join(','),
         ' FROM ',
           this.escapeField(table),
@@ -479,9 +475,11 @@ module.exports = (function() {
 
     aggregate(aggregator) {
 
-      return (this.aggregates.hasOwnProperty(aggregator) ?
-        this.aggregates[aggregator] :
-        this.aggregates[Aggregator.prototype.defaultAggregate]);
+      return typeof aggregator === 'function' ? aggregator : (
+        (this.aggregates.hasOwnProperty(aggregator) ?
+          this.aggregates[aggregator] :
+          this.aggregates[this.defaultAggregate])
+      );
 
     }
 
@@ -529,8 +527,11 @@ module.exports = (function() {
     'distinct': field => `COUNT(DISTINCT(${field}))`,
     'none': field => `NULL`,
     'min_date': field => `MIN(DATE_TRUNC('day', ${field}))`,
-    'max_date': field => `MAX(DATE_TRUNC('day', ${field}))`
+    'max_date': field => `MAX(DATE_TRUNC('day', ${field}))`,
+    'count_true': field => `COUNT(CASE WHEN ${field} THEN 1 ELSE NULL END)`
   };
+
+  DatabaseAdapter.prototype.defaultAggregate = 'none';
 
   DatabaseAdapter.prototype.types = {};
   DatabaseAdapter.prototype.sanitizeType = {};
