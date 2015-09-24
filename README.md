@@ -27,7 +27,7 @@ time.
 - Templates
 - Migrations
 - Routing
-- Query Composition
+- Query Composition (**NOTE**: Query Composition + ORM is in priority development)
 - Multiple database connections
 - Multiple environment configurations
 - Middleware (gzip/deflate middleware pre-packaged)
