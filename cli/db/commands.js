@@ -161,15 +161,9 @@ module.exports = {
         };
       });
 
-      console.log(schema_ids);
-      console.log(migrations);
-
       migrations = migrations.filter(function(v) {
         return schema_ids.indexOf(v.id) === -1;
       });
-
-      console.log(schema_ids);
-      console.log(migrations);
 
       if (migrations.length === 0) {
         console.log('No pending migrations');
