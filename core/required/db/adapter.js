@@ -202,7 +202,7 @@ module.exports = (function() {
     generateNestedGroupedSelectQuery(selectQuery, groupByArray, columnAggregateBy, table, columnNames, multiFilter, orderObjArray, limitObj, paramOffset) {
 
       let doNotAggregate = {};
-      groupByArray.filter(g => g.format === null).forEach(g => doNotAggregate[g.columnName] = false);
+      groupByArray.filter(g => g.format === null).forEach(g => doNotAggregate[g.columnName] = true);
       let escapeField = f => `${this.escapeField(table)}.${this.escapeField(f)}`;
       let formatField = (f, u) => (doNotAggregate[f] || !u) ? escapeField(f) : this.aggregate(columnAggregateBy[f])(escapeField(f));
 
@@ -231,7 +231,7 @@ module.exports = (function() {
     generateGroupedSelectQuery(groupByArray, columnAggregateBy, table, columnNames, multiFilter, orderObjArray, limitObj, paramOffset) {
 
       let doNotAggregate = {};
-      groupByArray.filter(g => g.format === null).forEach(g => doNotAggregate[g.columnName] = false);
+      groupByArray.filter(g => g.format === null).forEach(g => doNotAggregate[g.columnName] = true);
       let escapeField = f => `${this.escapeField(table)}.${this.escapeField(f)}`;
       let formatField = (f, u) => (doNotAggregate[f] || !u) ? escapeField(f) : this.aggregate(columnAggregateBy[f])(escapeField(f));
 
@@ -382,17 +382,15 @@ module.exports = (function() {
 
     }
 
-    parseFilterObj(table, filterObj, offset) {
+    parseFilterObj(table, filterObj) {
 
-      offset |= 0;
-      let self = this;
-
-      return filterObj.map(function(filter, i) {
+      return filterObj.map((filter, i) => {
         return {
           columnName: filter.columnName,
-          refName: [self.escapeField(table), self.escapeField(filter.columnName)].join('.'),
+          refName: [this.escapeField(table), this.escapeField(filter.columnName)].join('.'),
           comparator: filter.comparator,
-          value: filter.value
+          value: filter.value,
+          ignoreValue: !!this.comparatorIgnoresValue[filter.comparator]
         };
       });
 
@@ -400,17 +398,9 @@ module.exports = (function() {
 
     createMultiFilter(table, filterObjArray) {
 
-      let offset = 0;
-      let parse = this.parseFilterObj.bind(this);
-
       return filterObjArray
-        .filter(function(v) {
-          return v;
-        }).map(function(v, i) {
-          v = parse(table, v, offset);
-          offset += v.length;
-          return v;
-        });
+        .filter(v => v)
+        .map(v => this.parseFilterObj(table, v));
 
     }
 
@@ -439,9 +429,9 @@ module.exports = (function() {
     }
 
     getParamsFromMultiFilter(multiFilter) {
-      return [].concat.apply([], multiFilter).map(function(filterObj) {
-        return filterObj.value;
-      });
+      return [].concat.apply([], multiFilter)
+        .filter(filterObj => !filterObj.ignoreValue)
+        .map(filterObj => filterObj.value);
     }
 
     generateOrderByClause(table, orderObjArray) {
@@ -515,7 +505,14 @@ module.exports = (function() {
     gt: field => `${field} > __VAR__`,
     gte: field => `${field} >= __VAR__`,
     like: field => `${field} LIKE '%' || __VAR__ || '%'`,
-    ilike: field => `${field} ILIKE '%' || __VAR__ || '%'`
+    ilike: field => `${field} ILIKE '%' || __VAR__ || '%'`,
+    is_null: field => `${field} IS NULL`,
+    not_null: field => `${field} IS NOT NULL`
+  };
+
+  DatabaseAdapter.prototype.comparatorIgnoresValue = {
+    is_null: true,
+    not_null: true
   };
 
   DatabaseAdapter.prototype.aggregates = {
