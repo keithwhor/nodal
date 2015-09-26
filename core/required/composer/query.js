@@ -45,6 +45,7 @@ module.exports = (function() {
 
       let comparators = this._request._db.adapter.comparators;
       let columnLookup = this._request._columnLookup;
+      let relationshipLookup = this._request._relationshipLookup;
 
       filterObj.hasOwnProperty('__order') &&
         this.orderBy.call(this, filterObj.__order.split(' ')[0], filterObj.__order.split(' ')[1]);
@@ -52,18 +53,28 @@ module.exports = (function() {
       filterObj.hasOwnProperty('__offset') || filterObj.hasOwnProperty('__count') &&
         this.limit(filterObj.__offset || 0, filterObj.__count || 0);
 
-      return Object.keys(filterObj).map(function(filter) {
-        let column = filter.split('__');
-        let comparator = column.length > 1 ? column.pop() : 'is';
-        column = column.join('__');
-        return {
-          columnName: column,
-          comparator: comparator,
-          value: filterObj[filter],
-        };
-      }).filter(function(v) {
-        return columnLookup[v.columnName] && comparators[v.comparator];
-      });
+      Object.keys(filterObj)
+        .filter(filter => relationshipLookup[filter])
+        .forEach(filter => {
+          let rel = relationshipLookup[filter];
+          filterObj[rel.via] = filterObj[filter].get('id');
+          delete filterObj[filter];
+        });
+
+      return Object.keys(filterObj)
+        .map(filter => {
+          let column = filter.split('__');
+          let comparator = column.length > 1 ? column.pop() : 'is';
+          column = column.join('__');
+          return {
+            columnName: column,
+            comparator: comparator,
+            value: filterObj[filter],
+          };
+        })
+        .filter(function(v) {
+          return columnLookup[v.columnName] && comparators[v.comparator];
+        });
 
     }
 

@@ -12,17 +12,14 @@ module.exports = (function() {
       this._db = db;
       this._modelConstructor = modelConstructor;
       this._table = modelConstructor.prototype.schema.table;
-      this._columns = modelConstructor.prototype.schema.columns.map(function(v) { return v.name; });
+
+      this._columns = modelConstructor.prototype.schema.columns.map(v => v.name);
       this._extColumns = modelConstructor.prototype.externalInterface.slice();
 
       this._query = [];
 
-      let columnLookup = {};
-      this._columns.forEach(function(v) {
-        columnLookup[v] = true;
-      });
-
-      this._columnLookup = columnLookup;
+      this._columnLookup = this._columns.reduce((obj, c) => { return (obj[c] = true), obj; }, {});
+      this._relationshipLookup = Object.assign({}, modelConstructor.prototype.relationships);
 
       this._select = {
         where: [],

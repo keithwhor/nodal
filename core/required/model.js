@@ -1,19 +1,25 @@
-"use strict";
-
 module.exports = (function() {
+
+  'use strict';
 
   const DataTypes = require('./data_types.js');
   const Database = require('./db/database.js');
+  const ComposerRequest = require('./composer/request.js');
+
+  const utilities = require('./utilities.js');
+  const async = require('async');
 
   class Model {
 
     constructor(modelData, fromStorage) {
 
+      modelData = modelData || {};
+
       this._validations = {};
 
       this.__preInitialize__();
       this.__initialize__();
-      modelData && this.__load__(modelData, fromStorage);
+      this.__load__(modelData, fromStorage);
       this.__postInitialize__();
 
     }
@@ -129,18 +135,20 @@ module.exports = (function() {
 
     __load__(data, fromStorage) {
 
-      let self = this;
       this._inStorage = !!fromStorage;
       fromStorage && (this._errors = {}); // clear errors if in storage
 
-      !fromStorage && self.set('created_at', new Date());
+      if (!fromStorage) {
+        this.set('created_at', new Date());
+      }
 
-      self.fieldList().filter(function(key) {
-        return data.hasOwnProperty(key);
-      }).forEach(function(key) {
+      this.fieldList()
+        .concat(Object.keys(this.relationships))
+        .filter((key) => data.hasOwnProperty(key))
+        .forEach((key) => {
         // do not validate or log changes when loading from storage
-        self.set(key, data[key], !fromStorage, !fromStorage);
-      });
+          this.set(key, data[key], !fromStorage, !fromStorage);
+        });
 
       return this;
 
@@ -148,19 +156,24 @@ module.exports = (function() {
 
     read(data) {
 
-      let self = this;
+      this.fieldList()
+        .concat(Object.keys(this.relationships))
+        .filter((key) => data.hasOwnProperty(key))
+        .forEach((key) => this.set(key, data[key]));
 
-      self.fieldList().filter(function(key) {
-        return data.hasOwnProperty(key);
-      }).forEach(function(key) {
-        self.set(key, data[key]);
-      });
-
-      return self;
+      return this;
 
     }
 
     set(field, value, validate, logChange) {
+
+      if (this.relationships[field]) {
+        let rel = this.relationships[field];
+        if (!(value instanceof rel.model)) {
+          throw new Error(`${value} is not an instance of ${rel.model.name}`);
+        }
+        return this.set(rel.via, value.get('id'));
+      }
 
       validate = (validate === undefined) ? true : !!validate;
       logChange = (logChange === undefined) ? true : !!logChange;
@@ -210,6 +223,35 @@ module.exports = (function() {
     get(key) {
       return this._data[key];
     }
+
+    relationship(db, callback) {
+
+      let relationships = utilities.getFunctionParameters(callback);
+      relationships = relationships.slice(1);
+
+      if (!relationships.length) {
+        throw new Error('No valid relationships (1st parameter is error)');
+      }
+
+      let invalidRelationships = relationships.filter(r => !this.relationships[r]);
+
+      if (invalidRelationships.length) {
+        throw new Error(`Relationships "${invalidRelationships.join('", "')}" for model "${this.constructor.name}" do not exist.`);
+      }
+
+      let fns = relationships.map(r => this.relationships[r]).map(r => {
+        return (callback) => {
+          new ComposerRequest(db, r.model).find(this.get(r.via), (err, model) => {
+            callback(err, model);
+          });
+        }
+      });
+
+      async.parallel(fns, (err, results) => {
+        return callback.apply(this, [err].concat(results));
+      });
+
+    };
 
     toObject() {
       let obj = {};
@@ -396,6 +438,8 @@ module.exports = (function() {
     columns: []
   };
 
+  Model.prototype.relationships = {};
+
   Model.prototype.readOnly = false;
 
   Model.prototype.data = null;
@@ -408,6 +452,22 @@ module.exports = (function() {
   Model.prototype.aggregateBy = {
     'id': 'count',
     'created_at': 'min'
+  };
+
+  Model.prototype.rel = {};
+
+  Model.find = function(db, callback) {
+
+    return new ComposerRequest(db, r.model).find(id, (err, model) => {
+      callback.call(this, err, model);
+    });
+
+  };
+
+  Model.query = function(db) {
+
+    return new ComposerRequest(db, this).begin();
+
   };
 
   Model.toResource = function(resourceColumns) {
