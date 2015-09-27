@@ -222,8 +222,9 @@ module.exports = (function() {
 
     }
 
-    get(key) {
-      return this._data[key];
+    get(key, ignoreFormat) {
+      let datum = this._data[key];
+      return (!ignoreFormat && this.formatters[key]) ? this.formatters[key](datum) : datum;
     }
 
     relationship(db, callback) {
@@ -257,9 +258,8 @@ module.exports = (function() {
 
     toObject() {
       let obj = {};
-      let data = this._data;
-      Object.keys(data).forEach(function(key) {
-        obj[key] = data[key];
+      Object.keys(data).forEach((key) => {
+        obj[key] = this.get(key);
       });
       return obj;
     }
@@ -269,10 +269,9 @@ module.exports = (function() {
       relationships = (typeof relationships === 'object') ? relationships : null;
 
       let obj = {};
-      let data = this._data;
 
       this.externalInterface.forEach((key) => {
-        obj[key] = data[key];
+        obj[key] = this.get(key);
       });
 
       if (relationships) {
@@ -363,7 +362,7 @@ module.exports = (function() {
       if (!model.inStorage()) {
 
         columns = model.fieldList().filter(function(v) {
-          return !model.isFieldPrimaryKey(v) && model.get(v) !== null;
+          return !model.isFieldPrimaryKey(v) && model.get(v, true) !== null;
         });
 
         query = db.adapter.generateInsertQuery(model.schema.table, columns);
@@ -381,7 +380,7 @@ module.exports = (function() {
       db.query(
         query,
         columns.map(function(v) {
-          return db.adapter.sanitize(model.getFieldData(v).type, model.get(v));
+          return db.adapter.sanitize(model.getFieldData(v).type, model.get(v, true));
         }),
         function(err, result) {
 
@@ -430,7 +429,7 @@ module.exports = (function() {
       db.query(
         query,
         columns.map(function(v) {
-          return db.adapter.sanitize(model.getFieldData(v).type, model.get(v));
+          return db.adapter.sanitize(model.getFieldData(v).type, model.get(v, true));
         }),
         function(err, result) {
 
@@ -455,6 +454,7 @@ module.exports = (function() {
   };
 
   Model.prototype.relationships = {};
+  Model.prototype.formatters = {};
 
   Model.prototype.readOnly = false;
 
@@ -469,8 +469,6 @@ module.exports = (function() {
     'id': 'count',
     'created_at': 'min'
   };
-
-  Model.prototype.rel = {};
 
   Model.find = function(db, callback) {
 
