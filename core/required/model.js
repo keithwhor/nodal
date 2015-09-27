@@ -16,6 +16,7 @@ module.exports = (function() {
       modelData = modelData || {};
 
       this._validations = {};
+      this._relationshipCache = {};
 
       this.__preInitialize__();
       this.__initialize__();
@@ -172,6 +173,7 @@ module.exports = (function() {
         if (!(value instanceof rel.model)) {
           throw new Error(`${value} is not an instance of ${rel.model.name}`);
         }
+        this._relationshipCache[field] = value;
         return this.set(rel.via, value.get('id'));
       }
 
@@ -262,13 +264,27 @@ module.exports = (function() {
       return obj;
     }
 
-    toExternalObject() {
+    toExternalObject(relationships) {
+
+      relationships = (typeof relationships === 'object') ? relationships : null;
+
       let obj = {};
       let data = this._data;
-      this.externalInterface.forEach(function(key) {
+
+      this.externalInterface.forEach((key) => {
         obj[key] = data[key];
       });
+
+      if (relationships) {
+
+        Object.keys(this._relationshipCache)
+          .filter(key => relationships[key])
+          .forEach(key => obj[key] = this._relationshipCache[key].toExternalObject(relationships[key]));
+
+      }
+
       return obj;
+
     }
 
     tableName() {

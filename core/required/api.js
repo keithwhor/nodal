@@ -79,9 +79,9 @@ module.exports = (function() {
 
     }
 
-    formatModel(model) {
+    formatModel(model, relationships) {
 
-      let rows = model.hasErrors() ? [] : [model.toExternalObject()];
+      let rows = model.hasErrors() ? [] : [model.toExternalObject(relationships)];
 
       return {
         meta: this.meta(1, 1, 0,
@@ -90,7 +90,7 @@ module.exports = (function() {
             details: model.errorObject()
           } : null),
           this.formatSummary(),
-          this.resourceFromModel(model.constructor)
+          this.resourceFromModelInstance(model, relationships)
         ),
         data: rows
       };
@@ -145,13 +145,59 @@ module.exports = (function() {
       let lookup = [];
       columns.forEach(function(v) { lookup[v.name] = v; });
 
-      let fields = modelConstructor.prototype.externalInterface.map(function(v) {
-        return {
-          name: v,
-          type: lookup[v].type,
-          array: (lookup[v].properties && lookup[v].properties.array) ? true : undefined
-        };
-      });
+      let fields = modelConstructor.prototype.externalInterface
+        .filter(v => lookup[v])
+        .map(v => {
+          return {
+            name: v,
+            type: lookup[v].type,
+            array: (lookup[v].properties && lookup[v].properties.array) ? true : undefined
+          };
+        });
+
+      return {
+        name: modelConstructor.name,
+        fields: fields
+      };
+
+    }
+
+    resourceFromModelInstance(model, relationships) {
+
+      relationships = (typeof relationships === 'object') ? relationships : null;
+
+      let modelConstructor = model.constructor;
+
+      let columns = modelConstructor.prototype.schema.columns;
+      let lookup = [];
+      columns.forEach(function(v) { lookup[v.name] = v; });
+
+      let fields = modelConstructor.prototype.externalInterface
+        .filter(name => lookup[name])
+        .map(name => {
+          return {
+            name: name,
+            type: lookup[name].type,
+            array: (lookup[name].properties && lookup[name].properties.array) ? true : undefined
+          };
+        });
+
+      if (relationships) {
+
+        fields = fields.concat(
+          Object.keys(model._relationshipCache)
+          .filter(name => relationships[name])
+          .map(name => {
+            return {
+              name: name,
+              type: 'resource',
+              resource: this.resourceFromModelInstance(model._relationshipCache[name], relationships[name])
+            }
+          })
+          .filter(v => v.resource)
+        );
+
+      }
 
       return {
         name: modelConstructor.name,

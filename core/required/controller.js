@@ -114,24 +114,43 @@ module.exports = (function() {
       if(!data) { data = ''; }
 
       if (data instanceof Buffer) {
+
         this.getHeader('Content-Type') || this.setHeader('Content-Type', 'text/html');
+
       } else if (data instanceof Template) {
+
         this.getHeader('Content-Type') || this.setHeader('Content-Type', 'text/html');
         data = data.render(templateData);
-      } else if (data instanceof Model || data instanceof ComposerResult || data instanceof ComposerRecord) {
+
+      } else if (data instanceof Model) {
+
         this.getHeader('Content-Type') || this.setHeader('Content-Type', 'application/json');
-        data = API.format(data);
+        data = API.formatModel(data, templateData);
         data.meta.error && !this.getStatus() && this.status(400);
         data = JSON.stringify(data);
+
+      } else if (data instanceof ComposerResult || data instanceof ComposerRecord) {
+
+        this.getHeader('Content-Type') || this.setHeader('Content-Type', 'application/json');
+        data = API.format(data, templateData);
+        data.meta.error && !this.getStatus() && this.status(400);
+        data = JSON.stringify(data);
+
       } else if (typeof data === 'function') {
+
         this.getHeader('Content-Type') || this.setHeader('Content-Type', 'text/html');
         data = data(templateData);
+
       } else if (typeof data === 'object') {
+
         this.getHeader('Content-Type') || this.setHeader('Content-Type', 'application/json');
         data = JSON.stringify(data);
+
       } else {
+
         this.getHeader('Content-Type') || this.setHeader('Content-Type', 'text/html');
         data = data + '';
+
       }
 
       this.getStatus() || this.status(200);
