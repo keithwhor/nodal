@@ -511,31 +511,34 @@ module.exports = (function() {
         }
       });
 
-    let transformationFields = resourceColumns
-      .filter(c => c.transform)
-      .map(c => {
-        return {
-          name: c.alias,
-          type: c.type !== undefined ? c.type : (lookup[c.columns[0]] ? lookup[c.columns[0]].type : 'string'),
-          array: [undefined, true][(c.array !== undefined ? c.array : (lookup[c.columns[0]] ? !!(lookup[c.columns[0]].properties && lookup[c.columns[0]].properties.array) : false) | 0)],
-          transform: true
-        }
-      });
-
     let fields = resourceColumns
-      .filter(c => typeof c === 'string')
       .map(c => {
-        return {
-          name: c,
-          type: lookup[c] ? lookup[c].type : 'string',
-          array: [undefined, 0][(lookup[c] ? !!(lookup[c].properties && lookup[c].properties.array) : false) | 0]
-        };
 
-      });
+        if (typeof c === 'string') { // normal
+
+          return {
+            name: c,
+            type: lookup[c] ? lookup[c].type : 'string',
+            array: [undefined, 0][(lookup[c] ? !!(lookup[c].properties && lookup[c].properties.array) : false) | 0]
+          };
+
+        } else if (c.transform) { // transformation
+
+          return {
+            name: c.alias,
+            type: c.type !== undefined ? c.type : (lookup[c.columns[0]] ? lookup[c.columns[0]].type : 'string'),
+            array: [undefined, true][(c.array !== undefined ? c.array : (lookup[c.columns[0]] ? !!(lookup[c.columns[0]].properties && lookup[c.columns[0]].properties.array) : false) | 0)],
+            transform: true
+          }
+
+        }
+
+      })
+      .filter(c => c);
 
     return {
       name: this.name,
-      fields: fields.concat(relationshipFields, transformationFields)
+      fields: fields.concat(relationshipFields)
     };
 
   }
