@@ -494,27 +494,48 @@ module.exports = (function() {
     let lookup = [];
     columns.forEach(v => lookup[v.name] = v);
 
-    let fields = resourceColumns.map(v => {
-      // if it's a transformation
-      if (v.alias) {
+    let relationshipData = resourceColumns
+      .filter(c => c.relationship)
+      .reduce((obj, c) => {
+        obj[c.relationship] = obj[c.relationship] || [];
+        obj[c.relationship].push(c.alias.substr(c.alias.indexOf('$') + 1));
+        return obj;
+      }, {});
+
+    let relationshipFields = Object.keys(relationshipData)
+      .map(c => {
         return {
-          name: v.alias,
-          type: v.type !== undefined ? v.type : (lookup[v.columns[0]] ? lookup[v.columns[0]].type : 'string'),
-          array: v.array !== undefined ? v.array : (lookup[v.columns[0]] ? !!(lookup[v.columns[0]].properties && lookup[v.columns[0]].properties.array) : false),
+          name: c,
+          type: 'resource',
+          resource: this.prototype.relationships[c].model.toResource(relationshipData[c])
+        }
+      });
+
+    let transformationFields = resourceColumns
+      .filter(c => c.transform)
+      .map(c => {
+        return {
+          name: c.alias,
+          type: c.type !== undefined ? c.type : (lookup[c.columns[0]] ? lookup[c.columns[0]].type : 'string'),
+          array: [undefined, true][(c.array !== undefined ? c.array : (lookup[c.columns[0]] ? !!(lookup[c.columns[0]].properties && lookup[c.columns[0]].properties.array) : false) | 0)],
           transform: true
+        }
+      });
+
+    let fields = resourceColumns
+      .filter(c => typeof c === 'string')
+      .map(c => {
+        return {
+          name: c,
+          type: lookup[c] ? lookup[c].type : 'string',
+          array: [undefined, 0][(lookup[c] ? !!(lookup[c].properties && lookup[c].properties.array) : false) | 0]
         };
-      }
-      // otherwise...
-      return {
-        name: v,
-        type: lookup[v] ? lookup[v].type : 'string',
-        array: lookup[v] ? !!(lookup[v].properties && lookup[v].properties.array) : false
-      };
-    });
+
+      });
 
     return {
       name: this.name,
-      fields: fields
+      fields: fields.concat(relationshipFields, transformationFields)
     };
 
   }

@@ -16,13 +16,15 @@ module.exports = (function() {
       this._filters = [];
       this._columns = [];
       this._orderBy = [];
-      this._groupBy = [];
+      this._groupBy = null;
+      this._joins = [];
+
+      this._joinedColumns = [];
+
       this._transformations = {};
 
       this._count = 0;
       this._offset = 0;
-
-      this._aggregate = false; // Group, but everything
 
     }
 
@@ -31,7 +33,7 @@ module.exports = (function() {
       let modelConstructor = this._request._modelConstructor;
       let db = this._request._db;
 
-      if (this._orderBy.length && this._groupBy.length) {
+      if (this._orderBy.length && this._groupBy) {
         this._orderBy.filter(order => !order.format).forEach((order, i) => {
           order.format = db.adapter.aggregate(
             modelConstructor.prototype.aggregateBy[order.columnName]
@@ -78,6 +80,32 @@ module.exports = (function() {
 
     }
 
+    __prepareAggregateBy__(table, columns) {
+
+      let modelConstructor = this._request._modelConstructor;
+      let relationships = modelConstructor.prototype.relationships;
+
+      let aggregateBy = {};
+      aggregateBy[table] = {};
+
+      columns.filter(c => typeof c === 'string')
+        .forEach(c => aggregateBy[table][c] = modelConstructor.prototype.aggregateBy[c]);
+
+      columns.filter(c => c.transform)
+        .forEach(c => {
+          c.columns.forEach(c => aggregateBy[table][c] = modelConstructor.prototype.aggregateBy[c]);
+        })
+
+      columns.filter(c => c.relationship)
+        .forEach(c => {
+          aggregateBy[c.table] = aggregateBy[c.table] || {};
+          aggregateBy[c.table][c.column] = relationships[c.relationship].model.prototype.aggregateBy[c.column];
+        });
+
+      return aggregateBy;
+
+    }
+
     __toSQL__(table, columns, sql, paramOffset) {
 
       let base = !table;
@@ -91,34 +119,15 @@ module.exports = (function() {
       let multiFilter = db.adapter.createMultiFilter(table, this._filters);
       let params = db.adapter.getParamsFromMultiFilter(multiFilter);
 
-      let generate;
-
-      if (!this._groupBy.length && !this._aggregate) {
-
-        generate = base ? db.adapter.generateSelectQuery.bind(db.adapter) :
-          db.adapter.generateNestedSelectQuery.bind(db.adapter, sql);
-
-      } else {
-
-        generate = base ? db.adapter.generateGroupedSelectQuery.bind(
-            db.adapter,
-            this._groupBy,
-            modelConstructor.prototype.aggregateBy
-          ) :
-          db.adapter.generateNestedGroupedSelectQuery.bind(
-            db.adapter,
-            sql,
-            this._groupBy,
-            modelConstructor.prototype.aggregateBy
-          );
-
-      }
-
       return {
-        sql: generate(
+        sql: db.adapter.generateSelectQuery(
+          base ? null : sql,
           table,
           columns,
           multiFilter,
+          this._joins,
+          this._groupBy,
+          this.__prepareAggregateBy__(table, columns),
           this._orderBy,
           {count: this._count, offset: this._offset},
           paramOffset
@@ -136,14 +145,37 @@ module.exports = (function() {
       let queryCount = query.length;
 
       let genTable = i => `t${i}`;
-      let grouped = !!query.filter(q => q._groupBy.length || q._aggregate).length;
+      let grouped = !!query.filter(q => q._groupBy).length;
 
-      let columns = Array.from(query.reduce((set, query) => {
-        query._columns.forEach(c => set.add(c));
-        return set;
-      }, new Set())).map(c => this._transformations[c] || c);
+      // let columns = Array.from(query.reduce((set, query) => {
+      //   query._columns.forEach(c => set.add(c));
+      //   return set;
+      // }, new Set())).map(c => this._transformations[c] || c);
+      let columns = this._columns.map(c => {
+        if (typeof c === 'object' && c !== null) {
+          let relationship = Object.keys(c)[0];
+          console.log(c[relationship]);
+          return c[relationship].map(name => {
+            return this._joinedColumns.filter(jc => {
+              return jc.relationship === relationship && jc.column === name;
+            }).pop();
+          });
+        }
+        return this._transformations[c] || c;
+      }).filter(c => c);
 
-      columns = columns.length ? columns : this._request._columns;
+      columns = [].concat.apply([], columns);
+
+      if (!columns.length) {
+
+        // If no columns specified, grab everything...
+
+        columns = this._request._columns.concat(
+          Object.keys(this._transformations).map(t => this._transformations[t]),
+          this._joinedColumns
+        );
+
+      }
 
       let returnModels = !grouped && (columns.length === this._request._columns.length);
 
@@ -197,7 +229,6 @@ module.exports = (function() {
       let copy = this.copy();
       copy._groupBy = [];
       copy._orderBy = [];
-      copy._aggregate = true;
 
       return copy;
 
@@ -254,10 +285,49 @@ module.exports = (function() {
 
     }
 
+    join(relationship, columns) {
+
+      let relationships = this._request._modelConstructor.prototype.relationships;
+      let rel = Object.keys(relationships)
+        .filter(name => name === relationship)
+        .map(name => relationships[name])
+        .pop();
+
+      if (!rel) {
+        throw new Error(`Model "${this._request._modelConstructor.name}" has no relation "${relationship}"`);
+      }
+
+      this._joins.push({
+        table: rel.model.prototype.schema.table,
+        field: 'id',
+        baseField: rel.via
+      });
+
+      let columnLookup = rel.model.prototype.schema.columns
+        .reduce((obj, c) => ((obj[c.name] = c), obj), {});
+
+      columns = columns || Object.keys(columnLookup);
+
+      this._joinedColumns = this._joinedColumns.concat(
+        columns.map(column => {
+          return {
+            table: rel.model.prototype.schema.table,
+            relationship: relationship,
+            alias: `${relationship}\$${column}`,
+            column: column,
+            type: columnLookup[column].type
+          }
+        })
+      );
+
+      return this;
+
+    }
+
     orderBy(field, direction, formatFunc) {
 
-      if (this._aggregate) {
-        throw new Error('Can not call .orderBy on an aggregate query');
+      if (this._groupBy && !this._groupBy.length) {
+        throw new Error('Can not call .orderBy on a standalone aggregate query');
       }
 
       if (!this._request._columnLookup[field]) {
@@ -282,23 +352,45 @@ module.exports = (function() {
 
     groupBy(field, formatFunc) {
 
-      if (this._aggregate) {
-        throw new Error('Can not call .groupBy on an aggregate query');
-      }
+      let relationships = this._request._modelConstructor.prototype.relationships;
+      let rel = Object.keys(relationships)
+        .filter(name => name === field)
+        .map(name => relationships[name])
+        .pop();
 
-      if (!this._request._columnLookup[field]) {
-        throw new Error(`Model has no column: "${field}"`);
-        return this;
-      }
+      if (rel) {
 
-      if (typeof formatFunc !== 'function') {
-        formatFunc = null;
-      }
+        let table = rel.model.prototype.schema.table;
+        this._groupBy = (this._groupBy || []).concat(
+          rel.model.prototype.schema.columns.map(c => {
+            return {
+              table: table,
+              columnName: c.name,
+              formatFunc: null
+            };
+          })
+        );
 
-      this._groupBy.push({
-        columnName: field,
-        format: formatFunc
-      });
+      } else {
+
+        if (!this._request._columnLookup[field]) {
+          throw new Error(`Model has no column: "${field}"`);
+          return this;
+        }
+
+        if (typeof formatFunc !== 'function') {
+          formatFunc = null;
+        }
+
+        this._groupBy = this._groupBy || [];
+
+        this._groupBy.push({
+          table: null,
+          columnName: field,
+          format: formatFunc
+        });
+
+      }
 
       this.__aggregateOrder__();
 
@@ -335,7 +427,9 @@ module.exports = (function() {
         columns = [].slice.call(arguments);
       }
 
-      columns = columns.filter(column => this._request._columnLookup[column] || this._transformations[column])
+      columns = columns.filter(column => {
+        return column && (typeof(column) === 'object') || this._request._columnLookup[column] || this._transformations[column]
+      });
 
       this._columns = columns;
 

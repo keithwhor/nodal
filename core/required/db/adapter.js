@@ -156,96 +156,46 @@ module.exports = (function() {
 
     }
 
-    generateNestedSelectQuery(selectQuery, table, columnNames, multiFilter, orderObjArray, limitObj, paramOffset) {
+    generateSelectQuery(subQuery, table, columnNames, multiFilter, joinArray, groupByArray, columnAggregateBy, orderObjArray, limitObj, paramOffset) {
+
+      let isAggregateQuery = groupByArray instanceof Array;
+      
+      let groupingBy = {};
+      groupingBy[table] = {};
+
+      groupByArray && groupByArray
+        .filter(g => !g.format)
+        .forEach(g => {
+          let t = g.table || table;
+          groupingBy[t] = groupingBy[t] || {};
+          groupingBy[t][g.columnName] = true
+        });
+
+      let formatTableField = (table, column) => `${this.escapeField(table)}.${this.escapeField(column)}`;
+
+      // Determine if we use the aggregate form or normal form of the field.
+      let formatField = (table, column, useAggregate) => {
+        if (!isAggregateQuery || groupingBy[table][column] || !useAggregate) {
+          return formatTableField(table, column);
+        }
+        return this.aggregate(columnAggregateBy[table][column])(formatTableField(table, column));
+      };
 
       return [
         'SELECT ',
           columnNames.map(field => {
-            if (field.alias) {
-              let columns = field.columns.map(c => `${this.escapeField(table)}.${this.escapeField(c)}`)
-              return `(${field.transform.apply(null, columns)}) AS ${field.alias}`;
+            if (field.transform) {
+              let columns = field.columns.map(f => formatField(table, f, field.useAggregate));
+              return `(${field.transform.apply(null, columns)}) AS ${this.escapeField(field.alias)}`;
+            } else if (field.relationship) {
+              return `(${formatField(field.table, field.column, true)}) AS ${this.escapeField(field.alias)}`;
             }
-            return `${this.escapeField(table)}.${this.escapeField(field)}`;
+            return `(${formatField(table, field, true)}) AS ${this.escapeField(field)}`
           }).join(','),
         ' FROM ',
-          '(',
-            selectQuery,
-          ') AS ',
+          subQuery ? `(${subQuery}) AS ` : '',
           this.escapeField(table),
-          this.generateWhereClause(table, multiFilter, paramOffset),
-          this.generateOrderByClause(table, orderObjArray),
-          this.generateLimitClause(limitObj)
-      ].join('');
-
-    }
-
-    generateSelectQuery(table, columnNames, multiFilter, orderObjArray, limitObj, paramOffset) {
-
-      return [
-        'SELECT ',
-          columnNames.map(field => {
-            if (field.alias) {
-              let columns = field.columns.map(c => `${this.escapeField(table)}.${this.escapeField(c)}`)
-              return `(${field.transform.apply(null, columns)}) AS ${field.alias}`;
-            }
-            return `${this.escapeField(table)}.${this.escapeField(field)}`;
-          }).join(','),
-        ' FROM ',
-          this.escapeField(table),
-          this.generateWhereClause(table, multiFilter, paramOffset),
-          this.generateOrderByClause(table, orderObjArray),
-          this.generateLimitClause(limitObj)
-      ].join('');
-
-    }
-
-    generateNestedGroupedSelectQuery(selectQuery, groupByArray, columnAggregateBy, table, columnNames, multiFilter, orderObjArray, limitObj, paramOffset) {
-
-      let doNotAggregate = {};
-      groupByArray.filter(g => g.format === null).forEach(g => doNotAggregate[g.columnName] = true);
-      let escapeField = f => `${this.escapeField(table)}.${this.escapeField(f)}`;
-      let formatField = (f, u) => (doNotAggregate[f] || !u) ? escapeField(f) : this.aggregate(columnAggregateBy[f])(escapeField(f));
-
-      return [
-        'SELECT ',
-          columnNames.map(field => {
-            if (field.alias) {
-              let columns = field.columns.map(f => formatField(f, field.useAggregate));
-              return `(${field.transform.apply(null, columns)}) AS ${field.alias}`;
-            }
-            return `(${formatField(field, true)}) AS ${this.escapeField(field)}`
-          }).join(','),
-        ' FROM ',
-          '(',
-            selectQuery,
-          ') AS ',
-          this.escapeField(table),
-          this.generateWhereClause(table, multiFilter, paramOffset),
-          this.generateGroupByClause(table, groupByArray),
-          this.generateOrderByClause(table, orderObjArray),
-          this.generateLimitClause(limitObj)
-      ].join('');
-
-    }
-
-    generateGroupedSelectQuery(groupByArray, columnAggregateBy, table, columnNames, multiFilter, orderObjArray, limitObj, paramOffset) {
-
-      let doNotAggregate = {};
-      groupByArray.filter(g => g.format === null).forEach(g => doNotAggregate[g.columnName] = true);
-      let escapeField = f => `${this.escapeField(table)}.${this.escapeField(f)}`;
-      let formatField = (f, u) => (doNotAggregate[f] || !u) ? escapeField(f) : this.aggregate(columnAggregateBy[f])(escapeField(f));
-
-      return [
-        'SELECT ',
-          columnNames.map(field => {
-            if (field.alias) {
-              let columns = field.columns.map(f => formatField(f, field.useAggregate));
-              return `(${field.transform.apply(null, columns)}) AS ${field.alias}`;
-            }
-            return `(${formatField(field, true)}) AS ${this.escapeField(field)}`
-          }).join(','),
-        ' FROM ',
-          this.escapeField(table),
+          this.generateJoinClause(table, joinArray),
           this.generateWhereClause(table, multiFilter, paramOffset),
           this.generateGroupByClause(table, groupByArray),
           this.generateOrderByClause(table, orderObjArray),
@@ -443,10 +393,21 @@ module.exports = (function() {
 
     }
 
+    generateJoinClause(table, joinArray) {
+
+      return (!joinArray || !joinArray.length) ? '' :
+        joinArray.map(join => {
+          return ` INNER JOIN ${this.escapeField(join.table)} ON ` +
+          `${this.escapeField(join.table)}.${this.escapeField(join.field)} = ` +
+          `${this.escapeField(table)}.${this.escapeField(join.baseField)}`
+        }).join('');
+
+    }
+
     generateGroupByClause(table, groupByArray) {
 
       return (!groupByArray || !groupByArray.length) ? '' : ' GROUP BY ' + groupByArray.map(v => {
-        let columnStr = `${this.escapeField(table)}.${this.escapeField(v.columnName)}`;
+        let columnStr = `${this.escapeField(v.table || table)}.${this.escapeField(v.columnName)}`;
         return (v.format ? v.format(columnStr) : columnStr);
       }).join(', ');
 

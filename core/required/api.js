@@ -75,7 +75,7 @@ module.exports = (function() {
 
       // TODO: deprecate
 
-      return {};
+      return null;
 
     }
 

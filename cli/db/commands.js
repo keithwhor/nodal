@@ -145,7 +145,7 @@ module.exports = {
     let steps = flags.step | 0;
     if (!steps) { steps = 0; }
 
-    db.query(db.adapter.generateSelectQuery('schema_migrations', ['id']), [], function(err, result) {
+    db.query(db.adapter.generateSelectQuery(null, 'schema_migrations', ['id']), [], function(err, result) {
 
       if (err) {
         db.error('Could not get schema migrations, try `nodal db:prepare` first');
@@ -214,7 +214,7 @@ module.exports = {
     let steps = flags.step | 0;
     if (!steps) { steps = 1; }
 
-    db.query(db.adapter.generateSelectQuery('schema_migrations', ['id']), [], function(err, result) {
+    db.query(db.adapter.generateSelectQuery(null, 'schema_migrations', ['id']), [], function(err, result) {
 
       if (err) {
         db.error('Could not get schema migrations, try `nodal db:prepare` first');

@@ -144,6 +144,7 @@ module.exports = (function() {
 
       db.query(
         db.adapter.generateSelectQuery(
+          null,
           table,
           columns,
           multiFilter
@@ -196,9 +197,13 @@ module.exports = (function() {
 
           db.query(
             db.adapter.generateSelectQuery(
+              null,
               table,
               extColumns,
               multiFilter,
+              null,
+              null,
+              {},
               select.orderBy,
               select.limit
             ),
@@ -231,9 +236,13 @@ module.exports = (function() {
 
       db.query(
         db.adapter.generateSelectQuery(
+          null,
           table,
           columns,
           multiFilter,
+          null,
+          null,
+          {},
           select.orderBy,
           select.limit
         ),
