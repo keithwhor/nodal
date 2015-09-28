@@ -26,6 +26,9 @@ module.exports = (function() {
     allowOrigin(value) {
 
       this.setHeader('Access-Control-Allow-Origin', value);
+      this.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+
+      return this;
 
     }
 
