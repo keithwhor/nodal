@@ -258,7 +258,7 @@ module.exports = (function() {
 
     toObject() {
       let obj = {};
-      Object.keys(data).forEach((key) => {
+      Object.keys(this._data).forEach((key) => {
         obj[key] = this.get(key);
       });
       return obj;
