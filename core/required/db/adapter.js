@@ -120,12 +120,11 @@ module.exports = (function() {
     }
 
     generateUniqueKeysStatement(table, columns) {
-      let self = this;
+
       return this.getUniqueKeys(columns)
-        .map(function(columnData) {
-          self.generateUniqueKey(table, columnData.name);
-        })
+        .map(columnData => this.generateUniqueKey(table, columnData.name))
         .join(',');
+
     }
 
     generateCreateTableQuery(table, columns) {
@@ -159,7 +158,7 @@ module.exports = (function() {
     generateSelectQuery(subQuery, table, columnNames, multiFilter, joinArray, groupByArray, columnAggregateBy, orderObjArray, limitObj, paramOffset) {
 
       let isAggregateQuery = groupByArray instanceof Array;
-      
+
       let groupingBy = {};
       groupingBy[table] = {};
 
