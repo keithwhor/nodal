@@ -97,7 +97,8 @@ module.exports = (function() {
         'GET': 'get',
         'PUT': 'put',
         'POST': 'post',
-        'DELETE': 'del'
+        'DELETE': 'del',
+        'OPTIONS': 'options'
       }[request.method] || 'get';
 
       request.on('data', function(data) {

@@ -251,7 +251,13 @@ module.exports = (function() {
       });
 
       async.parallel(fns, (err, results) => {
+
+        relationships.forEach((r, i) => {
+          this.set(r, results[i]);
+        });
+
         return callback.apply(this, [err].concat(results));
+
       });
 
     };

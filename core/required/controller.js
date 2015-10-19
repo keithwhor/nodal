@@ -1,6 +1,6 @@
-"use strict";
-
 module.exports = (function() {
+
+  'use strict';
 
   const url = require('url');
   const Template = require('./template.js');
@@ -27,6 +27,7 @@ module.exports = (function() {
 
       this.setHeader('Access-Control-Allow-Origin', value);
       this.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+      this.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
 
       return this;
 
@@ -210,6 +211,11 @@ module.exports = (function() {
       this.status(501);
       this.setHeader('Content-Type', 'text/plain');
       this.render('501 - Not Implemented');
+    }
+
+    options() {
+      this.status(200);
+      this.render();
     }
 
   }
