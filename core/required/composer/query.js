@@ -65,17 +65,43 @@ module.exports = (function() {
 
       return Object.keys(filterObj)
         .map(filter => {
+
           let column = filter.split('__');
+          let table = null;
+          let rel = relationshipLookup[column[0]];
+
+          if (rel) {
+            column.shift();
+            table = rel.model.prototype.schema.table;
+          }
+
           let comparator = column.length > 1 ? column.pop() : 'is';
           column = column.join('__');
+
+          // block out bad column names
+          if (rel) {
+            if (!rel.model.prototype.schema.columns.filter(c => c.name === column).length) {
+              console.log('NULL');
+              return null;
+            }
+          } else if (!columnLookup[column]) {
+            return null;
+          }
+
+          if (!comparators[comparator]) {
+            return null;
+          }
+
           return {
+            table: table,
             columnName: column,
             comparator: comparator,
             value: filterObj[filter],
           };
+
         })
         .filter(function(v) {
-          return columnLookup[v.columnName] && comparators[v.comparator];
+          return !!v;
         });
 
     }
@@ -234,6 +260,55 @@ module.exports = (function() {
 
     }
 
+    __parseColumns__(columns) {
+
+      let relationships = {};
+      let tables = [];
+
+      columns = columns.map((c, i) => {
+
+        let colSplit = c.split('__');
+        let colRelationshipName = colSplit.length > 1 ? colSplit.shift() : null;
+        let colName = colSplit.join('__');
+
+        if (colRelationshipName) {
+
+          let rel = (
+            relationships[colRelationshipName] = relationships[colRelationshipName] ||
+              this.__getRelationship__(colRelationshipName)
+          );
+
+          if (!rel) {
+            throw new Error(`Model has no relationship "${colRelationshipName}"`);
+          }
+
+          if (!rel.model.prototype.schema.columns.filter(c => c.name === colName).length) {
+            throw new Error(`Model relationship "${colRelationshipName}" has no column "${colName}"`);
+          }
+
+          tables.push(rel.model.prototype.schema.table);
+
+        } else {
+
+          if (!this._request._columnLookup[colName]) {
+            throw new Error(`Model has no column "${colName}"`);
+          }
+
+          tables.push(null);
+
+        }
+
+        return colName;
+
+      });
+
+      return {
+        tables: tables,
+        columns: columns
+      };
+
+    }
+
     transform(alias, transformFn, type, isArray, useAggregate) {
 
       if (typeof transformFn === 'string') {
@@ -246,9 +321,12 @@ module.exports = (function() {
 
       let columns = utilities.getFunctionParameters(transformFn);
 
+      let parsedColumns = this.__parseColumns__(columns);
+
       this._transformations[alias] = {
         alias: alias,
-        columns: columns,
+        tables: parsedColumns.tables,
+        columns: parsedColumns.columns,
         transform: transformFn,
         type: type,
         array: isArray,
@@ -350,47 +428,74 @@ module.exports = (function() {
 
     }
 
-    groupBy(field, formatFunc) {
+    __getRelationship__(field) {
+
+      if (!field) {
+        return undefined;
+      }
 
       let relationships = this._request._modelConstructor.prototype.relationships;
-      let rel = Object.keys(relationships)
+      return Object.keys(relationships)
         .filter(name => name === field)
         .map(name => relationships[name])
         .pop();
 
-      if (rel) {
+    }
 
-        let table = rel.model.prototype.schema.table;
-        this._groupBy = (this._groupBy || []).concat(
-          rel.model.prototype.schema.columns.map(c => {
-            return {
-              table: table,
-              columnName: c.name,
-              formatFunc: null
-            };
-          })
-        );
+    groupByRelationship(rel) {
+
+      let table = rel.model.prototype.schema.table;
+      this._groupBy = (this._groupBy || []).concat(
+        rel.model.prototype.schema.columns.map(c => {
+          return {
+            tables: [table],
+            columns: [c.name],
+            format: null
+          };
+        })
+      );
+
+      this.__aggregateOrder__();
+
+      return this;
+
+    }
+
+    groupBy(columns, formatFunc) {
+
+      if (typeof columns === 'function') {
+
+        formatFunc = columns;
+        columns = utilities.getFunctionParameters(formatFunc);
 
       } else {
 
-        if (!this._request._columnLookup[field]) {
-          throw new Error(`Model has no column: "${field}"`);
-          return this;
+        if (typeof columns === 'string') {
+
+          let rel = this.__getRelationship__(columns);
+          if (rel) {
+            return this.groupByRelationship(rel);
+          }
+
+          columns = [columns];
+
         }
-
-        if (typeof formatFunc !== 'function') {
-          formatFunc = null;
-        }
-
-        this._groupBy = this._groupBy || [];
-
-        this._groupBy.push({
-          table: null,
-          columnName: field,
-          format: formatFunc
-        });
 
       }
+
+      let parsedColumns = this.__parseColumns__(columns);
+
+      if (typeof formatFunc !== 'function') {
+        formatFunc = null;
+      }
+
+      this._groupBy = this._groupBy || [];
+
+      this._groupBy.push({
+        tables: parsedColumns.tables,
+        columns: parsedColumns.columns,
+        format: formatFunc
+      });
 
       this.__aggregateOrder__();
 

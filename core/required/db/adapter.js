@@ -163,11 +163,10 @@ module.exports = (function() {
       groupingBy[table] = {};
 
       groupByArray && groupByArray
-        .filter(g => !g.format)
         .forEach(g => {
-          let t = g.table || table;
+          let t = g.tables[0] || table;
           groupingBy[t] = groupingBy[t] || {};
-          groupingBy[t][g.columnName] = true
+          groupingBy[t][g.columns[0]] = true
         });
 
       let formatTableField = (table, column) => `${this.escapeField(table)}.${this.escapeField(column)}`;
@@ -184,7 +183,8 @@ module.exports = (function() {
         'SELECT ',
           columnNames.map(field => {
             if (field.transform) {
-              let columns = field.columns.map(f => formatField(table, f, field.useAggregate));
+              let tables = field.tables;
+              let columns = field.columns.map((f, i) => formatField(tables[i] || table, f, field.useAggregate));
               return `(${field.transform.apply(null, columns)}) AS ${this.escapeField(field.alias)}`;
             } else if (field.relationship) {
               return `(${formatField(field.table, field.column, true)}) AS ${this.escapeField(field.alias)}`;
@@ -335,8 +335,9 @@ module.exports = (function() {
 
       return filterObj.map((filter, i) => {
         return {
+          table: filter.table,
           columnName: filter.columnName,
-          refName: [this.escapeField(table), this.escapeField(filter.columnName)].join('.'),
+          refName: [this.escapeField(filter.table || table), this.escapeField(filter.columnName)].join('.'),
           comparator: filter.comparator,
           value: filter.value,
           ignoreValue: !!this.comparatorIgnoresValue[filter.comparator]
@@ -406,8 +407,11 @@ module.exports = (function() {
     generateGroupByClause(table, groupByArray) {
 
       return (!groupByArray || !groupByArray.length) ? '' : ' GROUP BY ' + groupByArray.map(v => {
-        let columnStr = `${this.escapeField(v.table || table)}.${this.escapeField(v.columnName)}`;
-        return (v.format ? v.format(columnStr) : columnStr);
+        if (v.format) {
+          return v.format.apply(v, v.columns.map((c, i) => `${this.escapeField(v.tables[i] || table)}.${this.escapeField(c)}`));
+        } else {
+          return `${this.escapeField(v.tables[0] || table)}.${this.escapeField(v.columns[0])}`;
+        }
       }).join(', ');
 
     }
