@@ -1,11 +1,11 @@
 {
   "name": "nodal",
-  "version": "0.4.2-rc8",
+  "version": "0.4.2-rc10",
   "description": "An API Server and Framework for node.js",
   "author": "Keith Horwood",
   "main": "core/module.js",
   "engines": {
-    "node": "4.0.0"
+    "node": "4.2.1"
   },
   "dependencies": {
     "any-db": "~2.1.0",
