@@ -68,6 +68,8 @@ module.exports = (function() {
 
     parseBody(contentType, body) {
 
+      contentType = (typeof contentType === 'string') ? contentType.split(';')[0] : '';
+
       let fn = {
         'application/x-www-form-urlencoded': (function(body) {
           return {raw: body, data: this.parseQueryParameters(qs.parse(body))};
