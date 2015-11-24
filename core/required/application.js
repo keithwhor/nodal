@@ -261,22 +261,38 @@ module.exports = (function() {
 
     }
 
-    template(name) {
+    template(name, raw) {
 
-      if(this._templates[name]) {
-        return this._templates[name];
+      raw = !!raw | 0; // coerce to 0, 1
+
+      if (!this._templates[name]) {
+        this._templates[name] = Array(2);
+      }
+
+      if(this._templates[name][raw]) {
+        return this._templates[name][raw];
       }
 
       let filename = './app/templates/' + name;
 
       try {
+
         let contents = fs.readFileSync(filename);
-        this._templates[name] = new Template(this, dot.template(contents));
-        return this._templates[name];
+        this._templates[name][raw] = new Template(
+          this,
+          raw ?
+            function() { return contents; } :
+            dot.template(contents)
+        );
+        return this._templates[name][raw];
+
       } catch(e) {
+
         console.log(e);
         console.log('Could not load template ' + name);
+        
       }
+
       return this._templates['!'];
 
     }

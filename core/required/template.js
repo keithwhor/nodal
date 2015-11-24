@@ -17,6 +17,10 @@ module.exports = (function() {
       return this._app.template(name).render(data);
     }
 
+    rawPartial(name) {
+      return this._app.template(name, true).render();
+    }
+
   }
 
   return Template;
