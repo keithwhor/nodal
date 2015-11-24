@@ -89,7 +89,8 @@ module.exports = (function() {
 
       let controller = new this._controller(request, response, app.middleware);
 
-      let body = '';
+      let buffers = [];
+      let transferSize = 0;
       let query = this.parseQueryParameters(urlParts.query);
       let path = [].slice.call(urlParts.pathname.match(this._regex), 0);
       let id = urlParts.pathname.substr(path[0].length) || null;
@@ -102,8 +103,9 @@ module.exports = (function() {
       }[request.method] || 'get';
 
       request.on('data', function(data) {
-        body += data;
-        if (body.length > 1e6) {
+        buffers.push(data);
+        transferSize += data.byteLength;
+        if (transferSize > 1e6) {
           request.connection.destroy();
         }
       });
@@ -115,10 +117,14 @@ module.exports = (function() {
 
       request.on('end', (function() {
 
+        let buffer = buffers.length ? Buffer.concat(buffers) : new Buffer(0);
+        let body = buffer.toString();
+
         let params = {
           path: path,
           id: id,
           query: query,
+          buffer: buffer,
           body: this.parseBody(headers['content-type'], body),
           ip_address: headers['x-forwarded-for'] || request.connection.remoteAddress,
           headers: headers
