@@ -11,6 +11,79 @@ module.exports = (function() {
 
   class Model {
 
+    static find(db, callback) {
+
+      return new ComposerRequest(db, r.model).find(id, (err, model) => {
+        callback.call(this, err, model);
+      });
+
+    };
+
+    static query(db) {
+
+      return new ComposerRequest(db, this).begin();
+
+    };
+
+    static toResource(resourceColumns) {
+
+      if (!resourceColumns || !resourceColumns.length) {
+        resourceColumns = this.prototype.schema.columns.map(v => v.name);
+      }
+
+      let columns = this.prototype.schema.columns;
+      let lookup = [];
+      columns.forEach(v => lookup[v.name] = v);
+
+      let relationshipData = resourceColumns
+        .filter(c => c.relationship)
+        .reduce((obj, c) => {
+          obj[c.relationship] = obj[c.relationship] || [];
+          obj[c.relationship].push(c.alias.substr(c.alias.indexOf('$') + 1));
+          return obj;
+        }, {});
+
+      let relationshipFields = Object.keys(relationshipData)
+        .map(c => {
+          return {
+            name: c,
+            type: 'resource',
+            resource: this.prototype.relationships[c].model.toResource(relationshipData[c])
+          }
+        });
+
+      let fields = resourceColumns
+        .map(c => {
+
+          if (typeof c === 'string') { // normal
+
+            return {
+              name: c,
+              type: lookup[c] ? lookup[c].type : 'string',
+              array: [undefined, 0][(lookup[c] ? !!(lookup[c].properties && lookup[c].properties.array) : false) | 0]
+            };
+
+          } else if (c.transform) { // transformation
+
+            return {
+              name: c.alias,
+              type: c.type !== undefined ? c.type : (lookup[c.columns[0]] ? lookup[c.columns[0]].type : 'string'),
+              array: [undefined, true][(c.array !== undefined ? c.array : (lookup[c.columns[0]] ? !!(lookup[c.columns[0]].properties && lookup[c.columns[0]].properties.array) : false) | 0)],
+              transform: true
+            }
+
+          }
+
+        })
+        .filter(c => c);
+
+      return {
+        name: this.name,
+        fields: fields.concat(relationshipFields)
+      };
+
+    }
+
     constructor(modelData, fromStorage) {
 
       modelData = modelData || {};
@@ -359,7 +432,7 @@ module.exports = (function() {
       }
 
       if (model.hasErrors()) {
-        setTimeout(callback.bind(model, model.getErrors(), model), 1);
+        callback.call(model, {message: 'Validation error', fields: model.getErrors()}, model);
         return;
       }
 
@@ -475,79 +548,6 @@ module.exports = (function() {
     'id': 'count',
     'created_at': 'min'
   };
-
-  Model.find = function(db, callback) {
-
-    return new ComposerRequest(db, r.model).find(id, (err, model) => {
-      callback.call(this, err, model);
-    });
-
-  };
-
-  Model.query = function(db) {
-
-    return new ComposerRequest(db, this).begin();
-
-  };
-
-  Model.toResource = function(resourceColumns) {
-
-    if (!resourceColumns || !resourceColumns.length) {
-      resourceColumns = this.prototype.schema.columns.map(v => v.name);
-    }
-
-    let columns = this.prototype.schema.columns;
-    let lookup = [];
-    columns.forEach(v => lookup[v.name] = v);
-
-    let relationshipData = resourceColumns
-      .filter(c => c.relationship)
-      .reduce((obj, c) => {
-        obj[c.relationship] = obj[c.relationship] || [];
-        obj[c.relationship].push(c.alias.substr(c.alias.indexOf('$') + 1));
-        return obj;
-      }, {});
-
-    let relationshipFields = Object.keys(relationshipData)
-      .map(c => {
-        return {
-          name: c,
-          type: 'resource',
-          resource: this.prototype.relationships[c].model.toResource(relationshipData[c])
-        }
-      });
-
-    let fields = resourceColumns
-      .map(c => {
-
-        if (typeof c === 'string') { // normal
-
-          return {
-            name: c,
-            type: lookup[c] ? lookup[c].type : 'string',
-            array: [undefined, 0][(lookup[c] ? !!(lookup[c].properties && lookup[c].properties.array) : false) | 0]
-          };
-
-        } else if (c.transform) { // transformation
-
-          return {
-            name: c.alias,
-            type: c.type !== undefined ? c.type : (lookup[c.columns[0]] ? lookup[c.columns[0]].type : 'string'),
-            array: [undefined, true][(c.array !== undefined ? c.array : (lookup[c.columns[0]] ? !!(lookup[c.columns[0]].properties && lookup[c.columns[0]].properties.array) : false) | 0)],
-            transform: true
-          }
-
-        }
-
-      })
-      .filter(c => c);
-
-    return {
-      name: this.name,
-      fields: fields.concat(relationshipFields)
-    };
-
-  }
 
   return Model;
 
