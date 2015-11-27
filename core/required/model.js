@@ -11,9 +11,9 @@ module.exports = (function() {
 
   class Model {
 
-    static find(db, callback) {
+    static find(db, id, callback) {
 
-      return new ComposerRequest(db, r.model).find(id, (err, model) => {
+      return new ComposerRequest(db, this).find(id, (err, model) => {
         callback.call(this, err, model);
       });
 
@@ -428,7 +428,7 @@ module.exports = (function() {
       }
 
       if(typeof callback !== 'function') {
-        callback() = function() {};
+        callback = function() {};
       }
 
       if (model.hasErrors()) {

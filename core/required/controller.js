@@ -33,6 +33,19 @@ module.exports = (function() {
 
     }
 
+    filterParams(obj, fields) {
+
+      let filterObj = {};
+
+      fields
+        .map(k => ((filterObj[k] = obj[k]), k))
+        .filter(k => filterObj[k] === undefined)
+        .forEach(k => delete filterObj[k]);
+
+      return filterObj;
+
+    }
+
     request() {
       return this._request;
     }
@@ -164,17 +177,17 @@ module.exports = (function() {
         if (e) {
           this.setHeader('Content-Type', 'text/plain');
           this.status(500);
-          this.end(e.message || 'Unresolved error');
+          this.write(e.message || 'Unresolved error');
           return;
         }
-        this.end(data);
+        this.write(data);
       }).bind(this));
 
       return true;
 
     }
 
-    end(data) {
+    write(data) {
 
       this._response.writeHead(this._status, this._headers);
       this._response.end(data);
