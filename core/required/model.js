@@ -32,7 +32,7 @@ module.exports = (function() {
       }
 
       let columns = this.prototype.schema.columns;
-      let lookup = [];
+      let lookup = {};
       columns.forEach(v => lookup[v.name] = v);
 
       let relationshipData = resourceColumns
