@@ -21,8 +21,6 @@ module.exports = (function() {
       this._status = null;
       this._headers = {};
 
-      this.params = null;
-
     }
 
     allowOrigin(value) {
@@ -45,13 +43,6 @@ module.exports = (function() {
         .forEach(k => delete filterObj[k]);
 
       return filterObj;
-
-    }
-
-    setParams(obj) {
-
-      this.params = obj;
-      return this;
 
     }
 

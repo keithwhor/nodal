@@ -124,6 +124,10 @@ module.exports = (function() {
 
         let params = {
           path: path,
+          location: {
+            path: '/' + path[0].split('/').filter(v => !!v).join('/'),
+            matches: path.slice(1)
+          },
           id: id,
           query: query,
           buffer: buffer,
@@ -131,8 +135,6 @@ module.exports = (function() {
           ip_address: headers['x-forwarded-for'] || request.connection.remoteAddress,
           headers: headers
         };
-
-        controller.setParams(params);
 
         controller.auth(
           controller,
