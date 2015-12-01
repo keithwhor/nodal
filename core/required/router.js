@@ -132,6 +132,8 @@ module.exports = (function() {
           headers: headers
         };
 
+        controller.setParams(params);
+
         controller.auth(
           controller,
           params,

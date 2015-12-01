@@ -21,6 +21,8 @@ module.exports = (function() {
       this._status = null;
       this._headers = {};
 
+      this.params = null;
+
     }
 
     allowOrigin(value) {
@@ -43,6 +45,13 @@ module.exports = (function() {
         .forEach(k => delete filterObj[k]);
 
       return filterObj;
+
+    }
+
+    setParams(obj) {
+
+      this.params = obj;
+      return this;
 
     }
 
@@ -126,7 +135,7 @@ module.exports = (function() {
       return true;
     }
 
-    render(data, templateData) {
+    render(data, params, templateData) {
 
       if(!data) { data = ''; }
 
@@ -137,7 +146,7 @@ module.exports = (function() {
       } else if (data instanceof Template) {
 
         this.getHeader('Content-Type') || this.setHeader('Content-Type', 'text/html');
-        data = data.render(templateData);
+        data = data.generate(templateData); // FIXME: Legacy code block
 
       } else if (data instanceof Model) {
 

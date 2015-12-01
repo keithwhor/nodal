@@ -23,7 +23,7 @@ module.exports = (function() {
   const async = require('async');
 
   // For templates
-  dot.templateSettings.varname = 'data';
+  dot.templateSettings.varname = 'params, data';
   dot.templateSettings.strip = false;
 
   class Application {
@@ -290,7 +290,7 @@ module.exports = (function() {
 
         console.log(e);
         console.log('Could not load template ' + name);
-        
+
       }
 
       return this._templates['!'];
