@@ -61,7 +61,6 @@ module.exports = (function() {
           self.setHeader('ETag', staticData.tag);
         }
 
-        self.setHeader('Content-Length', staticData.buffer.byteLength);
         self.render(staticData.buffer);
 
       }
