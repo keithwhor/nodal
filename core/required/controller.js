@@ -174,13 +174,20 @@ module.exports = (function() {
       this.getHeader('X-Powered-By') || this.setHeader('X-Powered-By', 'Nodal');
 
       this._middlewareManager.exec(this, data, (function(e, data) {
+
         if (e) {
           this.setHeader('Content-Type', 'text/plain');
           this.status(500);
           this.write(e.message || 'Unresolved error');
           return;
         }
-        this.write(data);
+
+        if (data instanceof Buffer) {
+          this.write(data, 'binary');
+        } else {
+          this.write(data);
+        }
+
       }).bind(this));
 
       return true;
