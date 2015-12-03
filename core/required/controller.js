@@ -126,7 +126,7 @@ module.exports = (function() {
       return true;
     }
 
-    render(data, params, templateData) {
+    render(data, templateData) {
 
       if(!data) { data = ''; }
 

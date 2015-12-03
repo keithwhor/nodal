@@ -81,6 +81,8 @@ module.exports = (function() {
 
     formatModel(model, relationships) {
 
+      // FIXME: Relationships just needs to be the output schema...
+
       let rows = model.hasErrors() ? [] : [model.toExternalObject(relationships)];
 
       return {
@@ -142,7 +144,7 @@ module.exports = (function() {
     resourceFromModel(modelConstructor) {
 
       let columns = modelConstructor.prototype.schema.columns;
-      let lookup = [];
+      let lookup = {};
       columns.forEach(function(v) { lookup[v.name] = v; });
 
       let fields = modelConstructor.prototype.externalInterface
@@ -169,7 +171,7 @@ module.exports = (function() {
       let modelConstructor = model.constructor;
 
       let columns = modelConstructor.prototype.schema.columns;
-      let lookup = [];
+      let lookup = {};
       columns.forEach(function(v) { lookup[v.name] = v; });
 
       let fields = modelConstructor.prototype.externalInterface
