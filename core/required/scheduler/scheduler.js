@@ -57,7 +57,7 @@ module.exports = (function() {
 
     exec() {
 
-      this._task && this._task.exec(this._scheduler._app);
+      this._task && this._task.exec(this._scheduler._app, () => {});
 
     }
 
