@@ -217,18 +217,19 @@ module.exports = (function() {
 
     generateUpdateQuery(table, columnNames) {
 
-      let pkColumn = columnNames[0];
+      return this.generateUpdateAllQuery(table, columnNames[0], columnNames.slice(1), 1);
+
+    }
+
+    generateUpdateAllQuery(table, pkColumn, columnNames, offset, subQuery) {
 
       return [
-        'UPDATE ',
-          this.escapeField(table),
-        ' SET (',
-          columnNames.slice(1).map(this.escapeField.bind(this)).join(','),
-        ') = (',
-          columnNames.slice(1).map(function(v, i) { return '$' + (i + 2); }).join(','),
-        ') WHERE ',
-          this.escapeField(pkColumn), ' = $1',
-        ' RETURNING *'
+        `UPDATE ${this.escapeField(table)}`,
+        ` SET (${columnNames.map(this.escapeField.bind(this)).join(',')}) = (${columnNames.map((v, i) => '$' + (offset + 1)).join(',')})`,
+        ` WHERE (`,
+          this.escapeField(pkColumn),
+          subQuery ? ` IN (${subQuery})` : ` = $1`,
+        `) RETURNING *`
       ].join('');
 
     }
@@ -471,7 +472,9 @@ module.exports = (function() {
     like: field => `${field} LIKE '%' || __VAR__ || '%'`,
     ilike: field => `${field} ILIKE '%' || __VAR__ || '%'`,
     is_null: field => `${field} IS NULL`,
-    not_null: field => `${field} IS NOT NULL`
+    not_null: field => `${field} IS NOT NULL`,
+    in: field => `ARRAY[${field}] <@ __VAR__`,
+    not_in: field => `NOT (ARRAY[${field}] <@ __VAR__)`
   };
 
   DatabaseAdapter.prototype.comparatorIgnoresValue = {

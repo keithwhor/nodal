@@ -542,6 +542,44 @@ module.exports = (function() {
 
     }
 
+    update(fields, callback) {
+
+      this.interface('id');
+
+      let db = this._request._db;
+      let modelConstructor = this._request._modelConstructor;
+      let pQuery = this.__prepareQuery__();
+
+      let columns = Object.keys(fields);
+      let params = columns.map(c => fields[c]);
+
+      pQuery.sql = db.adapter.generateUpdateAllQuery(
+        modelConstructor.prototype.schema.table,
+        'id',
+        columns,
+        pQuery.params.length,
+        pQuery.sql
+      );
+
+      pQuery.params = pQuery.params.concat(params);
+
+      this.__query__(
+        pQuery,
+        (err, result) => {
+
+          let rows = result ? (result.rows || []).slice() : [];
+
+          let models = rows.map(function(v) {
+            return new modelConstructor(v, true);
+          });
+
+          callback.call(this._request, err, models);
+
+        }
+      )
+
+    }
+
     end(callback, summary) {
 
       let modelConstructor = this._request._modelConstructor;
