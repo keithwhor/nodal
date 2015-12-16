@@ -13,6 +13,9 @@ module.exports = (function() {
   /* Import Router */
   const router = Nodal.require('app/router.js');
 
+  /* Import Authorizer */
+  const authorizer = Nodal.require('app/authorizer.js');
+
   /* Import Database */
   // const db = Nodal.require('db/main.js');
 
