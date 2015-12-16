@@ -13,6 +13,7 @@ module.exports = (function() {
   let Nodal = {
     API: null,
     Application: null,
+    Authorizer: null,
     Composer: null,
     Controller: null,
     Daemon: null,
@@ -56,6 +57,12 @@ module.exports = (function() {
     Application: {
       get: function() {
         return Nodal.Application || (Nodal.Application = require('./required/application.js'));
+      },
+      enumerable: true
+    },
+    Authorizer: {
+      get: function() {
+        return Nodal.Authorizer || (Nodal.Authorizer = require('./required/authorizer.js'));
       },
       enumerable: true
     },

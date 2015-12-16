@@ -203,6 +203,8 @@ module.exports = (function() {
 
     }
 
+    // TODO: Deprecate auth
+
     auth(self, params, app, authorize) {
 
       authorize(true);

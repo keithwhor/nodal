@@ -136,6 +136,15 @@ module.exports = (function() {
           headers: headers
         };
 
+        controller.authorize = app.authorizer ? app.authorizer.exec.bind(
+            app.authorizer,
+            controller,
+            params,
+            app
+          ) : (function(permissionName, callback) { callback(null); });
+
+        // TODO: Deprecate auth
+
         controller.auth(
           controller,
           params,

@@ -7,7 +7,7 @@ module.exports = (function() {
   const Router = require('./router.js');
   const SocketServer = require('./socket.js');
   const Template = require('./template.js');
-  const Auth = require('./auth.js');
+  const Authorizer = require('./authorizer.js');
   const MiddlewareManager = require('./middleware_manager.js');
   const InitializerManager = require('./initializer_manager.js');
   const Scheduler = require('./scheduler/scheduler.js');
@@ -54,7 +54,7 @@ module.exports = (function() {
       this.router = null;
       this.socket = null;
       this.server = null;
-      this.auth = null;
+      this.authorizer = null;
       this.scheduler = null;
 
       this.composer = new Composer();
@@ -201,12 +201,6 @@ module.exports = (function() {
 
     }
 
-    enableAuth() {
-
-      this.auth = new Auth();
-
-    }
-
     useScheduler(scheduler) {
 
       if (!(scheduler instanceof Scheduler)) {
@@ -228,6 +222,18 @@ module.exports = (function() {
       }
 
       this.router = router;
+
+      return true;
+
+    }
+
+    useAuthorizer(authorizer) {
+
+      if (!(authorizer instanceof Authorizer)) {
+        throw new Error('useAuthorizer requires valid Authorizer instance');
+      }
+
+      this.authorizer = authorizer;
 
       return true;
 
