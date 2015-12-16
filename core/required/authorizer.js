@@ -9,13 +9,14 @@ module.exports = (function() {
     constructor() {
 
       this._permissions = {};
+      this._key = ''
 
     }
 
     createAccessToken() {
 
       let value = [].slice.call(arguments).concat([new Date().valueOf()]).join(':');
-      return crypto.createHmac('md5').update(value).digest('hex');
+      return crypto.createHmac('md5', this._key).update(value).digest('hex');
 
     }
 
