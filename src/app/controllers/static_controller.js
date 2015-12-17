@@ -7,20 +7,20 @@ module.exports = (function() {
 
   class StaticController extends Nodal.Controller {
 
-    get(self, params, app) {
+    get() {
 
-      let staticData = app.static(params.path[1]);
+      let staticData = this.app.static(this.params.path[1]);
 
       if (!staticData) {
         Error404Controller.prototype.get.apply(this, arguments);
         return;
       }
 
-      self.setHeader('Content-Type', staticData.mime);
+      this.setHeader('Content-Type', staticData.mime);
 
       if (staticData.mime.split('/')[0] === 'video') {
 
-        let range = params.headers.range;
+        let range = this.params.headers.range;
         let buffer = staticData.buffer;
         let len = buffer.byteLength;
 
@@ -48,20 +48,20 @@ module.exports = (function() {
 
         }
 
-        self.status(206);
-        self.setHeader('Content-Range', `bytes ${range[0]}-${range[1]}/${len}`);
-        self.setHeader('Accept-Ranges', 'bytes');
-        self.setHeader('Content-Length', buffer.byteLength);
-        self.render(buffer);
+        this.status(206);
+        this.setHeader('Content-Range', `bytes ${range[0]}-${range[1]}/${len}`);
+        this.setHeader('Accept-Ranges', 'bytes');
+        this.setHeader('Content-Length', buffer.byteLength);
+        this.render(buffer);
 
       } else {
 
         if (Nodal.my.Config.env === 'production') {
-          self.setHeader('Cache-Control', 'max-age=60');
-          self.setHeader('ETag', staticData.tag);
+          this.setHeader('Cache-Control', 'max-age=60');
+          this.setHeader('ETag', staticData.tag);
         }
 
-        self.render(staticData.buffer);
+        this.render(staticData.buffer);
 
       }
 
