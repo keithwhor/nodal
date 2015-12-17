@@ -41,6 +41,7 @@ module.exports = (function() {
       this._proxy = null;
 
       this._forceProxyTLS = false; // not related to above
+      this._forceWWW = false;
 
       this._templates = {
         '!': new Template(this, function() { return '<!-- Invalid Template //-->'; })
@@ -322,11 +323,24 @@ module.exports = (function() {
     requestHandler(request, response) {
 
       let error;
+      let host = request.headers.host;
+      let protocol = 'http';
+      let redirect = false;
+
+      if (this._forceWWW && host.split('.').length === 2) {
+        host = `www.${host}`;
+        redirect = true;
+      }
 
       if (this._forceProxyTLS &&
           request.headers.hasOwnProperty('x-forwarded-proto') &&
           request.headers['x-forwarded-proto'] !== 'https') {
-        response.writeHead(302, {'Location': 'https://' + request.headers.host + request.url});
+        protocol = 'https';
+        redirect = true;
+      }
+
+      if (redirect) {
+        response.writeHead(302, {'Location': `${protocol}://${host}${request.url}`});
         response.end();
         return;
       }
@@ -430,6 +444,12 @@ module.exports = (function() {
     forceProxyTLS() {
 
       this._forceProxyTLS = true;
+
+    }
+
+    forceWWW() {
+
+      this._forceWWW = true;
 
     }
 
