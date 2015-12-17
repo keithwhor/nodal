@@ -9,7 +9,7 @@ module.exports = (function() {
 
     get() {
 
-      {{? data.for }}if (this.this.params.id) {
+      {{? data.for }}if (this.params.id) {
 
         app.composer
           .from(this.app.db('main'), {{= data.for.name }})
