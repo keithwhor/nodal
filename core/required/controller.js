@@ -11,15 +11,17 @@ module.exports = (function() {
 
   class Controller {
 
-    constructor(request, response, middlewareManager) {
+    constructor(request, response, params, app) {
 
-      this._middlewareManager = middlewareManager;
       this._initializeTime = (new Date()).valueOf();
       this._request = request;
       this._response = response;
       this._path = url.parse(this._request.url, true).pathname;
       this._status = null;
       this._headers = {};
+
+      Object.defineProperty(this, 'app', {enumerable: true, value: app});
+      Object.defineProperty(this, 'params', {enumerable: true, value: params});
 
     }
 
@@ -173,7 +175,7 @@ module.exports = (function() {
       this.getStatus() || this.status(200);
       this.getHeader('X-Powered-By') || this.setHeader('X-Powered-By', 'Nodal');
 
-      this._middlewareManager.exec(this, data, (function(e, data) {
+      this.app.middleware.exec(this, data, (function(e, data) {
 
         if (e) {
           this.setHeader('Content-Type', 'text/plain');

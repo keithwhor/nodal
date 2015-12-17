@@ -7,88 +7,88 @@ module.exports = (function() {
 
   class {{= data.name }} extends Nodal.Controller {
 
-    get(self, params, app) {
+    get() {
 
-      {{? data.for }}if (params.id) {
+      {{? data.for }}if (this.this.params.id) {
 
         app.composer
-          .from(app.db('main'), {{= data.for.name }})
-          .find(params.id, function(err, model) {
+          .from(this.app.db('main'), {{= data.for.name }})
+          .find(this.params.id, (err, model) => {
 
             if (err) {
-              self.badRequest('Resource does not exist');
+              this.badRequest('Resource does not exist');
               return;
             }
 
-            self.render(model);
+            this.render(model);
 
           });
 
       } else {
 
         app.composer
-          .from(app.db('main'), {{= data.for.name }})
-          .where(params.query)
-          .externalQuery(function(err, result) {
+          .from(this.app.db('main'), {{= data.for.name }})
+          .where(this.params.query)
+          .externalQuery((err, result) => {
 
-            self.render(result);
+            this.render(result);
 
           });
 
-      }{{??}}self.render();{{?}}
+      }{{??}}this.render();{{?}}
 
     }
 
-    post(self, params, app) {
+    post() {
 
-      {{? data.for }}new {{= data.for.name }}(params.body.data).save(app.db('main'), function(err, model) {
+      {{? data.for }}new {{= data.for.name }}(this.params.body.data).save(this.app.db('main'), (err, model) => {
 
-          self.render(model);
+          this.render(model);
 
-      });{{??}}super.post(self, params, app);{{?}}
+      });{{??}}super.post();{{?}}
 
     }
 
-    put(self, params, app) {
+    put() {
 
       {{? data.for }}app.composer
-        .from(app.db('main'), {{= data.for.name }})
-        .find(params.id, function(err, model) {
+        .from(this.app.db('main'), {{= data.for.name }})
+        .find(this.params.id, (err, model) => {
 
           if (err) {
-            self.badRequest('Resource does not exist');
+            this.badRequest('Resource does not exist');
             return;
           }
 
-          model.read(params.body.data);
-          model.save(app.db('main'), function(err, model) {
+          model.read(this.params.body.data);
+          model.save(this.app.db('main'), (err, model) => {
 
-            self.render(model);
+            this.render(model);
 
           });
 
-        });{{??}}super.put(self, params, app);{{?}}
+        });{{??}}super.put();{{?}}
 
     }
 
-    del(self, params, app) {
+    del() {
 
       {{? data.for }}app.composer
-        .from(app.db('main'), {{= data.for.name }})
-        .find(params.id, function(err, model) {
+        .from(this.app.db('main'), {{= data.for.name }})
+        .find(this.params.id, (err, model) => {
 
           if (err) {
-            self.badRequest('Resource does not exist');
+            this.badRequest('Resource does not exist');
             return;
           }
 
-          model.destroy(app.db('main'), function(err, model) {
+          model.destroy(this.app.db('main'), (err, model) => {
 
-            self.render(model);
+            this.render(model);
 
           });
 
-        });{{??}}super.del(self, params, app);{{?}}
+        });{{??}}super.del();{{?}}
 
     }
 

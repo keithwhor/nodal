@@ -89,8 +89,6 @@ module.exports = (function() {
 
     execute(request, response, urlParts, app) {
 
-      let controller = new this._controller(request, response, app.middleware);
-
       let buffers = [];
       let transferSize = 0;
       let query = this.parseQueryParameters(urlParts.query);
@@ -117,7 +115,7 @@ module.exports = (function() {
         headers[key] = request.headers[key];
       });
 
-      request.on('end', (function() {
+      request.on('end', () => {
 
         let buffer = buffers.length ? Buffer.concat(buffers) : new Buffer(0);
         let body = buffer.toString();
@@ -136,12 +134,19 @@ module.exports = (function() {
           headers: headers
         };
 
+        let controller = new this._controller(
+          request,
+          response,
+          params,
+          app
+        );
+
         controller.authorize = app.authorizer ? app.authorizer.exec.bind(
             app.authorizer,
             controller,
             params,
             app
-          ) : (function(permissionName, callback) { callback(null); });
+          ) : ((permissionName, callback) => { callback(null); });
 
         // TODO: Deprecate auth
 
@@ -156,7 +161,7 @@ module.exports = (function() {
           }
         );
 
-      }).bind(this));
+      });
 
       return true;
 
