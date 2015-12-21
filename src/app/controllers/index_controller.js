@@ -7,10 +7,17 @@ module.exports = (function() {
   class IndexController extends Nodal.Controller {
 
     get() {
-      this.render(this.app.template('index.html'), {
-        test: this.params.query.test,
-        name: 'My Nodal Application'
-      });
+
+      this.render(
+        this.app.template('index.html').generate(
+          this.params,
+          {
+            test: this.params.query.test,
+            name: 'My Nodal Application'
+          }
+        )
+      );
+      
     }
 
   }

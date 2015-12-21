@@ -1,6 +1,6 @@
-"use strict";
-
 module.exports = (function() {
+
+  'use strict';
 
   class Middleware {
 

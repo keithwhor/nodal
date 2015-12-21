@@ -6,9 +6,14 @@ module.exports = (function() {
 
   class Error404Controller extends Nodal.Controller {
 
-    get(self, params, app) {
-      self.status(404);
-      self.render(app.template('error/404.html'), params);
+    get() {
+
+      this.status(404);
+
+      this.render(
+        this.app.template('error/404.html').generate(this.params)
+      );
+
     }
 
   }

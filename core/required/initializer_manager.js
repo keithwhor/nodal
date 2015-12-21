@@ -1,8 +1,7 @@
-"use strict";
-
 module.exports = (function() {
 
-  const Initializer = require('./initializer.js');
+  'use strict';
+
   const async = require('async');
 
   class InitializerManager {
@@ -14,10 +13,6 @@ module.exports = (function() {
     use(initializerConstructor) {
 
       let initializer = new initializerConstructor();
-      if (!(initializer instanceof Initializer)) {
-        throw new Error('Invalid Initializer');
-      }
-
       this._initializers.push(initializer);
 
     }

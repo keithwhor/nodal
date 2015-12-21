@@ -1,8 +1,7 @@
-"use strict";
-
 module.exports = (function() {
 
-  const Middleware = require('./middleware.js');
+  'use strict';
+
   const async = require('async');
 
   class MiddlewareManager {
@@ -14,10 +13,6 @@ module.exports = (function() {
     use(middlewareConstructor) {
 
       let middleware = new middlewareConstructor();
-      if (!(middleware instanceof Middleware)) {
-        throw new Error('Invalid Middleware');
-      }
-
       this._middleware.push(middleware);
 
     }
