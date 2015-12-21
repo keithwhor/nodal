@@ -94,13 +94,6 @@ module.exports = (function() {
       let query = this.parseQueryParameters(urlParts.query);
       let path = [].slice.call(urlParts.pathname.match(this._regex), 0);
       let id = urlParts.pathname.substr(path[0].length) || null;
-      let method = {
-        'GET': 'get',
-        'PUT': 'put',
-        'POST': 'post',
-        'DELETE': 'del',
-        'OPTIONS': 'options'
-      }[request.method] || 'get';
 
       request.on('data', function(data) {
         buffers.push(data);
@@ -148,18 +141,17 @@ module.exports = (function() {
             app
           ) : ((permissionName, callback) => { callback(null); });
 
-        // TODO: Deprecate auth
+        // Enjoy this one ;)
+        //      ... just to be sassy
+        let method = ({
+          'GET': ['index', 'show'],
+          'PUT': ['put', 'update'],
+          'POST': ['create', 'create'],
+          'DELETE': ['destroy', 'destroy'],
+          'OPTIONS': ['options', 'options']
+        }[request.method] || ['index', 'index'])[(id !== null) | 0];
 
-        controller.auth(
-          controller,
-          params,
-          app,
-          function(authorized, reason) {
-            return authorized ?
-              controller[method](controller, params, app) :
-              controller.unauthorized(reason);
-          }
-        );
+        controller[method](controller, controller, params, app);
 
       });
 

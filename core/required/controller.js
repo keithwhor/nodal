@@ -205,12 +205,24 @@ module.exports = (function() {
 
     }
 
-    // TODO: Deprecate auth
+    index() {
+      this.get();
+    }
 
-    auth(self, params, app, authorize) {
+    show() {
+      this.get();
+    }
 
-      authorize(true);
+    create() {
+      this.post();
+    }
 
+    update() {
+      this.put();
+    }
+
+    destroy() {
+      this.del();
     }
 
     get() {
