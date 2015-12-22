@@ -222,10 +222,13 @@ module.exports = (function() {
       let error = null;
 
       if (this.hasErrors()) {
+
         let errorObject = this.getErrors();
-        let message = errors._query || 'There was an error with your request';
-        let error = new Error(message);
+        let message = errorObject._query || 'There was an error with your request';
+
+        error = new Error(message);
         error.details = errorObject;
+        
       }
 
       return error;

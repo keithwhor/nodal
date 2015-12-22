@@ -82,8 +82,8 @@ module.exports = (function(Nodal) {
 
       let testObject = new TestObject();
       expect(testObject.errorObject()).to.not.equal(null);
-      expect(testObject.errorObject()).to.have.property('test');
-      expect(testObject.errorObject().test[0]).to.equal('should be at least five characters long');
+      expect(testObject.errorObject().details).to.have.property('test');
+      expect(testObject.errorObject().details.test[0]).to.equal('should be at least five characters long');
 
     });
 
