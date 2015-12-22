@@ -569,9 +569,8 @@ module.exports = (function() {
 
           let rows = result ? (result.rows || []).slice() : [];
 
-          let models = rows.map(function(v) {
-            return new modelConstructor(v, true);
-          });
+          let models = new ModelArray(modelConstructor);
+          models.push.apply(models, rows.map(r => new modelConstructor(r, true)));
 
           callback.call(this._request, err, models);
 
@@ -593,9 +592,10 @@ module.exports = (function() {
           let rows = result ? (result.rows || []).slice() : [];
           let models = null;
 
-          pQuery.models && (models = rows.map(function(v) {
-            return new modelConstructor(v, true);
-          }));
+          if (pQuery.models) {
+            models = new ModelArray(modelConstructor);
+            models.push.apply(models, rows.map(r => new modelConstructor(r, true)));
+          }
 
           let record = new ComposerRecord(err, rows, modelConstructor.toResource(pQuery.columns), summary);
 

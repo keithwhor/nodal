@@ -11,7 +11,16 @@ module.exports = (function() {
 
   class Model {
 
-    static find(db, id, callback) {
+    static find(id, callback) {
+
+      let db = this.db;
+
+      // legacy support
+      if (arguments.length === 3) {
+        db = arguments[0];
+        id = arguments[1];
+        callback = arguments[2];
+      }
 
       return new ComposerRequest(db, this).find(id, (err, model) => {
         callback.call(this, err, model);
@@ -21,6 +30,7 @@ module.exports = (function() {
 
     static query(db) {
 
+      db = db || this.db;
       return new ComposerRequest(db, this).begin();
 
     };
@@ -538,6 +548,8 @@ module.exports = (function() {
   Model.prototype.readOnly = false;
 
   Model.prototype.data = null;
+
+  Model.prototype.db = null;
 
   Model.prototype.externalInterface = [
     'id',

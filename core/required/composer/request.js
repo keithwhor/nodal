@@ -2,6 +2,8 @@ module.exports = (function() {
 
   'use strict';
 
+  // TODO: Deprecate entire module
+
   const ComposerQuery = require('./query.js');
   const ComposerResult = require('./composer_result');
 
