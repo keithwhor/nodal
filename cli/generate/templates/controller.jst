@@ -7,90 +7,79 @@ module.exports = (function() {
 
   class {{= data.name }} extends Nodal.Controller {
 
-    get() {
+    {{? data.for }}index() {
 
-      {{? data.for }}if (this.params.id) {
+      {{= data.for.name }}.query()
+        .filter(params.query)
+        .end((err, models) => {
 
-        app.composer
-          .from(this.app.db('main'), {{= data.for.name }})
-          .find(this.params.id, (err, model) => {
+          this.respond(err || models.toObject());
 
-            if (err) {
-              this.badRequest('Resource does not exist');
-              return;
-            }
+        });
 
-            this.render(model);
+    }
 
-          });
+    show() {
 
-      } else {
+      {{= data.for.name }}.find(params.id, (err, model) => {
 
-        app.composer
-          .from(this.app.db('main'), {{= data.for.name }})
-          .where(this.params.query)
-          .externalQuery((err, result) => {
+        this.respond(err || model.toObject());
 
-            this.render(result);
+      });
 
-          });
+    }
 
-      }{{??}}this.render();{{?}}
+    create() {
+
+      {{= data.for.name }}.create(params.body.data, (err, model) => {
+
+        this.respond(err || model.toObject());
+
+      });
+
+    }
+
+    update() {
+
+      {{= data.for.name }}.update(params.id, params.body.data, (err, model) => {
+
+        this.respond(err || model.toObject());
+
+      });
+
+    }
+
+    destroy() {
+
+      {{= data.for.name }}.destroy(params.id, (err, model) => {
+
+        this.respond(err || model.toObject());
+
+      });
+
+    }{{??}}get() {
+
+      this.render();
 
     }
 
     post() {
 
-      {{? data.for }}new {{= data.for.name }}(this.params.body.data).save(this.app.db('main'), (err, model) => {
-
-          this.render(model);
-
-      });{{??}}super.post();{{?}}
+      this.render();
 
     }
 
     put() {
 
-      {{? data.for }}app.composer
-        .from(this.app.db('main'), {{= data.for.name }})
-        .find(this.params.id, (err, model) => {
-
-          if (err) {
-            this.badRequest('Resource does not exist');
-            return;
-          }
-
-          model.read(this.params.body.data);
-          model.save(this.app.db('main'), (err, model) => {
-
-            this.render(model);
-
-          });
-
-        });{{??}}super.put();{{?}}
+      this.render();
 
     }
 
     del() {
 
-      {{? data.for }}app.composer
-        .from(this.app.db('main'), {{= data.for.name }})
-        .find(this.params.id, (err, model) => {
+      this.render();
 
-          if (err) {
-            this.badRequest('Resource does not exist');
-            return;
-          }
-
-          model.destroy(this.app.db('main'), (err, model) => {
-
-            this.render(model);
-
-          });
-
-        });{{??}}super.del();{{?}}
-
-    }
+    }{{?}}
 
   }
 

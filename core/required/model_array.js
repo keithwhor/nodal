@@ -4,10 +4,10 @@ module.exports = (function() {
 
   class ModelArray extends Array {
 
-    constructor(Model) {
+    constructor(modelConstructor) {
 
       super();
-      this.Model = Model;
+      this._modelConstructor = modelConstructor;
 
     }
 

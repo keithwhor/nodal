@@ -3,24 +3,48 @@ module.exports = (function() {
   'use strict';
 
   const Model = require('./model.js');
-  const ComposerResult = require('./composer/composer_result.js');
-  const ComposerRecord = require('./composer/record.js');
+  const ModelArray = require('./model_array.js');
 
   class APIConstructor {
 
-    format(obj, summary) {
+    format(obj, arrInterface) {
 
-      if (obj instanceof Model) {
-        return this.formatModel(obj);
-      } else if (obj instanceof ComposerResult) {
-        return this.formatComposerResult(obj);
-      } else if (obj instanceof ComposerRecord) {
-        return this.formatComposerRecord(obj);
-      } else if (obj instanceof Array) {
-        return this.formatArray(obj, summary);
+      if (obj instanceof Error) {
+        return this.error(obj.message, obj.details);
       }
 
-      throw new Error('.format requires Model, ComposerResult, or Array of data');
+      if (obj instanceof Model) {
+        obj = new ModelArray(obj.constructor);
+      }
+
+      if (!(obj instanceof ModelArray)) {
+        return this.spoof(obj);
+      }
+
+      return this.response(obj, arrInterface);
+
+    }
+
+    meta(total, count, offset, error, summary, resource) {
+
+      if (error) {
+        total = 0;
+        count = 0;
+        offset = 0;
+        resource = null;
+      }
+
+      let meta = {
+        total: total,
+        count: count,
+        offset: offset,
+        error: error
+      };
+
+      summary && (meta.summary = summary);
+      resource && (meta.resource = resource);
+
+      return meta;
 
     }
 
@@ -33,77 +57,38 @@ module.exports = (function() {
 
     }
 
-    formatComposerResult(composerResult) {
+    spoof(obj) {
+
+      if (!(obj instanceof Array)) {
+        obj = [obj];
+      }
 
       return {
         meta: this.meta(
-          composerResult.total,
-          composerResult.count,
-          composerResult.offset,
-          (composerResult.error ? {
-            message: 'There was an error with your query',
-            details: composerResult.error
-          } : null),
+          arr.length,
+          arr.length,
+          0,
+          null,
           this.formatSummary(),
-          this.resourceFromModel(composerResult.query._modelConstructor)
+          this.resourceFromArray(arr)
         ),
-        data: composerResult.rows
-      };
-
-    }
-
-    formatComposerRecord(composerRecord) {
-
-      return {
-        meta: this.meta(
-          composerRecord.total,
-          composerRecord.count,
-          composerRecord.offset,
-          (composerRecord.error ? {
-            message: 'There was an error with your query',
-            details: composerRecord.error
-          } : null),
-          composerRecord.summary,
-          composerRecord.resource
-        ),
-        data: composerRecord.data
-      };
-
-    }
-
-    formatSummary() {
-
-      // TODO: deprecate
-
-      return null;
-
-    }
-
-    formatModel(model, relationships) {
-
-      // FIXME: Relationships just needs to be the output schema...
-
-      let rows = model.hasErrors() ? [] : [model.toExternalObject(relationships)];
-
-      return {
-        meta: this.meta(1, 1, 0,
-          (model.hasErrors() ? {
-            message: 'There was an error with your request',
-            details: model.errorObject()
-          } : null),
-          this.formatSummary(),
-          this.resourceFromModelInstance(model, relationships)
-        ),
-        data: rows
-      };
-
-    }
-
-    formatArray(arr) {
-
-      return {
-        meta: this.meta(arr.length, arr.length, 0, null, this.formatSummary(), this.resourceFromArray(arr)),
         data: arr
+      }
+
+    }
+
+    response(modelArray, arrInterface) {
+
+      return {
+        meta: this.meta(
+          modelArray.length,
+          modelArray.length,
+          0,
+          null,
+          this.formatSummary(),
+          this.resourceFromModelArray(modelArray, arrInterface)
+        ),
+        data: modelArray.toObject(arrInterface);
       }
 
     }
@@ -141,93 +126,9 @@ module.exports = (function() {
 
     }
 
-    resourceFromModel(modelConstructor) {
+    resourceFromModelArray(modelArray, arrInterface) {
 
-      let columns = modelConstructor.prototype.schema.columns;
-      let lookup = {};
-      columns.forEach(function(v) { lookup[v.name] = v; });
-
-      let fields = modelConstructor.prototype.externalInterface
-        .filter(v => lookup[v])
-        .map(v => {
-          return {
-            name: v,
-            type: lookup[v].type,
-            array: (lookup[v].properties && lookup[v].properties.array) ? true : undefined
-          };
-        });
-
-      return {
-        name: modelConstructor.name,
-        fields: fields
-      };
-
-    }
-
-    resourceFromModelInstance(model, relationships) {
-
-      relationships = (typeof relationships === 'object') ? relationships : null;
-
-      let modelConstructor = model.constructor;
-
-      let columns = modelConstructor.prototype.schema.columns;
-      let lookup = {};
-      columns.forEach(function(v) { lookup[v.name] = v; });
-
-      let fields = modelConstructor.prototype.externalInterface
-        .filter(name => lookup[name])
-        .map(name => {
-          return {
-            name: name,
-            type: lookup[name].type,
-            array: (lookup[name].properties && lookup[name].properties.array) ? true : undefined
-          };
-        });
-
-      if (relationships) {
-
-        fields = fields.concat(
-          Object.keys(model._relationshipCache)
-          .filter(name => relationships[name])
-          .map(name => {
-            return {
-              name: name,
-              type: 'resource',
-              resource: this.resourceFromModelInstance(model._relationshipCache[name], relationships[name])
-            }
-          })
-          .filter(v => v.resource)
-        );
-
-      }
-
-      return {
-        name: modelConstructor.name,
-        fields: fields
-      };
-
-    }
-
-    meta(total, count, offset, error, summary, resource) {
-
-      if (error) {
-        total = 0;
-        count = 0;
-        offset = 0;
-        resource = null;
-      }
-
-      let meta = {
-        total: total,
-        count: count,
-        offset: offset,
-        error: error
-      };
-
-      summary && (meta.summary = summary);
-      resource && (meta.resource = resource);
-
-      return meta;
+      return modelArray._modelConstructor.toResource(arrInterface);
 
     }
 

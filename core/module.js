@@ -14,7 +14,6 @@ module.exports = (function() {
     API: null,
     Application: null,
     Authorizer: null,
-    Composer: null,
     Controller: null,
     Daemon: null,
     Database: null,
@@ -63,12 +62,6 @@ module.exports = (function() {
     Authorizer: {
       get: function() {
         return Nodal.Authorizer || (Nodal.Authorizer = require('./required/authorizer.js'));
-      },
-      enumerable: true
-    },
-    Composer: {
-      get: function() {
-        return Nodal.Composer || (Nodal.Composer = require('./required/composer/composer.js'));
       },
       enumerable: true
     },

@@ -5,8 +5,6 @@ module.exports = (function() {
   const url = require('url');
   const Template = require('./template.js');
   const Model = require('./model.js');
-  const ComposerResult = require('./composer/composer_result.js');
-  const ComposerRecord = require('./composer/record.js');
   const API = require('./api.js');
 
   class Controller {
@@ -128,6 +126,16 @@ module.exports = (function() {
       return true;
     }
 
+    respond(data) {
+
+      if (data instanceof Error) {
+        return this.badRequest(data.message, data.details);
+      } else {
+
+      return this.render(API.format(data));
+
+    }
+
     render(data, templateData) {
 
       if(!data) { data = ''; }
@@ -140,20 +148,6 @@ module.exports = (function() {
 
         this.getHeader('Content-Type') || this.setHeader('Content-Type', 'text/html');
         data = data.generate(templateData); // FIXME: Legacy code block
-
-      } else if (data instanceof Model) {
-
-        this.getHeader('Content-Type') || this.setHeader('Content-Type', 'application/json');
-        data = API.formatModel(data, templateData);
-        data.meta.error && !this.getStatus() && this.status(400);
-        data = JSON.stringify(data);
-
-      } else if (data instanceof ComposerResult || data instanceof ComposerRecord) {
-
-        this.getHeader('Content-Type') || this.setHeader('Content-Type', 'application/json');
-        data = API.format(data, templateData);
-        data.meta.error && !this.getStatus() && this.status(400);
-        data = JSON.stringify(data);
 
       } else if (typeof data === 'function') {
 

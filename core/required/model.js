@@ -4,7 +4,7 @@ module.exports = (function() {
 
   const DataTypes = require('./data_types.js');
   const Database = require('./db/database.js');
-  const ComposerRequest = require('./composer/request.js');
+  const Composer = require('./composer/composer.js');
 
   const utilities = require('./utilities.js');
   const async = require('async');
@@ -22,16 +22,24 @@ module.exports = (function() {
         callback = arguments[2];
       }
 
-      return new ComposerRequest(db, this).find(id, (err, model) => {
-        callback.call(this, err, model);
-      });
+      return new Composer(db, this)
+        .filter({id: id})
+        .end((err, record, models) => {
+
+          if (!err && !models.length) {
+            return callback(new Error(`Could not find ${this.name} with id "${id}".`));
+          }
+
+          callback(err, models[0]);
+
+        });
 
     };
 
     static query(db) {
 
       db = db || this.db;
-      return new ComposerRequest(db, this).begin();
+      return new Composer(db, this);
 
     };
 
@@ -310,7 +318,15 @@ module.exports = (function() {
       return (!ignoreFormat && this.formatters[key]) ? this.formatters[key](datum) : datum;
     }
 
-    relationship(db, callback) {
+    relationship(callback) {
+
+      let db = this.db;
+
+      // legacy support
+      if (arguments.length === 2) {
+        db = arguments[0];
+        callback = arguments[1];
+      }
 
       let relationships = utilities.getFunctionParameters(callback);
       relationships = relationships.slice(1);
@@ -327,7 +343,7 @@ module.exports = (function() {
 
       let fns = relationships.map(r => this.relationships[r]).map(r => {
         return (callback) => {
-          new ComposerRequest(db, r.model).find(this.get(r.via), (err, model) => {
+          r.model.find(db, this.get(r.via), (err, model) => {
             callback(err, model);
           });
         }

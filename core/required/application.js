@@ -3,7 +3,6 @@ module.exports = (function() {
   'use strict';
 
   const Database = require('./db/database.js');
-  const Composer = require('./composer/composer.js');
   const Router = require('./router.js');
   const SocketServer = require('./socket.js');
   const Template = require('./template.js');
@@ -59,8 +58,6 @@ module.exports = (function() {
       this.server = null;
       this.authorizer = null;
       this.scheduler = null;
-
-      this.composer = new Composer();
 
       this.middleware = new MiddlewareManager();
       this.initializers = new InitializerManager();

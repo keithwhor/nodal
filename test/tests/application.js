@@ -43,18 +43,6 @@ module.exports = (function(Nodal) {
 
     });
 
-    describe('#composer', function() {
-
-      it('should be an object', function() {
-        expect(app.composer).to.be.an('object');
-      });
-
-      it('should have the constructor name "Composer"', function() {
-        expect(app.composer).to.be.instanceof(Nodal.Composer);
-      });
-
-    });
-
   });
 
 });
