@@ -206,23 +206,23 @@ module.exports = (function() {
     }
 
     index() {
-      this.get();
+      this.get.apply(this, arguments);
     }
 
     show() {
-      this.get();
+      this.get.apply(this, arguments);
     }
 
     create() {
-      this.post();
+      this.post.apply(this, arguments);
     }
 
     update() {
-      this.put();
+      this.put.apply(this, arguments);
     }
 
     destroy() {
-      this.del();
+      this.del.apply(this, arguments);
     }
 
     get() {

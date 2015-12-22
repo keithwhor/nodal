@@ -47,6 +47,8 @@ module.exports = (function() {
         '!': new Template(this, function() { return '<!-- Invalid Template //-->'; })
       };
 
+      this._templateData = {};
+
       this._staticPath = '';
       this._static = {};
 
@@ -266,6 +268,14 @@ module.exports = (function() {
 
       return this._db[alias] || null;
 
+    }
+
+    setTemplateData(name, value) {
+      this._templateData[name] = value;
+    }
+
+    unsetTemplateData(name) {
+      delete this._templateData;
     }
 
     template(name, raw) {

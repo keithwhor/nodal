@@ -36,7 +36,18 @@ module.exports = (function() {
     }
 
     generate(params, data) {
+
+      params = params || {};
+      data = data || {};
+
+      let templateData = this._app._templateData;
+
+      Object.keys(templateData)
+        .filter(k => !data.hasOwnProperty(k))
+        .forEach(k => data[k] = templateData[k]);
+
       return new TemplateInstance(this, params, data).generate();
+
     }
 
   }
