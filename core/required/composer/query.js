@@ -3,6 +3,7 @@ module.exports = (function() {
   'use strict';
 
   const ComposerRecord = require('./record.js');
+  const ModelArray = require('../model_array.js');
   const utilities = require('../utilities.js');
 
   class ComposerQuery {

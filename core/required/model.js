@@ -345,13 +345,38 @@ module.exports = (function() {
 
     };
 
-    toObject() {
+    toObject(arrInterface) {
+
       let obj = {};
-      Object.keys(this._data).forEach((key) => {
-        obj[key] = this.get(key);
-      });
+
+      if (arrInterface) {
+
+        arrInterface.forEach(c => {
+
+          if (typeof key === 'object' && key !== null) {
+            let relationship = Object.keys(key)[0];
+            if (this._relationshipCache[relationship]) {
+              obj[key] = this._relationshipCache[relationship].toObject(key[relationship]);
+            }
+          } else if (this._data[key]) {
+            obj[key] = this.get(key);
+          }
+
+        });
+
+      } else {
+
+        Object.keys(this._data).forEach((key) => {
+          obj[key] = this.get(key);
+        });
+
+      }
+
       return obj;
+
     }
+
+    // TODO: Deprecate
 
     toExternalObject(relationships) {
 

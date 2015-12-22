@@ -6,13 +6,14 @@ module.exports = (function() {
 
     constructor(Model) {
 
+      super();
       this.Model = Model;
-      
+
     }
 
-    toObject() {
+    toObject(arrInterface) {
 
-      return this.map(m => m.toObject());
+      return this.map(m => m.toObject(arrInterface));
 
     }
 
