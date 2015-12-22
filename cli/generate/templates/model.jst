@@ -13,6 +13,8 @@ module.exports = (function() {
 
   }
 
+  {{? !data.nodb }}{{= data.name }}.prototype.db = Nodal.require('db/main.js');{{?}}
+
   {{= data.name }}.prototype.schema = Nodal.my.Schema.models.{{= data.name }};
 
   {{= data.name }}.prototype.externalInterface = [{{~ data.columns :value:index}}

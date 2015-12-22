@@ -13,7 +13,7 @@ module.exports = (function() {
 
     static find(id, callback) {
 
-      let db = this.db;
+      let db = this.prototype.db;
 
       // legacy support
       if (arguments.length === 3) {
@@ -24,24 +24,62 @@ module.exports = (function() {
 
       return new Composer(db, this)
         .filter({id: id})
-        .end((err, record, models) => {
+        .end((err, models) => {
 
           if (!err && !models.length) {
-            return callback(new Error(`Could not find ${this.name} with id "${id}".`));
+            let err = new Error(`Could not find ${this.name} with id "${id}".`);
+            err.notFound = true;
+            return callback(err);
           }
 
           callback(err, models[0]);
 
         });
 
-    };
+    }
+
+    static create(data, callback) {
+
+      let model = new this(data);
+      model.save(callback);
+
+    }
+
+    static update(id, data, callback) {
+
+      this.find(id, (err, model) => {
+
+        if (err) {
+          callback(err);
+        }
+
+        model.read(data);
+        model.save(callback);
+
+      });
+
+    }
+
+    static destroy(id, callback) {
+
+      this.find(id, (err, model) => {
+
+        if (err) {
+          callback(err);
+        }
+
+        model.destroy(callback);
+
+      });
+
+    }
 
     static query(db) {
 
-      db = db || this.db;
+      db = db || this.prototype.db;
       return new Composer(db, this);
 
-    };
+    }
 
     static toResource(resourceColumns) {
 
@@ -180,7 +218,18 @@ module.exports = (function() {
     }
 
     errorObject() {
-      return this.hasErrors() ? this.getErrors() : null;
+
+      let error = null;
+
+      if (this.hasErrors()) {
+        let errorObject = this.getErrors();
+        let message = errors._query || 'There was an error with your request';
+        let error = new Error(message);
+        error.details = errorObject;
+      }
+
+      return error;
+
     }
 
     hasErrors() {
@@ -367,7 +416,7 @@ module.exports = (function() {
 
       if (arrInterface) {
 
-        arrInterface.forEach(c => {
+        arrInterface.forEach(key => {
 
           if (typeof key === 'object' && key !== null) {
             let relationship = Object.keys(key)[0];
@@ -466,7 +515,15 @@ module.exports = (function() {
       return true;
     }
 
-    save(db, callback) {
+    save(callback) {
+
+      let db = this.db;
+
+      // Legacy
+      if (arguments.length === 2) {
+        db = arguments[0];
+        callback = arguments[1];
+      }
 
       if (this.readOnly) {
         throw new Error(this.constructor.name + ' is marked as readOnly, can not save');
@@ -527,7 +584,15 @@ module.exports = (function() {
 
     }
 
-    destroy(db, callback) {
+    destroy(callback) {
+
+      let db = this.db;
+
+      // Legacy
+      if (arguments.length === 2) {
+        db = arguments[0];
+        callback = arguments[1];
+      }
 
       if (this.readOnly) {
         throw new Error(this.constructor.name + ' is marked as readOnly, can not destroy');

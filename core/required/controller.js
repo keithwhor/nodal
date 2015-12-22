@@ -126,13 +126,19 @@ module.exports = (function() {
       return true;
     }
 
-    respond(data) {
+    respond(data, arrInterface) {
 
       if (data instanceof Error) {
-        return this.badRequest(data.message, data.details);
-      } else {
 
-      return this.render(API.format(data));
+        if (data.notFound) {
+          return this.notFound(data.message, data.details);
+        }
+
+        return this.badRequest(data.message, data.details);
+        
+      }
+
+      return this.render(API.format(data, arrInterface));
 
     }
 

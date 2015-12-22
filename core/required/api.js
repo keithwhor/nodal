@@ -14,7 +14,9 @@ module.exports = (function() {
       }
 
       if (obj instanceof Model) {
-        obj = new ModelArray(obj.constructor);
+        let modelArray = new ModelArray(obj.constructor);
+        modelArray.push(obj);
+        obj = modelArray;
       }
 
       if (!(obj instanceof ModelArray)) {
@@ -65,14 +67,14 @@ module.exports = (function() {
 
       return {
         meta: this.meta(
-          arr.length,
-          arr.length,
+          obj.length,
+          obj.length,
           0,
           null,
-          this.formatSummary(),
-          this.resourceFromArray(arr)
+          null,
+          this.resourceFromArray(obj)
         ),
-        data: arr
+        data: obj
       }
 
     }
@@ -85,10 +87,10 @@ module.exports = (function() {
           modelArray.length,
           0,
           null,
-          this.formatSummary(),
+          null,
           this.resourceFromModelArray(modelArray, arrInterface)
         ),
-        data: modelArray.toObject(arrInterface);
+        data: modelArray.toObject(arrInterface)
       }
 
     }

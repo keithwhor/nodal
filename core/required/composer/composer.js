@@ -13,7 +13,7 @@ module.exports = (function() {
       this._modelConstructor = modelConstructor;
       this._modelTable = modelConstructor.prototype.schema.table;
       this._modelColumns = modelConstructor.prototype.schema.columns.map(v => v.name);
-      this._modelColumnLookup = this._columns.reduce((obj, c) => { return (obj[c] = true), obj; }, {});
+      this._modelColumnLookup = this._modelColumns.reduce((obj, c) => { return (obj[c] = true), obj; }, {});
       this._modelRelationshipLookup = Object.assign({}, modelConstructor.prototype.relationships);
 
       this._query = (query instanceof Array ? query : []).slice();
@@ -105,7 +105,7 @@ module.exports = (function() {
           };
 
         })
-        .filter(function(v) {
+        .filter(v => {
           return !!v;
         });
 
@@ -208,7 +208,9 @@ module.exports = (function() {
 
       }
 
-      let returnModels = !grouped && (columns.length === this._modelColumns.length);
+      let returnModels = !grouped && (
+        columns.filter(c => typeof(c) === 'string').length === this._modelColumns.length
+      );
 
       let preparedQuery = query.reduce((prev, query, i) => {
         // If it's a summary, convert the last query to an aggregate query.
@@ -525,11 +527,7 @@ module.exports = (function() {
 
     }
 
-    external() {
-
-      return this.interface(this._modelConstructor.prototype.externalInterface);
-
-    }
+    // TODO: Deprecate
 
     interface(columns) {
 
@@ -595,13 +593,13 @@ module.exports = (function() {
         (err, result) => {
 
           let rows = result ? (result.rows || []).slice() : [];
-          let models = null;
+          let models;
 
           if (pQuery.models) {
             models = new ModelArray(modelConstructor);
             models.push.apply(models, rows.map(r => new modelConstructor(r, true)));
           }
-          
+
           callback.call(this, err, models);
 
         }

@@ -17,10 +17,10 @@ module.exports = (function() {
 
     /* Model Extensions */
 
-    save(db, callback) {
+    save(callback) {
 
       let user = this;
-      let save = super.save.bind(this, db, callback);
+      let save = super.save.bind(this, callback);
 
       if (!user.hasErrors() && user.hasChanged('password')) {
 
