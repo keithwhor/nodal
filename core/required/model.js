@@ -81,61 +81,59 @@ module.exports = (function() {
 
     }
 
+    static columns() {
+      return this.prototype.schema.columns.map(v => v.name);
+    }
+
+    static relationship(name) {
+      return this.prototype.relationships[name];
+    }
+
     static toResource(resourceColumns) {
 
       if (!resourceColumns || !resourceColumns.length) {
-        resourceColumns = this.prototype.schema.columns.map(v => v.name);
+        resourceColumns = this.columns().concat(
+          Object.keys(this.prototype.relationships)
+            .map(r => {
+              let obj = {};
+              obj[r] = this.relationship(r).model.columns();
+              return obj;
+            })
+        );
       }
 
+
       let columns = this.prototype.schema.columns;
-      let lookup = {};
-      columns.forEach(v => lookup[v.name] = v);
+      let columnLookup = {};
+      columns.forEach(v => columnLookup[v.name] = v);
 
-      let relationshipData = resourceColumns
-        .filter(c => c.relationship)
-        .reduce((obj, c) => {
-          obj[c.relationship] = obj[c.relationship] || [];
-          obj[c.relationship].push(c.alias.substr(c.alias.indexOf('$') + 1));
-          return obj;
-        }, {});
+      resourceColumns = resourceColumns.map(r => {
 
-      let relationshipFields = Object.keys(relationshipData)
-        .map(c => {
-          return {
-            name: c,
-            type: 'resource',
-            resource: this.prototype.relationships[c].model.toResource(relationshipData[c])
-          }
-        });
+        if (typeof r === 'string') {
 
-      let fields = resourceColumns
-        .map(c => {
+          let field = columnLookup[r];
+          let fieldData = {
+            name: r,
+            type: field ? field.type : 'string'
+          };
 
-          if (typeof c === 'string') { // normal
+          field.array && (fieldData.array = true);
 
-            return {
-              name: c,
-              type: lookup[c] ? lookup[c].type : 'string',
-              array: [undefined, 0][(lookup[c] ? !!(lookup[c].properties && lookup[c].properties.array) : false) | 0]
-            };
+          return fieldData;
 
-          } else if (c.transform) { // transformation
+        } else if (typeof r === 'object' && r !== null) {
 
-            return {
-              name: c.alias,
-              type: c.type !== undefined ? c.type : (lookup[c.columns[0]] ? lookup[c.columns[0]].type : 'string'),
-              array: [undefined, true][(c.array !== undefined ? c.array : (lookup[c.columns[0]] ? !!(lookup[c.columns[0]].properties && lookup[c.columns[0]].properties.array) : false) | 0)],
-              transform: true
-            }
+          let key = Object.keys(r)[0];
+          return this.relationship(key).model.toResource(r[key]);
 
-          }
+        }
 
-        })
-        .filter(c => c);
+      }).filter(r => r);
 
       return {
         name: this.name,
-        fields: fields.concat(relationshipFields)
+        type: 'resource',
+        fields: resourceColumns
       };
 
     }
@@ -228,7 +226,7 @@ module.exports = (function() {
 
         error = new Error(message);
         error.details = errorObject;
-        
+
       }
 
       return error;
@@ -434,33 +432,10 @@ module.exports = (function() {
 
       } else {
 
-        Object.keys(this._data).forEach((key) => {
-          obj[key] = this.get(key);
+        Object.keys(this._data).forEach(key => obj[key] = this.get(key));
+        Object.keys(this.relationships).forEach(key => {
+          obj[key] = this._relationshipCache[key] ? this._relationshipCache[key].toObject() : null;
         });
-
-      }
-
-      return obj;
-
-    }
-
-    // TODO: Deprecate
-
-    toExternalObject(relationships) {
-
-      relationships = (typeof relationships === 'object') ? relationships : null;
-
-      let obj = {};
-
-      this.externalInterface.forEach((key) => {
-        obj[key] = this.get(key);
-      });
-
-      if (relationships) {
-
-        Object.keys(this._relationshipCache)
-          .filter(key => relationships[key])
-          .forEach(key => obj[key] = this._relationshipCache[key].toExternalObject(relationships[key]));
 
       }
 

@@ -596,8 +596,46 @@ module.exports = (function() {
           let models;
 
           if (pQuery.models) {
+
             models = new ModelArray(modelConstructor);
-            models.push.apply(models, rows.map(r => new modelConstructor(r, true)));
+
+            models.push.apply(
+              models,
+              rows.map(row => {
+
+                let model = new modelConstructor(row, true);
+
+                // Create new models out of relationships...
+                let relationships = {};
+
+                Object.keys(row).forEach(key => {
+                  let index = key.indexOf('$');
+                  if (index >= 0) {
+                    let mainKey = key.substr(0, index);
+                    let subKey = key.substr(index + 1);
+                    relationships[mainKey] = relationships[mainKey] || {}
+                    relationships[mainKey][subKey] = row[key];
+                    return;
+                  }
+                });
+
+                Object.keys(relationships).forEach(relationship => {
+
+                  model.set(
+                    relationship,
+                    new this._modelRelationshipLookup[relationship].model(
+                      relationships[relationship],
+                      true
+                    )
+                  );
+
+                });
+
+                return model;
+
+              })
+            );
+
           }
 
           callback.call(this, err, models);

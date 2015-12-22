@@ -135,7 +135,7 @@ module.exports = (function() {
         }
 
         return this.badRequest(data.message, data.details);
-        
+
       }
 
       return this.render(API.format(data, arrInterface));
