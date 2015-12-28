@@ -125,7 +125,7 @@ module.exports = (function() {
     * @return {Object}
     */
     static relationship(name) {
-      return this.prototype._relationships[name];
+      return this.prototype._belongsTo[name];
     }
 
     /**
@@ -137,7 +137,7 @@ module.exports = (function() {
 
       if (!arrInterface || !arrInterface.length) {
         arrInterface = this.columns().concat(
-          Object.keys(this.prototype._relationships)
+          Object.keys(this.prototype._belongsTo)
             .map(r => {
               let obj = {};
               obj[r] = this.relationship(r).model.columns();
@@ -221,13 +221,13 @@ module.exports = (function() {
     */
     static belongsTo(modelConstructor, name, viaField) {
 
-      if (!this.prototype.hasOwnProperty('_relationships')) {
-        this.prototype._relationships = {};
+      if (!this.prototype.hasOwnProperty('_belongsTo')) {
+        this.prototype._belongsTo = {};
       };
 
       viaField = viaField || `${name}_id`;
 
-      this.prototype._relationships[name] = {
+      this.prototype._belongsTo[name] = {
         model: modelConstructor,
         via: viaField
       };
@@ -440,7 +440,7 @@ module.exports = (function() {
       }
 
       this.fieldList()
-        .concat(Object.keys(this._relationships))
+        .concat(Object.keys(this._belongsTo))
         .filter((key) => data.hasOwnProperty(key))
         .forEach((key) => {
         // do not validate or log changes when loading from storage
@@ -459,7 +459,7 @@ module.exports = (function() {
     read(data) {
 
       this.fieldList()
-        .concat(Object.keys(this._relationships))
+        .concat(Object.keys(this._belongsTo))
         .filter((key) => data.hasOwnProperty(key))
         .forEach((key) => this.set(key, data[key]));
 
@@ -476,8 +476,8 @@ module.exports = (function() {
     */
     set(field, value, validate, logChange) {
 
-      if (this._relationships[field]) {
-        let rel = this._relationships[field];
+      if (this._belongsTo[field]) {
+        let rel = this._belongsTo[field];
         if (!(value instanceof rel.model)) {
           throw new Error(`${value} is not an instance of ${rel.model.name}`);
         }
@@ -562,13 +562,13 @@ module.exports = (function() {
         throw new Error('No valid relationships (1st parameter is error)');
       }
 
-      let invalidRelationships = relationships.filter(r => !this._relationships[r]);
+      let invalidRelationships = relationships.filter(r => !this._belongsTo[r]);
 
       if (invalidRelationships.length) {
         throw new Error(`Relationships "${invalidRelationships.join('", "')}" for model "${this.constructor.name}" do not exist.`);
       }
 
-      let fns = relationships.map(r => this._relationships[r]).map(r => {
+      let fns = relationships.map(r => this._belongsTo[r]).map(r => {
         return (callback) => {
           r.model.find(db, this.get(r.via), (err, model) => {
             callback(err, model);
@@ -614,7 +614,7 @@ module.exports = (function() {
       } else {
 
         Object.keys(this._data).forEach(key => obj[key] = this.get(key));
-        Object.keys(this._relationships).forEach(key => {
+        Object.keys(this._belongsTo).forEach(key => {
           obj[key] = this._relationshipCache[key] ? this._relationshipCache[key].toObject() : null;
         });
 
@@ -870,7 +870,7 @@ module.exports = (function() {
     columns: []
   };
 
-  Model.prototype._relationships = {};
+  Model.prototype._belongsTo = {};
   Model.prototype._validations = {};
   Model.prototype.formatters = {};
 

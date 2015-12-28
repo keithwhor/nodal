@@ -255,7 +255,7 @@ module.exports = (function() {
     */
     render(data) {
 
-      if(!data) { data = ''; }
+      if (!data) { data = ''; }
 
       if (data instanceof Buffer) {
 
@@ -264,7 +264,12 @@ module.exports = (function() {
       } else if (typeof data === 'object') {
 
         this.getHeader('Content-Type') || this.setHeader('Content-Type', 'application/json');
-        data = JSON.stringify(data);
+
+        try {
+          data = JSON.stringify(data);
+        } catch(e) {
+          data = {};
+        }
 
       } else {
 
