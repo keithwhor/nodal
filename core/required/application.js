@@ -65,7 +65,6 @@ module.exports = (function() {
       this.router = null;
       this.socket = null;
       this.server = null;
-      this.authorizer = null;
       this.scheduler = null;
 
       this.middleware = new ExecutionQueue();
@@ -269,23 +268,6 @@ module.exports = (function() {
       }
 
       this.router = router;
-
-      return true;
-
-    }
-
-    /**
-    * Tell the Application which Authorizer to use.
-    * @param {Nodal.Authorizer} authorizer
-    * @return {boolean}
-    */
-    useAuthorizer(authorizer) {
-
-      if (!(authorizer instanceof Authorizer)) {
-        throw new Error('useAuthorizer requires valid Authorizer instance');
-      }
-
-      this.authorizer = authorizer;
 
       return true;
 

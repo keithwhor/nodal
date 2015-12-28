@@ -48,7 +48,7 @@ module.exports = (function() {
 
       let execArray = [
         function(callback) {
-          callback(null);
+          callback.apply(null, [null].concat(args));
         }
       ].concat(
         this._queue.map(item => {

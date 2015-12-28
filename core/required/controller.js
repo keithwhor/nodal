@@ -49,7 +49,7 @@ module.exports = (function() {
     }
 
     /**
-    * For use with Authorizer. Overwritten when Application#useAuthorizer is called.
+    * Intended to be overwritten when inherited. Used in AuthorizationController class.
     * @param {string} permissionName The permission name (and everything below) you'd like to allow.
     * @param {function({Error} err)} callback Function to execute upon authorization check.
     * @return {this}

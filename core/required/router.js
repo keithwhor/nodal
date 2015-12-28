@@ -133,11 +133,6 @@ module.exports = (function() {
           app
         );
 
-        controller.authorize = app.authorizer ? app.authorizer.exec.bind(
-            app.authorizer,
-            controller
-          ) : controller.authorize;
-
         // Enjoy this one ;)
         //      ... just to be sassy
         let method = ({

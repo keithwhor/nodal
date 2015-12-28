@@ -58,27 +58,6 @@ module.exports = (function() {
       return this.permission(permissionName) <= (parseInt(permissionLevel) || 0);
     }
 
-    /**
-    * Default exec method. Should be overwritten using Authorizer#auth
-    */
-    exec(controller, permissionName, callback) {
-
-      callback(null);
-
-    }
-
-    /**
-    * Overwrites exec method using the wrapperFn provided.
-    * @param {function} wrapperFn The function to overwrite Authorizer#exec with
-    * @return {this}
-    */
-    auth(wrapperFn) {
-
-      this.exec = wrapperFn.bind(this);
-      return this;
-
-    }
-
   }
 
   return Authorizer;

@@ -156,6 +156,11 @@ module.exports = (function() {
         if (typeof r === 'string') {
 
           let field = columnLookup[r];
+
+          if (!field) {
+            return null;
+          }
+
           let fieldData = {
             name: r,
             type: field ? field.type : 'string'
@@ -168,7 +173,13 @@ module.exports = (function() {
         } else if (typeof r === 'object' && r !== null) {
 
           let key = Object.keys(r)[0];
-          return this.relationship(key).model.toResource(r[key]);
+          let relationship = this.relationship(key);
+
+          if (!relationship) {
+            return null;
+          }
+
+          return relationship.model.toResource(r[key]);
 
         }
 
