@@ -125,7 +125,7 @@ module.exports = (function() {
     * @return {Object}
     */
     static relationship(name) {
-      return this.prototype.relationships[name];
+      return this.prototype._relationships[name];
     }
 
     /**
@@ -137,7 +137,7 @@ module.exports = (function() {
 
       if (!arrInterface || !arrInterface.length) {
         arrInterface = this.columns().concat(
-          Object.keys(this.prototype.relationships)
+          Object.keys(this.prototype._relationships)
             .map(r => {
               let obj = {};
               obj[r] = this.relationship(r).model.columns();
@@ -194,6 +194,64 @@ module.exports = (function() {
     }
 
     /**
+    * Set the database to be used for this model
+    * @param {Nodal.Database} db
+    */
+    static setDatabase(db) {
+
+      this.prototype.db = db;
+
+    }
+
+    /**
+    * Set the schema to be used for this model
+    * @param {Object} schema
+    */
+    static setSchema(schema) {
+
+      this.prototype.schema = schema;
+
+    }
+
+    /**
+    * Sets a belongsTo relationship for the Model
+    * @param {class Nodal.Model} modelConstructor The Model which your current model belongs to
+    * @param {string} name The name you wish yo use for the model (i.e. "user")
+    * @param {optional string} viaField Which field in current model represents this relationship, defaults to `${name}_id`
+    */
+    static belongsTo(modelConstructor, name, viaField) {
+
+      if (!this.prototype.hasOwnProperty('_relationships')) {
+        this.prototype._relationships = {};
+      };
+
+      viaField = viaField || `${name}_id`;
+
+      this.prototype._relationships[name] = {
+        model: modelConstructor,
+        via: viaField
+      };
+
+    }
+
+    /**
+    * Create a validator
+    * @param {string} field The field you'd like to validate
+    * @param {string} message The error message shown if a validation fails.
+    * @param {function({any} value)} fnAction the validation to run - first parameter is the value you're testing.
+    */
+    static validates(field, message, fnAction) {
+
+      if (!this.prototype.hasOwnProperty('_validations')) {
+        this.prototype._validations = {};
+      };
+
+      this.prototype._validations[field] = this.prototype._validations[field] || [];
+      this.prototype._validations[field].push({message: message, action: fnAction});
+
+    }
+
+    /**
     * @param {Object} modelData Data to load into the object
     * @param {optional boolean} fromStorage Is this model being loaded from storage? Defaults to false.
     */
@@ -201,7 +259,6 @@ module.exports = (function() {
 
       modelData = modelData || {};
 
-      this._validations = {};
       this._relationshipCache = {};
 
       this.__preInitialize__();
@@ -213,6 +270,7 @@ module.exports = (function() {
 
     /**
     * Expected to be overwritten when inherited. Anything done before loading data, like validations, goes here.
+    * @deprecated
     */
     __preInitialize__() {
       return true;
@@ -220,6 +278,7 @@ module.exports = (function() {
 
     /**
     * Expected to be overwritten when inherited. Anything done after loading data (computed fields, etc.) goes here.
+    * @deprecated
     */
     __postInitialize__() {
       return true;
@@ -267,19 +326,6 @@ module.exports = (function() {
     */
     inStorage() {
       return this._inStorage;
-    }
-
-    /**
-    * Create a validator, for use in Model#__preInitialize__
-    * @param {string} field The field you'd like to validate
-    * @param {string} message The error message shown if a validation fails.
-    * @param {function({any} value)} fnAction the validation to run - first parameter is the value you're testing.
-    */
-    validates(field, message, fnAction) {
-
-      this._validations[field] = this._validations[field] || [];
-      this._validations[field].push({message: message, action: fnAction});
-
     }
 
     /**
@@ -394,7 +440,7 @@ module.exports = (function() {
       }
 
       this.fieldList()
-        .concat(Object.keys(this.relationships))
+        .concat(Object.keys(this._relationships))
         .filter((key) => data.hasOwnProperty(key))
         .forEach((key) => {
         // do not validate or log changes when loading from storage
@@ -413,7 +459,7 @@ module.exports = (function() {
     read(data) {
 
       this.fieldList()
-        .concat(Object.keys(this.relationships))
+        .concat(Object.keys(this._relationships))
         .filter((key) => data.hasOwnProperty(key))
         .forEach((key) => this.set(key, data[key]));
 
@@ -430,8 +476,8 @@ module.exports = (function() {
     */
     set(field, value, validate, logChange) {
 
-      if (this.relationships[field]) {
-        let rel = this.relationships[field];
+      if (this._relationships[field]) {
+        let rel = this._relationships[field];
         if (!(value instanceof rel.model)) {
           throw new Error(`${value} is not an instance of ${rel.model.name}`);
         }
@@ -516,13 +562,13 @@ module.exports = (function() {
         throw new Error('No valid relationships (1st parameter is error)');
       }
 
-      let invalidRelationships = relationships.filter(r => !this.relationships[r]);
+      let invalidRelationships = relationships.filter(r => !this._relationships[r]);
 
       if (invalidRelationships.length) {
         throw new Error(`Relationships "${invalidRelationships.join('", "')}" for model "${this.constructor.name}" do not exist.`);
       }
 
-      let fns = relationships.map(r => this.relationships[r]).map(r => {
+      let fns = relationships.map(r => this._relationships[r]).map(r => {
         return (callback) => {
           r.model.find(db, this.get(r.via), (err, model) => {
             callback(err, model);
@@ -568,7 +614,7 @@ module.exports = (function() {
       } else {
 
         Object.keys(this._data).forEach(key => obj[key] = this.get(key));
-        Object.keys(this.relationships).forEach(key => {
+        Object.keys(this._relationships).forEach(key => {
           obj[key] = this._relationshipCache[key] ? this._relationshipCache[key].toObject() : null;
         });
 
@@ -824,7 +870,8 @@ module.exports = (function() {
     columns: []
   };
 
-  Model.prototype.relationships = {};
+  Model.prototype._relationships = {};
+  Model.prototype._validations = {};
   Model.prototype.formatters = {};
 
   Model.prototype.readOnly = false;

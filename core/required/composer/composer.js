@@ -14,7 +14,7 @@ module.exports = (function() {
       this._modelTable = modelConstructor.prototype.schema.table;
       this._modelColumns = modelConstructor.prototype.schema.columns.map(v => v.name);
       this._modelColumnLookup = this._modelColumns.reduce((obj, c) => { return (obj[c] = true), obj; }, {});
-      this._modelRelationshipLookup = Object.assign({}, modelConstructor.prototype.relationships);
+      this._modelRelationshipLookup = Object.assign({}, modelConstructor.prototype._relationships);
 
       this._query = (query instanceof Array ? query : []).slice();
 
@@ -114,7 +114,7 @@ module.exports = (function() {
     __prepareAggregateBy__(table, columns) {
 
       let modelConstructor = this._modelConstructor;
-      let relationships = modelConstructor.prototype.relationships;
+      let relationships = modelConstructor.prototype._relationships;
 
       let aggregateBy = {};
       aggregateBy[table] = {};
@@ -372,7 +372,7 @@ module.exports = (function() {
 
     join(relationship, columns) {
 
-      let relationships = this._modelConstructor.prototype.relationships;
+      let relationships = this._modelConstructor.prototype._relationships;
       let rel = Object.keys(relationships)
         .filter(name => name === relationship)
         .map(name => relationships[name])
@@ -441,7 +441,7 @@ module.exports = (function() {
         return undefined;
       }
 
-      let relationships = this._modelConstructor.prototype.relationships;
+      let relationships = this._modelConstructor.prototype._relationships;
       return Object.keys(relationships)
         .filter(name => name === field)
         .map(name => relationships[name])
