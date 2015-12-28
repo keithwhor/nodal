@@ -166,6 +166,16 @@ module.exports = (function() {
     }
 
     /**
+    * Creates a 302 redirect to the desired location
+    * @param {string} location
+    */
+    redirect(location) {
+      this.status(302);
+      this.setHeader('Location', location);
+      this.render();
+    }
+
+    /**
     * Using API formatting, send an http.ServerResponse indicating there was a Bad Request (400)
     * @param {string} msg Error message to send
     * @param {Object} details Any additional details for the error (must be serializable)
