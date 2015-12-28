@@ -121,13 +121,13 @@ module.exports = (function() {
     },
     Scheduler: {
       get: function() {
-        return Nodal.Scheduler || (Nodal.Scheduler = require('./required/scheduler/scheduler.js'));
+        return Nodal.Scheduler || (Nodal.Scheduler = require('./required/scheduler.js'));
       },
       enumerable: true
     },
     SchedulerTask: {
       get: function() {
-        return Nodal.Task || (Nodal.Task = require('./required/scheduler/task.js'));
+        return Nodal.Task || (Nodal.Task = require('./required/task.js'));
       },
       enumerable: true
     },

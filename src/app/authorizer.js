@@ -9,7 +9,7 @@ module.exports = (function() {
   authorizer.definePermission('user', 0);
   authorizer.definePermission('admin', 10);
 
-  authorizer.auth((controller, params, app, permissionName, callback) => {
+  authorizer.auth((controller, permissionName, callback) => {
 
     callback(null);
 

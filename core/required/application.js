@@ -7,9 +7,8 @@ module.exports = (function() {
   const SocketServer = require('./socket.js');
   const Template = require('./template.js');
   const Authorizer = require('./authorizer.js');
-  const MiddlewareManager = require('./middleware_manager.js');
-  const InitializerManager = require('./initializer_manager.js');
-  const Scheduler = require('./scheduler/scheduler.js');
+  const ExecutionQueue = require('./execution_queue.js');
+  const Scheduler = require('./scheduler.js');
 
   const dummyRouter = require('./dummy_router.js');
 
@@ -25,8 +24,15 @@ module.exports = (function() {
   dot.templateSettings.varname = 'params, data';
   dot.templateSettings.strip = false;
 
+  /**
+  * Core Nodal Application. Contains globally-applicable logic, methods and properties. Accessible by reference in any Controller or Task.
+  * @class
+  */
   class Application {
 
+    /**
+    * Three methods are run in order when instantiated, Application#__create__ then Application#__setup__ and finally, Application#__start__
+    */
     constructor() {
 
       this.__create__();
@@ -35,6 +41,9 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Sets all internal properties for the Application to function as expected
+    */
     __create__() {
 
       this._proxy = null;
@@ -59,12 +68,16 @@ module.exports = (function() {
       this.authorizer = null;
       this.scheduler = null;
 
-      this.middleware = new MiddlewareManager();
-      this.initializers = new InitializerManager();
+      this.middleware = new ExecutionQueue();
+      this.initializers = new ExecutionQueue();
 
     }
 
-    __destroy__(done) {
+    /**
+    * Cleans up the Application, closes outstanding HTTP or websocket requests
+    * @param {function} fnDone Method to execute when Application has been cleaned up successfully
+    */
+    __destroy__(fnDone) {
 
       let cwd = process.cwd();
       let self = this;
@@ -75,7 +88,7 @@ module.exports = (function() {
           delete self[v];
         });
 
-        done.call(this);
+        fnDone.call(this);
 
       };
 
@@ -111,15 +124,29 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Boilerplate method, intended to be overwritten when inherited (sets up Application initializers, etc.)
+    */
     __setup__() {}
+
+    /**
+    * Boilerplater method, overwritten by Daemon when spinning up Application
+    */
     __initialize__() {}
 
+    /**
+    * Used by Daemon to tells the Application to use the DummyRouter when given an error
+    * @param {Error} err
+    */
     __error__(err) {
 
       this.useRouter(dummyRouter(err));
 
     }
 
+    /**
+    * Starts the Application. First runs initializers, then calls Application#__initialize__ which should be provided by the Daemon.
+    */
     __start__() {
 
       let fn = this.__initialize__;
@@ -142,6 +169,11 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Loads all static assets into memory (RAM). Should be deprecated from this module and moved completely to initializer.
+    * @to_deprecate
+    * @param {string} path The directory from which to load static assets
+    */
     loadStaticAssets(path) {
 
       if (path[path.length - 1] === '/') {
@@ -195,12 +227,22 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Returns static file data given a name (path) within the static directory.
+    * @param {string} name Filepath from which to retrieve static data.
+    * @return {Buffer} file data
+    */
     static(name) {
 
       return this._static[[this._staticPath, name].join('/')] || null;
 
     }
 
+    /**
+    * Tell the Application which scheduler to use (only one can run in the main thread.)
+    * @param {Nodal.Scheduler} scheduler
+    * @return {boolean}
+    */
     useScheduler(scheduler) {
 
       if (!(scheduler instanceof Scheduler)) {
@@ -215,6 +257,11 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Tell the Application which router to use.
+    * @param {Nodal.Router} router
+    * @return {boolean}
+    */
     useRouter(router) {
 
       if (!(router instanceof Router)) {
@@ -227,6 +274,11 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Tell the Application which Authorizer to use.
+    * @param {Nodal.Authorizer} authorizer
+    * @return {boolean}
+    */
     useAuthorizer(authorizer) {
 
       if (!(authorizer instanceof Authorizer)) {
@@ -239,6 +291,12 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Alias a database instance to Application#db
+    * @param {Nodal.Database} db Database instance to alias
+    * @param {string} alias Alias to use for the database (i.e. "main")
+    * @return {boolean}
+    */
     useDatabase(db, alias) {
 
       if (typeof alias !== 'string') {
@@ -261,20 +319,42 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Reference an aliased database
+    * @param {string} alias
+    * @return {Nodal.Database}
+    */
     db(alias) {
 
       return this._db[alias] || null;
 
     }
 
+    /**
+    * Set default key-value pair for data objects to be sent to templates. i.e. "api_url" if you need it accessible from every template.
+    * @param {string} name Key which you're setting for the data object
+    * @param {any} value Value which you're setting for the specified key
+    * @return {any}
+    */
     setTemplateData(name, value) {
       this._templateData[name] = value;
+      return value;
     }
 
+    /**
+    * Unsets template data for the specified key
+    * @param {string} name Key which you're unsetting
+    */
     unsetTemplateData(name) {
       delete this._templateData;
     }
 
+    /**
+    * Retrieves the template matching the provided name. Lazy loads new templates from disk, otherwise caches.
+    * @param {string} name The template name (full path in the the app/templates directory).
+    * @param {optional boolean} raw Whether or not the template is "raw" (i.e. just an HTML string, no template engine required.) Defaults to false.
+    * @return {Nodal.Template} The template instance
+    */
     template(name, raw) {
 
       raw = !!raw | 0; // coerce to 0, 1
@@ -311,6 +391,10 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Proxies web socket requests through main HTTP connection (for use on Heroku, etc.)
+    * @experimental
+    */
     _proxyWebSocketRequests() {
 
       if (this.server && this.socket && !this._proxy) {
@@ -327,6 +411,11 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Handles incoming http.ClientRequest and outgoing http.ServerResponse objects, routes them appropriately.
+    * @param {http.ClientRequest} request
+    * @param {http.ServerResponse} response
+    */
     requestHandler(request, response) {
 
       let error;
@@ -377,6 +466,10 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Tells the Application to start listening for incoming HTTP connections on a specified port
+    * @param {number} port The port on which to begin listening
+    */
     listen(port) {
 
       if (this.server) {
@@ -424,6 +517,11 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Tells the Application to start listening for incoming websocket connections on a specified port
+    * @experimental
+    * @param {number} port The port on which to begin listening
+    */
     socketListen(port) {
 
       if (this.socket) {
@@ -441,6 +539,10 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Tells the websocket handler which command to execute
+    * @experimental
+    */
     command() {
       if(!this.socket) {
         throw new Error('Application must socketListen before it can use commands');
@@ -448,12 +550,18 @@ module.exports = (function() {
       this.socket.command.apply(this.socket, arguments);
     }
 
+    /**
+    * Force SSL when going through a proxy (i.e., Heroku)
+    */
     forceProxyTLS() {
 
       this._forceProxyTLS = true;
 
     }
 
+    /**
+    * Force redirect to WWW subdomain when accessed as a naked domain (no subdomain).
+    */
     forceWWW() {
 
       this._forceWWW = true;

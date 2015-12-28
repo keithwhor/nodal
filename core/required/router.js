@@ -1,10 +1,9 @@
-"use strict";
-
 module.exports = (function() {
+
+  'use strict';
 
   const url = require('url');
   const qs = require('querystring');
-  // const Config = require('../module.js'.my.Config); // ?
 
   const Controller = require('./controller.js');
 
@@ -12,14 +11,14 @@ module.exports = (function() {
 
     constructor(regex, controller) {
       this._regex = null;
-      if(typeof regex === 'string') {
+      if (typeof regex === 'string') {
         this._regex = new RegExp(regex);
       } else if(regex instanceof RegExp) {
         this._regex = regex;
       } else {
         throw new Error('Routes must be strings or valid regular expression');
       }
-      if(!Controller.prototype.isPrototypeOf(controller.prototype)) {
+      if (!Controller.prototype.isPrototypeOf(controller.prototype)) {
         throw new Error('Route requires a valid Controller');
       }
       this._controller = controller;
@@ -136,10 +135,8 @@ module.exports = (function() {
 
         controller.authorize = app.authorizer ? app.authorizer.exec.bind(
             app.authorizer,
-            controller,
-            params,
-            app
-          ) : ((permissionName, callback) => { callback(null); });
+            controller
+          ) : controller.authorize;
 
         // Enjoy this one ;)
         //      ... just to be sassy

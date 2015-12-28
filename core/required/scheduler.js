@@ -2,8 +2,6 @@ module.exports = (function() {
 
   'use strict';
 
-  const SchedulerTask = require('./task.js');
-
   class SchedulerEntry {
 
     constructor(scheduler) {
@@ -46,10 +44,6 @@ module.exports = (function() {
     }
 
     perform(Task) {
-
-      if (!SchedulerTask.prototype.isPrototypeOf(Task.prototype)) {
-        throw new Error('SchedulerEntry#perform must be provided with a valid SchedulerTask.');
-      }
 
       this._task = new Task();
 

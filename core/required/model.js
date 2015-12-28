@@ -2,15 +2,24 @@ module.exports = (function() {
 
   'use strict';
 
-  const DataTypes = require('./data_types.js');
+  const DataTypes = require('./db/data_types.js');
   const Database = require('./db/database.js');
   const Composer = require('./composer/composer.js');
 
   const utilities = require('./utilities.js');
   const async = require('async');
 
+  /**
+  * Basic Model implementation. Optionally interfaces with database.
+  * @class
+  */
   class Model {
 
+    /**
+    * Finds a model with a provided id, otherwise returns a notFound error.
+    * @param {number} id The id of the model you're looking for
+    * @param {function({Error} err, {Nodal.Model} model)} callback The callback to execute upon completion
+    */
     static find(id, callback) {
 
       let db = this.prototype.db;
@@ -38,6 +47,11 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Creates a new model instance using the provided data.
+    * @param {object} data The data to load into the object.
+    * @param {function({Error} err, {Nodal.Model} model)} callback The callback to execute upon completion
+    */
     static create(data, callback) {
 
       let model = new this(data);
@@ -45,6 +59,12 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Finds and updates a model with a specified id. Return a notFound error if model does not exist.
+    * @param {number} id The id of the model you're looking for
+    * @param {object} data The data to load into the object.
+    * @param {function({Error} err, {Nodal.Model} model)} callback The callback to execute upon completion
+    */
     static update(id, data, callback) {
 
       this.find(id, (err, model) => {
@@ -60,6 +80,11 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Finds and destroys a model with a specified id. Return a notFound error if model does not exist.
+    * @param {number} id The id of the model you're looking for
+    * @param {function({Error} err, {Nodal.Model} model)} callback The callback to execute upon completion
+    */
     static destroy(id, callback) {
 
       this.find(id, (err, model) => {
@@ -74,6 +99,11 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Creates a new Composer (ORM) instance to begin a new query.
+    * @param {optional Nodal.Database} db Deprecated - provide a database to query from. Set the model's db in its constructor file, instead.
+    * @return {Nodal.Composer}
+    */
     static query(db) {
 
       db = db || this.prototype.db;
@@ -81,18 +111,32 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Get the model's column names
+    * @return {Array}
+    */
     static columns() {
       return this.prototype.schema.columns.map(v => v.name);
     }
 
+    /**
+    * Get the model's relationship with a provided name
+    * @param {string} name Relationship name
+    * @return {Object}
+    */
     static relationship(name) {
       return this.prototype.relationships[name];
     }
 
-    static toResource(resourceColumns) {
+    /**
+    * Get resource data for a model, for API responses and debug information
+    * @param {Array} arrInterface Array of strings representing output columns, or singularly-keyed objects representing relationships and their interface.
+    * @return {Object} Resource object for the model
+    */
+    static toResource(arrInterface) {
 
-      if (!resourceColumns || !resourceColumns.length) {
-        resourceColumns = this.columns().concat(
+      if (!arrInterface || !arrInterface.length) {
+        arrInterface = this.columns().concat(
           Object.keys(this.prototype.relationships)
             .map(r => {
               let obj = {};
@@ -107,7 +151,7 @@ module.exports = (function() {
       let columnLookup = {};
       columns.forEach(v => columnLookup[v.name] = v);
 
-      resourceColumns = resourceColumns.map(r => {
+      let resourceColumns = arrInterface.map(r => {
 
         if (typeof r === 'string') {
 
@@ -138,6 +182,10 @@ module.exports = (function() {
 
     }
 
+    /**
+    * @param {Object} modelData Data to load into the object
+    * @param {optional boolean} fromStorage Is this model being loaded from storage? Defaults to false.
+    */
     constructor(modelData, fromStorage) {
 
       modelData = modelData || {};
@@ -152,14 +200,23 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Expected to be overwritten when inherited. Anything done before loading data, like validations, goes here.
+    */
     __preInitialize__() {
       return true;
     }
 
+    /**
+    * Expected to be overwritten when inherited. Anything done after loading data (computed fields, etc.) goes here.
+    */
     __postInitialize__() {
       return true;
     }
 
+    /**
+    * Prepare model for use
+    */
     __initialize__() {
 
       this._inStorage = false;
@@ -193,10 +250,20 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Indicates whethere or not the model is currently represented in hard storage (db).
+    * @return {boolean}
+    */
     inStorage() {
       return this._inStorage;
     }
 
+    /**
+    * Create a validator, for use in Model#__preInitialize__
+    * @param {string} field The field you'd like to validate
+    * @param {string} message The error message shown if a validation fails.
+    * @param {function({any} value)} fnAction the validation to run - first parameter is the value you're testing.
+    */
     validates(field, message, fnAction) {
 
       this._validations[field] = this._validations[field] || [];
@@ -204,10 +271,19 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Tells us whether a model field has changed since we created it or loaded it from storage.
+    * @param {string} field The model field
+    * @return {boolean}
+    */
     hasChanged(field) {
       return field === undefined ? this.changedFields().length > 0 : !!this._changed[field];
     }
 
+    /**
+    * Provides an array of all changed fields since model was created / loaded from storage
+    * @return {Array}
+    */
     changedFields() {
       let changed = this._changed;
       return Object.keys(changed).filter(function(v) {
@@ -215,6 +291,10 @@ module.exports = (function() {
       });
     }
 
+    /**
+    * Creates an error object for the model if any validations have failed, returns null otherwise
+    * @return {Error}
+    */
     errorObject() {
 
       let error = null;
@@ -233,12 +313,21 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Tells us whether or not the model has errors (failed validations)
+    * @return {boolean}
+    */
     hasErrors() {
 
       return Object.keys(this._errors).length > 0;
 
     }
 
+    /**
+    * Gives us an error object with each errored field as a key, and each value
+    * being an array of failure messages from the validators
+    * @return {Object}
+    */
     getErrors() {
       let obj = {};
       let errors = this._errors;
@@ -248,6 +337,10 @@ module.exports = (function() {
       return obj;
     }
 
+    /**
+    * Validates provided fieldList (or all fields if not provided)
+    * @param {optional Array} fieldList fields to validate
+    */
     __validate__(fieldList) {
 
       let data = this._data;
@@ -275,6 +368,11 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Loads data into the model
+    * @param {Object} data Data to load into the model
+    * @param {optional boolean} fromStorage Specify if the model was loaded from storage. Defaults to false.
+    */
     __load__(data, fromStorage) {
 
       this._inStorage = !!fromStorage;
@@ -296,6 +394,11 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Reads new data into the model.
+    * @param {Object} data Data to inject into the model
+    * @return {this}
+    */
     read(data) {
 
       this.fieldList()
@@ -307,6 +410,13 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Sets specified field data for the model
+    * @param {string} field Field to set
+    * @param {any} value Value for the field
+    * @param {optional boolean} validate Specify if you would like to validate the change (defaults to true)
+    * @param {optional boolean} logChange Specify if you'd like to count this as a changed field (defaults to true)
+    */
     set(field, value, validate, logChange) {
 
       if (this.relationships[field]) {
@@ -363,11 +473,21 @@ module.exports = (function() {
 
     }
 
-    get(key, ignoreFormat) {
-      let datum = this._data[key];
-      return (!ignoreFormat && this.formatters[key]) ? this.formatters[key](datum) : datum;
+    /**
+    * Retrieve field data for the model.
+    * @param {string} field Field for which you'd like to retrieve data.
+    */
+    get(field, ignoreFormat) {
+      let datum = this._data[field];
+      return (!ignoreFormat && this.formatters[field]) ? this.formatters[field](datum) : datum;
     }
 
+    /**
+    * Retrieve associated models related to this model from the database.
+    * @param {function({Error} err, {Nodal.Model|Nodal.ModelArray} model_1, ... {Nodal.Model|Nodal.ModelArray} model_n)}
+    *   Pass in a function with named parameters corresponding the relationships you'd like to retrieve.
+    *   The first parameter is always an error callback.
+    */
     relationship(callback) {
 
       let db = this.db;
@@ -411,6 +531,10 @@ module.exports = (function() {
 
     };
 
+    /**
+    * Creates a plain object from the Model, with properties matching an optional interface
+    * @param {optional Array} arrInterface Interface to use for object creation
+    */
     toObject(arrInterface) {
 
       let obj = {};
@@ -443,56 +567,114 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Get the table name for the model.
+    * @return {string}
+    */
     tableName() {
       return this._table;
     }
 
+    /**
+    * Determine if the model has a specified field.
+    * @param {string} field
+    * @return {boolean}
+    */
     hasField(field) {
       return !!this._fieldLookup[field];
     }
 
+    /**
+    * Retrieve the schema field data for the specified field
+    * @param {string} field
+    * @return {Object}
+    */
     getFieldData(field) {
       return this._fieldLookup[field];
     }
 
+    /**
+    * Retrieve the schema data type for the specified field
+    * @param {string} field
+    * @return {string}
+    */
     getDataTypeOf(field) {
       return DataTypes[this._fieldLookup[field].type];
     }
 
+    /**
+    * Determine whether or not this field is an Array (PostgreSQL supports this)
+    * @param {string} field
+    * @return {boolean}
+    */
     isFieldArray(field) {
       let fieldData = this._fieldLookup[field];
       return !!(fieldData && fieldData.properties && fieldData.properties.array);
     }
 
+    /**
+    * Determine whether or not this field is a primary key in our schema
+    * @param {string} field
+    * @return {boolean}
+    */
     isFieldPrimaryKey(field) {
       let fieldData = this._fieldLookup[field];
       return !!(fieldData && fieldData.properties && fieldData.properties.primary_key);
     }
 
+    /**
+    * Retrieve the defaultValue for this field from our schema
+    * @param {string} field
+    * @return {any}
+    */
     fieldDefaultValue(field) {
       let fieldData = this._fieldLookup[field];
       return !!(fieldData && fieldData.properties && fieldData.properties.array);
     }
 
+    /**
+    * Retrieve an array of fields for our model
+    * @return {Array}
+    */
     fieldList() {
       return this._fieldArray.map(function(v) { return v.name; });
     }
 
+    /**
+    * Retrieve our field schema definitions
+    * @return {Array}
+    */
     fieldDefinitions() {
       return this._fieldArray.slice();
     }
 
+    /**
+    * Set an error for a specified field (supports multiple errors)
+    * @param {string} key The specified field for which to create the error (or '*' for generic)
+    * @param {string} message The error message
+    * @return {boolean}
+    */
     setError(key, message) {
       this._errors[key] = this._errors[key] || [];
       this._errors[key].push(message);
       return true;
     }
 
+    /**
+    * Clears all errors for a specified field
+    * @param {string} key The specified field for which to create the error (or '*' for generic)
+    * @return {boolean}
+    */
     clearError(key) {
       delete this._errors[key];
       return true;
     }
 
+    /**
+    * Saves model to database
+    * @param {function({Error} err, {Nodal.Model} model)} callback
+    *   Method to execute upon completion, returns error if failed (including validations didn't pass)
+    */
     save(callback) {
 
       let db = this.db;
@@ -562,6 +744,11 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Destroys model reference in database.
+    * @param {function({Error} err, {Nodal.Model} model)} callback
+    *   Method to execute upon completion, returns error if failed
+    */
     destroy(callback) {
 
       let db = this.db;

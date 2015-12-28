@@ -13,7 +13,7 @@ module.exports = (function() {
         .filter(params.query)
         .end((err, models) => {
 
-          this.respond(err || models.toObject());
+          this.respond(err || models);
 
         });
 
@@ -23,7 +23,7 @@ module.exports = (function() {
 
       {{= data.for.name }}.find(params.id, (err, model) => {
 
-        this.respond(err || model.toObject());
+        this.respond(err || model);
 
       });
 
@@ -33,7 +33,7 @@ module.exports = (function() {
 
       {{= data.for.name }}.create(params.body.data, (err, model) => {
 
-        this.respond(err || model.toObject());
+        this.respond(err || model);
 
       });
 
@@ -43,7 +43,7 @@ module.exports = (function() {
 
       {{= data.for.name }}.update(params.id, params.body.data, (err, model) => {
 
-        this.respond(err || model.toObject());
+        this.respond(err || model);
 
       });
 
@@ -53,7 +53,7 @@ module.exports = (function() {
 
       {{= data.for.name }}.destroy(params.id, (err, model) => {
 
-        this.respond(err || model.toObject());
+        this.respond(err || model);
 
       });
 

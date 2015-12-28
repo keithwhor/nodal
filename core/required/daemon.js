@@ -7,8 +7,15 @@ module.exports = (function() {
 
   const fs = require('fs');
 
+  /**
+  * Daemon for running servers. Restarts when changes are made to the underlying file structure.
+  * @class
+  */
   class Daemon {
 
+    /**
+    * @param {string} path Path to your app.js file which exports your Application
+    */
     constructor(path) {
 
       this._path = path;
@@ -18,6 +25,10 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Begins the Daemon, instantiates your app. Initializers called first. Will only watch for changes when NODE_ENV is empty or set to "development"
+    * @param {function} callback Method to execute when Application is finished initializing.
+    */
     start(callback) {
 
       callback = typeof callback === 'function' ? callback : this._onStart;
@@ -64,12 +75,19 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Restarts the Daemon
+    */
     restart() {
 
       this.stop(this.start);
 
     }
 
+    /**
+    * Stops the Daemon
+    * @param {function} onStop Method to execute when Daemon has stopped successfully
+    */
     stop(onStop) {
 
       this.unwatch();
@@ -87,6 +105,9 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Stops watching directory tree for changes to files
+    */
     unwatch() {
 
       this._watchers && clearInterval(this._watchers.interval);
@@ -94,6 +115,11 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Watches a directory tree for changes
+    * @param {string} path Directory tree to watch
+    * @param {function} onChange Method to be executed when a change is detected
+    */
     watch(path, onChange) {
 
       function watchDir(cwd, dirname, watchers) {

@@ -36,12 +36,6 @@ module.exports = (function(Nodal) {
 
     });
 
-    it('should have Initializer constructor', function() {
-
-      expect(Nodal.Initializer).to.be.a('function');
-
-    });
-
     it('should have Middleware constructor', function() {
 
       expect(Nodal.Middleware).to.be.a('function');
