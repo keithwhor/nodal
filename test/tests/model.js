@@ -16,23 +16,16 @@ module.exports = (function(Nodal) {
       ]
     };
 
-    class TestObject extends Nodal.Model {
+    class TestObject extends Nodal.Model {}
 
-      __preInitialize__() {
+    TestObject.setDatabase(db);
+    TestObject.setSchema(schema);
 
-        this.validates('test', 'should be at least five characters long', function(value) {
+    TestObject.validates('test', 'should be at least five characters long', function(value) {
 
-          return value && value.length && value.length >= 5;
+      return value && value.length && value.length >= 5;
 
-        });
-
-      }
-
-    }
-
-    TestObject.prototype.schema = schema;
-
-    TestObject.prototype.externalInterface = ['id', 'test', 'created_at'];
+    });
 
     before(function(done) {
 
@@ -108,7 +101,7 @@ module.exports = (function(Nodal) {
       it('should refuse to save with error', function(done) {
 
         let testObject = new TestObject();
-        testObject.save(db, function(err, model) {
+        testObject.save(function(err, model) {
           expect(err).to.not.equal(null);
           expect(model).to.equal(testObject);
           expect(model.inStorage()).to.equal(false);
@@ -120,7 +113,7 @@ module.exports = (function(Nodal) {
       it('should save with no errors', function(done) {
 
         let testObject = new TestObject({test: 'abcdef'});
-        testObject.save(db, function(err, model) {
+        testObject.save(function(err, model) {
           expect(err).to.equal(null);
           expect(model).to.equal(testObject);
           expect(model.inStorage()).to.equal(true);
@@ -132,10 +125,10 @@ module.exports = (function(Nodal) {
       it('should save initially and update afterwards', function(done) {
 
         let testObject = new TestObject({test: '123456'});
-        testObject.save(db, function(err, model) {
+        testObject.save(function(err, model) {
           expect(err).to.equal(null);
           model.set('test', 'infinity');
-          model.save(db, function(err, model) {
+          model.save(function(err, model) {
             expect(err).to.equal(null);
             done();
           });
