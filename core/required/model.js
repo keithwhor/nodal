@@ -8,6 +8,7 @@ module.exports = (function() {
 
   const utilities = require('./utilities.js');
   const async = require('async');
+  const inflect = require('i')();
 
   /**
   * Basic Model implementation. Optionally interfaces with database.
@@ -125,7 +126,7 @@ module.exports = (function() {
     * @return {Object}
     */
     static relationship(name) {
-      return this.prototype._belongsTo[name];
+      return this.prototype._joins[name];
     }
 
     /**
@@ -137,7 +138,7 @@ module.exports = (function() {
 
       if (!arrInterface || !arrInterface.length) {
         arrInterface = this.columns().concat(
-          Object.keys(this.prototype._belongsTo)
+          Object.keys(this.prototype._joins)
             .map(r => {
               let obj = {};
               obj[r] = this.relationship(r).model.columns();
@@ -214,22 +215,48 @@ module.exports = (function() {
     }
 
     /**
-    * Sets a belongsTo relationship for the Model
+    * Sets a joins relationship for the Model. Sets joinedBy relationship for parent.
     * @param {class Nodal.Model} modelConstructor The Model which your current model belongs to
-    * @param {string} name The name you wish yo use for the model (i.e. "user")
-    * @param {optional string} viaField Which field in current model represents this relationship, defaults to `${name}_id`
+    * @param {optional Object} options
+    *   "name": The string name of the parent in the relationship (default to camelCase of Model name)
+    *   "via": Which field in current model represents this relationship, defaults to `${name}_id`
+    *   "as": What to display the name of the child as when joined to the parent (default to camelCase of child name)
     */
-    static belongsTo(modelConstructor, name, viaField) {
+    static joins(modelConstructor, options) {
 
-      if (!this.prototype.hasOwnProperty('_belongsTo')) {
-        this.prototype._belongsTo = {};
+      if (!this.prototype.hasOwnProperty('_joins')) {
+        this.prototype._joins = {};
       };
 
-      viaField = viaField || `${name}_id`;
+      options = options || {};
 
-      this.prototype._belongsTo[name] = {
+      options.name = inflect.camelize(modelConstructor.name, false);
+      options.via = options.via || `${inflect.underscore(options.name)}_id`;
+      options.multiple = !!options.multiple;
+
+      if (!options.as) {
+
+        options.as = inflect.camelize(this.name, false);
+
+        if (options.multiple) {
+          options.as = inflect.pluralize(options.as);
+        }
+
+      }
+
+      this.prototype._joins[options.name] = {
         model: modelConstructor,
-        via: viaField
+        via: options.via,
+        multiple: options.multiple
+      };
+
+      if (!modelConstructor.prototype.hasOwnProperty('_joinedBy')) {
+        modelConstructor.prototype._joinedBy = {};
+      };
+
+      modelConstructor.prototype._joinedBy[options.as] = {
+        model: this,
+        via: options.via
       };
 
     }
@@ -440,7 +467,7 @@ module.exports = (function() {
       }
 
       this.fieldList()
-        .concat(Object.keys(this._belongsTo))
+        .concat(Object.keys(this._joins))
         .filter((key) => data.hasOwnProperty(key))
         .forEach((key) => {
         // do not validate or log changes when loading from storage
@@ -459,7 +486,7 @@ module.exports = (function() {
     read(data) {
 
       this.fieldList()
-        .concat(Object.keys(this._belongsTo))
+        .concat(Object.keys(this._joins))
         .filter((key) => data.hasOwnProperty(key))
         .forEach((key) => this.set(key, data[key]));
 
@@ -476,8 +503,8 @@ module.exports = (function() {
     */
     set(field, value, validate, logChange) {
 
-      if (this._belongsTo[field]) {
-        let rel = this._belongsTo[field];
+      if (this._joins[field]) {
+        let rel = this._joins[field];
         if (!(value instanceof rel.model)) {
           throw new Error(`${value} is not an instance of ${rel.model.name}`);
         }
@@ -562,13 +589,13 @@ module.exports = (function() {
         throw new Error('No valid relationships (1st parameter is error)');
       }
 
-      let invalidRelationships = relationships.filter(r => !this._belongsTo[r]);
+      let invalidRelationships = relationships.filter(r => !this._joins[r]);
 
       if (invalidRelationships.length) {
         throw new Error(`Relationships "${invalidRelationships.join('", "')}" for model "${this.constructor.name}" do not exist.`);
       }
 
-      let fns = relationships.map(r => this._belongsTo[r]).map(r => {
+      let fns = relationships.map(r => this._joins[r]).map(r => {
         return (callback) => {
           r.model.find(db, this.get(r.via), (err, model) => {
             callback(err, model);
@@ -614,7 +641,7 @@ module.exports = (function() {
       } else {
 
         Object.keys(this._data).forEach(key => obj[key] = this.get(key));
-        Object.keys(this._belongsTo).forEach(key => {
+        Object.keys(this._joins).forEach(key => {
           obj[key] = this._relationshipCache[key] ? this._relationshipCache[key].toObject() : null;
         });
 
@@ -870,7 +897,8 @@ module.exports = (function() {
     columns: []
   };
 
-  Model.prototype._belongsTo = {};
+  Model.prototype._joins = {};
+  Model.prototype._has = {};
   Model.prototype._validations = {};
   Model.prototype.formatters = {};
 

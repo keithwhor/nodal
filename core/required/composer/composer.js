@@ -14,7 +14,7 @@ module.exports = (function() {
       this._modelTable = modelConstructor.prototype.schema.table;
       this._modelColumns = modelConstructor.prototype.schema.columns.map(v => v.name);
       this._modelColumnLookup = this._modelColumns.reduce((obj, c) => { return (obj[c] = true), obj; }, {});
-      this._modelRelationshipLookup = Object.assign({}, modelConstructor.prototype._belongsTo);
+      this._modelRelationshipLookup = Object.assign({}, modelConstructor.prototype._joins);
 
       this._query = (query instanceof Array ? query : []).slice();
 
@@ -22,7 +22,7 @@ module.exports = (function() {
       this._columns = [];
       this._orderBy = [];
       this._groupBy = null;
-      this._joins = [];
+      this._joinArray = [];
 
       this._joinedColumns = [];
 
@@ -114,7 +114,7 @@ module.exports = (function() {
     __prepareAggregateBy__(table, columns) {
 
       let modelConstructor = this._modelConstructor;
-      let relationships = modelConstructor.prototype._belongsTo;
+      let relationships = modelConstructor.prototype._joins;
 
       let aggregateBy = {};
       aggregateBy[table] = {};
@@ -156,7 +156,7 @@ module.exports = (function() {
           table,
           columns,
           multiFilter,
-          this._joins,
+          this._joinArray,
           this._groupBy,
           this.__prepareAggregateBy__(table, columns),
           this._orderBy,
@@ -372,7 +372,7 @@ module.exports = (function() {
 
     join(relationship, columns) {
 
-      let relationships = this._modelConstructor.prototype._belongsTo;
+      let relationships = this._modelConstructor.prototype._joins;
       let rel = Object.keys(relationships)
         .filter(name => name === relationship)
         .map(name => relationships[name])
@@ -382,7 +382,7 @@ module.exports = (function() {
         throw new Error(`Model "${this._modelConstructor.name}" has no relation "${relationship}"`);
       }
 
-      this._joins.push({
+      this._joinArray.push({
         table: rel.model.prototype.schema.table,
         field: 'id',
         baseField: rel.via
@@ -441,7 +441,7 @@ module.exports = (function() {
         return undefined;
       }
 
-      let relationships = this._modelConstructor.prototype._belongsTo;
+      let relationships = this._modelConstructor.prototype._joins;
       return Object.keys(relationships)
         .filter(name => name === field)
         .map(name => relationships[name])
