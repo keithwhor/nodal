@@ -173,6 +173,8 @@ module.exports = (function() {
 
         } else if (typeof r === 'object' && r !== null) {
 
+          return null; // FIXME: Deprecated for relationships.
+
           let key = Object.keys(r)[0];
           let relationship = this.relationship(key);
 
@@ -286,7 +288,8 @@ module.exports = (function() {
 
       modelData = modelData || {};
 
-      this._relationshipCache = {};
+      this._joinsCache = {};
+      this._joinedByCache = {};
 
       this.__preInitialize__();
       this.__initialize__();
@@ -508,7 +511,7 @@ module.exports = (function() {
         if (!(value instanceof rel.model)) {
           throw new Error(`${value} is not an instance of ${rel.model.name}`);
         }
-        this._relationshipCache[field] = value;
+        this._joinsCache[field] = value;
         return this.set(rel.via, value.get('id'));
       }
 
@@ -629,8 +632,8 @@ module.exports = (function() {
 
           if (typeof key === 'object' && key !== null) {
             let relationship = Object.keys(key)[0];
-            if (this._relationshipCache[relationship]) {
-              obj[key] = this._relationshipCache[relationship].toObject(key[relationship]);
+            if (this._joinsCache[relationship]) {
+              obj[key] = this._joinsCache[relationship].toObject(key[relationship]);
             }
           } else if (this._data[key]) {
             obj[key] = this.get(key);
@@ -641,8 +644,11 @@ module.exports = (function() {
       } else {
 
         Object.keys(this._data).forEach(key => obj[key] = this.get(key));
-        Object.keys(this._joins).forEach(key => {
-          obj[key] = this._relationshipCache[key] ? this._relationshipCache[key].toObject() : null;
+        Object.keys(this._joinsCache).forEach(key => {
+          obj[key] = this._joinsCache[key].toObject();
+        });
+        Object.keys(this._joinedByCache).forEach(key => {
+          obj[key] = this._joinedByCache[key].toObject();
         });
 
       }
@@ -898,7 +904,7 @@ module.exports = (function() {
   };
 
   Model.prototype._joins = {};
-  Model.prototype._has = {};
+  Model.prototype._joinedBy = {};
   Model.prototype._validations = {};
   Model.prototype.formatters = {};
 

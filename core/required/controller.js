@@ -241,7 +241,7 @@ module.exports = (function() {
     * @param {optional Array} The interface to use for the data being returned, if not an error.
     * @return {boolean}
     */
-    respond(data, arrInterface) {
+    respond(data, arrInterface, useResource) {
 
       if (data instanceof Error) {
 
@@ -253,7 +253,7 @@ module.exports = (function() {
 
       }
 
-      this.render(API.format(data, arrInterface));
+      this.render(API.format(data, arrInterface, useResource));
       return true;
 
     }
