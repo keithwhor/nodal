@@ -15,7 +15,6 @@ module.exports = (function() {
       this._modelColumns = modelConstructor.prototype.schema.columns.map(v => v.name);
       this._modelColumnLookup = this._modelColumns.reduce((obj, c) => { return (obj[c] = true), obj; }, {});
       this._modelJoinsLookup = Object.assign({}, modelConstructor.prototype._joins);
-      this._modelJoinedByLookup = Object.assign({}, modelConstructor.prototype._joinedBy);
 
       this._query = (query instanceof Array ? query : []).slice();
 
@@ -87,7 +86,6 @@ module.exports = (function() {
           // block out bad column names
           if (rel) {
             if (!rel.model.prototype.schema.columns.filter(c => c.name === column).length) {
-              console.log('NULL');
               return null;
             }
           } else if (!columnLookup[column]) {
@@ -186,7 +184,6 @@ module.exports = (function() {
       let columns = this._columns.map(c => {
         if (typeof c === 'object' && c !== null) {
           let relationship = Object.keys(c)[0];
-          console.log(c[relationship]);
           return c[relationship].map(name => {
             return this._joinedColumns.filter(jc => {
               return jc.relationship === relationship && jc.column === name;
@@ -371,6 +368,10 @@ module.exports = (function() {
 
     }
 
+    __joinAlias__(joinName, column, joinsObject) {
+      return `${(joinsObject.child && joinsObject.multiple) ? '$$' : '$'}${joinName}\$${column}`;
+    }
+
     join(joinName, columns) {
 
       let joins = this._modelConstructor.prototype._joins;
@@ -379,8 +380,8 @@ module.exports = (function() {
         .map(name => joins[name])
         .pop();
 
-      if (!rel) {
-        throw new Error(`Model "${this._modelConstructor.name}" has no relation "${joinName}"`);
+      if (!joinsObject) {
+        throw new Error(`Model "${this._modelConstructor.name}" has no join "${joinName}. Valid joins are "${Object.keys(joins).map(j => j + '", "')}".`);
       }
 
       this._joinArray.push({
@@ -389,7 +390,7 @@ module.exports = (function() {
         baseField: joinsObject.child ? 'id' : joinsObject.via
       });
 
-      let columnLookup = rel.model.prototype.schema.columns
+      let columnLookup = joinsObject.model.prototype.schema.columns
         .reduce((obj, c) => ((obj[c.name] = c), obj), {});
 
       columns = columns || Object.keys(columnLookup);
@@ -397,9 +398,9 @@ module.exports = (function() {
       this._joinedColumns = this._joinedColumns.concat(
         columns.map(column => {
           return {
-            table: rel.model.prototype.schema.table,
+            table: joinsObject.model.prototype.schema.table,
             relationship: joinName,
-            alias: `${joinName}\$${column}`,
+            alias: this.__joinAlias__(joinName, column, joinsObject),
             column: column,
             type: columnLookup[column].type
           }
@@ -583,6 +584,114 @@ module.exports = (function() {
 
     }
 
+    __parseModelsFromRows__(rows) {
+
+      console.log('START PARSE', rows.length);
+      let s = new Date().valueOf();
+
+      let modelConstructor = this._modelConstructor;
+      let models = new ModelArray(modelConstructor);
+
+      rows = rows.reduce((newRows, row) => {
+
+        let lastRow = newRows[newRows.length - 1];
+        let curRow = row;
+
+        if (lastRow && lastRow.id === row.id) {
+
+          curRow = lastRow;
+
+        } else {
+
+          let joins = {};
+
+          Object.keys(row)
+            .filter(key => key[0] === '$' && key[1] !== '$')
+            .forEach(key => {
+
+              let value = row[key];
+              key = key.substr(1);
+
+              let index = key.indexOf('$');
+
+              if (index === -1) {
+                return;
+              }
+
+              let mainKey = key.substr(0, index);
+              let subKey = key.substr(index + 1);
+
+              joins[mainKey] = joins[mainKey] || {};
+              joins[mainKey][subKey] = value;
+
+            });
+
+          Object.keys(joins)
+            .forEach(joinName => {
+
+              row[joinName] = new this._modelJoinsLookup[joinName].model(
+                joins[joinName],
+                true
+              );
+
+            });
+
+          newRows.push(row);
+
+        }
+
+        let joinsMultiple = {};
+
+        Object.keys(row)
+          .filter(key => key[0] === '$' && key[1] === '$')
+          .forEach(key => {
+
+            let value = row[key];
+            key = key.substr(2);
+
+            let index = key.indexOf('$');
+
+            if (index === -1) {
+              return;
+            }
+
+            let mainKey = key.substr(0, index);
+            let subKey = key.substr(index + 1);
+
+            joinsMultiple[mainKey] = joinsMultiple[mainKey] || {};
+            joinsMultiple[mainKey][subKey] = value;
+
+          });
+
+        Object.keys(joinsMultiple)
+          .forEach(joinName => {
+
+            let joinModelConstructor = this._modelJoinsLookup[joinName].model;
+
+            curRow[joinName] = curRow[joinName] || new ModelArray(joinModelConstructor);
+            curRow[joinName].push(
+              new joinModelConstructor(
+                joinsMultiple[joinName],
+                true
+              )
+            );
+
+          });
+
+        return newRows;
+
+      }, []).forEach(row => {
+
+        models.push(new modelConstructor(row));
+
+      });
+
+      console.log('END PARSE', new Date().valueOf() - s);
+
+      return models;
+
+    }
+
     end(callback, summary) {
 
       let modelConstructor = this._modelConstructor;
@@ -598,44 +707,7 @@ module.exports = (function() {
 
           if (pQuery.models) {
 
-            models = new ModelArray(modelConstructor);
-
-            models.push.apply(
-              models,
-              rows.map(row => {
-
-                let model = new modelConstructor(row, true);
-
-                // Create new models out of relationships...
-                let relationships = {};
-
-                Object.keys(row).forEach(key => {
-                  let index = key.indexOf('$');
-                  if (index >= 0) {
-                    let mainKey = key.substr(0, index);
-                    let subKey = key.substr(index + 1);
-                    relationships[mainKey] = relationships[mainKey] || {}
-                    relationships[mainKey][subKey] = row[key];
-                    return;
-                  }
-                });
-
-                Object.keys(relationships).forEach(relationship => {
-
-                  model.set(
-                    relationship,
-                    new this._modelJoinsLookup[relationship].model(
-                      relationships[relationship],
-                      true
-                    )
-                  );
-
-                });
-
-                return model;
-
-              })
-            );
+            models = this.__parseModelsFromRows__(rows);
 
           }
 

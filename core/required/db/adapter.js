@@ -398,7 +398,7 @@ module.exports = (function() {
 
       return (!joinArray || !joinArray.length) ? '' :
         joinArray.map(join => {
-          return ` INNER JOIN ${this.escapeField(join.table)} ON ` +
+          return ` LEFT JOIN ${this.escapeField(join.table)} ON ` +
           `${this.escapeField(join.table)}.${this.escapeField(join.field)} = ` +
           `${this.escapeField(table)}.${this.escapeField(join.baseField)}`
         }).join('');

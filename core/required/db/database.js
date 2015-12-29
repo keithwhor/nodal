@@ -51,13 +51,14 @@ module.exports = (function() {
 
     }
 
-    log(sql, params) {
+    log(sql, params, time) {
 
       let colorFunc = this.__logColorFuncs[this._useLogColor];
 
       console.log();
       console.log(colorFunc(sql));
       params && console.log(colorFunc(JSON.stringify(params)));
+      time && console.log(colorFunc(time + 'ms'));
       console.log();
 
       this._useLogColor = (this._useLogColor + 1) % this.__logColorFuncs.length;
@@ -94,8 +95,13 @@ module.exports = (function() {
         throw new Error('Callback must be a function');
       }
 
-      this._connection.query(query, params, callback);
-      this.log(query, params);
+      let start = new Date().valueOf();
+      let log = this.log.bind(this);
+
+      this._connection.query(query, params, function() {
+        log(query, params, new Date().valueOf() - start);
+        callback.apply(this, arguments);
+      });
 
       return true;
 

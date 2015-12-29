@@ -6,6 +6,8 @@ module.exports = (function() {
   const Database = require('./db/database.js');
   const Composer = require('./composer/composer.js');
 
+  const ModelArray = require('./model_array.js');
+
   const utilities = require('./utilities.js');
   const async = require('async');
   const inflect = require('i')();
@@ -294,27 +296,9 @@ module.exports = (function() {
       this._joinsCache = {};
       this._joinedByCache = {};
 
-      this.__preInitialize__();
       this.__initialize__();
       this.__load__(modelData, fromStorage);
-      this.__postInitialize__();
 
-    }
-
-    /**
-    * Expected to be overwritten when inherited. Anything done before loading data, like validations, goes here.
-    * @deprecated
-    */
-    __preInitialize__() {
-      return true;
-    }
-
-    /**
-    * Expected to be overwritten when inherited. Anything done after loading data (computed fields, etc.) goes here.
-    * @deprecated
-    */
-    __postInitialize__() {
-      return true;
     }
 
     /**
@@ -510,12 +494,42 @@ module.exports = (function() {
     set(field, value, validate, logChange) {
 
       if (this._joins[field]) {
-        let rel = this._joins[field];
-        if (!(value instanceof rel.model)) {
-          throw new Error(`${value} is not an instance of ${rel.model.name}`);
+
+        let joinsObject = this._joins[field];
+
+        if (
+          (!joinsObject.child || (joinsObject.child && !joinsObject.multiple)) &&
+          !(value instanceof joinsObject.model)
+        ) {
+
+          throw new Error(`${value} is not an instance of ${joinsObject.model.name}`);
+
+        } else if (
+          joinsObject.child && joinsObject.multiple &&
+          (!(value instanceof ModelArray) || (value._modelConstructor !== joinsObject.model))
+        ) {
+
+          throw new Error(`${value} is not an instanceof ModelArray[${joinsObject.model.name}]`);
+
         }
+
+        if (joinsObject.child) {
+
+          if (joinsObject.multiple) {
+            value.forEach(model => model.set(joinsObject.via, this.get('id')));
+          } else {
+            value.set(joinsObject.via, this.get('id'));
+          }
+
+        } else {
+
+          this.set(joinsObject.via, value.get('id'));
+
+        }
+
         this._joinsCache[field] = value;
-        return this.set(rel.via, value.get('id'));
+        return value;
+
       }
 
       validate = (validate === undefined) ? true : !!validate;
@@ -568,8 +582,14 @@ module.exports = (function() {
     * @param {string} field Field for which you'd like to retrieve data.
     */
     get(field, ignoreFormat) {
+
+      if (this._joinsCache[field]) {
+        return this._joinsCache[field];
+      }
+
       let datum = this._data[field];
       return (!ignoreFormat && this.formatters[field]) ? this.formatters[field](datum) : datum;
+
     }
 
     /**
