@@ -14,7 +14,8 @@ module.exports = (function() {
       this._modelTable = modelConstructor.prototype.schema.table;
       this._modelColumns = modelConstructor.prototype.schema.columns.map(v => v.name);
       this._modelColumnLookup = this._modelColumns.reduce((obj, c) => { return (obj[c] = true), obj; }, {});
-      this._modelRelationshipLookup = Object.assign({}, modelConstructor.prototype._joins);
+      this._modelJoinsLookup = Object.assign({}, modelConstructor.prototype._joins);
+      this._modelJoinedByLookup = Object.assign({}, modelConstructor.prototype._joinedBy);
 
       this._query = (query instanceof Array ? query : []).slice();
 
@@ -52,7 +53,7 @@ module.exports = (function() {
 
       let comparators = this._db.adapter.comparators;
       let columnLookup = this._modelColumnLookup;
-      let relationshipLookup = this._modelRelationshipLookup;
+      let relationshipLookup = this._modelJoinsLookup;
 
       filterObj.hasOwnProperty('__order') &&
         this.orderBy.call(this, filterObj.__order.split(' ')[0], filterObj.__order.split(' ')[1]);
@@ -370,22 +371,22 @@ module.exports = (function() {
 
     }
 
-    join(relationship, columns) {
+    join(joinName, columns) {
 
-      let relationships = this._modelConstructor.prototype._joins;
-      let rel = Object.keys(relationships)
-        .filter(name => name === relationship)
-        .map(name => relationships[name])
+      let joins = this._modelConstructor.prototype._joins;
+      let joinsObject = Object.keys(joins)
+        .filter(name => name === joinName)
+        .map(name => joins[name])
         .pop();
 
       if (!rel) {
-        throw new Error(`Model "${this._modelConstructor.name}" has no relation "${relationship}"`);
+        throw new Error(`Model "${this._modelConstructor.name}" has no relation "${joinName}"`);
       }
 
       this._joinArray.push({
-        table: rel.model.prototype.schema.table,
-        field: 'id',
-        baseField: rel.via
+        table: joinsObject.model.prototype.schema.table,
+        field: joinsObject.child ? joinsObject.via : 'id',
+        baseField: joinsObject.child ? 'id' : joinsObject.via
       });
 
       let columnLookup = rel.model.prototype.schema.columns
@@ -397,8 +398,8 @@ module.exports = (function() {
         columns.map(column => {
           return {
             table: rel.model.prototype.schema.table,
-            relationship: relationship,
-            alias: `${relationship}\$${column}`,
+            relationship: joinName,
+            alias: `${joinName}\$${column}`,
             column: column,
             type: columnLookup[column].type
           }
@@ -623,7 +624,7 @@ module.exports = (function() {
 
                   model.set(
                     relationship,
-                    new this._modelRelationshipLookup[relationship].model(
+                    new this._modelJoinsLookup[relationship].model(
                       relationships[relationship],
                       true
                     )

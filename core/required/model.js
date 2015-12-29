@@ -248,17 +248,20 @@ module.exports = (function() {
 
       this.prototype._joins[options.name] = {
         model: modelConstructor,
+        child: false,
         via: options.via,
         multiple: options.multiple
       };
 
-      if (!modelConstructor.prototype.hasOwnProperty('_joinedBy')) {
-        modelConstructor.prototype._joinedBy = {};
+      if (!modelConstructor.prototype.hasOwnProperty('_joins')) {
+        modelConstructor.prototype._joins = {};
       };
 
-      modelConstructor.prototype._joinedBy[options.as] = {
+      modelConstructor.prototype._joins[options.as] = {
         model: this,
-        via: options.via
+        child: true,
+        via: options.via,
+        multiple: options.multiple
       };
 
     }
@@ -904,7 +907,6 @@ module.exports = (function() {
   };
 
   Model.prototype._joins = {};
-  Model.prototype._joinedBy = {};
   Model.prototype._validations = {};
   Model.prototype.formatters = {};
 
