@@ -20,6 +20,8 @@ module.exports = (function() {
   const crypto = require('crypto');
   const async = require('async');
 
+  const domain = require('domain'); // TODO: Will be deprecated.
+
   // For templates
   dot.templateSettings.varname = 'params, data';
   dot.templateSettings.strip = false;
@@ -460,7 +462,32 @@ module.exports = (function() {
         return;
       }
 
-      let server = http.createServer(this.requestHandler.bind(this)).listen(port);
+      let server = http.createServer((request, response) => {
+
+        // TODO: Domains will be deprecated, remove to continue support
+
+        let d = domain.create();
+
+        d.on('error', (function(err) {
+
+          if (!(err instanceof Error)) {
+            err = new Error(err);
+          }
+
+          console.error(`* Request aborted: ${request.url}`);
+          console.error(err.stack);
+
+          if ((process.env.NODE_ENV || 'development') === 'development') {
+            response.end(err.stack);
+          } else {
+            response.end('Application Error');
+          }
+
+        }).bind(this));
+
+        d.run(this.requestHandler.bind(this, request, response));
+
+      }).listen(port);
 
       let clients = [];
       let availableIds = [];
