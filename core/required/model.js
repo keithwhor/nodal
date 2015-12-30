@@ -286,6 +286,39 @@ module.exports = (function() {
     }
 
     /**
+    * Create a calculated field (in JavaScript). Must be synchronous.
+    * @param {string} calcField The name of the calculated field
+    * @param {function} fnCalculate The synchronous method to perform a calculation for.
+    *   Pass the names of the (non-computed) fields you'd like to use as parameters.
+    */
+    static calculates(calcField, fnCompute) {
+
+      if (!this.prototype.hasOwnProperty('_calculations')) {
+        this.prototype._calculations = {};
+      }
+
+      let columnCache = this.columns().reduce((p, c) => { p[c] = 1; return p; }, {});
+
+      if (columnCache[calcField]) {
+        throw new Error(`Cannot create calculated field "${calcField}" for "${this.name}", field already exists.`);
+      }
+
+      let fields = utilities.getFunctionParameters(fnCompute);
+
+      fields.forEach(f => {
+        if (!columnCache[f]) {
+          throw new Error(`Calculation function error: "${calcField} for "${this.name}" using field "${f}", "${f}" does not exist.`)
+        }
+      });
+
+      this.prototype._calculations[calcField] = {
+        calculate: fnCompute,
+        fields: fields
+      };
+
+    }
+
+    /**
     * @param {Object} modelData Data to load into the object
     * @param {optional boolean} fromStorage Is this model being loaded from storage? Defaults to false.
     */
@@ -583,6 +616,15 @@ module.exports = (function() {
     */
     get(field, ignoreFormat) {
 
+      if (this._calculations[field]) {
+        let fn = this._calculations[field].calculate;
+        let fields = this._calculations[field].fields;
+        return fn.apply(
+          this,
+          fields.map(f => this.get(f))
+        );
+      }
+
       if (this._joinsCache[field]) {
         return this._joinsCache[field];
       }
@@ -654,11 +696,13 @@ module.exports = (function() {
         arrInterface.forEach(key => {
 
           if (typeof key === 'object' && key !== null) {
-            let relationship = Object.keys(key)[0];
-            if (this._joinsCache[relationship]) {
-              obj[key] = this._joinsCache[relationship].toObject(key[relationship]);
+            let subInterface = key;
+            key = Object.keys(key)[0];
+            let joinObject = this._joinsCache[key] || this._joinedByCache[key];
+            if (joinObject) {
+              obj[key] = joinObject.toObject(subInterface[key]);
             }
-          } else if (this._data[key]) {
+          } else if (this._data[key] || this._calculations[key]) {
             obj[key] = this.get(key);
           }
 
@@ -667,6 +711,7 @@ module.exports = (function() {
       } else {
 
         Object.keys(this._data).forEach(key => obj[key] = this.get(key));
+        Object.keys(this._calculations).forEach(key => obj[key] = this.get(key));
         Object.keys(this._joinsCache).forEach(key => {
           obj[key] = this._joinsCache[key].toObject();
         });
@@ -928,6 +973,7 @@ module.exports = (function() {
 
   Model.prototype._joins = {};
   Model.prototype._validations = {};
+  Model.prototype._calculations = {};
   Model.prototype.formatters = {};
 
   Model.prototype.readOnly = false;
