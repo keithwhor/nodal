@@ -586,11 +586,85 @@ module.exports = (function() {
 
     __parseModelsFromRows__(rows) {
 
-      console.log('START PARSE', rows.length);
+      // console.log('START PARSE', rows.length);
+      
       let s = new Date().valueOf();
 
       let modelConstructor = this._modelConstructor;
       let models = new ModelArray(modelConstructor);
+
+      let rowKeys = [];
+      rows.length && (rowKeys = Object.keys(rows[0]));
+
+      // First, grab all the keys and multiple keys we need...
+      let joinKeys = rowKeys.filter(key => key[0] === '$' && key[1] !== '$');
+      let joinMultipleKeys = rowKeys.filter(key => key[0] === '$' && key[1] === '$');
+
+      // Next, create lookup for main / sub keys from our keys
+      let createLookup = (multiple) => {
+
+        let offset = multiple ? 2 : 1;
+
+        return (lookup, key) => {
+
+          let index = key.indexOf('$', offset);
+
+          if (index === -1) {
+            return;
+          }
+
+          let mainKey = key.substr(offset, index - offset);
+          let subKey = key.substr(index + 1);
+
+          lookup[key] = {
+            mainKey: mainKey,
+            subKey: subKey,
+            multiple: multiple
+          };
+
+          return lookup;
+
+        }
+
+      };
+
+      // create a lookup for any field
+      let joinLookup = joinMultipleKeys.reduce(
+        createLookup(true),
+        joinKeys.reduce(createLookup(false), {})
+      );
+
+      // create a skeleton object to temporarily hold model data
+      let joinSkeleton = Object.keys(joinLookup).reduce((obj, key) => {
+
+        let lookup = joinLookup[key];
+
+        obj[lookup.mainKey] = obj[lookup.mainKey] || {
+          data: {},
+          multiple: lookup.multiple
+        };
+
+        obj[lookup.mainKey].data[lookup.subKey] = null;
+
+        return obj;
+
+      }, {});
+
+      // Get our names for joined or joined multiple fields
+      let joinNames = Object.keys(joinSkeleton).filter(j => !joinSkeleton[j].multiple);
+      let joinMultipleNames = Object.keys(joinSkeleton).filter(j => joinSkeleton[j].multiple);
+
+      // Assign to skeleton function for copying data to our schema
+      let assignToSkeleton = (row) => {
+
+        return (key) => {
+
+          let keySplit = joinLookup[key];
+          joinSkeleton[keySplit.mainKey].data[keySplit.subKey] = row[key];
+
+        };
+
+      };
 
       rows = rows.reduce((newRows, row) => {
 
@@ -603,80 +677,38 @@ module.exports = (function() {
 
         } else {
 
-          let joins = {};
+          // if it's a new row, we need to fill the skeleton with new data and create
+          // a new model
+          joinKeys.forEach(assignToSkeleton(row));
+          joinNames.forEach(joinName => {
 
-          Object.keys(row)
-            .filter(key => key[0] === '$' && key[1] !== '$')
-            .forEach(key => {
+            row[joinName] = new this._modelJoinsLookup[joinName].model(
+              joinSkeleton[joinName].data,
+              true
+            );
 
-              let value = row[key];
-              key = key.substr(1);
-
-              let index = key.indexOf('$');
-
-              if (index === -1) {
-                return;
-              }
-
-              let mainKey = key.substr(0, index);
-              let subKey = key.substr(index + 1);
-
-              joins[mainKey] = joins[mainKey] || {};
-              joins[mainKey][subKey] = value;
-
-            });
-
-          Object.keys(joins)
-            .forEach(joinName => {
-
-              row[joinName] = new this._modelJoinsLookup[joinName].model(
-                joins[joinName],
-                true
-              );
-
-            });
+          });
 
           newRows.push(row);
 
         }
 
-        let joinsMultiple = {};
+        // if the lowest common denominator (right now) is a multiple joined field
+        // so it will be new on every row
+        joinMultipleKeys.forEach(assignToSkeleton(row));
+        joinMultipleNames.forEach(joinName => {
 
-        Object.keys(row)
-          .filter(key => key[0] === '$' && key[1] === '$')
-          .forEach(key => {
+          let joinModelConstructor = this._modelJoinsLookup[joinName].model;
 
-            let value = row[key];
-            key = key.substr(2);
+          curRow[joinName] = curRow[joinName] || new ModelArray(joinModelConstructor);
+          curRow[joinName].push(
+            new joinModelConstructor(
+              joinSkeleton[joinName].data,
+              true
+            )
+          );
 
-            let index = key.indexOf('$');
-
-            if (index === -1) {
-              return;
-            }
-
-            let mainKey = key.substr(0, index);
-            let subKey = key.substr(index + 1);
-
-            joinsMultiple[mainKey] = joinsMultiple[mainKey] || {};
-            joinsMultiple[mainKey][subKey] = value;
-
-          });
-
-        Object.keys(joinsMultiple)
-          .forEach(joinName => {
-
-            let joinModelConstructor = this._modelJoinsLookup[joinName].model;
-
-            curRow[joinName] = curRow[joinName] || new ModelArray(joinModelConstructor);
-            curRow[joinName].push(
-              new joinModelConstructor(
-                joinsMultiple[joinName],
-                true
-              )
-            );
-
-          });
+        });
 
         return newRows;
 
@@ -686,7 +718,7 @@ module.exports = (function() {
 
       });
 
-      console.log('END PARSE', new Date().valueOf() - s);
+      // console.log('END PARSE', new Date().valueOf() - s);
 
       return models;
 

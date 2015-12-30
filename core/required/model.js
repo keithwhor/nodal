@@ -115,11 +115,38 @@ module.exports = (function() {
     }
 
     /**
-    * Get the model's column names
+    * Get the model's table name
+    * @return {string}
+    */
+    static table() {
+      return this.prototype.schema.table;
+    };
+
+    /**
+    * Get the model's column data
     * @return {Array}
     */
     static columns() {
-      return this.prototype.schema.columns.map(v => v.name);
+      return this.prototype.schema.columns;
+    };
+
+    /**
+    * Get the model's column names (fields)
+    * @return {Array}
+    */
+    static columnNames() {
+      return this.columns().map(v => v.name);
+    }
+
+    /**
+    * Get the model's column lookup data
+    * @return {Object}
+    */
+    static columnLookup() {
+      return this.columns().reduce((p, c) => {
+        p[c.name] = c;
+        return p;
+      }, {});
     }
 
     /**
@@ -139,20 +166,18 @@ module.exports = (function() {
     static toResource(arrInterface) {
 
       if (!arrInterface || !arrInterface.length) {
-        arrInterface = this.columns().concat(
+        arrInterface = this.columnNames().concat(
           Object.keys(this.prototype._joins)
             .map(r => {
               let obj = {};
-              obj[r] = this.relationship(r).model.columns();
+              obj[r] = this.relationship(r).model.columnNames();
               return obj;
             })
         );
       }
 
 
-      let columns = this.prototype.schema.columns;
-      let columnLookup = {};
-      columns.forEach(v => columnLookup[v.name] = v);
+      let columnLookup = this.columnLookup();
 
       let resourceColumns = arrInterface.map(r => {
 
@@ -216,6 +241,23 @@ module.exports = (function() {
 
       this.prototype.schema = schema;
 
+      this.prototype._table = this.table();
+      this.prototype._columns = this.columns();
+      this.prototype._columnNames = this.columnNames();
+      this.prototype._columnLookup = this.columnLookup();
+
+      this.prototype._data = this.columnNames()
+        .reduce((p, c) => {
+          p[c] = null;
+          return p;
+        }, {});
+
+      this.prototype._changed = this.columnNames()
+        .reduce((p, c) => {
+          p[c] = false;
+          return p;
+        }, {});
+
     }
 
     /**
@@ -230,6 +272,7 @@ module.exports = (function() {
 
       if (!this.prototype.hasOwnProperty('_joins')) {
         this.prototype._joins = {};
+        this.prototype._joinsList = [];
       };
 
       options = options || {};
@@ -248,6 +291,10 @@ module.exports = (function() {
 
       }
 
+      if (this.prototype._joins[options.name]) {
+        throw new Error(`Join relationship already exists for "${options.name}" on "${this.name}".`);
+      }
+
       this.prototype._joins[options.name] = {
         model: modelConstructor,
         child: false,
@@ -255,9 +302,16 @@ module.exports = (function() {
         multiple: options.multiple
       };
 
+      this.prototype._joinsList.push(options.name);
+
       if (!modelConstructor.prototype.hasOwnProperty('_joins')) {
         modelConstructor.prototype._joins = {};
+        modelConstructor.prototype._joinsList = [];
       };
+
+      if (modelConstructor.prototype._joins[options.as]) {
+        throw new Error(`Join relationship already exists for "${options.as}" on "${modelConstructor.name}".`);
+      }
 
       modelConstructor.prototype._joins[options.as] = {
         model: this,
@@ -265,6 +319,8 @@ module.exports = (function() {
         via: options.via,
         multiple: options.multiple
       };
+
+      modelConstructor.prototype._joinsList.push(options.as);
 
     }
 
@@ -278,7 +334,12 @@ module.exports = (function() {
 
       if (!this.prototype.hasOwnProperty('_validations')) {
         this.prototype._validations = {};
+        this.prototype._validationsList = [];
       };
+
+      if (!this.prototype._validations[field]) {
+        this.prototype._validationsList.push(field);
+      }
 
       this.prototype._validations[field] = this.prototype._validations[field] || [];
       this.prototype._validations[field].push({message: message, action: fnAction});
@@ -295,18 +356,23 @@ module.exports = (function() {
 
       if (!this.prototype.hasOwnProperty('_calculations')) {
         this.prototype._calculations = {};
+        this.prototype._calculationsList = [];
       }
 
-      let columnCache = this.columns().reduce((p, c) => { p[c] = 1; return p; }, {});
+      if (this.prototype._calculations[calcField]) {
+        throw new Error(`Calculated field "${calcField}" for "${this.name}" already exists!`);
+      }
 
-      if (columnCache[calcField]) {
+      let columnLookup = this.columnLookup();
+
+      if (columnLookup[calcField]) {
         throw new Error(`Cannot create calculated field "${calcField}" for "${this.name}", field already exists.`);
       }
 
       let fields = utilities.getFunctionParameters(fnCompute);
 
       fields.forEach(f => {
-        if (!columnCache[f]) {
+        if (!columnLookup[f]) {
           throw new Error(`Calculation function error: "${calcField} for "${this.name}" using field "${f}", "${f}" does not exist.`)
         }
       });
@@ -315,6 +381,8 @@ module.exports = (function() {
         calculate: fnCompute,
         fields: fields
       };
+
+      this.prototype._calculationsList.push(calcField);
 
     }
 
@@ -326,9 +394,6 @@ module.exports = (function() {
 
       modelData = modelData || {};
 
-      this._joinsCache = {};
-      this._joinedByCache = {};
-
       this.__initialize__();
       this.__load__(modelData, fromStorage);
 
@@ -339,34 +404,89 @@ module.exports = (function() {
     */
     __initialize__() {
 
-      this._inStorage = false;
+      this._joinsCache = {};
+      this._joinedByCache = {};
 
-      this._table = this.schema.table;
-      this._fieldArray = this.schema.columns.slice();
-
-      let fieldLookup = {};
-
-      this._fieldArray.forEach(function(v) {
-        fieldLookup[v.name] = v;
-      });
-
-      this._fieldLookup = fieldLookup;
-
-      let data = {};
-      let changed = {};
-
-      this.fieldList().forEach(function(v) {
-        data[v] = null;
-        changed[v] = false;
-      });
-
-      this._data = data;
-      this._changed = changed;
+      this._data = Object.create(this._data); // Inherit from prototype
+      this._changed = Object.create(this._changed); // Inherit from prototype
       this._errors = {};
+
+      return true;
+
+    }
+
+    /**
+    * Loads data into the model
+    * @param {Object} data Data to load into the model
+    * @param {optional boolean} fromStorage Specify if the model was loaded from storage. Defaults to false.
+    */
+    __load__(data, fromStorage) {
+
+      this._inStorage = !!fromStorage;
+
+      if (!fromStorage) {
+        data.created_at = new Date();
+      }
+
+      Object.keys(data).forEach(key => this.__safeSet__(key, data[key]));
 
       this.__validate__();
 
-      return true;
+      return this;
+
+    }
+
+    /**
+    * Validates provided fieldList (or all fields if not provided)
+    * @param {optional Array} fieldList fields to validate
+    */
+    __validate__(field) {
+
+      let data = this._data;
+
+      if (!field) {
+
+        let valid = true;
+        this._validationsList.forEach(field => valid = (this.__validate__(field) && valid));
+        return valid;
+
+      } else if (!this._validations[field]) {
+
+        return true;
+
+      }
+
+      this.clearError(field);
+      let value = this._data[field];
+
+      return this._validations[field].filter(validation => {
+        let valid = validation.action.call(null, value);
+        !valid && this.setError(field, validation.message);
+        return valid;
+      }).length === 0;
+
+    }
+
+    /**
+    * Sets specified field data for the model, assuming data is safe and does not log changes
+    * @param {string} field Field to set
+    * @param {any} value Value for the field
+    */
+    __safeSet__(field, value) {
+
+      if (this._joins[field]) {
+
+        return this.setJoined(field, value);
+
+      }
+
+      if (!this.hasField(field)) {
+
+        return;
+
+      }
+
+      this._data[field] = this.convert(field, value);
 
     }
 
@@ -393,9 +513,7 @@ module.exports = (function() {
     */
     changedFields() {
       let changed = this._changed;
-      return Object.keys(changed).filter(function(v) {
-        return changed[v];
-      });
+      return Object.keys(changed).filter(v => changed[v]);
     }
 
     /**
@@ -445,63 +563,6 @@ module.exports = (function() {
     }
 
     /**
-    * Validates provided fieldList (or all fields if not provided)
-    * @param {optional Array} fieldList fields to validate
-    */
-    __validate__(fieldList) {
-
-      let data = this._data;
-
-      this.clearError('*');
-
-      return (fieldList || this.fieldList()).filter((function(field) {
-
-        this.clearError(field);
-        let value = data[field];
-
-        return (this._validations[field] || []).filter((function(validation) {
-
-          let isValid = validation.action.call(null, value);
-          return !(isValid || !this.setError(field, validation.message));
-
-        }).bind(this)).length > 0;
-
-      }).bind(this)).concat((this._validations['*'] || []).filter((function(validation) {
-
-        let isValid = validation.action.call(null, data);
-        return !(isValid || !this.setError('*', validation.message));
-
-      }).bind(this))).length > 0;
-
-    }
-
-    /**
-    * Loads data into the model
-    * @param {Object} data Data to load into the model
-    * @param {optional boolean} fromStorage Specify if the model was loaded from storage. Defaults to false.
-    */
-    __load__(data, fromStorage) {
-
-      this._inStorage = !!fromStorage;
-      fromStorage && (this._errors = {}); // clear errors if in storage
-
-      if (!fromStorage) {
-        this.set('created_at', new Date());
-      }
-
-      this.fieldList()
-        .concat(Object.keys(this._joins))
-        .filter((key) => data.hasOwnProperty(key))
-        .forEach((key) => {
-        // do not validate or log changes when loading from storage
-          this.set(key, data[key], !fromStorage, !fromStorage);
-        });
-
-      return this;
-
-    }
-
-    /**
     * Reads new data into the model.
     * @param {Object} data Data to inject into the model
     * @return {this}
@@ -509,7 +570,7 @@ module.exports = (function() {
     read(data) {
 
       this.fieldList()
-        .concat(Object.keys(this._joins))
+        .concat(this._joinsList)
         .filter((key) => data.hasOwnProperty(key))
         .forEach((key) => this.set(key, data[key]));
 
@@ -518,55 +579,38 @@ module.exports = (function() {
     }
 
     /**
-    * Sets specified field data for the model
+    * Converts a value to its intended format based on its field. Returns null if field not found.
+    * @param {string} field The field to use for conversion data
+    * @param {any} value The value to convert
+    */
+    convert(field, value) {
+
+      if (!this.hasField(field) || value === null || value === undefined) {
+        return null;
+      }
+
+      let dataType = this.getDataTypeOf(field);
+
+      if (this.isFieldArray(field)) {
+        return (value instanceof Array ? value : [value]).map(v => dataType.convert(v));
+      }
+
+      return dataType.convert(value);
+
+    }
+
+    /**
+    * Sets specified field data for the model. Logs and validates the change.
     * @param {string} field Field to set
     * @param {any} value Value for the field
-    * @param {optional boolean} validate Specify if you would like to validate the change (defaults to true)
-    * @param {optional boolean} logChange Specify if you'd like to count this as a changed field (defaults to true)
     */
-    set(field, value, validate, logChange) {
+    set(field, value) {
 
       if (this._joins[field]) {
 
-        let joinsObject = this._joins[field];
-
-        if (
-          (!joinsObject.child || (joinsObject.child && !joinsObject.multiple)) &&
-          !(value instanceof joinsObject.model)
-        ) {
-
-          throw new Error(`${value} is not an instance of ${joinsObject.model.name}`);
-
-        } else if (
-          joinsObject.child && joinsObject.multiple &&
-          (!(value instanceof ModelArray) || (value._modelConstructor !== joinsObject.model))
-        ) {
-
-          throw new Error(`${value} is not an instanceof ModelArray[${joinsObject.model.name}]`);
-
-        }
-
-        if (joinsObject.child) {
-
-          if (joinsObject.multiple) {
-            value.forEach(model => model.set(joinsObject.via, this.get('id')));
-          } else {
-            value.set(joinsObject.via, this.get('id'));
-          }
-
-        } else {
-
-          this.set(joinsObject.via, value.get('id'));
-
-        }
-
-        this._joinsCache[field] = value;
-        return value;
+        return this.setJoined(field, value);
 
       }
-
-      validate = (validate === undefined) ? true : !!validate;
-      logChange = (logChange === undefined) ? true : !!logChange;
 
       if (!this.hasField(field)) {
 
@@ -574,40 +618,95 @@ module.exports = (function() {
 
       }
 
-      let dataType = this.getDataTypeOf(field);
-      let newValue = null;
-
-      value = (value !== undefined) ? value : null;
-
-      if (value !== null) {
-        if (this.isFieldArray(field)) {
-          newValue = value instanceof Array ? value : [value];
-          newValue = newValue.map(function(v) { return dataType.convert(v); });
-        } else {
-          newValue = dataType.convert(value);
-        }
-      }
-
       let curValue = this._data[field];
       let changed = false;
+      value = this.convert(field, value);
 
-      if (newValue !== curValue) {
-        if (newValue instanceof Array && curValue instanceof Array) {
-          if (newValue.filter(function(v, i) { return v !== curValue[i]; }).length) {
-            this._data[field] = newValue;
-            logChange && (changed = true);
+      if (value !== curValue) {
+
+        changed = true;
+
+        if (
+          value instanceof Array &&
+          curValue instanceof Array &&
+          value.length === curValue.length
+        ) {
+
+          changed = false;
+          // If we have two equal length arrays, we must compare every value
+
+          for (let i = 0; i < value.length; i++) {
+            if (value[i] !== curValue[i]) {
+              changed = true;
+              break;
+            }
           }
-        } else {
-          this._data[field] = newValue;
-          logChange && (changed = true);
+
         }
       }
 
+      this._data[field] = value;
       this._changed[field] = changed;
-      validate && (!logChange || changed) && this.__validate__([field]);
+      changed && this.__validate__(field);
 
       return value;
 
+    }
+
+    /**
+    * Set a joined object (Model or ModelArray)
+    * @param {string} field The field (name of the join relationship)
+    * @param {Model|ModelArray} value The joined model or array of models
+    */
+    setJoined(field, value) {
+
+      let joinsObject = this._joins[field];
+
+      if (
+        (!joinsObject.child || (joinsObject.child && !joinsObject.multiple)) &&
+        !(value instanceof joinsObject.model)
+      ) {
+
+        throw new Error(`${value} is not an instance of ${joinsObject.model.name}`);
+
+      } else if (
+        joinsObject.child && joinsObject.multiple &&
+        (!(value instanceof ModelArray) || (value._modelConstructor !== joinsObject.model))
+      ) {
+
+        throw new Error(`${value} is not an instanceof ModelArray[${joinsObject.model.name}]`);
+
+      }
+
+      if (joinsObject.child) {
+
+        if (joinsObject.multiple) {
+          value.forEach(model => model.set(joinsObject.via, this.get('id')));
+        } else {
+          value.set(joinsObject.via, this.get('id'));
+        }
+
+      } else {
+
+        this.set(joinsObject.via, value.get('id'));
+
+      }
+
+      this._joinsCache[field] = value;
+      return value;
+
+    }
+
+    /**
+    * Calculate field from calculations (assumes it exists)
+    *  @param {string} field Name of the calculated field
+    */
+    calculate(field) {
+      let calc = this._calculations[field];
+      return calc.calculate.apply(
+        this,
+        calc.fields.map(f => this.get(f))
+      );
     }
 
     /**
@@ -617,12 +716,7 @@ module.exports = (function() {
     get(field, ignoreFormat) {
 
       if (this._calculations[field]) {
-        let fn = this._calculations[field].calculate;
-        let fields = this._calculations[field].fields;
-        return fn.apply(
-          this,
-          fields.map(f => this.get(f))
-        );
+        return this.calculate(field);
       }
 
       if (this._joinsCache[field]) {
@@ -699,24 +793,22 @@ module.exports = (function() {
             let subInterface = key;
             key = Object.keys(key)[0];
             let joinObject = this._joinsCache[key] || this._joinedByCache[key];
-            if (joinObject) {
-              obj[key] = joinObject.toObject(subInterface[key]);
-            }
-          } else if (this._data[key] || this._calculations[key]) {
-            obj[key] = this.get(key);
+            joinObject && (obj[key] = joinObject.toObject(subInterface[key]));
+          } else if (this._data[key]) {
+            obj[key] = this._data[key];
+          } else if (this._calculations[key]) {
+            obj[key] = this.calculate(key);
           }
 
         });
 
       } else {
 
-        Object.keys(this._data).forEach(key => obj[key] = this.get(key));
-        Object.keys(this._calculations).forEach(key => obj[key] = this.get(key));
-        Object.keys(this._joinsCache).forEach(key => {
-          obj[key] = this._joinsCache[key].toObject();
-        });
-        Object.keys(this._joinedByCache).forEach(key => {
-          obj[key] = this._joinedByCache[key].toObject();
+        this.fieldList().forEach(key => obj[key] = this._data[key]);
+        this._calculationsList.forEach(key => obj[key] = this.calculate(key));
+        this._joinsList.forEach(key => {
+          let cacheValue = this._joinsCache[key] || this._joinedByCache[key];
+          cacheValue && (obj[key] = cacheValue.toObject());
         });
 
       }
@@ -739,7 +831,7 @@ module.exports = (function() {
     * @return {boolean}
     */
     hasField(field) {
-      return !!this._fieldLookup[field];
+      return !!this._columnLookup[field];
     }
 
     /**
@@ -748,7 +840,7 @@ module.exports = (function() {
     * @return {Object}
     */
     getFieldData(field) {
-      return this._fieldLookup[field];
+      return this._columnLookup[field];
     }
 
     /**
@@ -757,7 +849,7 @@ module.exports = (function() {
     * @return {string}
     */
     getDataTypeOf(field) {
-      return DataTypes[this._fieldLookup[field].type];
+      return DataTypes[this._columnLookup[field].type];
     }
 
     /**
@@ -766,7 +858,7 @@ module.exports = (function() {
     * @return {boolean}
     */
     isFieldArray(field) {
-      let fieldData = this._fieldLookup[field];
+      let fieldData = this._columnLookup[field];
       return !!(fieldData && fieldData.properties && fieldData.properties.array);
     }
 
@@ -776,7 +868,7 @@ module.exports = (function() {
     * @return {boolean}
     */
     isFieldPrimaryKey(field) {
-      let fieldData = this._fieldLookup[field];
+      let fieldData = this._columnLookup[field];
       return !!(fieldData && fieldData.properties && fieldData.properties.primary_key);
     }
 
@@ -786,7 +878,7 @@ module.exports = (function() {
     * @return {any}
     */
     fieldDefaultValue(field) {
-      let fieldData = this._fieldLookup[field];
+      let fieldData = this._columnLookup[field];
       return !!(fieldData && fieldData.properties && fieldData.properties.array);
     }
 
@@ -795,7 +887,7 @@ module.exports = (function() {
     * @return {Array}
     */
     fieldList() {
-      return this._fieldArray.map(function(v) { return v.name; });
+      return this._columnNames.slice();
     }
 
     /**
@@ -803,7 +895,7 @@ module.exports = (function() {
     * @return {Array}
     */
     fieldDefinitions() {
-      return this._fieldArray.slice();
+      return this._columns.slice();
     }
 
     /**
@@ -972,8 +1064,14 @@ module.exports = (function() {
   };
 
   Model.prototype._joins = {};
+  Model.prototype._joinsList = [];
+
   Model.prototype._validations = {};
+  Model.prototype._validationsList = [];
+
   Model.prototype._calculations = {};
+  Model.prototype._calculationsList = [];
+
   Model.prototype.formatters = {};
 
   Model.prototype.readOnly = false;

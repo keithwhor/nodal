@@ -29,7 +29,7 @@ module.exports = (function() {
           if (err) {
             user.setError('password', 'Could not encrypt password');
           } else {
-            user.set('password', hash, false);
+            user.__safeSet__('password', hash);
           }
 
           save();
