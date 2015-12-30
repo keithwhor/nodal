@@ -74,9 +74,10 @@ module.exports = (function() {
 
     /**
     * Cleans up the Application, closes outstanding HTTP or websocket requests
+    * @param {Error} error An error message to send out to HTTP / socket clients
     * @param {function} fnDone Method to execute when Application has been cleaned up successfully
     */
-    __destroy__(fnDone) {
+    __destroy__(error, fnDone) {
 
       let cwd = process.cwd();
       let self = this;
@@ -102,7 +103,7 @@ module.exports = (function() {
         let server = this.server;
 
         cleanup.push(function(callback) {
-          server.__destroy__();
+          server.__destroy__(error);
           server.close(callback);
         });
 
@@ -480,12 +481,22 @@ module.exports = (function() {
 
       });
 
-      server.__destroy__ = function() {
+      server.__destroy__ = function(error) {
 
         clients.filter(function(socket) {
           return !!socket;
         }).forEach(function(socket) {
+
+          if (error) {
+            if ((process.env.NODE_ENV || 'development') === 'development') {
+              socket.end(error instanceof Error ? error.stack : error);
+            } else {
+              socket.end('Application Error.');
+            }
+          }
+
           socket.destroy();
+
         });
 
       };

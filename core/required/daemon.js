@@ -56,31 +56,58 @@ module.exports = (function() {
         App.prototype.__initialize__ = init;
         this._app = new App();
 
-      } catch(err) {
+        let listener = (function(err) {
 
-        class DummyApp extends Application {
-
-          __setup__() {
-
-            this.useRouter(dummyRouter(err));
-
+          if (!(err instanceof Error)) {
+            err = new Error(err);
           }
 
-        }
+          console.error('Caught exception: ' + err.message);
+          console.error(err.stack);
 
-        DummyApp.prototype.__initialize__ = init;
-        this._app = new DummyApp();
+          process.removeListener('uncaughtException', listener);
+          this.restart(err);
+
+        }).bind(this);
+
+        process.on('uncaughtException', listener);
+
+      } catch(err) {
+
+        this.startError(err, init);
 
       }
 
     }
 
     /**
+    * Begins the Daemon in error mode (will show the startup error).
+    * @param {Error} error The error the application encountered when it tried to start.
+    * @param {function} init The initialization function from Daemon#start
+    */
+    startError(error, init) {
+
+      class DummyApp extends Application {
+
+        __setup__() {
+
+          this.useRouter(dummyRouter(error));
+
+        }
+
+      }
+
+      DummyApp.prototype.__initialize__ = init;
+      this._app = new DummyApp();
+
+    }
+
+    /**
     * Restarts the Daemon
     */
-    restart() {
+    restart(err) {
 
-      this.stop(this.start);
+      this.stop(err, this.start);
 
     }
 
@@ -88,9 +115,11 @@ module.exports = (function() {
     * Stops the Daemon
     * @param {function} onStop Method to execute when Daemon has stopped successfully
     */
-    stop(onStop) {
+    stop(err, onStop) {
 
       this.unwatch();
+
+      err = err || new Error('Application Stopped');
 
       let cwd = process.cwd();
 
@@ -101,7 +130,7 @@ module.exports = (function() {
         delete require.cache[key];
       });
 
-      this._app.__destroy__(onStop.bind(this));
+      this._app.__destroy__(err, onStop.bind(this));
 
     }
 
