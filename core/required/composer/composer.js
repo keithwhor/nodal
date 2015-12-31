@@ -11,21 +11,20 @@ module.exports = (function() {
 
       this._db = db;
       this._modelConstructor = modelConstructor;
-      this._modelTable = modelConstructor.prototype.schema.table;
-      this._modelColumns = modelConstructor.prototype.schema.columns.map(v => v.name);
-      this._modelColumnLookup = this._modelColumns.reduce((obj, c) => { return (obj[c] = true), obj; }, {});
+      this._modelTable = modelConstructor.table();
+      this._modelColumns = modelConstructor.columnNames();
+      this._modelColumnLookup = modelConstructor.columnLookup();
       this._modelJoinsLookup = Object.assign({}, modelConstructor.prototype._joins);
 
       this._query = (query instanceof Array ? query : []).slice();
 
       this._filters = [];
-      this._columns = [];
+      this._columns = this._query.length ? this._query[this._query.length - 1]._columns.slice() : this._modelColumns.slice();
       this._orderBy = [];
       this._groupBy = null;
       this._joinArray = [];
 
-      this._joinedColumns = [];
-
+      this._joined = {};
       this._transformations = {};
 
       this._count = 0;
@@ -136,16 +135,25 @@ module.exports = (function() {
 
     }
 
+    __prepareColumns__(columns) {
+
+      return columns.map(c => this._joined[c] || c);
+
+    };
+
     __toSQL__(table, columns, sql, paramOffset) {
 
       let base = !table;
-
-      table = table || this._modelTable;
 
       let db = this._db;
 
       let modelConstructor = this._modelConstructor;
 
+      table = table || this._modelTable;
+      columns = this.__prepareColumns__(columns);
+      // console.log('COLUMNS');
+      // console.log(table);
+      // console.log(columns);
       let multiFilter = db.adapter.createMultiFilter(table, this._filters);
       let params = db.adapter.getParamsFromMultiFilter(multiFilter);
 
@@ -177,45 +185,14 @@ module.exports = (function() {
       let genTable = i => `t${i}`;
       let grouped = !!query.filter(q => q._groupBy).length;
 
-      // let columns = Array.from(query.reduce((set, query) => {
-      //   query._columns.forEach(c => set.add(c));
-      //   return set;
-      // }, new Set())).map(c => this._transformations[c] || c);
-      let columns = this._columns.map(c => {
-        if (typeof c === 'object' && c !== null) {
-          let relationship = Object.keys(c)[0];
-          return c[relationship].map(name => {
-            return this._joinedColumns.filter(jc => {
-              return jc.relationship === relationship && jc.column === name;
-            }).pop();
-          });
-        }
-        return this._transformations[c] || c;
-      }).filter(c => c);
-
-      columns = [].concat.apply([], columns);
-
-      if (!columns.length) {
-
-        // If no columns specified, grab everything...
-
-        columns = this._modelColumns.concat(
-          Object.keys(this._transformations).map(t => this._transformations[t]),
-          this._joinedColumns
-        );
-
-      }
-
-      let returnModels = !grouped && (
-        columns.filter(c => typeof(c) === 'string').length === this._modelColumns.length
-      );
+      let returnModels = !grouped; // FIXME: Maybe?
 
       let preparedQuery = query.reduce((prev, query, i) => {
         // If it's a summary, convert the last query to an aggregate query.
         query = ((i === queryCount - 1) && isSummary) ? query.aggregate() : query;
         let select = query.__toSQL__(
           i && genTable(i),
-          columns,
+          query._columns, // change this to change which columns load
           prev.sql,
           prev.params.length
         );
@@ -227,7 +204,7 @@ module.exports = (function() {
 
       preparedQuery.grouped = grouped;
       preparedQuery.models = returnModels;
-      preparedQuery.columns = columns;
+      preparedQuery.columns = this._columns; // TODO: Deprecate?
 
       return preparedQuery;
 
@@ -390,22 +367,24 @@ module.exports = (function() {
         baseField: joinsObject.child ? 'id' : joinsObject.via
       });
 
-      let columnLookup = joinsObject.model.prototype.schema.columns
-        .reduce((obj, c) => ((obj[c.name] = c), obj), {});
+      let columnLookup = joinsObject.model.columnLookup();
+      let columnNames = joinsObject.model.columnNames();
 
-      columns = columns || Object.keys(columnLookup);
+      columnNames.forEach(columnName => {
 
-      this._joinedColumns = this._joinedColumns.concat(
-        columns.map(column => {
-          return {
-            table: joinsObject.model.prototype.schema.table,
-            relationship: joinName,
-            alias: this.__joinAlias__(joinName, column, joinsObject),
-            column: column,
-            type: columnLookup[column].type
-          }
-        })
-      );
+        let alias = this.__joinAlias__(joinName, columnName, joinsObject);
+
+        this._joined[alias] = {
+          table: joinsObject.model.prototype.schema.table,
+          relationship: joinName,
+          alias: this.__joinAlias__(joinName, columnName, joinsObject),
+          column: columnName,
+          type: columnLookup[columnName].type
+        };
+
+        this._columns.push(alias);
+
+      });
 
       return this;
 
@@ -529,24 +508,6 @@ module.exports = (function() {
 
     }
 
-    // TODO: Deprecate
-
-    interface(columns) {
-
-      if (!(columns instanceof Array)) {
-        columns = [].slice.call(arguments);
-      }
-
-      columns = columns.filter(column => {
-        return column && (typeof(column) === 'object') || this._modelColumnLookup[column] || this._transformations[column]
-      });
-
-      this._columns = columns;
-
-      return this;
-
-    }
-
     update(fields, callback) {
 
       this.interface('id');
@@ -587,7 +548,7 @@ module.exports = (function() {
     __parseModelsFromRows__(rows) {
 
       // console.log('START PARSE', rows.length);
-      
+
       let s = new Date().valueOf();
 
       let modelConstructor = this._modelConstructor;
