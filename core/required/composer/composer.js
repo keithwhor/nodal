@@ -24,6 +24,7 @@ module.exports = (function() {
       this._groupBy = null;
       this._joinArray = [];
 
+      this._joinedAlias = {};
       this._joined = {};
       this._transformations = {};
 
@@ -75,19 +76,29 @@ module.exports = (function() {
           let rel = relationshipLookup[column[0]];
 
           if (rel) {
-            column.shift();
-            table = rel.model.prototype.schema.table;
+
+            let joinName = column.shift();
+
+            // if it's not found, return null...
+            if (!rel.model.columnNames().filter(c => c === column[0]).length) {
+              return null;
+            }
+
+            let foundQuery = this._query.filter(q => q.hasJoined(joinName)).pop();
+
+            if (foundQuery) {
+              column[0] = foundQuery.getJoinedAlias(joinName, column[0]);
+            } else {
+              table = rel.model.prototype.schema.table;
+            }
+
           }
 
           let comparator = column.length > 1 ? column.pop() : 'is';
-          column = column.join('__');
+          let columnName = column.join('__');
 
           // block out bad column names
-          if (rel) {
-            if (!rel.model.prototype.schema.columns.filter(c => c.name === column).length) {
-              return null;
-            }
-          } else if (!columnLookup[column]) {
+          if (!rel && !columnLookup[columnName]) {
             return null;
           }
 
@@ -97,7 +108,7 @@ module.exports = (function() {
 
           return {
             table: table,
-            columnName: column,
+            columnName: columnName,
             comparator: comparator,
             value: filterObj[filter],
           };
@@ -137,7 +148,7 @@ module.exports = (function() {
 
     __prepareColumns__(columns) {
 
-      return columns.map(c => this._joined[c] || c);
+      return columns.map(c => this._joinedAlias[c] || c);
 
     };
 
@@ -345,13 +356,15 @@ module.exports = (function() {
 
     }
 
-    __joinAlias__(joinName, column, joinsObject) {
+    getJoinedAlias(joinName, column) {
+      let joinsObject = this._joined[joinName];
       return `${(joinsObject.child && joinsObject.multiple) ? '$$' : '$'}${joinName}\$${column}`;
     }
 
-    join(joinName, columns) {
+    setJoined(joinName) {
 
       let joins = this._modelConstructor.prototype._joins;
+
       let joinsObject = Object.keys(joins)
         .filter(name => name === joinName)
         .map(name => joins[name])
@@ -360,6 +373,18 @@ module.exports = (function() {
       if (!joinsObject) {
         throw new Error(`Model "${this._modelConstructor.name}" has no join "${joinName}. Valid joins are "${Object.keys(joins).map(j => j + '", "')}".`);
       }
+
+      return (this._joined[joinName] = joinsObject);
+
+    }
+
+    hasJoined(joinName) {
+      return !!this._joined[joinName];
+    }
+
+    join(joinName, columns) {
+
+      let joinsObject = this.setJoined(joinName);
 
       this._joinArray.push({
         table: joinsObject.model.prototype.schema.table,
@@ -372,12 +397,12 @@ module.exports = (function() {
 
       columnNames.forEach(columnName => {
 
-        let alias = this.__joinAlias__(joinName, columnName, joinsObject);
+        let alias = this.getJoinedAlias(joinName, columnName);
 
-        this._joined[alias] = {
+        this._joinedAlias[alias] = {
           table: joinsObject.model.prototype.schema.table,
           relationship: joinName,
-          alias: this.__joinAlias__(joinName, columnName, joinsObject),
+          alias: alias,
           column: columnName,
           type: columnLookup[columnName].type
         };
@@ -385,6 +410,22 @@ module.exports = (function() {
         this._columns.push(alias);
 
       });
+
+      // FIXME: Must order by parent table id for parser to work
+      // We should fix this in the parser...
+      let orderBy;
+      for (let i = 0; i < this._orderBy.length; i++) {
+        if (this._orderBy[i].columnName === 'id') {
+          orderBy = this._orderBy.splice(i, 1)[0];
+          break;
+        }
+      }
+
+      if (!orderBy) {
+        orderBy = {columnName: 'id', direction: 'ASC', format: null}
+      }
+
+      this._orderBy.unshift(orderBy);
 
       return this;
 
