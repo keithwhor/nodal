@@ -22,6 +22,7 @@ module.exports = (function() {
     Middleware: null,
     Migration: null,
     Model: null,
+    ModelArray: null,
     Router: null,
     Scheduler: null,
     SchedulerTask: null,
@@ -110,6 +111,12 @@ module.exports = (function() {
     Model: {
       get: function() {
         return Nodal.Model || (Nodal.Model = require('./required/model.js'));
+      },
+      enumerable: true
+    },
+    ModelArray: {
+      get: function() {
+        return Nodal.ModelArray || (Nodal.ModelArray = require('./required/model_array.js'));
       },
       enumerable: true
     },

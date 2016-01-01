@@ -527,7 +527,7 @@ module.exports = (function() {
       if (this.hasErrors()) {
 
         let errorObject = this.getErrors();
-        let message = errorObject._query || 'There was an error with your request';
+        let message = errorObject._query || 'Validation error';
 
         error = new Error(message);
         error.details = errorObject;
@@ -678,22 +678,41 @@ module.exports = (function() {
 
       }
 
-      if (joinsObject.child) {
+      this._joinsCache[field] = value;
+
+      return this.setJoinedId(field);
+
+    }
+
+    /**
+    * Sets appropriate id field for joined models
+    * @param {string} field The field (name of the join relationship)
+    * @param {Model|ModelArray} value The joined model or array of models
+    */
+    setJoinedId(field) {
+
+      let joinsObject = this._joins[field];
+      let joinedModel = this._joinsCache[field];
+
+      if (!joinedModel) {
+        throw new Error('${field} cannot have its joined id set, is not currently added to model.');
+      }
+
+      if (joinsObject.child && this.inStorage()) {
 
         if (joinsObject.multiple) {
-          value.forEach(model => model.set(joinsObject.via, this.get('id')));
+          joinedModel.forEach(model => model.set(joinsObject.via, this.get('id')));
         } else {
-          value.set(joinsObject.via, this.get('id'));
+          joinedModel.set(joinsObject.via, this.get('id'));
         }
 
-      } else {
+      } else if (!joinsObject.child && joinedModel.inStorage()) {
 
-        this.set(joinsObject.via, value.get('id'));
+        this.set(joinsObject.via, joinedModel.get('id'));
 
       }
 
-      this._joinsCache[field] = value;
-      return value;
+      return joinedModel;
 
     }
 
@@ -920,6 +939,30 @@ module.exports = (function() {
       return true;
     }
 
+    __generateSaveQuery__() {
+
+      let query, columns;
+      let db = this.db;
+
+      if (!this.inStorage()) {
+
+        columns = this.fieldList().filter(v => !this.isFieldPrimaryKey(v) && this.get(v, true) !== null);
+        query = db.adapter.generateInsertQuery(this.schema.table, columns);
+
+      } else {
+
+        columns = ['id'].concat(this.changedFields().filter(v => !this.isFieldPrimaryKey(v)));
+        query = db.adapter.generateUpdateQuery(this.schema.table, columns);
+
+      }
+
+      return {
+        sql: query,
+        params: columns.map(v => db.adapter.sanitize(this.getFieldData(v).type, this.get(v)))
+      };
+
+    }
+
     /**
     * Saves model to database
     * @param {function({Error} err, {Nodal.Model} model)} callback
@@ -935,59 +978,29 @@ module.exports = (function() {
         callback = arguments[1];
       }
 
-      if (this.readOnly) {
-        throw new Error(this.constructor.name + ' is marked as readOnly, can not save');
-      }
-
-      let model = this;
-
-      if (!(db instanceof Database)) {
-        throw new Error('Must provide a valid Database to save to');
-      }
-
       if(typeof callback !== 'function') {
         callback = function() {};
       }
 
-      if (model.hasErrors()) {
-        callback.call(model, {message: 'Validation error', fields: model.getErrors()}, model);
+      if (this.hasErrors()) {
+        callback.call(this, this.errorObject(), this);
         return;
       }
 
-      let columns, query;
-
-      if (!model.inStorage()) {
-
-        columns = model.fieldList().filter(function(v) {
-          return !model.isFieldPrimaryKey(v) && model.get(v, true) !== null;
-        });
-
-        query = db.adapter.generateInsertQuery(model.schema.table, columns);
-
-      } else {
-
-        columns = ['id'].concat(model.changedFields().filter(function(v) {
-          return !model.isFieldPrimaryKey(v);
-        }));
-
-        query = db.adapter.generateUpdateQuery(model.schema.table, columns);
-
-      }
+      let query = this.__generateSaveQuery__();
 
       db.query(
-        query,
-        columns.map(function(v) {
-          return db.adapter.sanitize(model.getFieldData(v).type, model.get(v, true));
-        }),
-        function(err, result) {
+        query.sql,
+        query.params,
+        (err, result) => {
 
           if (err) {
-            model.setError('_query', err.message);
+            this.setError('_query', err.message);
           } else {
-            result.rows.length && model.__load__(result.rows[0], true);
+            result.rows.length && this.__load__(result.rows[0], true);
           }
 
-          callback.call(model, model.errorObject(), model);
+          callback.call(this, this.errorObject(), this);
 
         }
       );
@@ -1007,10 +1020,6 @@ module.exports = (function() {
       if (arguments.length === 2) {
         db = arguments[0];
         callback = arguments[1];
-      }
-
-      if (this.readOnly) {
-        throw new Error(this.constructor.name + ' is marked as readOnly, can not destroy');
       }
 
       let model = this;
@@ -1073,8 +1082,6 @@ module.exports = (function() {
   Model.prototype._calculationsList = [];
 
   Model.prototype.formatters = {};
-
-  Model.prototype.readOnly = false;
 
   Model.prototype.data = null;
 

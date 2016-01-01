@@ -128,20 +128,11 @@ module.exports = (function() {
       let db = this;
       let transaction = beginTransaction(this._connection);
 
-      let queries = preparedArray.map(function(queryData, i) {
+      let queries = preparedArray.map(queryData => {
 
         queryData[1] = queryData[1] || [];
 
-        if (i > 0) {
-
-          return function(result, next) {
-            db.log(queryData[0], queryData[1]);
-            transaction.query(queryData[0], queryData[1], next);
-          };
-
-        }
-
-        return function(next) {
+        return (next) => {
           db.log(queryData[0], queryData[1]);
           transaction.query(queryData[0], queryData[1], next);
         };
@@ -149,6 +140,7 @@ module.exports = (function() {
       });
 
       let transactionError = null;
+      let transactionResults = [];
 
       transaction.on('rollback:start', function() {
 
@@ -177,20 +169,21 @@ module.exports = (function() {
       transaction.on('close', function() {
 
         db.info('Transaction complete!');
-
-        callback(transactionError);
+        callback(transactionError, transactionResults);
 
       });
 
       db.info('Transaction started...');
 
-      async.waterfall(queries, function(err) {
+      async.series(queries, (err, results) => {
 
         if (err) {
           transactionError = err;
           db.error(err.message);
           transaction.rollback();
         }
+
+        transactionResults = results;
 
         transaction.commit();
 

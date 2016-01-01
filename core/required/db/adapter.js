@@ -143,9 +143,9 @@ module.exports = (function() {
 
     }
 
-    generateDropTableQuery(table) {
+    generateDropTableQuery(table, ifExists) {
 
-      return `DROP TABLE ${this.escapeField(table)}`
+      return `DROP TABLE ${ifExists?'IF EXISTS ':''}${this.escapeField(table)}`;
 
     }
 
@@ -471,6 +471,10 @@ module.exports = (function() {
     gte: field => `${field} >= __VAR__`,
     like: field => `${field} LIKE '%' || __VAR__ || '%'`,
     ilike: field => `${field} ILIKE '%' || __VAR__ || '%'`,
+    startswith: field => `${field} LIKE __VAR__ || '%'`,
+    istartswith: field => `${field} ILIKE __VAR__ || '%'`,
+    endswith: field => `${field} LIKE '%' || __VAR__`,
+    iendswith: field => `${field} ILIKE '%' || __VAR__`,
     is_null: field => `${field} IS NULL`,
     not_null: field => `${field} IS NOT NULL`,
     in: field => `ARRAY[${field}] <@ __VAR__`,

@@ -2,6 +2,8 @@ module.exports = (function() {
 
   'use strict';
 
+  // Deprecated...
+
   class ComposerRecord {
 
     constructor(error, rows, resource, summary) {

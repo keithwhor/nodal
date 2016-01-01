@@ -7,32 +7,30 @@ module.exports = (function(Nodal) {
   describe('Nodal.Model', function() {
 
     let db = new Nodal.Database();
-    let schema = {
-      table: 'test_objects',
+
+    let schemaParent = {
+      table: 'parents',
       columns: [
         {name: 'id', type: 'serial'},
-        {name: 'test', type: 'string'},
+        {name: 'name', type: 'string'},
         {name: 'created_at', type: 'datetime'}
       ]
     };
+    class Parent extends Nodal.Model {}
 
-    class TestObject extends Nodal.Model {}
+    Parent.setDatabase(db);
+    Parent.setSchema(schemaParent);
 
-    TestObject.setDatabase(db);
-    TestObject.setSchema(schema);
-
-    TestObject.validates('test', 'should be at least five characters long', function(value) {
-
-      return value && value.length && value.length >= 5;
-
-    });
+    Parent.validates('name', 'should be at least five characters long', v => v && v.length >= 5);
 
     before(function(done) {
 
       db.connect(Nodal.my.Config.db.main);
 
       db.transaction(
-        db.adapter.generateCreateTableQuery(schema.table, schema.columns),
+        [schemaParent].map(schema => {
+          return db.adapter.generateCreateTableQuery(schema.table, schema.columns);
+        }).join(';'),
         function(err, result) {
           expect(err).to.equal(null);
           done();
@@ -52,47 +50,47 @@ module.exports = (function(Nodal) {
 
     it('should instantiate', function() {
 
-      let testObject = new TestObject();
-      expect(testObject).to.be.instanceof(Nodal.Model);
+      let parent = new Parent();
+      expect(parent).to.be.instanceof(Nodal.Model);
 
     });
 
     it('should not be listed as in Storage', function() {
 
-      let testObject = new TestObject();
-      expect(testObject.inStorage()).to.equal(false);
+      let parent = new Parent();
+      expect(parent.inStorage()).to.equal(false);
 
     });
 
     it('should have errors from validators with no params set', function() {
 
-      let testObject = new TestObject();
-      expect(testObject.hasErrors()).to.equal(true);
+      let parent = new Parent();
+      expect(parent.hasErrors()).to.equal(true);
 
     });
 
     it('should have correct validator error', function() {
 
-      let testObject = new TestObject();
-      expect(testObject.errorObject()).to.not.equal(null);
-      expect(testObject.errorObject().details).to.have.property('test');
-      expect(testObject.errorObject().details.test[0]).to.equal('should be at least five characters long');
+      let parent = new Parent();
+      expect(parent.errorObject()).to.not.equal(null);
+      expect(parent.errorObject().details).to.have.property('name');
+      expect(parent.errorObject().details.name[0]).to.equal('should be at least five characters long');
 
     });
 
     it('should not have errors if validations pass', function() {
 
-      let testObject = new TestObject({test: 'abcdef'});
-      expect(testObject.hasErrors()).to.equal(false);
+      let parent = new Parent({name: 'abcdef'});
+      expect(parent.hasErrors()).to.equal(false);
 
     });
 
     it('should clear errors once validated properties set', function() {
 
-      let testObject = new TestObject();
-      expect(testObject.hasErrors()).to.equal(true);
-      testObject.set('test', 'abcdef');
-      expect(testObject.hasErrors()).to.equal(false);
+      let parent = new Parent();
+      expect(parent.hasErrors()).to.equal(true);
+      parent.set('name', 'abcdef');
+      expect(parent.hasErrors()).to.equal(false);
 
     });
 
@@ -100,10 +98,10 @@ module.exports = (function(Nodal) {
 
       it('should refuse to save with error', function(done) {
 
-        let testObject = new TestObject();
-        testObject.save(function(err, model) {
+        let parent = new Parent();
+        parent.save(function(err, model) {
           expect(err).to.not.equal(null);
-          expect(model).to.equal(testObject);
+          expect(model).to.equal(parent);
           expect(model.inStorage()).to.equal(false);
           done();
         });
@@ -112,10 +110,10 @@ module.exports = (function(Nodal) {
 
       it('should save with no errors', function(done) {
 
-        let testObject = new TestObject({test: 'abcdef'});
-        testObject.save(function(err, model) {
+        let parent = new Parent({name: 'abcdef'});
+        parent.save(function(err, model) {
           expect(err).to.equal(null);
-          expect(model).to.equal(testObject);
+          expect(model).to.equal(parent);
           expect(model.inStorage()).to.equal(true);
           done();
         });
@@ -124,14 +122,30 @@ module.exports = (function(Nodal) {
 
       it('should save initially and update afterwards', function(done) {
 
-        let testObject = new TestObject({test: '123456'});
-        testObject.save(function(err, model) {
+        let parent = new Parent({name: '123456'});
+        parent.save(function(err, model) {
           expect(err).to.equal(null);
-          model.set('test', 'infinity');
+          model.set('name', 'infinity');
           model.save(function(err, model) {
             expect(err).to.equal(null);
             done();
           });
+        });
+
+      });
+
+      it('should save multiple parents', function(done) {
+
+        let parents = new Nodal.ModelArray(Parent);
+
+        for (let i = 0; i < 10; i++) {
+          parents.push(new Parent({name: 'Parent_' + i}));
+        }
+
+        parents.saveAll((err, modelArray) => {
+          expect(err).to.equal(null);
+          expect(modelArray.filter(m => m.inStorage()).length).to.equal(modelArray.length);
+          done();
         });
 
       });

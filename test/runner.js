@@ -31,4 +31,6 @@ describe('Test Suite', function() {
 
   require('./tests/application.js')(Nodal);
 
+  require('./tests/composer.js')(Nodal);
+
 });
