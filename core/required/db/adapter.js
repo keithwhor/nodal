@@ -155,48 +155,24 @@ module.exports = (function() {
 
     }
 
-    generateSelectQuery(subQuery, table, columnNames, multiFilter, joinArray, groupByArray, columnAggregateBy, orderObjArray, limitObj, paramOffset) {
-
-      let isAggregateQuery = groupByArray instanceof Array;
-
-      let groupingBy = {};
-      groupingBy[table] = {};
-
-      groupByArray && groupByArray
-        .forEach(g => {
-          let t = g.tables[0] || table;
-          groupingBy[t] = groupingBy[t] || {};
-          groupingBy[t][g.columns[0]] = true
-        });
+    generateSelectQuery(subQuery, table, columns, multiFilter, joinArray, orderObjArray, limitObj, paramOffset) {
 
       let formatTableField = (table, column) => `${this.escapeField(table)}.${this.escapeField(column)}`;
 
-      // Determine if we use the aggregate form or normal form of the field.
-      let formatField = (table, column, useAggregate) => {
-        if (!isAggregateQuery || groupingBy[table][column] || !useAggregate) {
-          return formatTableField(table, column);
-        }
-        return this.aggregate(columnAggregateBy[table][column])(formatTableField(table, column));
-      };
-
       return [
         'SELECT ',
-          columnNames.map(field => {
-            if (field.transform) {
-              let tables = field.tables;
-              let columns = field.columns.map((f, i) => formatField(tables[i] || table, f, field.useAggregate));
-              return `(${field.transform.apply(null, columns)}) AS ${this.escapeField(field.alias)}`;
-            } else if (field.relationship) {
-              return `(${formatField(field.table, field.column, true)}) AS ${this.escapeField(field.alias)}`;
+          columns.map(field => {
+            if (typeof field === 'string') {
+              return `(${formatTableField(table, field)}) AS ${this.escapeField(field)}`;
             }
-            return `(${formatField(table, field, true)}) AS ${this.escapeField(field)}`
+            return `(${formatTableField(field.table || table, field.columnName)}) AS ${this.escapeField(field.alias)}`;
           }).join(','),
         ' FROM ',
           subQuery ? `(${subQuery}) AS ` : '',
           this.escapeField(table),
           this.generateJoinClause(table, joinArray),
           this.generateWhereClause(table, multiFilter, paramOffset),
-          this.generateGroupByClause(table, groupByArray),
+          this.generateGroupByClause(table, []),
           this.generateOrderByClause(table, orderObjArray),
           this.generateLimitClause(limitObj)
       ].join('');
@@ -341,7 +317,10 @@ module.exports = (function() {
           refName: [this.escapeField(filter.table || table), this.escapeField(filter.columnName)].join('.'),
           comparator: filter.comparator,
           value: filter.value,
-          ignoreValue: !!this.comparatorIgnoresValue[filter.comparator]
+          ignoreValue: !!this.comparatorIgnoresValue[filter.comparator],
+          joined: filter.joined,
+          via: filter.via,
+          child: filter.child
         };
       });
 
@@ -351,6 +330,7 @@ module.exports = (function() {
 
       return filterObjArray
         .filter(v => v)
+        .sort((a, b) => a.joined === b.joined ? a.table > b.table : a.joined > b.joined) // important! must be sorted.
         .map(v => this.parseFilterObj(table, v));
 
     }
@@ -359,9 +339,13 @@ module.exports = (function() {
 
       paramOffset = Math.max(0, parseInt(paramOffset) || 0);
 
-      return ((!multiFilter || !multiFilter.length) ? '': ' WHERE (' + multiFilter.map((function(filterObj) {
+      if (!multiFilter || !multiFilter.length) {
+        return '';
+      }
+
+      return (' WHERE (' + multiFilter.map(filterObj => {
         return this.generateAndClause(table, filterObj);
-      }).bind(this)).join(') OR (') + ')').replace(/__VAR__/g, () => `\$${1 + (paramOffset++)}`);
+      }).join(') OR (') + ')').replace(/__VAR__/g, () => `\$${1 + (paramOffset++)}`);
 
     }
 
@@ -373,9 +357,65 @@ module.exports = (function() {
         return '';
       }
 
-      return filterObjArray.map(function(filterObj) {
-        return comparators[filterObj.comparator](filterObj.refName);
-      }).join(' AND ');
+      let lastTable = null;
+      let clauses = [];
+      let joinedClauses = [];
+
+      for (let i = 0; i < filterObjArray.length; i++) {
+
+        let filterObj = filterObjArray[i];
+        let joined = filterObj.joined;
+        let table = filterObj.table;
+
+        if (!joined) {
+
+          clauses.push(comparators[filterObj.comparator](filterObj.refName));
+
+        } else {
+
+          let currentJoinedClauses = [];
+
+          if (lastTable === table) {
+
+            currentJoinedClauses = joinedClauses[joinedClauses.length - 1].clauses;
+
+          } else {
+
+            joinedClauses.push({
+              table: table,
+              via: filterObj.via,
+              child: filterObj.child,
+              clauses: currentJoinedClauses
+            });
+
+          }
+
+          currentJoinedClauses.push(comparators[filterObj.comparator](filterObj.refName));
+
+        }
+
+      }
+
+      joinedClauses = joinedClauses.map(jc => {
+
+        jc.clauses.push(
+          jc.child ?
+          `${this.escapeField(jc.table)}.${this.escapeField(jc.via)} = ${this.escapeField(table)}.${this.escapeField('id')}` :
+          `${this.escapeField(table)}.${this.escapeField(jc.via)} = ${this.escapeField(jc.table)}.${this.escapeField('id')}`
+        );
+
+        return [
+          `(`,
+            `SELECT ${this.escapeField(jc.table)}.${this.escapeField('id')} `,
+            `FROM ${this.escapeField(jc.table)} `,
+            `WHERE (${jc.clauses.join(' AND ')}) `,
+            `LIMIT 1`,
+          `) IS NOT NULL`
+        ].join('');
+
+      });
+      
+      return clauses.concat(joinedClauses).join(' AND ');
 
     }
 

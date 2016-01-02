@@ -7,582 +7,13 @@ module.exports = (function() {
 
   class Composer {
 
-    constructor(db, modelConstructor, query) {
+    constructor(Model, parent) {
 
-      this._db = db;
-      this._modelConstructor = modelConstructor;
-      this._modelTable = modelConstructor.table();
-      this._modelColumns = modelConstructor.columnNames();
-      this._modelColumnLookup = modelConstructor.columnLookup();
-      this._modelJoinsLookup = Object.assign({}, modelConstructor.prototype._joins);
+      this.db = Model.prototype.db;
+      this.Model = Model;
 
-      this._query = (query instanceof Array ? query : []).slice();
-
-      this._filters = [];
-      this._columns = this._query.length ? this._query[this._query.length - 1]._columns.slice() : this._modelColumns.slice();
-      this._orderBy = [];
-      this._groupBy = null;
-      this._joinArray = [];
-
-      this._joinedAlias = {};
-      this._joined = {};
-      this._transformations = {};
-
-      this._count = 0;
-      this._offset = 0;
-
-    }
-
-    __aggregateOrder__() {
-
-      let modelConstructor = this._modelConstructor;
-      let db = this._db;
-
-      if (this._orderBy.length && this._groupBy) {
-        this._orderBy.filter(order => !order.format).forEach((order, i) => {
-          order.format = db.adapter.aggregate(
-            modelConstructor.prototype.aggregateBy[order.columnName]
-          );
-        });
-      }
-
-    }
-
-    __parseFilters__(filterObj) {
-
-      let comparators = this._db.adapter.comparators;
-      let columnLookup = this._modelColumnLookup;
-      let relationshipLookup = this._modelJoinsLookup;
-
-      filterObj.hasOwnProperty('__order') &&
-        this.orderBy.call(this, filterObj.__order.split(' ')[0], filterObj.__order.split(' ')[1]);
-
-      filterObj.hasOwnProperty('__offset') || filterObj.hasOwnProperty('__count') &&
-        this.limit(filterObj.__offset || 0, filterObj.__count || 0);
-
-      Object.keys(filterObj)
-        .filter(filter => relationshipLookup[filter])
-        .forEach(filter => {
-          let rel = relationshipLookup[filter];
-          filterObj[rel.via] = filterObj[filter].get('id');
-          delete filterObj[filter];
-        });
-
-      return Object.keys(filterObj)
-        .map(filter => {
-
-          let column = filter.split('__');
-          let table = null;
-          let rel = relationshipLookup[column[0]];
-
-          if (rel) {
-
-            let joinName = column.shift();
-
-            // if it's not found, return null...
-            if (!rel.model.columnNames().filter(c => c === column[0]).length) {
-              return null;
-            }
-
-            let foundQuery = this._query.filter(q => q.hasJoined(joinName)).pop();
-
-            if (foundQuery) {
-              column[0] = foundQuery.getJoinedAlias(joinName, column[0]);
-            } else {
-              table = rel.model.prototype.schema.table;
-            }
-
-          }
-
-          let comparator = column.length > 1 ? column.pop() : 'is';
-          let columnName = column.join('__');
-
-          // block out bad column names
-          if (!rel && !columnLookup[columnName]) {
-            return null;
-          }
-
-          if (!comparators[comparator]) {
-            return null;
-          }
-
-          return {
-            table: table,
-            columnName: columnName,
-            comparator: comparator,
-            value: filterObj[filter],
-          };
-
-        })
-        .filter(v => {
-          return !!v;
-        });
-
-    }
-
-    __prepareAggregateBy__(table, columns) {
-
-      let modelConstructor = this._modelConstructor;
-      let relationships = modelConstructor.prototype._joins;
-
-      let aggregateBy = {};
-      aggregateBy[table] = {};
-
-      columns.filter(c => typeof c === 'string')
-        .forEach(c => aggregateBy[table][c] = modelConstructor.prototype.aggregateBy[c]);
-
-      columns.filter(c => c.transform)
-        .forEach(c => {
-          c.columns.forEach(c => aggregateBy[table][c] = modelConstructor.prototype.aggregateBy[c]);
-        })
-
-      columns.filter(c => c.relationship)
-        .forEach(c => {
-          aggregateBy[c.table] = aggregateBy[c.table] || {};
-          aggregateBy[c.table][c.column] = relationships[c.relationship].model.prototype.aggregateBy[c.column];
-        });
-
-      return aggregateBy;
-
-    }
-
-    __prepareColumns__(columns) {
-
-      return columns.map(c => this._joinedAlias[c] || c);
-
-    };
-
-    __toSQL__(table, columns, sql, paramOffset) {
-
-      let base = !table;
-
-      let db = this._db;
-
-      let modelConstructor = this._modelConstructor;
-
-      table = table || this._modelTable;
-      columns = this.__prepareColumns__(columns);
-      // console.log('COLUMNS');
-      // console.log(table);
-      // console.log(columns);
-      let multiFilter = db.adapter.createMultiFilter(table, this._filters);
-      let params = db.adapter.getParamsFromMultiFilter(multiFilter);
-
-      return {
-        sql: db.adapter.generateSelectQuery(
-          base ? null : sql,
-          table,
-          columns,
-          multiFilter,
-          this._joinArray,
-          this._groupBy,
-          this.__prepareAggregateBy__(table, columns),
-          this._orderBy,
-          {count: this._count, offset: this._offset},
-          paramOffset
-        ),
-        params: params
-      };
-
-    }
-
-    __prepareQuery__(isSummary) {
-
-      let query = this._query.slice();
-      query.push(this);
-
-      let queryCount = query.length;
-
-      let genTable = i => `t${i}`;
-      let grouped = !!query.filter(q => q._groupBy).length;
-
-      let returnModels = !grouped; // FIXME: Maybe?
-
-      let preparedQuery = query.reduce((prev, query, i) => {
-        // If it's a summary, convert the last query to an aggregate query.
-        query = ((i === queryCount - 1) && isSummary) ? query.aggregate() : query;
-        let select = query.__toSQL__(
-          i && genTable(i),
-          query._columns, // change this to change which columns load
-          prev.sql,
-          prev.params.length
-        );
-        return {
-          sql: select.sql,
-          params: prev.params.concat(select.params)
-        }
-      }, {params: []});
-
-      preparedQuery.grouped = grouped;
-      preparedQuery.models = returnModels;
-      preparedQuery.columns = this._columns; // TODO: Deprecate?
-
-      return preparedQuery;
-
-    }
-
-    __query__(pQuery, callback) {
-
-      this._db.query(
-        pQuery.sql,
-        pQuery.params,
-        callback
-      );
-
-      return this;
-
-    }
-
-    copy() {
-
-      let copy = new Composer(this._db, this._modelConstructor, this._query);
-
-      Object.keys(this).forEach(k => copy[k] = this[k] instanceof Array ? this[k].slice() : this[k]);
-
-      return copy;
-
-    }
-
-    aggregate() {
-
-      let copy = this.copy();
-      copy._groupBy = [];
-      copy._orderBy = [];
-
-      return copy;
-
-    }
-
-    __parseColumns__(columns) {
-
-      let relationships = {};
-      let tables = [];
-
-      columns = columns.map((c, i) => {
-
-        let colSplit = c.split('__');
-        let colRelationshipName = colSplit.length > 1 ? colSplit.shift() : null;
-        let colName = colSplit.join('__');
-
-        if (colRelationshipName) {
-
-          let rel = (
-            relationships[colRelationshipName] = relationships[colRelationshipName] ||
-              this.__getRelationship__(colRelationshipName)
-          );
-
-          if (!rel) {
-            throw new Error(`Model has no relationship "${colRelationshipName}"`);
-          }
-
-          if (!rel.model.prototype.schema.columns.filter(c => c.name === colName).length) {
-            throw new Error(`Model relationship "${colRelationshipName}" has no column "${colName}"`);
-          }
-
-          tables.push(rel.model.prototype.schema.table);
-
-        } else {
-
-          if (!this._modelColumnLookup[colName]) {
-            throw new Error(`Model has no column "${colName}"`);
-          }
-
-          tables.push(null);
-
-        }
-
-        return colName;
-
-      });
-
-      return {
-        tables: tables,
-        columns: columns
-      };
-
-    }
-
-    transform(alias, transformFn, type, isArray, useAggregate) {
-
-      if (typeof transformFn === 'string') {
-        transformFn = new Function(transformFn, `return ${transformFn};`);
-      }
-
-      if (typeof transformFn !== 'function') {
-        throw new Error('.transform requires valid transformation function');
-      }
-
-      let columns = utilities.getFunctionParameters(transformFn);
-
-      let parsedColumns = this.__parseColumns__(columns);
-
-      this._transformations[alias] = {
-        alias: alias,
-        tables: parsedColumns.tables,
-        columns: parsedColumns.columns,
-        transform: transformFn,
-        type: type,
-        array: isArray,
-        useAggregate: !!useAggregate
-      };
-
-      return this;
-
-    }
-
-    stransform(alias, transformFn, type, isArray) {
-
-      return this.transform(alias, transformFn, type, isArray, true);
-
-    }
-
-    filter(filters) {
-
-      if (this._filters.length) {
-        this._query.push(this);
-        let child = new Composer(this._db, this._modelConstructor, this._query);
-        return child.filter.apply(child, arguments);
-      }
-
-      if (!(filters instanceof Array)) {
-        filters = [].slice.call(arguments);
-      }
-
-      this._filters = filters.map(
-        this.__parseFilters__.bind(this)
-      ).filter(f => f.length);
-
-      return this;
-
-    }
-
-    getJoinedAlias(joinName, column) {
-      let joinsObject = this._joined[joinName];
-      return `${(joinsObject.child && joinsObject.multiple) ? '$$' : '$'}${joinName}\$${column}`;
-    }
-
-    setJoined(joinName) {
-
-      let joins = this._modelConstructor.prototype._joins;
-
-      let joinsObject = Object.keys(joins)
-        .filter(name => name === joinName)
-        .map(name => joins[name])
-        .pop();
-
-      if (!joinsObject) {
-        throw new Error(`Model "${this._modelConstructor.name}" has no join "${joinName}. Valid joins are "${Object.keys(joins).map(j => j + '", "')}".`);
-      }
-
-      return (this._joined[joinName] = joinsObject);
-
-    }
-
-    hasJoined(joinName) {
-      return !!this._joined[joinName];
-    }
-
-    join(joinName, columns) {
-
-      let joinsObject = this.setJoined(joinName);
-
-      this._joinArray.push({
-        table: joinsObject.model.prototype.schema.table,
-        field: joinsObject.child ? joinsObject.via : 'id',
-        baseField: joinsObject.child ? 'id' : joinsObject.via
-      });
-
-      let columnLookup = joinsObject.model.columnLookup();
-      let columnNames = joinsObject.model.columnNames();
-
-      columnNames.forEach(columnName => {
-
-        let alias = this.getJoinedAlias(joinName, columnName);
-
-        this._joinedAlias[alias] = {
-          table: joinsObject.model.prototype.schema.table,
-          relationship: joinName,
-          alias: alias,
-          column: columnName,
-          type: columnLookup[columnName].type
-        };
-
-        this._columns.push(alias);
-
-      });
-
-      // FIXME: Must order by parent table id for parser to work
-      // We should fix this in the parser...
-      let orderBy;
-      for (let i = 0; i < this._orderBy.length; i++) {
-        if (this._orderBy[i].columnName === 'id') {
-          orderBy = this._orderBy.splice(i, 1)[0];
-          break;
-        }
-      }
-
-      if (!orderBy) {
-        orderBy = {columnName: 'id', direction: 'ASC', format: null}
-      }
-
-      this._orderBy.unshift(orderBy);
-
-      return this;
-
-    }
-
-    orderBy(field, direction, formatFunc) {
-
-      if (this._groupBy && !this._groupBy.length) {
-        throw new Error('Can not call .orderBy on a standalone aggregate query');
-      }
-
-      if (!this._modelColumnLookup[field]) {
-        return this;
-      }
-
-      if (typeof formatFunc !== 'function') {
-        formatFunc = null;
-      }
-
-      this._orderBy.push({
-        columnName: field,
-        direction: ({'asc': 'ASC', 'desc': 'DESC'}[(direction + '').toLowerCase()] || 'ASC'),
-        format: formatFunc
-      });
-
-      this.__aggregateOrder__();
-
-      return this;
-
-    }
-
-    __getRelationship__(field) {
-
-      if (!field) {
-        return undefined;
-      }
-
-      let relationships = this._modelConstructor.prototype._joins;
-      return Object.keys(relationships)
-        .filter(name => name === field)
-        .map(name => relationships[name])
-        .pop();
-
-    }
-
-    groupByRelationship(rel) {
-
-      let table = rel.model.prototype.schema.table;
-      this._groupBy = (this._groupBy || []).concat(
-        rel.model.prototype.schema.columns.map(c => {
-          return {
-            tables: [table],
-            columns: [c.name],
-            format: null
-          };
-        })
-      );
-
-      this.__aggregateOrder__();
-
-      return this;
-
-    }
-
-    groupBy(columns, formatFunc) {
-
-      if (typeof columns === 'function') {
-
-        formatFunc = columns;
-        columns = utilities.getFunctionParameters(formatFunc);
-
-      } else {
-
-        if (typeof columns === 'string') {
-
-          let rel = this.__getRelationship__(columns);
-          if (rel) {
-            return this.groupByRelationship(rel);
-          }
-
-          columns = [columns];
-
-        }
-
-      }
-
-      let parsedColumns = this.__parseColumns__(columns);
-
-      if (typeof formatFunc !== 'function') {
-        formatFunc = null;
-      }
-
-      this._groupBy = this._groupBy || [];
-
-      this._groupBy.push({
-        tables: parsedColumns.tables,
-        columns: parsedColumns.columns,
-        format: formatFunc
-      });
-
-      this.__aggregateOrder__();
-
-      return this;
-
-    }
-
-    limit(offset, count) {
-
-      if (count === undefined) {
-        count = offset;
-        offset = 0;
-      }
-
-      count = parseInt(count);
-      offset = parseInt(offset);
-
-      this._count = this._count ? Math.min(count, this._count) : Math.max(count, 0);
-      this._offset += offset;
-
-      return this;
-
-    }
-
-    update(fields, callback) {
-
-      this.interface('id');
-
-      let db = this._db;
-      let modelConstructor = this._modelConstructor;
-      let pQuery = this.__prepareQuery__();
-
-      let columns = Object.keys(fields);
-      let params = columns.map(c => fields[c]);
-
-      pQuery.sql = db.adapter.generateUpdateAllQuery(
-        modelConstructor.prototype.schema.table,
-        'id',
-        columns,
-        pQuery.params.length,
-        pQuery.sql
-      );
-
-      pQuery.params = pQuery.params.concat(params);
-
-      this.__query__(
-        pQuery,
-        (err, result) => {
-
-          let rows = result ? (result.rows || []).slice() : [];
-
-          let models = new ModelArray(modelConstructor);
-          models.push.apply(models, rows.map(r => new modelConstructor(r, true)));
-
-          callback.call(this, err, models);
-
-        }
-      )
+      this._parent = parent || null;
+      this._command = null;
 
     }
 
@@ -592,8 +23,7 @@ module.exports = (function() {
 
       let s = new Date().valueOf();
 
-      let modelConstructor = this._modelConstructor;
-      let models = new ModelArray(modelConstructor);
+      let models = new ModelArray(this.Model);
 
       let rowKeys = [];
       rows.length && (rowKeys = Object.keys(rows[0]));
@@ -684,7 +114,7 @@ module.exports = (function() {
           joinKeys.forEach(assignToSkeleton(row));
           joinNames.forEach(joinName => {
 
-            row[joinName] = new this._modelJoinsLookup[joinName].model(
+            row[joinName] = new (this.Model.relationship(joinName).Model)(
               joinSkeleton[joinName].data,
               true
             );
@@ -700,7 +130,7 @@ module.exports = (function() {
         joinMultipleKeys.forEach(assignToSkeleton(row));
         joinMultipleNames.forEach(joinName => {
 
-          let joinModelConstructor = this._modelJoinsLookup[joinName].model;
+          let joinModelConstructor = this.Model.relationship(joinName).Model;
 
           curRow[joinName] = curRow[joinName] || new ModelArray(joinModelConstructor);
           curRow[joinName].push(
@@ -716,7 +146,7 @@ module.exports = (function() {
 
       }, []).forEach(row => {
 
-        models.push(new modelConstructor(row));
+        models.push(new this.Model(row));
 
       });
 
@@ -726,48 +156,325 @@ module.exports = (function() {
 
     }
 
-    end(callback, summary) {
+    __generateQueryInformation__() {
 
-      let modelConstructor = this._modelConstructor;
+      let composerArray = [];
+      let composer = this;
 
-      let pQuery = this.__prepareQuery__();
+      while (composer) {
+        composerArray.unshift(composer);
+        composer = composer._parent;
+      }
 
-      this.__query__(
-        pQuery,
-        (err, result) => {
+      let joins = [];
 
-          let rows = result ? (result.rows || []).slice() : [];
-          let models;
+      let commands = composerArray.reduce((p, c) => {
 
-          if (pQuery.models) {
+        let composerCommand = c._command || {type: 'filter', data: {filters: []}};
+        let lastCommand = p[p.length - 1];
+        let command = {};
 
-            models = this.__parseModelsFromRows__(rows);
+        if (lastCommand && !lastCommand[composerCommand.type]) {
+          command = lastCommand;
+        } else {
+          p.push(command);
+        }
+
+        if (composerCommand.type === 'join') {
+
+          joins.push(Object.keys(composerCommand.data).reduce((p, c) => {
+            return (p[c] = composerCommand.data[c], p);
+          }, {}));
+
+        } else {
+
+          command[composerCommand.type] = Object.keys(composerCommand.data).reduce((p, c) => {
+            return (p[c] = composerCommand.data[c], p);
+          }, {});
+
+        }
+
+        return p;
+
+      }, []);
+
+      return {
+        commands: commands,
+        joins: joins
+      };
+
+    }
+
+    __joinedColumns__(joinName) {
+      let joinsObject = this.Model.relationship(joinName);
+      return joinsObject.Model.columnNames().map(columnName => {
+        return {
+          table: joinsObject.Model.table(),
+          columnName: columnName,
+          alias: `${(joinsObject.child && joinsObject.multiple) ? '$$' : '$'}${joinName}\$${columnName}`
+        };
+      });
+    }
+
+    __generateQuery__() {
+
+      let queryInfo = this.__generateQueryInformation__();
+
+      return queryInfo.commands.reduce((prev, command, i) => {
+
+        let table = !prev.sql ? this.Model.table() : `t${i}`;
+
+        let multiFilter = this.db.adapter.createMultiFilter(table, command.filter ? command.filter.filters : []);
+        let params = this.db.adapter.getParamsFromMultiFilter(multiFilter);
+
+        let joins = null;
+        let columns = this.Model.columnNames();
+
+        let orderBy = command.orderBy ? [command.orderBy] : []
+
+        // Only add in joins at the end
+        if (i === queryInfo.commands.length - 1) {
+
+          joins = queryInfo.joins;
+
+          joins.forEach(j => {
+            columns = columns.concat(this.__joinedColumns__(j.name));
+          });
+
+          joins.length && orderBy.unshift({columnName: 'id', direction: 'ASC'}); // FIXME: For parsing, should fix.
+
+        }
+
+        return {
+          sql: this.db.adapter.generateSelectQuery(
+            prev.sql,
+            table,
+            columns,
+            multiFilter,
+            joins,
+            orderBy, // FIXME: Should be an array before it gets here
+            command.limit,
+            prev.params.length
+          ),
+          params: prev.params.concat(params)
+        }
+
+      }, {sql: null, params: []});
+
+    };
+
+    __parseFilters__(filterObj) {
+
+      let comparators = this.db.adapter.comparators;
+      let columnLookup = this.Model.columnLookup();
+
+      filterObj = Object.keys(filterObj).reduce((p, c) => { return (p[c] = filterObj[c], p); }, {});
+
+      if ('__order' in filterObj) {
+        let order = filterObj.__order.split(' ');
+        delete filterObj.__order;
+        return this.orderBy(order[0], order[1]).filter(filterObj);
+      }
+
+      if ('__offset' in filterObj || '__count' in filterObj) {
+        let offset = filterObj.__offset;
+        let count = filterObj.__count;
+        delete filterObj.__offset;
+        delete filterObj.__count;
+        return this.limit(offset || 0, count || 0).filter(filterObj);
+      }
+
+      return Object.keys(filterObj)
+        .map(filter => {
+
+          let column = filter.split('__');
+          let rel = this.Model.relationship(column[0]);
+
+          let table = null;
+          let via = null;
+          let child = null;
+          let joined = false;
+
+          if (rel) {
+
+            let joinName = column.shift();
+
+            // if it's not found, return null...
+            if (!rel.Model.hasColumn(column[0])) {
+              return null;
+            }
+
+            table = rel.Model.table();
+            child = rel.child;
+            via = rel.via;
+            joined = true;
+
+            // Need this t be the following...
+
+            `
+            SELECT
+              "id"
+            FROM "parents"
+            WHERE
+              (SELECT "children"."id" FROM "children" WHERE "children"."parent_id" = "parent"."id" AND (/* joined filters */) LIMIT 1)
+            `
 
           }
 
-          callback.call(this, err, models);
+          let comparator = column.length > 1 ? column.pop() : 'is';
+          let columnName = column.join('__');
 
+          // block out bad column names
+          if (!rel && !this.Model.hasColumn(columnName)) {
+            return null;
+          }
+
+          if (!comparators[comparator]) {
+            return null;
+          }
+
+          return {
+            table: table,
+            columnName: columnName,
+            comparator: comparator,
+            value: filterObj[filter],
+            joined: joined,
+            via: via,
+            child: child
+          };
+
+        })
+        .filter(v => {
+          return !!v;
+        });
+
+    }
+
+    filter(filters) {
+
+      if (this._command) {
+        let composer = new Composer(this.Model, this);
+        return composer.filter.apply(composer, arguments);
+      }
+
+      if (!(filters instanceof Array)) {
+        filters = [].slice.call(arguments);
+      }
+
+      this._command = {
+        type: 'filter',
+        data: {
+          filters: filters
+          .map(this.__parseFilters__.bind(this))
+          .filter(f => f.length)
         }
-      );
+      };
 
       return this;
 
     }
 
-    summarize(callback) {
+    orderBy(field, direction, formatFunc) {
 
-      let pQuery = this.__prepareQuery__(true);
+      if (this._command) {
+        return new Composer(this.Model, this).orderBy(field, direction, formatFunc);
+      }
 
-      this.__query__(
-        pQuery,
-        (err, result) => {
+      if (!this.Model.hasColumn(field)) {
+        throw new Error(`Cannot order by ${field}, it does not belong to ${this.Model.name}`);
+      }
 
-          this.end(callback, !err && result.rows && result.rows.length ? result.rows[0] : null);
+      if (typeof formatFunc !== 'function') {
+        formatFunc = null;
+      }
 
+      this._command = {
+        type: 'orderBy',
+        data: {
+          columnName: field,
+          direction: ({'asc': 'ASC', 'desc': 'DESC'}[(direction + '').toLowerCase()] || 'ASC'),
+          format: formatFunc
         }
-      );
+      };
 
       return this;
+
+    }
+
+    limit(offset, count) {
+
+      if (this._command) {
+        return new Composer(this.Model, this).limit(offset, count);
+      }
+
+      if (count === undefined) {
+        count = offset;
+        offset = 0;
+      }
+
+      count = parseInt(count);
+      offset = parseInt(offset);
+
+      this._command = {
+        type: 'limit',
+        data: {
+          count: count,
+          offset: offset
+        }
+      };
+
+      return this;
+
+    }
+
+    join(joinName) {
+
+      if (this._command) {
+        return new Composer(this.Model, this).join(joinName);
+      }
+
+      if (!this.Model.hasRelationship(joinName)) {
+        throw new Error(`Model ${this.Model.name} does not have relationship ${joinName}`);
+      }
+
+      let composer = this;
+      while (composer) {
+        if (composer._command && composer._command.type === 'join' && composer._command.data.name === joinName) {
+          return this;
+        }
+        composer = composer._parent;
+      }
+
+      let joinsObject = this.Model.relationship(joinName);
+
+      this._command = {
+        type: 'join',
+        data: {
+          name: joinName,
+          table: joinsObject.Model.table(),
+          field: joinsObject.child ? joinsObject.via : 'id',
+          baseField: joinsObject.child ? 'id' : joinsObject.via
+        }
+      };
+
+      return this;
+
+    }
+
+    end(callback) {
+
+      let query = this.__generateQuery__();
+
+      return this.db.query(query.sql, query.params, (err, result) => {
+
+        let rows = result ? (result.rows || []).slice() : [];
+        let models;
+
+        models = this.__parseModelsFromRows__(rows);
+
+        callback.call(this, err, models);
+
+      });
 
     }
 

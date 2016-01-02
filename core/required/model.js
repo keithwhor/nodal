@@ -110,7 +110,7 @@ module.exports = (function() {
     static query(db) {
 
       db = db || this.prototype.db;
-      return new Composer(db, this);
+      return new Composer(this);
 
     }
 
@@ -150,6 +150,30 @@ module.exports = (function() {
     }
 
     /**
+    * Check if the model has a column name in its schema
+    * @param {string} columnName
+    */
+    static hasColumn(columnName) {
+      return !!this.column(columnName);
+    }
+
+    /**
+    * Return the column schema data for a given name
+    * @param {string} columnName
+    */
+    static column(columnName) {
+      return this.prototype._columnLookup[columnName];
+    }
+
+    /**
+    * Check if the model has a relationship with a given name
+    * @param {string} name
+    */
+    static hasRelationship(name) {
+      return !!this.relationship(name);
+    }
+
+    /**
     * Get the model's relationship with a provided name
     * @param {string} name Relationship name
     * @return {Object}
@@ -170,7 +194,7 @@ module.exports = (function() {
           Object.keys(this.prototype._joins)
             .map(r => {
               let obj = {};
-              obj[r] = this.relationship(r).model.columnNames();
+              obj[r] = this.relationship(r).Model.columnNames();
               return obj;
             })
         );
@@ -209,7 +233,7 @@ module.exports = (function() {
             return null;
           }
 
-          return relationship.model.toResource(r[key]);
+          return relationship.Model.toResource(r[key]);
 
         }
 
@@ -296,7 +320,7 @@ module.exports = (function() {
       }
 
       this.prototype._joins[options.name] = {
-        model: modelConstructor,
+        Model: modelConstructor,
         child: false,
         via: options.via,
         multiple: options.multiple
@@ -314,7 +338,7 @@ module.exports = (function() {
       }
 
       modelConstructor.prototype._joins[options.as] = {
-        model: this,
+        Model: this,
         child: true,
         via: options.via,
         multiple: options.multiple
@@ -664,17 +688,17 @@ module.exports = (function() {
 
       if (
         (!joinsObject.child || (joinsObject.child && !joinsObject.multiple)) &&
-        !(value instanceof joinsObject.model)
+        !(value instanceof joinsObject.Model)
       ) {
 
-        throw new Error(`${value} is not an instance of ${joinsObject.model.name}`);
+        throw new Error(`${value} is not an instance of ${joinsObject.Model.name}`);
 
       } else if (
         joinsObject.child && joinsObject.multiple &&
-        (!(value instanceof ModelArray) || (value._modelConstructor !== joinsObject.model))
+        (!(value instanceof ModelArray) || (value._modelConstructor !== joinsObject.Model))
       ) {
 
-        throw new Error(`${value} is not an instanceof ModelArray[${joinsObject.model.name}]`);
+        throw new Error(`${value} is not an instanceof ModelArray[${joinsObject.Model.name}]`);
 
       }
 
@@ -778,7 +802,7 @@ module.exports = (function() {
 
       let fns = relationships.map(r => this._joins[r]).map(r => {
         return (callback) => {
-          r.model.find(db, this.get(r.via), (err, model) => {
+          r.Model.find(db, this.get(r.via), (err, model) => {
             callback(err, model);
           });
         }

@@ -174,6 +174,54 @@ module.exports = (function(Nodal) {
 
     });
 
+    it('Should orderBy properly (DESC)', function(done) {
+
+      Child.query()
+        .orderBy('id', 'DESC')
+        .end((err, children) => {
+
+          expect(err).to.equal(null);
+          expect(children).to.be.an.instanceOf(Nodal.ModelArray);
+          expect(children.length).to.equal(100);
+          expect(children[0].get('id')).to.equal(100);
+          done();
+
+        });
+
+    });
+
+    it('Should limit properly (10)', function(done) {
+
+      Child.query()
+        .limit(10)
+        .end((err, children) => {
+
+          expect(err).to.equal(null);
+          expect(children).to.be.an.instanceOf(Nodal.ModelArray);
+          expect(children.length).to.equal(10);
+          done();
+
+        });
+
+    });
+
+    it('Should limit and orderBy properly (ASC)', function(done) {
+
+      Child.query()
+        .limit(10, 10)
+        .orderBy('id', 'ASC')
+        .end((err, children) => {
+
+          expect(err).to.equal(null);
+          expect(children).to.be.an.instanceOf(Nodal.ModelArray);
+          expect(children.length).to.equal(10);
+          expect(children[0].get('id')).to.equal(11);
+          done();
+
+        });
+
+    });
+
     it('Should do an "is" filter properly', (done) => {
 
       Parent.query()
@@ -428,6 +476,25 @@ module.exports = (function(Nodal) {
 
           expect(err).to.equal(null);
           expect(parents.length).to.equal(2);
+          done();
+
+        });
+
+    });
+
+    it('Should filter from both relationships, but keep 10 children per parent', (done) => {
+
+      Parent.query()
+        .join('children')
+        .filter({children__id__lte: 25})
+        .join('partner')
+        .filter({partner__name: 'Partner0'}, {partner__name: 'Partner1'})
+        .end((err, parents) => {
+
+          expect(err).to.equal(null);
+          expect(parents.length).to.equal(2);
+          expect(parents[0].get('children').length).to.equal(10);
+          expect(parents[1].get('children').length).to.equal(10);
           done();
 
         });
