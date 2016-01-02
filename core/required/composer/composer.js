@@ -220,7 +220,7 @@ module.exports = (function() {
 
       let queryInfo = this.__generateQueryInformation__();
 
-      return queryInfo.commands.reduce((prev, command, i) => {
+      return queryInfo.commands.concat({joins: queryInfo.joins}).reduce((prev, command, i) => {
 
         let table = !prev.sql ? this.Model.table() : `t${i}`;
 
@@ -233,9 +233,9 @@ module.exports = (function() {
         let orderBy = command.orderBy ? [command.orderBy] : []
 
         // Only add in joins at the end
-        if (i === queryInfo.commands.length - 1) {
+        if (command.joins) {
 
-          joins = queryInfo.joins;
+          joins = command.joins;
 
           joins.forEach(j => {
             columns = columns.concat(this.__joinedColumns__(j.name));

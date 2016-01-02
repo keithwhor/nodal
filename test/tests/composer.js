@@ -570,6 +570,37 @@ module.exports = (function(Nodal) {
 
     });
 
+    it('Should limit based on the Parent, not joined fields', (done) => {
+
+      Parent.query()
+        .join('children')
+        .filter({children__id__lte: 70})
+        .limit(5)
+        .end((err, parents) => {
+
+          expect(err).to.equal(null);
+          expect(parents.length).to.equal(5);
+          done();
+
+        });
+
+    });
+
+    it('Should filter without joining', (done) => {
+
+      Parent.query()
+        .filter({children__id__lte: 70})
+        .limit(5)
+        .end((err, parents) => {
+
+          expect(err).to.equal(null);
+          expect(parents.length).to.equal(5);
+          done();
+
+        });
+
+    });
+
   });
 
 });
