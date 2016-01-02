@@ -50,13 +50,13 @@ module.exports = (function(Nodal) {
 
     Child.setDatabase(db);
     Child.setSchema(schemaChild);
-    Child.joins(Parent, {multiple: true});
+    Child.joinsTo(Parent, {multiple: true});
 
     class Partner extends Nodal.Model {}
 
     Partner.setDatabase(db);
     Partner.setSchema(schemaPartner);
-    Partner.joins(Parent);
+    Partner.joinsTo(Parent);
 
     before(function(done) {
 

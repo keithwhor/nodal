@@ -169,16 +169,16 @@ module.exports = (function() {
     * Check if the model has a relationship with a given name
     * @param {string} name
     */
-    static hasRelationship(name) {
-      return !!this.relationship(name);
+    static hasJoin(name) {
+      return !!this.joinInformation(name);
     }
 
     /**
-    * Get the model's relationship with a provided name
+    * Retrieve join information based on the provided name
     * @param {string} name Relationship name
     * @return {Object}
     */
-    static relationship(name) {
+    static joinInformation(name) {
       return this.prototype._joins[name];
     }
 
@@ -194,7 +194,7 @@ module.exports = (function() {
           Object.keys(this.prototype._joins)
             .map(r => {
               let obj = {};
-              obj[r] = this.relationship(r).Model.columnNames();
+              obj[r] = this.joinInformation(r).Model.columnNames();
               return obj;
             })
         );
@@ -227,7 +227,7 @@ module.exports = (function() {
           return null; // FIXME: Deprecated for relationships.
 
           let key = Object.keys(r)[0];
-          let relationship = this.relationship(key);
+          let relationship = this.joinInformation(key);
 
           if (!relationship) {
             return null;
@@ -292,7 +292,7 @@ module.exports = (function() {
     *   "via": Which field in current model represents this relationship, defaults to `${name}_id`
     *   "as": What to display the name of the child as when joined to the parent (default to camelCase of child name)
     */
-    static joins(modelConstructor, options) {
+    static joinsTo(modelConstructor, options) {
 
       if (!this.prototype.hasOwnProperty('_joins')) {
         this.prototype._joins = {};
@@ -772,12 +772,12 @@ module.exports = (function() {
     }
 
     /**
-    * Retrieve associated models related to this model from the database.
+    * Retrieve associated models joined this model from the database.
     * @param {function({Error} err, {Nodal.Model|Nodal.ModelArray} model_1, ... {Nodal.Model|Nodal.ModelArray} model_n)}
     *   Pass in a function with named parameters corresponding the relationships you'd like to retrieve.
     *   The first parameter is always an error callback.
     */
-    relationship(callback) {
+    include(callback) {
 
       let db = this.db;
 
@@ -800,9 +800,10 @@ module.exports = (function() {
         throw new Error(`Relationships "${invalidRelationships.join('", "')}" for model "${this.constructor.name}" do not exist.`);
       }
 
+      // FIXME: Must get multiple children, etc.
       let fns = relationships.map(r => this._joins[r]).map(r => {
         return (callback) => {
-          r.Model.find(db, this.get(r.via), (err, model) => {
+          r.Model.find(this.get(r.via), (err, model) => {
             callback(err, model);
           });
         }

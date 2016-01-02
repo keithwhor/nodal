@@ -114,7 +114,7 @@ module.exports = (function() {
           joinKeys.forEach(assignToSkeleton(row));
           joinNames.forEach(joinName => {
 
-            row[joinName] = new (this.Model.relationship(joinName).Model)(
+            row[joinName] = new (this.Model.joinInformation(joinName).Model)(
               joinSkeleton[joinName].data,
               true
             );
@@ -130,7 +130,7 @@ module.exports = (function() {
         joinMultipleKeys.forEach(assignToSkeleton(row));
         joinMultipleNames.forEach(joinName => {
 
-          let joinModelConstructor = this.Model.relationship(joinName).Model;
+          let joinModelConstructor = this.Model.joinInformation(joinName).Model;
 
           curRow[joinName] = curRow[joinName] || new ModelArray(joinModelConstructor);
           curRow[joinName].push(
@@ -206,7 +206,7 @@ module.exports = (function() {
     }
 
     __joinedColumns__(joinName) {
-      let joinsObject = this.Model.relationship(joinName);
+      let joinsObject = this.Model.joinInformation(joinName);
       return joinsObject.Model.columnNames().map(columnName => {
         return {
           table: joinsObject.Model.table(),
@@ -288,7 +288,7 @@ module.exports = (function() {
         .map(filter => {
 
           let column = filter.split('__');
-          let rel = this.Model.relationship(column[0]);
+          let rel = this.Model.joinInformation(column[0]);
 
           let table = null;
           let via = null;
@@ -433,7 +433,7 @@ module.exports = (function() {
         return new Composer(this.Model, this).join(joinName);
       }
 
-      if (!this.Model.hasRelationship(joinName)) {
+      if (!this.Model.hasJoin(joinName)) {
         throw new Error(`Model ${this.Model.name} does not have relationship ${joinName}`);
       }
 
@@ -445,7 +445,7 @@ module.exports = (function() {
         composer = composer._parent;
       }
 
-      let joinsObject = this.Model.relationship(joinName);
+      let joinsObject = this.Model.joinInformation(joinName);
 
       this._command = {
         type: 'join',

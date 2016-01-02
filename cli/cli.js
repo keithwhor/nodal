@@ -52,7 +52,7 @@
         }
 
         promptResult.simpleName = promptResult.name.replace(/\s/gi, '-');
-        let dirname = inflect.underscore(promptResult.name);
+        let dirname = promptResult.name.replace(/[^A-Za-z0-9-_]/gi, '-').toLowerCase();
 
         console.log('');
         console.log('Creating directory "' + dirname + '"...');
