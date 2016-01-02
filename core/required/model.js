@@ -34,7 +34,7 @@ module.exports = (function() {
         callback = arguments[2];
       }
 
-      return new Composer(db, this)
+      return new Composer(this)
         .filter({id: id})
         .end((err, models) => {
 
@@ -787,35 +787,47 @@ module.exports = (function() {
         callback = arguments[1];
       }
 
-      let relationships = utilities.getFunctionParameters(callback);
-      relationships = relationships.slice(1);
+      let joinNames = utilities.getFunctionParameters(callback);
+      joinNames = joinNames.slice(1);
 
-      if (!relationships.length) {
+      if (!joinNames.length) {
         throw new Error('No valid relationships (1st parameter is error)');
       }
 
-      let invalidRelationships = relationships.filter(r => !this._joins[r]);
+      let invalidJoinNames = joinNames.filter(r => !this._joins[r]);
 
-      if (invalidRelationships.length) {
-        throw new Error(`Relationships "${invalidRelationships.join('", "')}" for model "${this.constructor.name}" do not exist.`);
+      if (invalidJoinNames.length) {
+        throw new Error(`Joins "${invalidJoinNames.join('", "')}" for model "${this.constructor.name}" do not exist.`);
       }
 
       // FIXME: Must get multiple children, etc.
-      let fns = relationships.map(r => this._joins[r]).map(r => {
+      let fns = joinNames.map(r => this._joins[r]).map(r => {
         return (callback) => {
-          r.Model.find(this.get(r.via), (err, model) => {
-            callback(err, model);
-          });
+
+          if (r.child) {
+
+            let filters = {};
+            filters[r.via] = this.get('id');
+            r.Model.query()
+              .filter(filters)
+              .end((err, models) => callback(err, r.multiple ? models : models[0]));
+
+          } else {
+
+            r.Model.find(this.get(r.via), callback);
+
+          }
+
         }
       });
 
       async.parallel(fns, (err, results) => {
 
-        relationships.forEach((r, i) => {
+        joinNames.forEach((r, i) => {
           this.set(r, results[i]);
         });
 
-        return callback.apply(this, [err].concat(results));
+        return callback.apply(this, [err || null].concat(results));
 
       });
 

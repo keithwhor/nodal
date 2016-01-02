@@ -174,6 +174,57 @@ module.exports = (function(Nodal) {
 
     });
 
+    it('Should have parent lazy load models after fetching', (done) => {
+
+      Parent.query()
+        .limit(1)
+        .end((err, parents) => {
+
+          let parent = parents[0];
+
+          expect(err).to.equal(null);
+          expect(parent.get('children')).to.be.undefined;
+          expect(parent.get('partner')).to.be.undefined;
+
+          parent.include((err, children, partner) => {
+
+            expect(err).to.equal(null);
+            expect(children.length).to.equal(10);
+            expect(partner).to.exist;
+            expect(parent.get('children')).to.equal(children);
+            expect(parent.get('partner')).to.equal(partner);
+            done();
+
+          });
+
+        });
+
+    });
+
+    it('Should also lazy load from Child', (done) => {
+
+      Child.query()
+        .limit(1)
+        .end((err, children) => {
+
+          let child = children[0];
+
+          expect(err).to.equal(null);
+          expect(child.get('parent')).to.be.undefined;
+
+          child.include((err, parent) => {
+
+            expect(err).to.equal(null);
+            expect(parent).to.exist;
+            expect(child.get('parent')).to.equal(parent);
+            done();
+
+          });
+
+        });
+
+    });
+
     it('Should orderBy properly (DESC)', function(done) {
 
       Child.query()
