@@ -41,6 +41,17 @@ module.exports = (function(Nodal) {
       ]
     };
 
+    let schemaPet = {
+      table: 'pets',
+      columns: [
+        {name: 'id', type: 'serial'},
+        {name: 'parent_id', type: 'int'},
+        {name: 'name', type: 'string'},
+        {name: 'animal', type: 'string'},
+        {name: 'created_at', type: 'datetime'}
+      ]
+    };
+
     class Parent extends Nodal.Model {}
 
     Parent.setDatabase(db);
@@ -58,12 +69,18 @@ module.exports = (function(Nodal) {
     Partner.setSchema(schemaPartner);
     Partner.joinsTo(Parent);
 
+    class Pet extends Nodal.Model {}
+
+    Pet.setDatabase(db);
+    Pet.setSchema(schemaPet);
+    Pet.joinsTo(Parent, {multiple: true});
+
     before(function(done) {
 
       db.connect(Nodal.my.Config.db.main);
 
       db.transaction(
-        [schemaParent, schemaChild, schemaPartner].map(schema => {
+        [schemaParent, schemaChild, schemaPartner, schemaPet].map(schema => {
           return [
             db.adapter.generateDropTableQuery(schema.table, true),
             db.adapter.generateCreateTableQuery(schema.table, schema.columns)
@@ -96,6 +113,12 @@ module.exports = (function(Nodal) {
 
             p.set('children', Nodal.ModelArray.from(children));
 
+            let pets = ['Oliver', 'Ruby', 'Pascal'].map((name, i) => {
+              return new Pet({name: name, animal: ['Cat', 'Dog', 'Cat'][i]});
+            });
+
+            p.set('pets', Nodal.ModelArray.from(pets));
+
             let partner = new Partner({name: `Partner${i}`, job: ['Plumber', 'Engineer', 'Nurse'][(Math.random() * 3) | 0]});
             p.set('partner', partner);
 
@@ -108,6 +131,7 @@ module.exports = (function(Nodal) {
             async.series(
               [].concat(
                 parents.map(p => p.get('children').saveAll.bind(p.get('children'))),
+                parents.map(p => p.get('pets').saveAll.bind(p.get('pets'))),
                 parents.map(p => p.get('partner').save.bind(p.get('partner')))
               ), (err) => {
 
@@ -595,6 +619,28 @@ module.exports = (function(Nodal) {
 
           expect(err).to.equal(null);
           expect(parents.length).to.equal(5);
+          done();
+
+        });
+
+    });
+
+    it('Should have Parent join many mutiple fields (Children, Pets) and parse properly', (done) => {
+
+      Parent.query()
+        .join('children')
+        .join('pets')
+        .limit(3)
+        .end((err, parents) => {
+
+          expect(err).to.equal(null);
+          expect(parents.length).to.equal(3);
+
+          parents.forEach(parent => {
+            expect(parent.get('children').length).to.equal(10);
+            expect(parent.get('pets').length).to.equal(3);
+          });
+
           done();
 
         });
