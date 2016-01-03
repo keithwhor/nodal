@@ -19,16 +19,6 @@ module.exports = (function(Nodal) {
       ]
     };
 
-    let schemaFriendship = {
-      table: 'friendships',
-      columns: [
-        {name: 'id', type: 'serial'},
-        {name: 'from_parent_id', type: 'int'},
-        {name: 'to_parent_id', type: 'int'},
-        {name: 'created_at', type: 'datetime'}
-      ]
-    };
-
     let schemaChild = {
       table: 'children',
       columns: [
@@ -51,17 +41,21 @@ module.exports = (function(Nodal) {
       ]
     };
 
+    let schemaPet = {
+      table: 'pets',
+      columns: [
+        {name: 'id', type: 'serial'},
+        {name: 'parent_id', type: 'int'},
+        {name: 'name', type: 'string'},
+        {name: 'animal', type: 'string'},
+        {name: 'created_at', type: 'datetime'}
+      ]
+    };
+
     class Parent extends Nodal.Model {}
 
     Parent.setDatabase(db);
     Parent.setSchema(schemaParent);
-    Parent.joinsTo(Parent, {multiple: true, via: ['']});
-
-    class Friendship extends Nodal.Model {}
-
-    Friendship.setDatabase(db);
-    Friendship.setSchema(schemaFriendship);
-    Friendship.joinsTo(Parent, {via: ['from_parent_id', 'to_parent_id'], multiple: true});
 
     class Child extends Nodal.Model {}
 
@@ -75,16 +69,18 @@ module.exports = (function(Nodal) {
     Partner.setSchema(schemaPartner);
     Partner.joinsTo(Parent);
 
+    class Pet extends Nodal.Model {}
+
+    Pet.setDatabase(db);
+    Pet.setSchema(schemaPet);
+    Pet.joinsTo(Parent, {multiple: true});
+
     before(function(done) {
 
       db.connect(Nodal.my.Config.db.main);
 
       db.transaction(
-<<<<<<< HEAD
-        [schemaParent, schemaFriendship, schemaChild, schemaPartner, schemaPet].map(schema => {
-=======
-        [schemaParent, schemaChild, schemaPartner].map(schema => {
->>>>>>> parent of 0179c8a... :cd::musical_note::fire: Composer parse refactor, more robust and concise.
+        [schemaParent, schemaChild, schemaPartner, schemaPet].map(schema => {
           return [
             db.adapter.generateDropTableQuery(schema.table, true),
             db.adapter.generateCreateTableQuery(schema.table, schema.columns)
@@ -117,15 +113,14 @@ module.exports = (function(Nodal) {
 
             p.set('children', Nodal.ModelArray.from(children));
 
+            let pets = ['Oliver', 'Ruby', 'Pascal'].map((name, i) => {
+              return new Pet({name: name, animal: ['Cat', 'Dog', 'Cat'][i]});
+            });
+
+            p.set('pets', Nodal.ModelArray.from(pets));
+
             let partner = new Partner({name: `Partner${i}`, job: ['Plumber', 'Engineer', 'Nurse'][(Math.random() * 3) | 0]});
             p.set('partner', partner);
-
-            let friendships = [];
-            while (i--) {
-              friendships.push(new Friendship({to_parent_id: i + 1}));
-            }
-
-            friendships.length && p.set('friendships', Nodal.ModelArray.from(friendships));
 
           });
 
@@ -136,13 +131,8 @@ module.exports = (function(Nodal) {
             async.series(
               [].concat(
                 parents.map(p => p.get('children').saveAll.bind(p.get('children'))),
-<<<<<<< HEAD
                 parents.map(p => p.get('pets').saveAll.bind(p.get('pets'))),
-                parents.map(p => p.get('partner').save.bind(p.get('partner'))),
-                parents.map(p => p.get('friendships') && p.get('friendships').saveAll.bind(p.get('friendships'))).filter(p => p)
-=======
                 parents.map(p => p.get('partner').save.bind(p.get('partner')))
->>>>>>> parent of 0179c8a... :cd::musical_note::fire: Composer parse refactor, more robust and concise.
               ), (err) => {
 
                 expect(err).to.be.undefined;
@@ -635,7 +625,6 @@ module.exports = (function(Nodal) {
 
     });
 
-<<<<<<< HEAD
     it('Should have Parent join many mutiple fields (Children, Pets) and parse properly', (done) => {
 
       Parent.query()
@@ -658,45 +647,6 @@ module.exports = (function(Nodal) {
 
     });
 
-    it('Should have Parents join Friendships via multiple fields', (done) => {
-
-      Parent.query()
-        .join('friendships')
-        .limit(1)
-        .end((err, parents) => {
-
-          let parent = parents[0];
-
-          expect(err).to.equal(null);
-          expect(parent.get('friendships')).to.not.be.undefined;
-          expect(parent.get('friendships').length).to.equal(9);
-          done();
-
-        });
-
-    });
-
-    it('Should have Friendships join Parents via multiple fields', (done) => {
-
-      Friendship.query()
-        .join('parents')
-        .end((err, friendships) => {
-
-          expect(err).to.equal(null);
-          expect(friendships.length).to.equal(45);
-          friendships.forEach(friend => {
-            expect(friend.get('parents')).to.not.be.undefined;
-            expect(friend.get('parents').length).to.equal(2);
-          });
-
-          done();
-
-        });
-
-    });
-
-=======
->>>>>>> parent of 0179c8a... :cd::musical_note::fire: Composer parse refactor, more robust and concise.
   });
 
 });

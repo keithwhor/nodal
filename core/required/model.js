@@ -288,10 +288,9 @@ module.exports = (function() {
     * Sets a joins relationship for the Model. Sets joinedBy relationship for parent.
     * @param {class Nodal.Model} modelConstructor The Model which your current model belongs to
     * @param {optional Object} options
-    *   "name": The string name of the parent in the relationship (default to camelCase of Parent Model name)
+    *   "name": The string name of the parent in the relationship (default to camelCase of Model name)
     *   "via": Which field in current model represents this relationship, defaults to `${name}_id`
-    *   "as": What to display the name of the child as when joined to the parent (default to camelCase of Child Model name)
-    *   "multiple": Whether or not there can be multiple connection (many:one)
+    *   "as": What to display the name of the child as when joined to the parent (default to camelCase of child name)
     */
     static joinsTo(modelConstructor, options) {
 
@@ -305,11 +304,6 @@ module.exports = (function() {
       options.name = inflect.camelize(modelConstructor.name, false);
       options.via = options.via || `${inflect.underscore(options.name)}_id`;
       options.multiple = !!options.multiple;
-
-      // If it's via two or more columns it's plural
-      if (options.via instanceof Array && options.via.length >= 2) {
-        options.name = inflect.pluralize(options.name);
-      }
 
       if (!options.as) {
 
@@ -642,24 +636,6 @@ module.exports = (function() {
 
       }
 
-      // We can set multiple fields, first empty one gets the value.
-      // Use for many:many relationships
-      // Fail if no empty fields.
-      if (field instanceof Array) {
-
-        if (field.filter(f => this.get(f) === value).length) {
-          return value;
-        }
-
-        let emptyField = field.filter(f => this.get(f) === null).shift();
-        if (emptyField) {
-          return this.set(emptyField, value);
-        }
-
-        throw new Error(`Cannot set any of "${field.join('", "')}" in model ${this.constructor.name}. Impossible to disambiguate.`);
-
-      }
-
       if (!this.hasField(field)) {
 
         throw new Error('Field ' + field + ' does not belong to model ' + this.constructor.name);
@@ -710,17 +686,19 @@ module.exports = (function() {
 
       let joinsObject = this._joins[field];
 
-      if (joinsObject.child ? joinsObject.multiple : (joinsObject.via instanceof Array && joinsObject.via.length >= 2)) {
+      if (
+        (!joinsObject.child || (joinsObject.child && !joinsObject.multiple)) &&
+        !(value instanceof joinsObject.Model)
+      ) {
 
-        if (!(value instanceof ModelArray) || (value._modelConstructor !== joinsObject.Model)) {
-          throw new Error(`${value} is not an instanceof ModelArray[${joinsObject.Model.name}]`);
-        }
+        throw new Error(`${value} is not an instance of ${joinsObject.Model.name}`);
 
-      } else {
+      } else if (
+        joinsObject.child && joinsObject.multiple &&
+        (!(value instanceof ModelArray) || (value._modelConstructor !== joinsObject.Model))
+      ) {
 
-        if (!(value instanceof joinsObject.Model)) {
-          throw new Error(`${value} is not an instance of ${joinsObject.Model.name}`);
-        }
+        throw new Error(`${value} is not an instanceof ModelArray[${joinsObject.Model.name}]`);
 
       }
 
@@ -752,15 +730,9 @@ module.exports = (function() {
           joinedModel.set(joinsObject.via, this.get('id'));
         }
 
-      } else if (!joinsObject.child) {
+      } else if (!joinsObject.child && joinedModel.inStorage()) {
 
-        if (joinsObject.via instanceof Array) {
-          joinedModel
-            .filter(j => j.inStorage())
-            .forEach(j => this.set(joinsObject.via, j.get('id')));
-        } else {
-          this.set(joinsObject.via, joinedModel.get('id'));
-        }
+        this.set(joinsObject.via, joinedModel.get('id'));
 
       }
 
