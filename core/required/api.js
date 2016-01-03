@@ -134,7 +134,7 @@ module.exports = (function() {
 
     }
 
-  };
+  }
 
   return new APIConstructor();
 

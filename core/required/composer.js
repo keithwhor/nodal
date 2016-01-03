@@ -4,8 +4,17 @@ module.exports = (function() {
 
   const ModelArray = require('./model_array.js');
 
+  /**
+  * The query composer (ORM)
+  * @class
+  */
   class Composer {
 
+    /**
+    * Created by Model#query, used for composing SQL queries based on Models
+    * @param {class Nodal.Model} Model The model class the composer is querying from
+    * @param {optional Nodal.Composer} parent The composer's parent (another composer instance)
+    */
     constructor(Model, parent) {
 
       this.db = Model.prototype.db;
@@ -16,6 +25,11 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Given rows with repeated data (due to joining in multiple children), return only parent models (but include references to their children)
+    * @param {Array} rows Rows from sql result
+    * @return {Nodal.ModelArray}
+    */
     __parseModelsFromRows__(rows) {
 
       // console.log('START PARSE', rows.length);
@@ -133,6 +147,10 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Generate query information from the linked list of previous queries. Can squash multiple composer commands into a single query.
+    * @return {Object}
+    */
     __generateQueryInformation__() {
 
       let composerArray = [];
@@ -182,6 +200,10 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Retrieve all joined column data for a given join
+    * @param {string} joinName The name of the join relationship
+    */
     __joinedColumns__(joinName) {
       let joinsObject = this.Model.joinInformation(joinName);
       return joinsObject.Model.columnNames().map(columnName => {
@@ -194,6 +216,10 @@ module.exports = (function() {
       });
     }
 
+    /**
+    * Generate a SQL query and its associated parameters from the current composer instance
+    * @return {Object} Has "params" and "sql" properties.
+    */
     __generateQuery__() {
 
       let queryInfo = this.__generateQueryInformation__();
@@ -239,6 +265,11 @@ module.exports = (function() {
 
     };
 
+    /**
+    * When using Composer#where, format all provided comparisons
+    * @param {Object} comparisons Comparisons object. {age__lte: 27}, for example.
+    * @return {Array}
+    */
     __parseComparisons__(comparisons) {
 
       let comparators = this.db.adapter.comparators;
@@ -316,6 +347,11 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Add comparisons to SQL WHERE clause.
+    * @param {Object} comparisons Comparisons object. {age__lte: 27}, for example.
+    * @return {Nodal.Composer} new Composer instance
+    */
     where(comparisons) {
 
       if (!(comparisons instanceof Array)) {
@@ -335,6 +371,12 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Order by field belonging to the current Composer instance's model.
+    * @param {string} field Field to order by
+    * @param {string} direction Must be 'ASC' or 'DESC'
+    * @return {Nodal.Composer} new Composer instance
+    */
     orderBy(field, direction, formatFunc) {
 
       if (!this.Model.hasColumn(field)) {
@@ -358,6 +400,12 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Limit to an offset and count
+    * @param {number} offset The offset at which to set the limit. If this is the only argument provided, it will be the count instead.
+    * @param {number} count The number of results to be returned. Can be omitted, and if omitted, first argument is used for count.
+    * @return {Nodal.Composer} new Composer instance
+    */
     limit(offset, count) {
 
       if (this._command) {
@@ -384,6 +432,10 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Join in a relationship. Must have Model.joinsTo() set from a child, or set to a parent
+    * @param {string} joinName The name of the joined relationship
+    */
     join(joinName) {
 
       if (!this.Model.hasJoin(joinName)) {
@@ -414,6 +466,10 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Execute the query you've been composing.
+    * @param {function({Error}, {Nodal.ModelArray})} callback The method to execute when the query is complete
+    */
     end(callback) {
 
       let query = this.__generateQuery__();
