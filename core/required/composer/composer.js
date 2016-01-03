@@ -182,7 +182,7 @@ module.exports = (function() {
         return {
           table: joinsObject.Model.table(),
           columnName: columnName,
-          alias: `${(joinsObject.child && joinsObject.multiple) ? '$$' : '$'}${joinName}\$${columnName}`
+          alias: `${(joinsObject.child ? joinsObject.multiple : joinsObject.via instanceof Array) ? '$$' : '$'}${joinName}\$${columnName}`
         };
       });
     }

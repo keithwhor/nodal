@@ -19,6 +19,16 @@ module.exports = (function(Nodal) {
       ]
     };
 
+    let schemaFriendship = {
+      table: 'friendships',
+      columns: [
+        {name: 'id', type: 'serial'},
+        {name: 'from_parent_id', type: 'int'},
+        {name: 'to_parent_id', type: 'int'},
+        {name: 'created_at', type: 'datetime'}
+      ]
+    };
+
     let schemaChild = {
       table: 'children',
       columns: [
@@ -56,6 +66,33 @@ module.exports = (function(Nodal) {
 
     Parent.setDatabase(db);
     Parent.setSchema(schemaParent);
+    Parent.joinsTo(Parent, {multiple: true, via: ['']});
+
+    class Friendship extends Nodal.Model {}
+
+    Friendship.setDatabase(db);
+    Friendship.setSchema(schemaFriendship);
+    Friendship.joinsTo(Parent, {via: ['from_parent_id', 'to_parent_id'], multiple: true});
+
+    // Friendship.query()
+    //   .filter({parent__id: 7})
+    //   .join('parents'); // this makes sense
+    //
+    // Parent.query()
+    //   .limit(1)
+    //   .join('friendships')
+    //   .join('parents')
+    //
+    // LEFT JOIN "friendships" AS "j1" ON (
+    //   "j1"."from_parent_id" = "parents"."id" OR
+    //   "j1"."to_parent_id" = "parents"."id" AND
+    //   "j1"."from_parent_id" <> "j1"."to_parent_id"
+    // )
+    // LEFT JOIN "parents" AS "friendships" ON (
+    //   "friendships"."id" = "j1"."from_parent_id" OR
+    //   "friendships"."id" = "j1"."to_parent_id" AND
+    //   "friendships"."id" <> "parents"."id"
+    // )
 
     class Child extends Nodal.Model {}
 
@@ -80,7 +117,7 @@ module.exports = (function(Nodal) {
       db.connect(Nodal.my.Config.db.main);
 
       db.transaction(
-        [schemaParent, schemaChild, schemaPartner, schemaPet].map(schema => {
+        [schemaParent, schemaFriendship, schemaChild, schemaPartner, schemaPet].map(schema => {
           return [
             db.adapter.generateDropTableQuery(schema.table, true),
             db.adapter.generateCreateTableQuery(schema.table, schema.columns)
@@ -122,6 +159,13 @@ module.exports = (function(Nodal) {
             let partner = new Partner({name: `Partner${i}`, job: ['Plumber', 'Engineer', 'Nurse'][(Math.random() * 3) | 0]});
             p.set('partner', partner);
 
+            let friendships = [];
+            while (i--) {
+              friendships.push(new Friendship({to_parent_id: i + 1}));
+            }
+
+            friendships.length && p.set('friendships', Nodal.ModelArray.from(friendships));
+
           });
 
           parents.saveAll(err => {
@@ -132,7 +176,8 @@ module.exports = (function(Nodal) {
               [].concat(
                 parents.map(p => p.get('children').saveAll.bind(p.get('children'))),
                 parents.map(p => p.get('pets').saveAll.bind(p.get('pets'))),
-                parents.map(p => p.get('partner').save.bind(p.get('partner')))
+                parents.map(p => p.get('partner').save.bind(p.get('partner'))),
+                parents.map(p => p.get('friendships') && p.get('friendships').saveAll.bind(p.get('friendships'))).filter(p => p)
               ), (err) => {
 
                 expect(err).to.be.undefined;
@@ -639,6 +684,43 @@ module.exports = (function(Nodal) {
           parents.forEach(parent => {
             expect(parent.get('children').length).to.equal(10);
             expect(parent.get('pets').length).to.equal(3);
+          });
+
+          done();
+
+        });
+
+    });
+
+    it('Should have Parents join Friendships via multiple fields', (done) => {
+
+      Parent.query()
+        .join('friendships')
+        .limit(1)
+        .end((err, parents) => {
+
+          let parent = parents[0];
+
+          expect(err).to.equal(null);
+          expect(parent.get('friendships')).to.not.be.undefined;
+          expect(parent.get('friendships').length).to.equal(9);
+          done();
+
+        });
+
+    });
+
+    it('Should have Friendships join Parents via multiple fields', (done) => {
+
+      Friendship.query()
+        .join('parents')
+        .end((err, friendships) => {
+
+          expect(err).to.equal(null);
+          expect(friendships.length).to.equal(45);
+          friendships.forEach(friend => {
+            expect(friend.get('parents')).to.not.be.undefined;
+            expect(friend.get('parents').length).to.equal(2);
           });
 
           done();

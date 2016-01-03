@@ -414,7 +414,7 @@ module.exports = (function() {
         ].join('');
 
       });
-      
+
       return clauses.concat(joinedClauses).join(' AND ');
 
     }
@@ -438,9 +438,23 @@ module.exports = (function() {
 
       return (!joinArray || !joinArray.length) ? '' :
         joinArray.map(join => {
-          return ` LEFT JOIN ${this.escapeField(join.table)} ON ` +
-          `${this.escapeField(join.table)}.${this.escapeField(join.field)} = ` +
-          `${this.escapeField(table)}.${this.escapeField(join.baseField)}`
+
+          let fields = join.field instanceof Array ? join.field : [join.field]
+          let baseFields = join.baseField instanceof Array ? join.baseField : [join.baseField]
+
+          let statements = [];
+
+          fields.forEach(field => {
+            baseFields.forEach(baseField => {
+              statements.push(
+                `${this.escapeField(join.table)}.${this.escapeField(field)} = ` +
+                `${this.escapeField(table)}.${this.escapeField(baseField)}`
+              );
+            });
+          });
+
+          return ` LEFT JOIN ${this.escapeField(join.table)} ON (${statements.join(' OR ')})`;
+
         }).join('');
 
     }
