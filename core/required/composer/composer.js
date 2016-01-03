@@ -29,95 +29,124 @@ module.exports = (function() {
       rows.length && (rowKeys = Object.keys(rows[0]));
 
       // First, grab all the keys and multiple keys we need...
-      let coreKeys = rowKeys.filter(key => key[0] !== '$');
-      let joinSingleKeys = rowKeys.filter(key => key[0] === '$' && key[1] !== '$').map(key => key.substr(1));
-      let joinMultipleKeys = rowKeys.filter(key => key[0] === '$' && key[1] === '$').map(key => key.substr(2));
+      let joinKeys = rowKeys.filter(key => key[0] === '$' && key[1] !== '$');
+      let joinMultipleKeys = rowKeys.filter(key => key[0] === '$' && key[1] === '$');
 
-      let reduceKeys = (prev, key) => {
+      // Next, create lookup for main / sub keys from our keys
+      let createLookup = (multiple) => {
 
-        let i = key.indexOf('$');
-        let joinName = key.substr(0, i);
-        key = key.substr(i + 1, 0);
-        prev[joinName] = prev[joinName] || [];
-        prev[joinName].push(key);
-        return prev;
+        let offset = multiple ? 2 : 1;
+
+        return (lookup, key) => {
+
+          let index = key.indexOf('$', offset);
+
+          if (index === -1) {
+            return;
+          }
+
+          let mainKey = key.substr(offset, index - offset);
+          let subKey = key.substr(index + 1);
+
+          lookup[key] = {
+            mainKey: mainKey,
+            subKey: subKey,
+            multiple: multiple
+          };
+
+          return lookup;
+
+        }
 
       };
 
-      let joinSingle = joinSingleKeys.reduce(reduceKeys, {});
-      let joinSingleNames = Object.keys(joinSingle);
+      // create a lookup for any field
+      let joinLookup = joinMultipleKeys.reduce(
+        createLookup(true),
+        joinKeys.reduce(createLookup(false), {})
+      );
 
-      let joinMultiple = joinMultipleKeys.reduce(reduceKeys, {});
-      let joinMultipleNames = Object.keys(joinMultiple);
+      // create a skeleton object to temporarily hold model data
+      let joinSkeleton = Object.keys(joinLookup).reduce((obj, key) => {
 
-      let rowCache = {};
-      let objectCache = {};
-      let rowObjectCache = {};
+        let lookup = joinLookup[key];
 
-      rows.forEach(row => {
+        obj[lookup.mainKey] = obj[lookup.mainKey] || {
+          data: {},
+          multiple: lookup.multiple
+        };
 
-        let model = rowCache[row.id];
-        let curRowObjectCache = rowObjectCache[row.id] = rowObjectCache[row.id] || {};
+        obj[lookup.mainKey].data[lookup.subKey] = null;
 
-        if (!model) {
-          model = rowCache[row.id] = new this.Model(row, true);
-          models.push(model);
+        return obj;
+
+      }, {});
+
+      // Get our names for joined or joined multiple fields
+      let joinNames = Object.keys(joinSkeleton).filter(j => !joinSkeleton[j].multiple);
+      let joinMultipleNames = Object.keys(joinSkeleton).filter(j => joinSkeleton[j].multiple);
+
+      // Assign to skeleton function for copying data to our schema
+      let assignToSkeleton = (row) => {
+
+        return (key) => {
+
+          let keySplit = joinLookup[key];
+          joinSkeleton[keySplit.mainKey].data[keySplit.subKey] = row[key];
+
+        };
+
+      };
+
+      rows = rows.reduce((newRows, row) => {
+
+        let lastRow = newRows[newRows.length - 1];
+        let curRow = row;
+
+        if (lastRow && lastRow.id === row.id) {
+
+          curRow = lastRow;
+
+        } else {
+
+          // if it's a new row, we need to fill the skeleton with new data and create
+          // a new model
+          joinKeys.forEach(assignToSkeleton(row));
+          joinNames.forEach(joinName => {
+
+            row[joinName] = new (this.Model.joinInformation(joinName).Model)(
+              joinSkeleton[joinName].data,
+              true
+            );
+
+          });
+
+          newRows.push(row);
+
         }
 
-        joinSingleNames.forEach(name => {
+        // if the lowest common denominator (right now) is a multiple joined field
+        // so it will be new on every row
+        joinMultipleKeys.forEach(assignToSkeleton(row));
+        joinMultipleNames.forEach(joinName => {
 
-          let id = row[`\$${name}\$id`];
+          let joinModelConstructor = this.Model.joinInformation(joinName).Model;
 
-          objectCache[name] = objectCache[name] || {};
-          let cached = objectCache[name][id];
-
-          curRowObjectCache[name] = curRowObjectCache[name] || {};
-          let cachedForRow = curRowObjectCache[name][id];
-
-          if (!cached) {
-            objectCache[name][id] = cached = new (this.Model.joinInformation(name).Model)(
-              joinSingle[name].reduce((prev, key) => {
-                prev[key] = row[`\$${name}\$${key}`];
-                return prev;
-              }, {}),
+          curRow[joinName] = curRow[joinName] || new ModelArray(joinModelConstructor);
+          curRow[joinName].push(
+            new joinModelConstructor(
+              joinSkeleton[joinName].data,
               true
-            );
-          }
-
-          if (!cachedForRow) {
-            curRowObjectCache[name][id] = cachedForRow = cached;
-            model.set(name, cached);
-          }
+            )
+          );
 
         });
 
-        joinMultipleNames.forEach(name => {
+        return newRows;
 
-          let id = row[`\$\$${name}\$id`];
+      }, []).forEach(row => {
 
-          objectCache[name] = objectCache[name] || {};
-          let cached = objectCache[name][id];
-
-          curRowObjectCache[name] = curRowObjectCache[name] || {};
-          let cachedForRow = curRowObjectCache[name][id];
-
-          if (!cached) {
-            objectCache[name][id] = cached = new (this.Model.joinInformation(name).Model)(
-              joinMultiple[name].reduce((prev, key) => {
-                prev[key] = row[`\$\$${name}\$${key}`];
-                return prev;
-              }, {}),
-              true
-            );
-          }
-
-          if (!cachedForRow) {
-            curRowObjectCache[name][id] = cachedForRow = cached;
-            let modelArray = model.get(name) || model.set(name, new ModelArray(cached.constructor));
-            modelArray.push(cached);
-          }
-
-        });
+        models.push(new this.Model(row));
 
       });
 
@@ -212,6 +241,8 @@ module.exports = (function() {
             columns = columns.concat(this.__joinedColumns__(j.name));
           });
 
+          joins.length && orderBy.unshift({columnName: 'id', direction: 'ASC'}); // FIXME: For parsing, should fix.
+
         }
 
         return {
@@ -221,7 +252,7 @@ module.exports = (function() {
             columns,
             multiFilter,
             joins,
-            orderBy,
+            orderBy, // FIXME: Should be an array before it gets here
             command.limit,
             prev.params.length
           ),
@@ -321,6 +352,11 @@ module.exports = (function() {
 
     filter(filters) {
 
+      if (this._command) {
+        let composer = new Composer(this.Model, this);
+        return composer.filter.apply(composer, arguments);
+      }
+
       if (!(filters instanceof Array)) {
         filters = [].slice.call(arguments);
       }
@@ -334,11 +370,15 @@ module.exports = (function() {
         }
       };
 
-      return new Composer(this.Model, this);
+      return this;
 
     }
 
     orderBy(field, direction, formatFunc) {
+
+      if (this._command) {
+        return new Composer(this.Model, this).orderBy(field, direction, formatFunc);
+      }
 
       if (!this.Model.hasColumn(field)) {
         throw new Error(`Cannot order by ${field}, it does not belong to ${this.Model.name}`);
@@ -357,7 +397,7 @@ module.exports = (function() {
         }
       };
 
-      return new Composer(this.Model, this);
+      return this;
 
     }
 
@@ -383,11 +423,15 @@ module.exports = (function() {
         }
       };
 
-      return new Composer(this.Model, this);
+      return this;
 
     }
 
     join(joinName) {
+
+      if (this._command) {
+        return new Composer(this.Model, this).join(joinName);
+      }
 
       if (!this.Model.hasJoin(joinName)) {
         throw new Error(`Model ${this.Model.name} does not have relationship ${joinName}`);
@@ -413,7 +457,7 @@ module.exports = (function() {
         }
       };
 
-      return new Composer(this.Model, this);
+      return this;
 
     }
 
@@ -424,7 +468,9 @@ module.exports = (function() {
       return this.db.query(query.sql, query.params, (err, result) => {
 
         let rows = result ? (result.rows || []).slice() : [];
-        let models = this.__parseModelsFromRows__(rows);
+        let models;
+
+        models = this.__parseModelsFromRows__(rows);
 
         callback.call(this, err, models);
 
