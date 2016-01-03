@@ -308,30 +308,30 @@ module.exports = (function() {
 
     }
 
-    parseFilterObj(table, filterObj) {
+    parseWhereObj(table, whereObj) {
 
-      return filterObj.map((filter, i) => {
+      return whereObj.map((where, i) => {
         return {
-          table: filter.table,
-          columnName: filter.columnName,
-          refName: [this.escapeField(filter.table || table), this.escapeField(filter.columnName)].join('.'),
-          comparator: filter.comparator,
-          value: filter.value,
-          ignoreValue: !!this.comparatorIgnoresValue[filter.comparator],
-          joined: filter.joined,
-          via: filter.via,
-          child: filter.child
+          table: where.table,
+          columnName: where.columnName,
+          refName: [this.escapeField(where.table || table), this.escapeField(where.columnName)].join('.'),
+          comparator: where.comparator,
+          value: where.value,
+          ignoreValue: !!this.comparatorIgnoresValue[where.comparator],
+          joined: where.joined,
+          via: where.via,
+          child: where.child
         };
       });
 
     }
 
-    createMultiFilter(table, filterObjArray) {
+    createMultiFilter(table, whereObjArray) {
 
-      return filterObjArray
+      return whereObjArray
         .filter(v => v)
         .sort((a, b) => a.joined === b.joined ? a.table > b.table : a.joined > b.joined) // important! must be sorted.
-        .map(v => this.parseFilterObj(table, v));
+        .map(v => this.parseWhereObj(table, v));
 
     }
 
@@ -343,17 +343,17 @@ module.exports = (function() {
         return '';
       }
 
-      return (' WHERE (' + multiFilter.map(filterObj => {
-        return this.generateAndClause(table, filterObj);
+      return (' WHERE (' + multiFilter.map(whereObj => {
+        return this.generateAndClause(table, whereObj);
       }).join(') OR (') + ')').replace(/__VAR__/g, () => `\$${1 + (paramOffset++)}`);
 
     }
 
-    generateAndClause(table, filterObjArray) {
+    generateAndClause(table, whereObjArray) {
 
       let comparators = this.comparators;
 
-      if (!filterObjArray.length) {
+      if (!whereObjArray.length) {
         return '';
       }
 
@@ -361,15 +361,15 @@ module.exports = (function() {
       let clauses = [];
       let joinedClauses = [];
 
-      for (let i = 0; i < filterObjArray.length; i++) {
+      for (let i = 0; i < whereObjArray.length; i++) {
 
-        let filterObj = filterObjArray[i];
-        let joined = filterObj.joined;
-        let table = filterObj.table;
+        let whereObj = whereObjArray[i];
+        let joined = whereObj.joined;
+        let table = whereObj.table;
 
         if (!joined) {
 
-          clauses.push(comparators[filterObj.comparator](filterObj.refName));
+          clauses.push(comparators[whereObj.comparator](whereObj.refName));
 
         } else {
 
@@ -383,14 +383,14 @@ module.exports = (function() {
 
             joinedClauses.push({
               table: table,
-              via: filterObj.via,
-              child: filterObj.child,
+              via: whereObj.via,
+              child: whereObj.child,
               clauses: currentJoinedClauses
             });
 
           }
 
-          currentJoinedClauses.push(comparators[filterObj.comparator](filterObj.refName));
+          currentJoinedClauses.push(comparators[whereObj.comparator](whereObj.refName));
 
         }
 
@@ -421,8 +421,8 @@ module.exports = (function() {
 
     getParamsFromMultiFilter(multiFilter) {
       return [].concat.apply([], multiFilter)
-        .filter(filterObj => !filterObj.ignoreValue)
-        .map(filterObj => filterObj.value);
+        .filter(whereObj => !whereObj.ignoreValue)
+        .map(whereObj => whereObj.value);
     }
 
     generateOrderByClause(table, orderObjArray) {

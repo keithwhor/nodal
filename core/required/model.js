@@ -35,7 +35,7 @@ module.exports = (function() {
       }
 
       return new Composer(this)
-        .filter({id: id})
+        .where({id: id})
         .end((err, models) => {
 
           if (!err && !models.length) {
@@ -800,16 +800,15 @@ module.exports = (function() {
         throw new Error(`Joins "${invalidJoinNames.join('", "')}" for model "${this.constructor.name}" do not exist.`);
       }
 
-      // FIXME: Must get multiple children, etc.
       let fns = joinNames.map(r => this._joins[r]).map(r => {
         return (callback) => {
 
           if (r.child) {
 
-            let filters = {};
-            filters[r.via] = this.get('id');
+            let where = {};
+            where[r.via] = this.get('id');
             r.Model.query()
-              .filter(filters)
+              .where(where)
               .end((err, models) => callback(err, r.multiple ? models : models[0]));
 
           } else {

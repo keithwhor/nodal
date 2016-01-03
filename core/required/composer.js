@@ -147,7 +147,7 @@ module.exports = (function() {
 
       let commands = composerArray.reduce((p, c) => {
 
-        let composerCommand = c._command || {type: 'filter', data: {filters: []}};
+        let composerCommand = c._command || {type: 'where', data: {comparisons: []}};
         let lastCommand = p[p.length - 1];
         let command = {};
 
@@ -202,7 +202,7 @@ module.exports = (function() {
 
         let table = !prev.sql ? this.Model.table() : `t${i}`;
 
-        let multiFilter = this.db.adapter.createMultiFilter(table, command.filter ? command.filter.filters : []);
+        let multiFilter = this.db.adapter.createMultiFilter(table, command.where ? command.where.comparisons : []);
         let params = this.db.adapter.getParamsFromMultiFilter(multiFilter);
 
         let joins = null;
@@ -239,31 +239,31 @@ module.exports = (function() {
 
     };
 
-    __parseFilters__(filterObj) {
+    __parseComparisons__(comparisons) {
 
       let comparators = this.db.adapter.comparators;
       let columnLookup = this.Model.columnLookup();
 
-      filterObj = Object.keys(filterObj).reduce((p, c) => { return (p[c] = filterObj[c], p); }, {});
+      comparisons = Object.keys(comparisons).reduce((p, c) => { return (p[c] = comparisons[c], p); }, {});
 
-      if ('__order' in filterObj) {
-        let order = filterObj.__order.split(' ');
-        delete filterObj.__order;
-        return this.orderBy(order[0], order[1]).filter(filterObj);
+      if ('__order' in comparisons) {
+        let order = comparisons.__order.split(' ');
+        delete comparisons.__order;
+        return this.orderBy(order[0], order[1]).where(comparisons);
       }
 
-      if ('__offset' in filterObj || '__count' in filterObj) {
-        let offset = filterObj.__offset;
-        let count = filterObj.__count;
-        delete filterObj.__offset;
-        delete filterObj.__count;
-        return this.limit(offset || 0, count || 0).filter(filterObj);
+      if ('__offset' in comparisons || '__count' in comparisons) {
+        let offset = comparisons.__offset;
+        let count = comparisons.__count;
+        delete comparisons.__offset;
+        delete comparisons.__count;
+        return this.limit(offset || 0, count || 0).where(comparisons);
       }
 
-      return Object.keys(filterObj)
-        .map(filter => {
+      return Object.keys(comparisons)
+        .map(comparison => {
 
-          let column = filter.split('__');
+          let column = comparison.split('__');
           let rel = this.Model.joinInformation(column[0]);
 
           let table = null;
@@ -285,16 +285,6 @@ module.exports = (function() {
             via = rel.via;
             joined = true;
 
-            // Need this t be the following...
-
-            `
-            SELECT
-              "id"
-            FROM "parents"
-            WHERE
-              (SELECT "children"."id" FROM "children" WHERE "children"."parent_id" = "parent"."id" AND (/* joined filters */) LIMIT 1)
-            `
-
           }
 
           let comparator = column.length > 1 ? column.pop() : 'is';
@@ -313,7 +303,7 @@ module.exports = (function() {
             table: table,
             columnName: columnName,
             comparator: comparator,
-            value: filterObj[filter],
+            value: comparisons[comparison],
             joined: joined,
             via: via,
             child: child
@@ -326,17 +316,17 @@ module.exports = (function() {
 
     }
 
-    filter(filters) {
+    where(comparisons) {
 
-      if (!(filters instanceof Array)) {
-        filters = [].slice.call(arguments);
+      if (!(comparisons instanceof Array)) {
+        comparisons = [].slice.call(arguments);
       }
 
       this._command = {
-        type: 'filter',
+        type: 'where',
         data: {
-          filters: filters
-          .map(this.__parseFilters__.bind(this))
+          comparisons: comparisons
+          .map(this.__parseComparisons__.bind(this))
           .filter(f => f.length)
         }
       };

@@ -10,7 +10,7 @@ module.exports = (function() {
     {{? data.for }}index() {
 
       {{= data.for.name }}.query()
-        .filter(params.query)
+        .where(params.query)
         .end((err, models) => {
 
           this.respond(err || models);

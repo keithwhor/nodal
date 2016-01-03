@@ -323,10 +323,10 @@ module.exports = (function(Nodal) {
 
     });
 
-    it('Should do an "is" filter properly', (done) => {
+    it('Should do an "is" where query properly', (done) => {
 
       Parent.query()
-        .filter({name: 'Zoolander'})
+        .where({name: 'Zoolander'})
         .end((err, parents) => {
 
           expect(err).to.equal(null);
@@ -338,10 +338,10 @@ module.exports = (function(Nodal) {
 
     });
 
-    it('Should do an "not" filter properly', (done) => {
+    it('Should do an "not" where query properly', (done) => {
 
       Parent.query()
-        .filter({name__not: 'Zoolander'})
+        .where({name__not: 'Zoolander'})
         .end((err, parents) => {
 
           expect(err).to.equal(null);
@@ -352,10 +352,10 @@ module.exports = (function(Nodal) {
 
     });
 
-    it('Should do a "lt" filter properly', (done) => {
+    it('Should do a "lt" where query properly', (done) => {
 
       Parent.query()
-        .filter({name__lt: 'Zoolander'})
+        .where({name__lt: 'Zoolander'})
         .end((err, parents) => {
 
           expect(err).to.equal(null);
@@ -366,10 +366,10 @@ module.exports = (function(Nodal) {
 
     });
 
-    it('Should do a "lte" filter properly', (done) => {
+    it('Should do a "lte" where query properly', (done) => {
 
       Parent.query()
-        .filter({name__lte: 'Zoolander'})
+        .where({name__lte: 'Zoolander'})
         .end((err, parents) => {
 
           expect(err).to.equal(null);
@@ -380,10 +380,10 @@ module.exports = (function(Nodal) {
 
     });
 
-    it('Should do a "gt" filter properly', (done) => {
+    it('Should do a "gt" where query properly', (done) => {
 
       Parent.query()
-        .filter({name__gt: 'Albert'})
+        .where({name__gt: 'Albert'})
         .end((err, parents) => {
 
           expect(err).to.equal(null);
@@ -394,10 +394,10 @@ module.exports = (function(Nodal) {
 
     });
 
-    it('Should do a "gte" filter properly', (done) => {
+    it('Should do a "gte" where query properly', (done) => {
 
       Parent.query()
-        .filter({name__gte: 'Albert'})
+        .where({name__gte: 'Albert'})
         .end((err, parents) => {
 
           expect(err).to.equal(null);
@@ -408,10 +408,10 @@ module.exports = (function(Nodal) {
 
     });
 
-    it('Should do a "like" filter properly', (done) => {
+    it('Should do a "like" where query properly', (done) => {
 
       Parent.query()
-        .filter({name__like: 'am'}) // James, Samantha, Samuel
+        .where({name__like: 'am'}) // James, Samantha, Samuel
         .end((err, parents) => {
 
           expect(err).to.equal(null);
@@ -422,10 +422,10 @@ module.exports = (function(Nodal) {
 
     });
 
-    it('Should do an "ilike" filter properly', (done) => {
+    it('Should do an "ilike" where query properly', (done) => {
 
       Parent.query()
-        .filter({name__ilike: 'z'}) // Suzy, Zoolander
+        .where({name__ilike: 'z'}) // Suzy, Zoolander
         .end((err, parents) => {
 
           expect(err).to.equal(null);
@@ -436,10 +436,10 @@ module.exports = (function(Nodal) {
 
     });
 
-    it('Should do an "startswith" filter properly', (done) => {
+    it('Should do an "startswith" where query properly', (done) => {
 
       Parent.query()
-        .filter({name__startswith: 'Sam'}) // Samantha, Samuel
+        .where({name__startswith: 'Sam'}) // Samantha, Samuel
         .end((err, parents) => {
 
           expect(err).to.equal(null);
@@ -450,10 +450,10 @@ module.exports = (function(Nodal) {
 
     });
 
-    it('Should do an "endswith" filter properly', (done) => {
+    it('Should do an "endswith" where query properly', (done) => {
 
       Parent.query()
-        .filter({name__endswith: 'y'}) // Dingleberry, Sally, Suzy
+        .where({name__endswith: 'y'}) // Dingleberry, Sally, Suzy
         .end((err, parents) => {
 
           expect(err).to.equal(null);
@@ -464,10 +464,10 @@ module.exports = (function(Nodal) {
 
     });
 
-    it('Should do an "iendswith" filter properly', (done) => {
+    it('Should do an "iendswith" where query properly', (done) => {
 
       Parent.query()
-        .filter({name__iendswith: 'Y'}) // Dingleberry, Sally, Suzy
+        .where({name__iendswith: 'Y'}) // Dingleberry, Sally, Suzy
         .end((err, parents) => {
 
           expect(err).to.equal(null);
@@ -481,7 +481,7 @@ module.exports = (function(Nodal) {
     it('Should allow for OR queries', (done) => {
 
       Parent.query()
-        .filter({name: 'Zoolander'}, {name: 'Albert'})
+        .where({name: 'Zoolander'}, {name: 'Albert'})
         .end((err, parents) => {
 
           expect(err).to.equal(null);
@@ -495,7 +495,7 @@ module.exports = (function(Nodal) {
     it('Should find all children with parent id = "1", by id', (done) => {
 
       Child.query()
-        .filter({parent_id: 1})
+        .where({parent_id: 1})
         .end((err, children) => {
 
           expect(err).to.equal(null);
@@ -510,7 +510,7 @@ module.exports = (function(Nodal) {
 
       Child.query()
         .join('parent')
-        .filter({parent__id: 1})
+        .where({parent__id: 1})
         .end((err, children) => {
 
           expect(err).to.equal(null);
@@ -525,7 +525,7 @@ module.exports = (function(Nodal) {
 
       Child.query()
         .join('parent')
-        .filter({parent__name: 'Zoolander'})
+        .where({parent__name: 'Zoolander'})
         .end((err, children) => {
 
           expect(err).to.equal(null);
@@ -540,7 +540,7 @@ module.exports = (function(Nodal) {
 
       Parent.query()
         .join('children')
-        .filter({children__id__lte: 15})
+        .where({children__id__lte: 15})
         .end((err, parents) => {
 
           expect(err).to.equal(null);
@@ -566,13 +566,13 @@ module.exports = (function(Nodal) {
 
     });
 
-    it('Should join children and partners both to parents, and filter each', (done) => {
+    it('Should join children and partners both to parents, and where each', (done) => {
 
       Parent.query()
         .join('children')
-        .filter({children__id__lte: 25})
+        .where({children__id__lte: 25})
         .join('partner')
-        .filter({partner__name: 'Partner0'}, {partner__name: 'Partner1'})
+        .where({partner__name: 'Partner0'}, {partner__name: 'Partner1'})
         .end((err, parents) => {
 
           expect(err).to.equal(null);
@@ -583,13 +583,13 @@ module.exports = (function(Nodal) {
 
     });
 
-    it('Should filter from both relationships, but keep 10 children per parent', (done) => {
+    it('Should where from both relationships, but keep 10 children per parent', (done) => {
 
       Parent.query()
         .join('children')
-        .filter({children__id__lte: 25})
+        .where({children__id__lte: 25})
         .join('partner')
-        .filter({partner__name: 'Partner0'}, {partner__name: 'Partner1'})
+        .where({partner__name: 'Partner0'}, {partner__name: 'Partner1'})
         .end((err, parents) => {
 
           expect(err).to.equal(null);
@@ -602,14 +602,14 @@ module.exports = (function(Nodal) {
 
     });
 
-    it('Should join children and partners both to parents, and filter each, with an additional filter of the first join', (done) => {
+    it('Should join children and partners both to parents, and where each, with an additional where of the first join', (done) => {
 
       Parent.query()
         .join('children')
-        .filter({children__id__lte: 25})
+        .where({children__id__lte: 25})
         .join('partner')
-        .filter({partner__name: 'Partner0'}, {partner__name: 'Partner1'})
-        .filter({children__id__gte: 15})
+        .where({partner__name: 'Partner0'}, {partner__name: 'Partner1'})
+        .where({children__id__gte: 15})
         .end((err, parents) => {
 
           expect(err).to.equal(null);
@@ -624,7 +624,7 @@ module.exports = (function(Nodal) {
 
       Parent.query()
         .join('children')
-        .filter({children__id__lte: 70})
+        .where({children__id__lte: 70})
         .limit(5)
         .end((err, parents) => {
 
@@ -636,10 +636,10 @@ module.exports = (function(Nodal) {
 
     });
 
-    it('Should filter without joining', (done) => {
+    it('Should where without joining', (done) => {
 
       Parent.query()
-        .filter({children__id__lte: 70})
+        .where({children__id__lte: 70})
         .limit(5)
         .end((err, parents) => {
 
@@ -720,7 +720,7 @@ module.exports = (function(Nodal) {
       Friendship.query()
         .join('fromParent')
         .join('toParent')
-        .filter({fromParent__id: 5}, {toParent__id: 5})
+        .where({fromParent__id: 5}, {toParent__id: 5})
         .end((err, friendships) => {
 
           expect(friendships.length).to.equal(9);
