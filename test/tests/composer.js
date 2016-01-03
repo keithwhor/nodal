@@ -74,26 +74,6 @@ module.exports = (function(Nodal) {
     Friendship.setSchema(schemaFriendship);
     Friendship.joinsTo(Parent, {via: ['from_parent_id', 'to_parent_id'], multiple: true});
 
-    // Friendship.query()
-    //   .filter({parent__id: 7})
-    //   .join('parents'); // this makes sense
-    //
-    // Parent.query()
-    //   .limit(1)
-    //   .join('friendships')
-    //   .join('parents')
-    //
-    // LEFT JOIN "friendships" AS "j1" ON (
-    //   "j1"."from_parent_id" = "parents"."id" OR
-    //   "j1"."to_parent_id" = "parents"."id" AND
-    //   "j1"."from_parent_id" <> "j1"."to_parent_id"
-    // )
-    // LEFT JOIN "parents" AS "friendships" ON (
-    //   "friendships"."id" = "j1"."from_parent_id" OR
-    //   "friendships"."id" = "j1"."to_parent_id" AND
-    //   "friendships"."id" <> "parents"."id"
-    // )
-
     class Child extends Nodal.Model {}
 
     Child.setDatabase(db);
