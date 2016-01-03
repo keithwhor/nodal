@@ -7,8 +7,16 @@ module.exports = (function() {
 
   const Controller = require('./controller.js');
 
+  /**
+  * Routes are what the router uses to actually instantiate Controllers
+  * @class
+  */
   class Route {
 
+    /**
+    * @param {RegEx} regex The Regular Expression to match for the route
+    * @param {class Nodal.Controller} controller The controller class to instantiate when a route is activated
+    */
     constructor(regex, controller) {
       this._regex = null;
       if (typeof regex === 'string') {
@@ -24,10 +32,20 @@ module.exports = (function() {
       this._controller = controller;
     }
 
+    /**
+    * Check whether or not the route matches a given HTTP.ClientRequest path
+    * @param {string} pathname The pathname to check against the route's regex
+    * @return {boolean}
+    */
     match(pathname) {
       return !!this._regex.exec(pathname);
     }
 
+    /**
+    * Parse query parameters from a query string. Matches arrays and object query param definitions. (obj[a]=1&obj[b]=2)
+    * @param {string} query The query string to match
+    * @return {Object} The parsed object
+    */
     parseQueryParameters(query) {
 
       let obj = {};
@@ -65,6 +83,12 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Parse the POST body from an HTTP.ClientRequest. Accepts x-www-form-urlencoded or JSON.
+    * @param {string} contentType The Content-Type header of the HTTP.ClientRequest
+    * @param {string} body The POST body of the HTTP.ClientRequest
+    * @return {Object} The body returned as JS Object
+    */
     parseBody(contentType, body) {
 
       contentType = (typeof contentType === 'string') ? contentType.split(';')[0] : '';
@@ -86,7 +110,15 @@ module.exports = (function() {
 
     }
 
-    execute(request, response, urlParts, app) {
+    /**
+    * Activate the route once you know it has been hit.
+    * @param {Nodal.Application} app The Nodal.Application instance assocatied with this route / router
+    * @param {HTTP.ClientRequest} request
+    * @param {HTTP.ServerResponse} response
+    */
+    execute(app, request, response) {
+
+      let urlParts = url.parse(request.url, true);
 
       let buffers = [];
       let transferSize = 0;
@@ -153,16 +185,30 @@ module.exports = (function() {
 
   }
 
+  /**
+  * Delegates HTTP.ClientRequest to specified routes, which dispatch Controllers
+  * @class
+  */
   class Router {
 
     constructor() {
       this._routes = [];
     }
 
+    /**
+    * Creates a route with a specified regex that dispatches a given Controller
+    * @param {RegEx} regex The regex to match for the route
+    * @param {class Nodal.Controller} Controller The Controller to dispatch
+    */
     route(regex, Controller) {
       this._routes.push(new Route(regex, Controller));
     }
 
+    /**
+    * Finds the appropriate route given a pathname. Does a simple array iteration (first matching route wins).
+    * @param {string} pathname The pathname from an HTTP.ClientRequest
+    * @return {Route} The route instance that matches the pathname
+    */
     find(pathname) {
       let routes = this._routes;
       for(let i = 0, len = routes.length; i < len; i++) {
@@ -173,13 +219,20 @@ module.exports = (function() {
       return null;
     }
 
+    /**
+    * Delegates an HTTP.ClientRequest to a route / Controller. Used with Node's HTTP server. Given a generic plaintext 404 if no routes found.
+    * @param {Nodal.Application} app Your Nodal application
+    * @param {HTTP.ClientRequest} request
+    * @param {HTTP.ServerResponse} response
+    */
     delegate(app, request, response) {
 
-      let urlParts = url.parse(request.url, true);
+      let pathname = url.parse(request.url, true).pathname;
 
-      let route = this.find(urlParts.pathname);
+      let route = this.find(pathname);
+
       if (route) {
-        return route.execute(request, response, urlParts, app);
+        return route.execute(app, request, response);
       }
 
       response.writeHead(404, {'Content-Type': 'text/plain'});

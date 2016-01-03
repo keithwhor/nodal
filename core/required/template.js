@@ -2,8 +2,17 @@ module.exports = (function() {
 
   'use strict';
 
-  class TemplateInstance {
+  /**
+  * The current template, bound to specific params and data (passed on to partials)
+  * @class
+  */
+  class ActiveTemplate {
 
+    /**
+    * @param {Nodal.Template} template The parent template
+    * @param {Object} params The parameters for the template
+    * @param {Object} data The data for the template
+    */
     constructor(template, params, data) {
 
       this.template = template;
@@ -12,12 +21,20 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Render the template based on this ActiveTemplate's params and data
+    * @return {string}
+    */
     generate() {
 
       return this.template._fn.call(this, this._params, this._data);
 
     }
 
+    /**
+    * Renders another template template based upon this ActiveTemplate's params and data
+    * @return {string}
+    */
     partial(name, raw) {
 
       return this.template._app.template(name, !!raw).generate(this._params, this._data);
@@ -26,8 +43,16 @@ module.exports = (function() {
 
   }
 
+  /**
+  * Light wrapper around template functions, creates ActiveTemplates from provided params and data
+  * @class
+  */
   class Template {
 
+    /**
+    * @param {Nodal.Application} app Your Nodal Application
+    * @param {function} fn The method to render your template with
+    */
     constructor(app, fn) {
 
       this._app = app;
@@ -35,6 +60,12 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Generates (renders) your template by creating an ActiveTemplate instance
+    * @param {Object} params The parameters for the template
+    * @param {Object} data The data for the template
+    * @return {ActiveTemplate}
+    */
     generate(params, data) {
 
       params = params || {};
@@ -46,7 +77,7 @@ module.exports = (function() {
         .filter(k => !data.hasOwnProperty(k))
         .forEach(k => data[k] = templateData[k]);
 
-      return new TemplateInstance(this, params, data).generate();
+      return new ActiveTemplate(this, params, data).generate();
 
     }
 

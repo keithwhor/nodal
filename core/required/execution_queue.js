@@ -6,6 +6,7 @@ module.exports = (function() {
 
   /**
   * Queues initializers, middleware, etc (make sure they fire in order).
+  * @class
   */
   class ExecutionQueue {
 

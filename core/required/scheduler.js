@@ -2,8 +2,15 @@ module.exports = (function() {
 
   'use strict';
 
+  /**
+  * Base entry for schedulers for performing repeated tasks.
+  * @class
+  */
   class SchedulerEntry {
 
+    /**
+    * @param {Nodal.Scheduler} scheduler The scheduler instance this entry belongs to
+    */
     constructor(scheduler) {
 
       this._scheduler = scheduler;
@@ -16,12 +23,20 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Get the difference between now and the last time the task should be executed. Overwritten when inherited.
+    * @param {Date} cur The current Date object
+    */
     getDateOffset(cur) {
 
       return cur;
 
     }
 
+    /**
+    * Initialize the entry.
+    * @param {Array} times The times at which this entry should execute
+    */
     __initialize__(times) {
 
       let timeLength = this.timeLength;
@@ -43,18 +58,28 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Assign a task to this scheduler entry
+    * @param {Nodal.Task|constructor} task The Task to perform (must have an exec function)
+    */
     perform(Task) {
 
       this._task = new Task();
 
     }
 
+    /**
+    * Execute the scheduler entry's associated task
+    */
     exec() {
 
       this._task && this._task.exec(this._scheduler._app, () => {});
 
     }
 
+    /**
+    * Begin the scheduler entry. Create a timeout for the first execution, and an interval for all subsequent ones.
+    */
     start() {
 
       let intervals = [];
@@ -82,6 +107,9 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Clear all timeouts and intervals for the scheduler entry (stops it).
+    */
     stop() {
 
       this.timeouts.forEach(clearTimeout);
@@ -91,8 +119,16 @@ module.exports = (function() {
 
   }
 
+  /**
+  * SchedulerEntry extension for minutely (on the second) execution
+  * @class
+  */
   class MinutelyEntry extends SchedulerEntry {
 
+    /**
+    * @param {Nodal.Scheduler} scheduler the scheduler the entry belongs to
+    * @param {Array} times The times (in seconds) to execute the task
+    */
     constructor(scheduler, times) {
 
       super(scheduler);
@@ -104,6 +140,10 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Sets the offset to the nearest minute
+    * @param {Date} cur The current Date
+    */
     getDateOffset(cur) {
 
       return new Date(Date.UTC(cur.getUTCFullYear(), cur.getUTCMonth(), cur.getUTCDate(), cur.getUTCHours(), cur.getUTCMinutes()));
@@ -112,8 +152,16 @@ module.exports = (function() {
 
   }
 
+  /**
+  * SchedulerEntry extension for hourly (on the minute) execution
+  * @class
+  */
   class HourlyEntry extends SchedulerEntry {
 
+    /**
+    * @param {Nodal.Scheduler} scheduler the scheduler the entry belongs to
+    * @param {Array} times The times (in minutes) to execute the task
+    */
     constructor(scheduler, times) {
 
       super(scheduler);
@@ -125,6 +173,10 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Sets the offset to the nearest hour
+    * @param {Date} cur The current Date
+    */
     getDateOffset(cur) {
 
       return new Date(Date.UTC(cur.getUTCFullYear(), cur.getUTCMonth(), cur.getUTCDate(), cur.getUTCHours()));
@@ -133,8 +185,16 @@ module.exports = (function() {
 
   }
 
+  /**
+  * SchedulerEntry extension for daily (on the hour) execution
+  * @class
+  */
   class DailyEntry extends SchedulerEntry {
 
+    /**
+    * @param {Nodal.Scheduler} scheduler the scheduler the entry belongs to
+    * @param {Array} times The times (in hours) to execute the task
+    */
     constructor(scheduler, times) {
 
       super(scheduler);
@@ -146,6 +206,10 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Sets the offset to the nearest day
+    * @param {Date} cur The current Date
+    */
     getDateOffset(cur) {
 
       return new Date(Date.UTC(cur.getUTCFullYear(), cur.getUTCMonth(), cur.getUTCDate()));
@@ -154,8 +218,16 @@ module.exports = (function() {
 
   }
 
+  /**
+  * SchedulerEntry extension for weekly (on the day of week) execution
+  * @class
+  */
   class WeeklyEntry extends SchedulerEntry {
 
+    /**
+    * @param {Nodal.Scheduler} scheduler the scheduler the entry belongs to
+    * @param {Array} times The times (in days of week) to execute the task
+    */
     constructor(scheduler, times) {
 
       super(scheduler);
@@ -167,6 +239,10 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Sets the offset to the nearest week
+    * @param {Date} cur The current Date
+    */
     getDateOffset(cur) {
 
       return new Date(Date.UTC(cur.getUTCFullYear(), cur.getUTCMonth(), cur.getUTCDate() - cur.getUTCDay()));
@@ -175,6 +251,10 @@ module.exports = (function() {
 
   }
 
+  /**
+  * Use to delegate tasks minutely, hourly, daily, or weekly.
+  * @class
+  */
   class Scheduler {
 
     constructor() {
@@ -184,6 +264,11 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Create a SchedulerEntry object given arguments (times)
+    * @param {Nodal.SchedulerEntry} entryConstructor The entry to create
+    * @param {Array} args The arguments to initialize Scheduler Entry with
+    */
     _entry(entryConstructor, args) {
 
       let times = [].slice.call(args);
@@ -193,6 +278,10 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Set the app for the scheduler.
+    * @param {Nodal.Application} app Your Nodal application
+    */
     setApp(app) {
 
       this._app = app;
@@ -200,30 +289,45 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Construct a new Nodal.MinutelyEntry. All arguments passed represent the times to execute.
+    */
     minutely() {
 
       return this._entry(MinutelyEntry, arguments);
 
     }
 
+    /**
+    * Construct a new Nodal.HourlyEntry. All arguments passed represent the times to execute.
+    */
     hourly() {
 
       return this._entry(HourlyEntry, arguments);
 
     }
 
+    /**
+    * Construct a new Nodal.DailyEntry. All arguments passed represent the times to execute.
+    */
     daily() {
 
       return this._entry(DailyEntry, arguments);
 
     }
 
+    /**
+    * Construct a new Nodal.WeeklyEntry. All arguments passed represent the times to execute.
+    */
     weekly() {
 
       return this._entry(WeeklyEntry, arguments);
 
     }
 
+    /**
+    * Starts all associated SchedulerEntry objects for the Scheduler
+    */
     start() {
 
       this.entries.forEach(function(v) {
@@ -236,6 +340,9 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Stops all associated SchedulerEntry objects for the Scheduler
+    */
     stop() {
 
       this.entries.forEach(function(v) {
@@ -248,6 +355,9 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Restarts all associated SchedulerEntry objects for the Scheduler
+    */
     restart() {
 
       this.stop();
