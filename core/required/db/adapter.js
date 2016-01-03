@@ -165,7 +165,7 @@ module.exports = (function() {
             if (typeof field === 'string') {
               return `(${formatTableField(table, field)}) AS ${this.escapeField(field)}`;
             }
-            return `(${formatTableField(field.table || table, field.columnName)}) AS ${this.escapeField(field.alias)}`;
+            return `(${formatTableField(field.name || field.table || table, field.columnName)}) AS ${this.escapeField(field.alias)}`;
           }).join(','),
         ' FROM ',
           subQuery ? `(${subQuery}) AS ` : '',
@@ -447,13 +447,17 @@ module.exports = (function() {
           fields.forEach(field => {
             baseFields.forEach(baseField => {
               statements.push(
-                `${this.escapeField(join.table)}.${this.escapeField(field)} = ` +
+                `${this.escapeField(join.name || join.table)}.${this.escapeField(field)} = ` +
                 `${this.escapeField(table)}.${this.escapeField(baseField)}`
               );
             });
           });
 
-          return ` LEFT JOIN ${this.escapeField(join.table)} ON (${statements.join(' OR ')})`;
+          return [
+            ` LEFT JOIN ${this.escapeField(join.table)}`,
+            `AS ${this.escapeField(join.name || join.table)}`,
+            `ON (${statements.join(' OR ')})`
+          ].join(' ');
 
         }).join('');
 

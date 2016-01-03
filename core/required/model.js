@@ -4,7 +4,7 @@ module.exports = (function() {
 
   const DataTypes = require('./db/data_types.js');
   const Database = require('./db/database.js');
-  const Composer = require('./composer/composer.js');
+  const Composer = require('./composer.js');
 
   const ModelArray = require('./model_array.js');
 
@@ -301,7 +301,7 @@ module.exports = (function() {
 
       options = options || {};
 
-      options.name = inflect.camelize(modelConstructor.name, false);
+      options.name = options.name || inflect.camelize(modelConstructor.name, false);
       options.via = options.via || `${inflect.underscore(options.name)}_id`;
       options.multiple = !!options.multiple;
 

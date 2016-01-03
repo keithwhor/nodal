@@ -19,6 +19,16 @@ module.exports = (function(Nodal) {
       ]
     };
 
+    let schemaFriendship = {
+      table: 'friendships',
+      columns: [
+        {name: 'id', type: 'serial'},
+        {name: 'from_parent_id', type: 'int'},
+        {name: 'to_parent_id', type: 'int'},
+        {name: 'created_at', type: 'datetime'}
+      ]
+    };
+
     let schemaChild = {
       table: 'children',
       columns: [
@@ -57,6 +67,13 @@ module.exports = (function(Nodal) {
     Parent.setDatabase(db);
     Parent.setSchema(schemaParent);
 
+    class Friendship extends Nodal.Model {}
+
+    Friendship.setDatabase(db);
+    Friendship.setSchema(schemaFriendship);
+    Friendship.joinsTo(Parent, {name: 'fromParent', as: 'outgoingFriendships', multiple: true});
+    Friendship.joinsTo(Parent, {name: 'toParent', as: 'incomingFriendships', multiple: true});
+
     class Child extends Nodal.Model {}
 
     Child.setDatabase(db);
@@ -80,7 +97,7 @@ module.exports = (function(Nodal) {
       db.connect(Nodal.my.Config.db.main);
 
       db.transaction(
-        [schemaParent, schemaChild, schemaPartner, schemaPet].map(schema => {
+        [schemaParent, schemaFriendship, schemaChild, schemaPartner, schemaPet].map(schema => {
           return [
             db.adapter.generateDropTableQuery(schema.table, true),
             db.adapter.generateCreateTableQuery(schema.table, schema.columns)
@@ -122,6 +139,14 @@ module.exports = (function(Nodal) {
             let partner = new Partner({name: `Partner${i}`, job: ['Plumber', 'Engineer', 'Nurse'][(Math.random() * 3) | 0]});
             p.set('partner', partner);
 
+            let friendships = new Nodal.ModelArray(Friendship);
+            while (i--) {
+              let friendship = new Friendship({to_parent_id: i + 1});
+              friendships.push(friendship);
+            }
+
+            p.set('outgoingFriendships', friendships);
+
           });
 
           parents.saveAll(err => {
@@ -132,7 +157,8 @@ module.exports = (function(Nodal) {
               [].concat(
                 parents.map(p => p.get('children').saveAll.bind(p.get('children'))),
                 parents.map(p => p.get('pets').saveAll.bind(p.get('pets'))),
-                parents.map(p => p.get('partner').save.bind(p.get('partner')))
+                parents.map(p => p.get('partner').save.bind(p.get('partner'))),
+                parents.map(p => p.get('outgoingFriendships').saveAll.bind(p.get('outgoingFriendships'))).filter(p => p)
               ), (err) => {
 
                 expect(err).to.be.undefined;
@@ -639,6 +665,71 @@ module.exports = (function(Nodal) {
           parents.forEach(parent => {
             expect(parent.get('children').length).to.equal(10);
             expect(parent.get('pets').length).to.equal(3);
+          });
+
+          done();
+
+        });
+
+    });
+
+    it('Should have Parent join Incoming + Outgoing Friendships', (done) => {
+
+      Parent.query()
+        .join('incomingFriendships')
+        .join('outgoingFriendships')
+        .orderBy('id', 'ASC')
+        .end((err, parents) => {
+
+          expect(err).to.equal(null);
+
+          parents.forEach((parent, i) => {
+            expect(parent.get('incomingFriendships').length).to.equal(9 - i);
+            expect(parent.get('outgoingFriendships').length).to.equal(i);
+          });
+
+          done();
+
+        });
+
+    });
+
+    it('Should get all Friendships and their Parents', (done) => {
+
+      Friendship.query()
+        .join('fromParent')
+        .join('toParent')
+        .end((err, friendships) => {
+
+          expect(err).to.equal(null);
+          expect(friendships.length).to.equal(45);
+
+          friendships.forEach((friendship, i) => {
+            expect(friendship.get('fromParent')).to.not.be.undefined;
+            expect(friendship.get('toParent')).to.not.be.undefined;
+          });
+
+          done();
+
+        });
+
+    });
+
+    it('Should get all Friendships belonging to a parent', (done) => {
+
+      Friendship.query()
+        .join('fromParent')
+        .join('toParent')
+        .filter({fromParent__id: 5}, {toParent__id: 5})
+        .end((err, friendships) => {
+
+          expect(friendships.length).to.equal(9);
+
+          friendships.forEach(friendship => {
+            expect(
+              friendship.get('fromParent').get('id') === 5 ||
+              friendship.get('toParent').get('id') === 5
+            ).to.equal(true);
           });
 
           done();

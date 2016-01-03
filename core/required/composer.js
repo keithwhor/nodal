@@ -2,8 +2,7 @@ module.exports = (function() {
 
   'use strict';
 
-  const ModelArray = require('../model_array.js');
-  const utilities = require('../utilities.js');
+  const ModelArray = require('./model_array.js');
 
   class Composer {
 
@@ -37,7 +36,7 @@ module.exports = (function() {
 
         let i = key.indexOf('$');
         let joinName = key.substr(0, i);
-        key = key.substr(i + 1, 0);
+        key = key.substr(i + 1);
         prev[joinName] = prev[joinName] || [];
         prev[joinName].push(key);
         return prev;
@@ -67,6 +66,9 @@ module.exports = (function() {
         joinSingleNames.forEach(name => {
 
           let id = row[`\$${name}\$id`];
+          if (id === null) {
+            return;
+          }
 
           objectCache[name] = objectCache[name] || {};
           let cached = objectCache[name][id];
@@ -93,7 +95,12 @@ module.exports = (function() {
 
         joinMultipleNames.forEach(name => {
 
+          let modelArray = model.get(name) || model.set(name, new ModelArray(this.Model.joinInformation(name).Model));
+
           let id = row[`\$\$${name}\$id`];
+          if (id === null) {
+            return;
+          }
 
           objectCache[name] = objectCache[name] || {};
           let cached = objectCache[name][id];
@@ -113,7 +120,6 @@ module.exports = (function() {
 
           if (!cachedForRow) {
             curRowObjectCache[name][id] = cachedForRow = cached;
-            let modelArray = model.get(name) || model.set(name, new ModelArray(cached.constructor));
             modelArray.push(cached);
           }
 
@@ -180,6 +186,7 @@ module.exports = (function() {
       let joinsObject = this.Model.joinInformation(joinName);
       return joinsObject.Model.columnNames().map(columnName => {
         return {
+          name: joinName,
           table: joinsObject.Model.table(),
           columnName: columnName,
           alias: `${(joinsObject.child && joinsObject.multiple) ? '$$' : '$'}${joinName}\$${columnName}`
