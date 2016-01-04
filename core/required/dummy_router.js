@@ -13,11 +13,19 @@ module.exports = function(err) {
       this.setHeader('Content-Type', 'text/plain');
 
       let message = 'Application Error';
+      let errorData = '';
 
-      if ((process.env.NODE_ENV || 'development') === 'development' && err) {
-        message += '\n\n' + err.stack;
+      if (err) {
+        errorData = err.stack;
       }
 
+      if ((process.env.NODE_ENV || 'development') === 'development') {
+        message += '\n\n' + errorData;
+      }
+
+      console.error('** Application Error');
+      console.error(errorData);
+      
       this.render(message);
 
     }

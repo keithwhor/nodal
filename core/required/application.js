@@ -480,7 +480,7 @@ module.exports = (function() {
           if ((process.env.NODE_ENV || 'development') === 'development') {
             response.end(err.stack);
           } else {
-            response.end('Application Error');
+            response.end('Controller Error');
           }
 
         }).bind(this));
@@ -515,10 +515,14 @@ module.exports = (function() {
         }).forEach(function(socket) {
 
           if (error) {
+
+            console.error('*** Application Shutdown');
+            console.error((error instanceof Error ? error.stack : error));
+
             if ((process.env.NODE_ENV || 'development') === 'development') {
-              socket.end(error instanceof Error ? error.stack : error);
+              socket.end('Application Shutdown\n\n' + (error instanceof Error ? error.stack : error));
             } else {
-              socket.end('Application Error.');
+              socket.end('Application Shutdown');
             }
           }
 
