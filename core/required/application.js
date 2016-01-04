@@ -4,7 +4,6 @@ module.exports = (function() {
 
   const Database = require('./db/database.js');
   const Router = require('./router.js');
-  const SocketServer = require('./socket.js');
   const Template = require('./template.js');
   const Authorizer = require('./authorizer.js');
   const ExecutionQueue = require('./execution_queue.js');
@@ -65,7 +64,6 @@ module.exports = (function() {
       this._db = {};
 
       this.router = null;
-      this.socket = null;
       this.server = null;
       this.scheduler = null;
 
@@ -75,8 +73,8 @@ module.exports = (function() {
     }
 
     /**
-    * Cleans up the Application, closes outstanding HTTP or websocket requests
-    * @param {Error} error An error message to send out to HTTP / socket clients
+    * Cleans up the Application, closes outstanding HTTP requests
+    * @param {Error} error An error message to send out to HTTP clients
     * @param {function} fnDone Method to execute when Application has been cleaned up successfully
     */
     __destroy__(error, fnDone) {
@@ -377,26 +375,6 @@ module.exports = (function() {
     }
 
     /**
-    * Proxies web socket requests through main HTTP connection (for use on Heroku, etc.)
-    * @experimental
-    */
-    _proxyWebSocketRequests() {
-
-      if (this.server && this.socket && !this._proxy) {
-
-        this._proxy = httpProxy.createProxyServer({ws: true});
-
-        this.server.on('upgrade', (function (req, socket, head) {
-          this._proxy.ws(req, socket, head, {target: 'ws://localhost:' + this.socket._port});
-        }).bind(this));
-
-      }
-
-      return true;
-
-    }
-
-    /**
     * Handles incoming http.ClientRequest and outgoing http.ServerResponse objects, routes them appropriately.
     * @param {http.ClientRequest} request
     * @param {http.ServerResponse} response
@@ -533,45 +511,11 @@ module.exports = (function() {
       };
 
       this.server = server;
-      this._proxyWebSocketRequests();
 
       console.log('Nodal HTTP server listening on port ' + port);
 
       return true;
 
-    }
-
-    /**
-    * Tells the Application to start listening for incoming websocket connections on a specified port
-    * @experimental
-    * @param {number} port The port on which to begin listening
-    */
-    socketListen(port) {
-
-      if (this.socket) {
-        console.error('WebSocket server already listening');
-        return;
-      }
-
-      this.socket = new SocketServer(port);
-
-      this._proxyWebSocketRequests();
-
-      console.log('Nodal WebSocket server listening on port ' + port);
-
-      return true;
-
-    }
-
-    /**
-    * Tells the websocket handler which command to execute
-    * @experimental
-    */
-    command() {
-      if(!this.socket) {
-        throw new Error('Application must socketListen before it can use commands');
-      }
-      this.socket.command.apply(this.socket, arguments);
     }
 
     /**
