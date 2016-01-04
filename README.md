@@ -42,7 +42,7 @@ wherever you please.
 Getting started with Nodal is easy.
 
 1. Download and install the newest Node 5.x version from [nodejs.org](https://nodejs.org)
-2. Open terminal, and type `npm install nodal -g`.
+2. Open terminal, and type `sudo npm install nodal -g`.
 3. Using your terminal, visit your projects folder. Perhaps with `cd ~`.
 4. Run `nodal new`.
 5. Follow the on screen instructions, enter your new project directory and type `nodal s`.
