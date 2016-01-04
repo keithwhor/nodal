@@ -33,23 +33,44 @@ module.exports = (function() {
 
   }
 
-  function generateUserDefinition(columns) {
+  function generateUserDefinition() {
     return dot.template(
       fs.readFileSync(__dirname + '/templates/models/user.jst', {
         varname: 'data',
         strip: false
       }).toString()
-    )({columns: columns});
+    )();
+  };
+
+  function generateAccessTokenDefinition() {
+    return dot.template(
+      fs.readFileSync(__dirname + '/templates/models/access_token.jst', {
+        varname: 'data',
+        strip: false
+      }).toString()
+    )();
   };
 
   function convertArgListToPropertyList(argList) {
+
     return argList.slice(1).map(function(v) {
+
       let obj = {name: inflect.underscore(v[0]), type: v[1]};
-      if (v[2] && (v[2] === 'array')) {
-        obj.properties = {array: true};
-      }
+      let rest = v.slice(2);
+      let properties = {};
+
+      ['array', 'unique'].forEach(v => {
+        if (rest.indexOf(v) !== -1) {
+          properties[v] = true;
+        }
+      });
+
+      Object.keys(properties).length && (obj.properties = properties);
+
       return obj;
+
     });
+
   }
 
   function generateModelSchemaObject(modelName, propertyList) {
@@ -67,10 +88,17 @@ module.exports = (function() {
       if (flags.hasOwnProperty('user')) {
         args = [
           ['User'],
-          ['email', 'string'],
+          ['email', 'string', 'unique'],
           ['password', 'string'],
-          ['name', 'string'],
-          ['permission', 'int'],
+          ['username', 'string'],
+        ];
+      } else if (flags.hasOwnProperty('access_token')) {
+        args = [
+          ['AccessToken'],
+          ['user_id', 'int'],
+          ['access_token', 'string'],
+          ['token_type', 'string'],
+          ['expires_at', 'datetime'],
           ['ip_address', 'string']
         ];
       }
@@ -94,23 +122,15 @@ module.exports = (function() {
 
       if (flags.hasOwnProperty('user')) {
 
-        fs.writeFileSync(createPath, generateUserDefinition(
-          ['id'].concat(
-            schemaObject.columns.map(function(v) { return v.name; }).filter(function(v) {
-              return ['ip_address', 'permission', 'password'].indexOf(v) === -1;
-            }),
-            ['created_at']
-          )
-        ));
+        fs.writeFileSync(createPath, generateUserDefinition());
+
+      } else if (flags.hasOwnProperty('access_token')) {
+
+        fs.writeFileSync(createPath, generateAccessTokenDefinition());
 
       } else {
-        fs.writeFileSync(createPath, generateModelDefinition(
-          modelName,
-          ['id'].concat(
-            schemaObject.columns.map(function(v) { return v.name; }),
-            ['created_at']
-          )
-        ));
+
+        fs.writeFileSync(createPath, generateModelDefinition(modelName));
       }
 
       console.log(colors.green.bold('Create: ') + createPath);

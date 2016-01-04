@@ -201,7 +201,7 @@ module.exports = (function() {
 
       return [
         `UPDATE ${this.escapeField(table)}`,
-        ` SET (${columnNames.map(this.escapeField.bind(this)).join(',')}) = (${columnNames.map((v, i) => '$' + (offset + 1)).join(',')})`,
+        ` SET (${columnNames.map(this.escapeField.bind(this)).join(',')}) = (${columnNames.map((v, i) => '$' + (i + offset + 1)).join(',')})`,
         ` WHERE (`,
           this.escapeField(pkColumn),
           subQuery ? ` IN (${subQuery})` : ` = $1`,

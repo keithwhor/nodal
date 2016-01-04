@@ -1,6 +1,6 @@
 module.exports = (function() {
 
-  "use strict";
+  'use strict';
 
   const Nodal = require('nodal');{{? data.for }}
   const {{= data.for.name }} = Nodal.require('{{= data.for.path }}');{{?}}
@@ -10,7 +10,7 @@ module.exports = (function() {
     {{? data.for }}index() {
 
       {{= data.for.name }}.query()
-        .where(params.query)
+        .where(this.params.query)
         .end((err, models) => {
 
           this.respond(err || models);
@@ -21,7 +21,7 @@ module.exports = (function() {
 
     show() {
 
-      {{= data.for.name }}.find(params.id, (err, model) => {
+      {{= data.for.name }}.find(this.params.id, (err, model) => {
 
         this.respond(err || model);
 
@@ -31,7 +31,7 @@ module.exports = (function() {
 
     create() {
 
-      {{= data.for.name }}.create(params.body.data, (err, model) => {
+      {{= data.for.name }}.create(this.params.body.data, (err, model) => {
 
         this.respond(err || model);
 
@@ -41,7 +41,7 @@ module.exports = (function() {
 
     update() {
 
-      {{= data.for.name }}.update(params.id, params.body.data, (err, model) => {
+      {{= data.for.name }}.update(this.params.id, params.body.data, (err, model) => {
 
         this.respond(err || model);
 
@@ -51,7 +51,7 @@ module.exports = (function() {
 
     destroy() {
 
-      {{= data.for.name }}.destroy(params.id, (err, model) => {
+      {{= data.for.name }}.destroy(this.params.id, (err, model) => {
 
         this.respond(err || model);
 

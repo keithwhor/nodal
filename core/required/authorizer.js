@@ -13,18 +13,6 @@ module.exports = (function() {
     constructor() {
 
       this._permissions = {};
-      this._key = ''
-
-    }
-
-    /**
-    * Creates a 32-byte md5 access token by combining the current date and any provided arguments.
-    * @return {string}
-    */
-    createAccessToken() {
-
-      let value = [].slice.call(arguments).concat([new Date().valueOf()]).join(':');
-      return crypto.createHmac('md5', this._key).update(value).digest('hex');
 
     }
 

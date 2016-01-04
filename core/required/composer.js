@@ -275,22 +275,6 @@ module.exports = (function() {
       let comparators = this.db.adapter.comparators;
       let columnLookup = this.Model.columnLookup();
 
-      comparisons = Object.keys(comparisons).reduce((p, c) => { return (p[c] = comparisons[c], p); }, {});
-
-      if ('__order' in comparisons) {
-        let order = comparisons.__order.split(' ');
-        delete comparisons.__order;
-        return this.orderBy(order[0], order[1]).where(comparisons);
-      }
-
-      if ('__offset' in comparisons || '__count' in comparisons) {
-        let offset = comparisons.__offset;
-        let count = comparisons.__count;
-        delete comparisons.__offset;
-        delete comparisons.__count;
-        return this.limit(offset || 0, count || 0).where(comparisons);
-      }
-
       return Object.keys(comparisons)
         .map(comparison => {
 
@@ -352,16 +336,46 @@ module.exports = (function() {
     * @param {Object} comparisons Comparisons object. {age__lte: 27}, for example.
     * @return {Nodal.Composer} new Composer instance
     */
-    where(comparisons) {
+    where(comparisonsArray) {
 
-      if (!(comparisons instanceof Array)) {
-        comparisons = [].slice.call(arguments);
+      if (!(comparisonsArray instanceof Array)) {
+        comparisonsArray = [].slice.call(arguments);
+      }
+
+      comparisonsArray = comparisonsArray.map(comparisons => {
+        return Object.keys(comparisons).reduce((p, c) => { return (p[c] = comparisons[c], p); }, {});
+      });
+
+      let order = null;
+      let limit = null;
+
+      comparisonsArray.forEach(comparisons => {
+
+        if ('__order' in comparisons) {
+          order = comparisons.__order.split(' ');
+          delete comparisons.__order;
+        }
+
+        if ('__offset' in comparisons || '__count' in comparisons) {
+          offset = comparisons.__offset;
+          count = comparisons.__count;
+          delete comparisons.__offset;
+          delete comparisons.__count;
+        }
+
+      });
+
+      if (order || limit) {
+        let composer = this;
+        order && (composer = composer.orderBy(order[0], order[1]));
+        limit && (composer = composer.limit(offset || 0, count || 0));
+        return composer.where(comparisonsArray);
       }
 
       this._command = {
         type: 'where',
         data: {
-          comparisons: comparisons
+          comparisons: comparisonsArray
           .map(this.__parseComparisons__.bind(this))
           .filter(f => f.length)
         }

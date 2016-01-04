@@ -55,13 +55,13 @@ systems designed where no single service is dependent upon any other one. If a
 junior developer accidentally brings down your Branding Server, for example, your
 API and Application still work perfectly.
 
-### Branding Server
+### Brandings Server
 
-This is your Google-able, SEO-indexed branding page for your product or service.
-Use Nodal's Templates and partials (using doT.js) to show your users
-server-generated HTML pages that serve as a great introduction to what you're
-showing off. If you need to grab live data from an API, send asynchronous
-non-blocking requests to your API Server.
+This is your Google-able, SEO-indexed server for your product or service,
+containing your branding pages. Use Nodal's Templates and partials (using doT.js)
+to show your users server-generated HTML pages that serve as a great introduction
+to what you're showing off. If you need to grab live data from an API, send
+asynchronous non-blocking requests to your API Server.
 
 Here's the controller for a sample index page:
 

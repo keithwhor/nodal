@@ -452,7 +452,12 @@ module.exports = (function() {
         data.created_at = new Date();
       }
 
-      Object.keys(data).forEach(key => this.__safeSet__(key, data[key]));
+      let keys = Object.keys(data);
+
+      keys.forEach(key => {
+        this.__safeSet__(key, data[key]);
+        this._changed[key] = !fromStorage
+      });
 
       this.__validate__();
 

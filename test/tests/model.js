@@ -13,6 +13,7 @@ module.exports = (function(Nodal) {
       columns: [
         {name: 'id', type: 'serial'},
         {name: 'name', type: 'string'},
+        {name: 'age', type: 'int'},
         {name: 'created_at', type: 'datetime'}
       ]
     };
@@ -126,6 +127,7 @@ module.exports = (function(Nodal) {
         parent.save(function(err, model) {
           expect(err).to.equal(null);
           model.set('name', 'infinity');
+          model.set('age', 27);
           model.save(function(err, model) {
             expect(err).to.equal(null);
             done();

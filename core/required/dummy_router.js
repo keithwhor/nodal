@@ -1,16 +1,16 @@
 module.exports = function(err) {
 
-  "use strict";
+  'use strict';
 
   const Controller = require('./controller.js');
   const Router = require('./router.js');
 
   class DummyController extends Controller {
 
-    get(self, params, app) {
+    get() {
 
-      self.status(500);
-      self.setHeader('Content-Type', 'text/plain');
+      this.status(500);
+      this.setHeader('Content-Type', 'text/plain');
 
       let message = 'Application Error';
 
@@ -18,8 +18,24 @@ module.exports = function(err) {
         message += '\n\n' + err.stack;
       }
 
-      self.render(message);
+      this.render(message);
 
+    }
+
+    post() {
+      this.get();
+    }
+
+    put() {
+      this.get();
+    }
+
+    del() {
+      this.get();
+    }
+
+    options() {
+      this.get();
     }
 
   }

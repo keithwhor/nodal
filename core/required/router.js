@@ -165,8 +165,6 @@ module.exports = (function() {
           app
         );
 
-        // Enjoy this one ;)
-        //      ... just to be sassy
         let method = ({
           'GET': ['index', 'show'],
           'PUT': ['put', 'update'],

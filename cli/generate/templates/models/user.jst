@@ -1,35 +1,25 @@
 module.exports = (function() {
 
-  "use strict";
+  'use strict';
 
   const Nodal = require('nodal');
   const bcrypt = require('bcrypt');
 
   class User extends Nodal.Model {
 
-    __preInitialize__() {
-
-      this.validates('password', 'must be at least 5 characters in length', function(v) {
-        return v && v.length >= 5;
-      });
-
-    }
-
-    /* Model Extensions */
-
     save(callback) {
 
       let user = this;
       let save = super.save.bind(this, callback);
 
-      if (!user.hasErrors() && user.hasChanged('password')) {
+      if (!this.hasErrors() && this.hasChanged('password')) {
 
-        bcrypt.hash(user.get('password'), 10, function(err, hash) {
+        bcrypt.hash(this.get('password'), 10, (err, hash) => {
 
           if (err) {
-            user.setError('password', 'Could not encrypt password');
+            this.setError('password', 'Could not encrypt password');
           } else {
-            user.__safeSet__('password', hash);
+            this.__safeSet__('password', hash);
           }
 
           save();
@@ -46,21 +36,19 @@ module.exports = (function() {
 
     verifyPassword(unencrypted, callback) {
 
-      let user = this;
-
-      bcrypt.compare(unencrypted, user.get('password'), function(err, result) {
-        callback.call(user, err, result);
+      bcrypt.compare(unencrypted, this.get('password'), (err, result) => {
+        callback.call(this, err, result);
       });
 
     }
 
   }
 
-  User.prototype.schema = Nodal.my.Schema.models.User;
+  User.setDatabase(Nodal.require('db/main.js'));
+  User.setSchema(Nodal.my.Schema.models.User);
 
-  User.prototype.externalInterface = [{{~ data.columns :value:index}}
-    '{{= value }}'{{? data.columns.length - 1 !== index }},{{?}}{{~}}
-  ];
+  User.validates('email', 'must be valid', v => v && (v + '').match(/.+@.+\.\w+/i));
+  User.validates('password', 'must be at least 5 characters in length', v => v && v.length >= 5);
 
   return User;
 
