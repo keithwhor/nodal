@@ -16,6 +16,8 @@ product in a short timespan while minimizing technical debt.
 Nodal projects are ready to deploy to [Heroku](https://heroku.com) right out of
 the box, so you can have your website live in no time.
 
+[Check out the first Nodal Screencast here.](https://www.youtube.com/embed/IxBXkFbUqtk)
+
 ## Why Nodal?
 
 Nodal is built upon an ideology of a robust, scalable microservice architecture.
@@ -94,7 +96,7 @@ systems designed where no single service is dependent upon any other one. If a
 junior developer accidentally brings down your Branding Server, for example, your
 API and Application still work perfectly.
 
-### Brandings Server
+### Branding Server
 
 This is your Google-able, SEO-indexed server for your product or service,
 containing your branding pages. Use Nodal's Templates and partials (using doT.js)
@@ -190,7 +192,7 @@ great user experience.
 
 ## Beginner's Guide
 
-Website incoming, you'll be able to learn more about Nodal at [nodaljs.com](http://nodaljs.com).
+You'll be able to learn more about Nodal at [nodaljs.com](http://nodaljs.com).
 
 ## Documentation
 
