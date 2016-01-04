@@ -347,7 +347,8 @@ module.exports = (function() {
       });
 
       let order = null;
-      let limit = null;
+      let offset = null;
+      let count = null;
 
       comparisonsArray.forEach(comparisons => {
 
@@ -365,10 +366,10 @@ module.exports = (function() {
 
       });
 
-      if (order || limit) {
+      if (order || offset || count) {
         let composer = this;
         order && (composer = composer.orderBy(order[0], order[1]));
-        limit && (composer = composer.limit(offset || 0, count || 0));
+        count && (composer = composer.limit(offset || 0, count || 0));
         return composer.where(comparisonsArray);
       }
 

@@ -58,12 +58,12 @@ module.exports = (function() {
 
     }
 
-    static verify(strAccessToken, callback) {
+    static verify(params, callback) {
 
       this.query()
         .join('user')
         .where({
-          access_token: strAccessToken,
+          access_token: params.query.access_token,
           expires_at__gte: new Date()
         })
         .end((err, accessTokens) => {
@@ -88,9 +88,9 @@ module.exports = (function() {
 
     }
 
-    static logout(strAccessToken, callback) {
+    static logout(params, callback) {
 
-      this.verify(strAccessToken, (err, accessToken) => {
+      this.verify(params.query.access_token, (err, accessToken) => {
 
         if (err) {
           return callback(err);

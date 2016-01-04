@@ -4,7 +4,9 @@
 [![Build Status](https://travis-ci.org/keithwhor/nodal.svg?branch=master)](https://travis-ci.org/keithwhor/nodal)
 
 Nodal is a web server for Node.js that was built with the sole purpose of making
-the developer's life easier. Boasting its own opinionated, explicit, idiomatic and
+the developer's life easier.
+
+Boasting its own opinionated, explicit, idiomatic and
 highly-extensible full-service framework, Nodal takes care of all of the hard
 decisions for you and your team. This allows you to focus on creating an effective
 product in a short timespan while minimizing technical debt.
@@ -42,6 +44,41 @@ Getting started with Nodal is easy.
 5. Follow the on screen instructions, enter your new project directory and type `nodal s`.
 
 That's it! Your Nodal webserver is up and running.
+
+## Hooking Up Your Database
+
+Once Nodal is up and running, it's likely that you'll want to connect your project
+to a database. Nodal comes packaged with Migrations, a Query Composer and full
+PostgreSQL integration.
+
+First you'll need to install PostgreSQL. OS X users, I recommend using
+[Postgres.app](http://postgresapp.com/) for your development environment.
+
+Once you've installed Postgres, make sure to run:
+
+```
+$ createuser postgres -s
+```
+
+To create a default postgres superuser with no password. (Default for Nodal's
+configuration.)
+
+To begin using your database, start with:
+
+```
+$ nodal db:create
+```
+
+To create the database and then,
+
+```
+$ nodal db:prepare
+```
+
+To prepare for migrations.
+
+From here, `nodal db:migrate` runs all pending migrations and `nodal db:rollback`
+will roll back migrations, one at a time by default.
 
 ## Server Types
 
@@ -89,7 +126,7 @@ class IndexController extends Nodal.Controller {
 
 Create an API server using Nodal's Models, PostgreSQL integration, built-in JSON
 API formatting, and Query Composer (ORM). Bi-directional migrations are packaged
-with Nodal out-of-the-box, meaning you can maintain the integrity of your data.
+with Nodal, meaning you can maintain the integrity of your data.
 User (including password) and OAuth AccessToken models and controllers are
 pre-built for you and can be added easily to your project.
 
@@ -106,7 +143,7 @@ class BlogPostsController extends Nodal.Controller {
     BlogPost.query()
       .join('user')
       .join('comments')
-      .where(params.query)
+      .where(this.params.query)
       .end((err, blogPosts) => {
 
         this.respond(err || blogPosts);
