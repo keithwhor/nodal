@@ -6,6 +6,8 @@
 Nodal is a web server for Node.js that was built with the sole purpose of making
 the developer's life easier.
 
+![Nodal Logo](http://www.nodaljs.com/static/images/nodal_logo_small.png =128x)
+
 Boasting its own opinionated, explicit, idiomatic and
 highly-extensible full-service framework, Nodal takes care of all of the hard
 decisions for you and your team. This allows you to focus on creating an effective
