@@ -73,7 +73,7 @@ module.exports = (function() {
       this.find(id, (err, model) => {
 
         if (err) {
-          callback(err);
+          return callback(err);
         }
 
         model.read(data);
@@ -93,7 +93,7 @@ module.exports = (function() {
       this.find(id, (err, model) => {
 
         if (err) {
-          callback(err);
+          return callback(err);
         }
 
         model.destroy(callback);
