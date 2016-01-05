@@ -90,7 +90,7 @@ module.exports = (function() {
 
     static logout(params, callback) {
 
-      this.verify(params.query.access_token, (err, accessToken) => {
+      this.verify(params, (err, accessToken) => {
 
         if (err) {
           return callback(err);
