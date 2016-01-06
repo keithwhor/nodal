@@ -181,7 +181,8 @@
       migration: generateCommands.migration,
       controller: generateCommands.controller,
       initializer: generateCommands.initializer,
-      middleware: generateCommands.middleware
+      middleware: generateCommands.middleware,
+      task: generateCommands.task
     },
     task: {
       _: function(args, flags) {
