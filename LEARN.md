@@ -12,7 +12,7 @@ To begin your project, first install the latest version of Node (4.x) from
 terminal and run:
 
 ```
-sudo npm install -g
+sudo npm install nodal -g
 ```
 
 It will take a few seconds to finish. At this point, you have the Nodal
