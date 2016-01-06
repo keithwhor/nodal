@@ -216,9 +216,9 @@ available [in the API documentation](./docs/index.html).
 
 ## Using 'this' in Controllers
 
-Please keep in mind that ES6 arrow function (`fnAdd = (a, b) => a + b;`)
-*does not create a new context for* `this`. If you have nested callbacks
-in a Controller (quite common), it is best practice to keep using anonymous
+Please keep in mind that ES6 arrow functions (`fnAdd = (a, b) => a + b;`)
+*do not create a new context for* `this`. If you have nested callbacks
+in a Controller (quite common), it is a best practice to keep using anonymous
 arrow functions to preserve your reference to the controller instance so responses
 are easy to send out. (No `self = this;` anti-patterns.)
 
