@@ -30,7 +30,7 @@ Single Page Applications, you can spin up a Nodal server for anything.
 Nodal servers are not meant to be monoliths. They're meant to be modular and
 distinct. Ideally, you should only use a subset of Nodal's features per project,
 and have multiple Nodal projects that are loosely-coupled and interface with
-one another (brandind webserver, API server, application server). You can
+one another (branding webserver, API server, application server). You can
 [read more about specific types of servers](#server-types) and where you'd use
 them, if you're interested.
 
