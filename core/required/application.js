@@ -44,6 +44,7 @@ module.exports = (function() {
 
     /**
     * Sets all internal properties for the Application to function as expected
+    * @private
     */
     __create__() {
 
@@ -76,6 +77,7 @@ module.exports = (function() {
     * Cleans up the Application, closes outstanding HTTP requests
     * @param {Error} error An error message to send out to HTTP clients
     * @param {function} fnDone Method to execute when Application has been cleaned up successfully
+    * @private
     */
     __destroy__(error, fnDone) {
 
@@ -126,17 +128,20 @@ module.exports = (function() {
 
     /**
     * Boilerplate method, intended to be overwritten when inherited (sets up Application initializers, etc.)
+    * @private
     */
     __setup__() {}
 
     /**
     * Boilerplater method, overwritten by Daemon when spinning up Application
+    * @private
     */
     __initialize__() {}
 
     /**
     * Used by Daemon to tells the Application to use the DummyRouter when given an error
     * @param {Error} err
+    * @private
     */
     __error__(err) {
 
@@ -146,6 +151,7 @@ module.exports = (function() {
 
     /**
     * Starts the Application. First runs initializers, then calls Application#__initialize__ which should be provided by the Daemon.
+    * @private
     */
     __start__() {
 

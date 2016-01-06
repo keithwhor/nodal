@@ -19,6 +19,19 @@ module.exports = (function() {
   class Model {
 
     /**
+    * @param {Object} modelData Data to load into the object
+    * @param {optional boolean} fromStorage Is this model being loaded from storage? Defaults to false.
+    */
+    constructor(modelData, fromStorage) {
+
+      modelData = modelData || {};
+
+      this.__initialize__();
+      this.__load__(modelData, fromStorage);
+
+    }
+
+    /**
     * Finds a model with a provided id, otherwise returns a notFound error.
     * @param {number} id The id of the model you're looking for
     * @param {function({Error} err, {Nodal.Model} model)} callback The callback to execute upon completion
@@ -411,20 +424,8 @@ module.exports = (function() {
     }
 
     /**
-    * @param {Object} modelData Data to load into the object
-    * @param {optional boolean} fromStorage Is this model being loaded from storage? Defaults to false.
-    */
-    constructor(modelData, fromStorage) {
-
-      modelData = modelData || {};
-
-      this.__initialize__();
-      this.__load__(modelData, fromStorage);
-
-    }
-
-    /**
     * Prepare model for use
+    * @private
     */
     __initialize__() {
 
@@ -441,6 +442,7 @@ module.exports = (function() {
 
     /**
     * Loads data into the model
+    * @private
     * @param {Object} data Data to load into the model
     * @param {optional boolean} fromStorage Specify if the model was loaded from storage. Defaults to false.
     */
@@ -467,6 +469,7 @@ module.exports = (function() {
 
     /**
     * Validates provided fieldList (or all fields if not provided)
+    * @private
     * @param {optional Array} fieldList fields to validate
     */
     __validate__(field) {
@@ -1069,8 +1072,8 @@ module.exports = (function() {
         throw new Error('Must provide a valid Database to save to');
       }
 
-      if(typeof callback !== 'function') {
-        callback() = function() {};
+      if (typeof callback !== 'function') {
+        callback = function() {};
       }
 
       if (!model.inStorage()) {

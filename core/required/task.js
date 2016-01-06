@@ -8,6 +8,8 @@ module.exports = (function() {
   */
   class Task {
 
+    constructor() {}
+
     /**
     * Execute the initializer.
     * @param {Nodal.Application} app the Application Instance

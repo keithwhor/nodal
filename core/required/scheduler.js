@@ -35,6 +35,7 @@ module.exports = (function() {
 
     /**
     * Initialize the entry.
+    * @private
     * @param {Array} times The times at which this entry should execute
     */
     __initialize__(times) {
@@ -268,6 +269,7 @@ module.exports = (function() {
     * Create a SchedulerEntry object given arguments (times)
     * @param {Nodal.SchedulerEntry} entryConstructor The entry to create
     * @param {Array} args The arguments to initialize Scheduler Entry with
+    * @private
     */
     _entry(entryConstructor, args) {
 

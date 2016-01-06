@@ -8,6 +8,8 @@ module.exports = (function() {
   */
   class Middleware {
 
+    constructor() {}
+
     /**
     * Execute the middleware.
     * @param {Nodal.Controller} controller the Controller Instance

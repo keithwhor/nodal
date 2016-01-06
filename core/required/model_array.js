@@ -9,6 +9,17 @@ module.exports = (function() {
   class ModelArray extends Array {
 
     /**
+    * Create the ModelArray with a provided Model to use as a reference.
+    * @param {Array|class Nodal.Model} modelConstructor Must pass the constructor for the type of ModelArray you wish to create.
+    */
+    constructor(modelConstructor) {
+
+      super();
+      this._modelConstructor = modelConstructor;
+
+    }
+
+    /**
     * Convert a normal Array into a ModelArray
     * @param {Array} arr The array of child objects
     */
@@ -22,17 +33,6 @@ module.exports = (function() {
       modelArray.push.apply(modelArray, arr);
 
       return modelArray;
-
-    }
-
-    /**
-    * Create the ModelArray with a provided Model to use as a reference.
-    * @param {Array|class Nodal.Model} modelConstructor Must pass the constructor for the type of ModelArray you wish to create.
-    */
-    constructor(modelConstructor) {
-
-      super();
-      this._modelConstructor = modelConstructor;
 
     }
 

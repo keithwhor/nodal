@@ -1,6 +1,6 @@
 module.exports = (function() {
 
-  "use strict";
+  'use strict';
 
   const Nodal = require('nodal');
 
@@ -17,7 +17,7 @@ module.exports = (function() {
           }
         )
       );
-      
+
     }
 
   }

@@ -12,8 +12,8 @@ module.exports = (function() {
 
     /**
     * Created by Model#query, used for composing SQL queries based on Models
-    * @param {class Nodal.Model} Model The model class the composer is querying from
-    * @param {optional Nodal.Composer} parent The composer's parent (another composer instance)
+    * @param {Nodal.Model} Model The model class the composer is querying from
+    * @param {Nodal.Composer} [parent=null] The composer's parent (another composer instance)
     */
     constructor(Model, parent) {
 
@@ -27,6 +27,7 @@ module.exports = (function() {
 
     /**
     * Given rows with repeated data (due to joining in multiple children), return only parent models (but include references to their children)
+    * @private
     * @param {Array} rows Rows from sql result
     * @return {Nodal.ModelArray}
     */
@@ -149,6 +150,7 @@ module.exports = (function() {
 
     /**
     * Generate query information from the linked list of previous queries. Can squash multiple composer commands into a single query.
+    * @private
     * @return {Object}
     */
     __generateQueryInformation__() {
@@ -202,6 +204,7 @@ module.exports = (function() {
 
     /**
     * Retrieve all joined column data for a given join
+    * @private
     * @param {string} joinName The name of the join relationship
     */
     __joinedColumns__(joinName) {
@@ -218,6 +221,7 @@ module.exports = (function() {
 
     /**
     * Generate a SQL query and its associated parameters from the current composer instance
+    * @private
     * @return {Object} Has "params" and "sql" properties.
     */
     __generateQuery__() {
@@ -267,6 +271,7 @@ module.exports = (function() {
 
     /**
     * When using Composer#where, format all provided comparisons
+    * @private
     * @param {Object} comparisons Comparisons object. {age__lte: 27}, for example.
     * @return {Array}
     */

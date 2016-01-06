@@ -14,7 +14,7 @@ module.exports = (function() {
         .split(',')
         .filter(v => !!v);
     }
-    
+
   };
 
 })();
