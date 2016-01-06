@@ -149,14 +149,20 @@ module.exports = (function() {
   Object.defineProperties(LazyNodal.my, {
     Config: {
       get: function() {
+        var makingItWork = require('./required/my/config.js')(LazyNodal.rootDirectory);
+        Nodal.my.Config = (Nodal.my.Config === undefined) ?  Nodal.my.Config : makingItWork;
+        return Nodal.my.Config;
+
         // return Nodal.my.Config = (Nodal.my.Config === undefined) ?  Nodal.my.Config : require('./required/my/config.js')(LazyNodal.rootDirectory));
       },
       enumerable: true
     },
     Schema: {
       get: function() {
-        // return Nodal.my.Schema || (Nodal.my.Schema = require('./required/my/schema.js')(LazyNodal.rootDirectory));
-        // return Nodal.my.Schema = (Nodal.my.Schema === undefined) ?  Nodal.my.Schema : require('./required/my/schema.js')(LazyNodal.rootDirectory));
+         var makingItWork = require('./required/my/schema.js')(LazyNodal.rootDirectory);
+         Nodal.my.Schema = (Nodal.my.Schema === undefined) ?  Nodal.my.Schema : makingItWork;
+         return Nodal.my.Schema;
+         //return Nodal.my.Schema = (Nodal.my.Schema === undefined) ?  Nodal.my.Schema : require('./required/my/schema.js')(LazyNodal.rootDirectory));
       },
       enumerable: true
     }
