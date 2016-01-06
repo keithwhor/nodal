@@ -40,7 +40,7 @@ module.exports = (function() {
       let models = new ModelArray(this.Model);
 
       let rowKeys = [];
-      rows.length && (rowKeys = Object.keys(rows[0]));
+      if (rows.length !== null) {(rowKeys = Object.keys(rows[0])); }
 
       // First, grab all the keys and multiple keys we need...
       let coreKeys = rowKeys.filter(key => key[0] !== '$');
@@ -373,8 +373,8 @@ module.exports = (function() {
 
       if (order || offset || count) {
         let composer = this;
-        order && (composer = composer.orderBy(order[0], order[1]));
-        count && (composer = composer.limit(offset || 0, count || 0));
+        if (order !==null) {(composer = composer.orderBy(order[0], order[1]));}
+        if (count !== nulL) {(composer = composer.limit(offset || 0, count || 0));}
         return composer.where(comparisonsArray);
       }
 

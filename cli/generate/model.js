@@ -65,7 +65,7 @@ module.exports = (function() {
         }
       });
 
-      Object.keys(properties).length && (obj.properties = properties);
+      if(Object.keys(properties).length !== null) {(obj.properties = properties);}
 
       return obj;
 

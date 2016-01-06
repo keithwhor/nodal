@@ -43,8 +43,8 @@ module.exports = (function() {
         error
       };
 
-      summary && (_meta.summary = summary);
-      resource && (_meta.resource = resource);
+      if (summary !== null) {(_meta.summary = summary);}
+      if (resource !== null) {(_meta.resource = resource);}
 
       return _meta;
 
