@@ -11,6 +11,7 @@ module.exports = (function() {
       controller.allowOrigin('*');
 
       callback(null, data);
+      return false;
 
     }
 
