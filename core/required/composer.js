@@ -40,7 +40,7 @@ module.exports = (function() {
       let models = new ModelArray(this.Model);
 
       let rowKeys = [];
-      if (rows.length > 0) {(rowKeys = Object.keys(rows[0])); }
+      if (rows.length) {(rowKeys = Object.keys(rows[0])); }
 
       // First, grab all the keys and multiple keys we need...
       let coreKeys = rowKeys.filter(key => key[0] !== '$');
