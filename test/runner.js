@@ -1,7 +1,4 @@
-
 "use strict";
-
-
 
 let child_process = require('child_process');
 
