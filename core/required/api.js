@@ -36,17 +36,17 @@ module.exports = (function() {
         resource = null;
       }
 
-      let meta = {
-        total: total,
-        count: count,
-        offset: offset,
-        error: error
+      let _meta = {
+        total,
+        count,
+        offset,
+        error
       };
 
-      summary && (meta.summary = summary);
-      resource && (meta.resource = resource);
+      summary && (_meta.summary = summary);
+      resource && (_meta.resource = resource);
 
-      return meta;
+      return _meta;
 
     }
 
