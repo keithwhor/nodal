@@ -126,7 +126,7 @@ module.exports = (function() {
       }
 
       let db = this;
-      let transaction = beginTransaction(this._connection);
+      let _transaction = beginTransaction(this._connection);
 
       let queries = preparedArray.map(queryData => {
 
@@ -134,7 +134,7 @@ module.exports = (function() {
 
         return (next) => {
           db.log(queryData[0], queryData[1]);
-          transaction.query(queryData[0], queryData[1], next);
+          _transaction.query(queryData[0], queryData[1], next);
         };
 
       });
@@ -142,31 +142,31 @@ module.exports = (function() {
       let transactionError = null;
       let transactionResults = [];
 
-      transaction.on('rollback:start', function() {
+      _transaction.on('rollback:start', function() {
 
         db.info('Rollback started...');
 
       });
 
-      transaction.on('rollback:complete', function() {
+      _transaction.on('rollback:complete', function() {
 
         db.info('Rollback complete!');
 
       });
 
-      transaction.on('commit:start', function() {
+      _transaction.on('commit:start', function() {
 
         db.info('Commit started...');
 
       });
 
-      transaction.on('commit:complete', function() {
+      _transaction.on('commit:complete', function() {
 
         db.info('Commit complete!');
 
       });
 
-      transaction.on('close', function() {
+      _transaction.on('close', function() {
 
         db.info('Transaction complete!');
         callback(transactionError, transactionResults);
@@ -180,12 +180,12 @@ module.exports = (function() {
         if (err) {
           transactionError = err;
           db.error(err.message);
-          transaction.rollback();
+          _transaction.rollback();
         }
 
         transactionResults = results;
 
-        transaction.commit();
+        _transaction.commit();
 
       });
 

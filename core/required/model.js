@@ -231,7 +231,7 @@ module.exports = (function() {
             type: field ? field.type : 'string'
           };
 
-          field.array && (fieldData.array = true);
+          if (field.array) {(fieldData.array = true) }
 
           return fieldData;
 
@@ -856,7 +856,7 @@ module.exports = (function() {
             let subInterface = key;
             key = Object.keys(key)[0];
             let joinObject = this._joinsCache[key] || this._joinedByCache[key];
-            joinObject && (obj[key] = joinObject.toObject(subInterface[key]));
+            if (joinObject) {(obj[key] = joinObject.toObject(subInterface[key]));}
           } else if (this._data[key]) {
             obj[key] = this._data[key];
           } else if (this._calculations[key]) {
@@ -871,7 +871,7 @@ module.exports = (function() {
         this._calculationsList.forEach(key => obj[key] = this.calculate(key));
         this._joinsList.forEach(key => {
           let cacheValue = this._joinsCache[key] || this._joinedByCache[key];
-          cacheValue && (obj[key] = cacheValue.toObject());
+          if (cacheValue) { (obj[key] = cacheValue.toObject()); }
         });
 
       }
