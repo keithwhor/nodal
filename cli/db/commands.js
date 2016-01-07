@@ -135,6 +135,41 @@ module.exports = {
 
   },
 
+  version: function() {
+    let dbCredentials = Nodal.my.Config.db.main;
+
+    let db = new Database();
+    db.connect(dbCredentials);
+
+    // Query schema by the Id column, descending
+    let orderClause = [{
+      columnName: 'id',
+      direction: 'desc'
+    }];
+
+    // Only fetch one row
+    let limitClause = {
+      offset: 0,
+      count: 1
+    }
+
+    db.query(db.adapter.generateSelectQuery(null, 'schema_migrations', ['id'], null, null, orderClause, limitClause), [], function(err, result) {
+      if (err) {
+        db.error('Could not get schema migration version,  try `nodal db:prepare` first');
+        process.exit(0);
+      }
+
+      if (result.rows && result.rows.length) {
+        console.log(colors.green.bold('Current Schema Version: ') + result.rows[0].id);
+      } else {
+        console.log(colors.red.bold('Database Error: ') + 'No Migrations have been run, try `nodal db:migrate` first');
+      }
+      process.exit(0);
+
+    });
+
+  },
+
   migrate: function(args, flags) {
 
     let dbCredentials = Nodal.my.Config.db.main;

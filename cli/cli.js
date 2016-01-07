@@ -171,7 +171,8 @@
       drop: dbCommands.drop,
       prepare: dbCommands.prepare,
       migrate: dbCommands.migrate,
-      rollback: dbCommands.rollback
+      rollback: dbCommands.rollback,
+      version: dbCommands.version
     },
     g: {
       _: function(args, flags) {
