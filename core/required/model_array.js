@@ -43,6 +43,13 @@ module.exports = (function() {
     */
     toObject(arrInterface, opts) {
 
+      maxDepth = maxDepth || 1;
+      depth = depth || 0;
+
+      if (depth > maxDepth) {
+        return;
+      }
+
       return this.map(m => m.toObject(arrInterface));
 
     }

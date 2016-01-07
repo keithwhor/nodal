@@ -139,9 +139,10 @@ module.exports = (function(Nodal) {
 
     it('should toObject with interface, with joined', function() {
 
-      let parent = new Parent();
-      let house = new House();
+      let parent = new Parent({id: 1});
+      let house = new House({id: 1});
       parent.set('house', house);
+      house.set('parent', parent);
 
       let obj = parent.toObject();
 
