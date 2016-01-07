@@ -3,8 +3,70 @@
   <style>
     body {
       font-family: Helvetica, Arial;
-      font-size: 14px;
+      font-size: 16px;
       font-weight: 200;
+      padding: 30px 5px 0;
+    }
+
+    h1 {
+      font-size: 1.5em;
+      margin: 0;
+      font-weight: normal;
+    }
+
+    span.tagline {
+      display: block;
+      font-size: 12px;
+      padding: 10px 0 0;
+    }
+
+    div.container {
+      padding: 10px;
+      display: flex;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      justify-content: flex-start;
+      align-content: stretch;
+      align-items: flex-start;
+    }
+
+    div.sidebar, div.welcome {
+      order: 0;
+      align-self: auto;
+    }
+
+    div.sidebar {
+      flex: 0 1 auto;
+      min-width: 200px;
+      text-align: center;
+    }
+
+    div.welcome {
+      flex: 1 2 auto;
+    }
+
+    span.signature {
+      display: block;
+      margin-top: 10px;
+    }
+
+    span.file {
+      font-family: monospace;
+      font-size: 13px;
+      background-color: #FAF38E;
+      padding: 3px;
+      font-weight: normal;
+    }
+
+    ul.steps {
+      font-family: monospace;
+      list-style: none;
+      padding: 0;
+      margin: 10px 0;
+    }
+
+    li {
+      padding: 3px 0;
     }
   </style>
 </head>
