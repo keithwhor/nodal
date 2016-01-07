@@ -198,7 +198,7 @@ You'll be able to learn more about Nodal at [nodaljs.com](http://nodaljs.com).
 
 ## Documentation
 
-Nodal has the majority if its important methods fully documented inline, in the
+Nodal has the majority of its important methods fully documented inline, in the
 codebase. You will be able to find this translated and prettified at
 [nodaljs.com](http://nodaljs.com).
 
