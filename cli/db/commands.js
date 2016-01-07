@@ -158,7 +158,12 @@ module.exports = {
         db.error('Could not get schema migration version,  try `nodal db:prepare` first');
         process.exit(0);
       }
-      console.log(colors.green.bold('Current Schema Version: ') + result.rows[0].id);
+
+      if (result.rows && result.rows.length) {
+        console.log(colors.green.bold('Current Schema Version: ') + result.rows[0].id);
+      } else {
+        console.log(colors.red.bold('Database Error: ') + 'No Migrations have been run, try `nodal db:migrate` first');
+      }
       process.exit(0);
 
     });
