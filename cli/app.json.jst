@@ -1,0 +1,16 @@
+{
+  "name": "{{= data.simpleName}} Application",
+  "description": "A barebones Node.js app using NodalJS",
+  "logo": "https://raw.githubusercontent.com/keithwhor/nodal/master/nodal.png",
+  "keywords": [
+    "node",
+    "nodal"
+  ],
+  "scripts": {
+    "postdeploy": "nodal db:prepare"
+  },
+  "env": {
+    "NODE_ENV": "production"
+  },
+   "addons": ["heroku-postgresql"]
+}
