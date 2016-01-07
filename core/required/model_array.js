@@ -41,7 +41,7 @@ module.exports = (function() {
     * @param {Array} arrInterface Interface to use for object creation for each model
     * @param {Object} opts Options for the object conversion
     */
-    toObject(arrInterface, opts) {
+    toObject(arrInterface, opts, maxDepth, depth) {
 
       maxDepth = maxDepth || 1;
       depth = depth || 0;
