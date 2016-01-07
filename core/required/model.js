@@ -842,25 +842,51 @@ module.exports = (function() {
 
     /**
     * Creates a plain object from the Model, with properties matching an optional interface
-    * @param {optional Array} arrInterface Interface to use for object creation
+    * @param {Array} arrInterface Interface to use for object creation
+    * @param {Object} opts Options like whether to exclude the fields. {exclude: true}
     */
-    toObject(arrInterface) {
+    toObject(arrInterface, opts) {
 
       let obj = {};
+      opts = opts || {};
+
+      if (opts.exclude) {
+
+        let excludeObjects = [];
+        let excludeLookup = arrInterface.reduce((o, key) => {
+          if (typeof key === 'object' && key !== null) {
+            excludeObjects.push(key);
+            key = Object.keys(key)[0];
+          }
+          o[key] = true;
+          return o;
+        }, {});
+
+        arrInterface = this.fieldList()
+          .concat(this._calculationsList)
+          .concat(this._joinsList)
+          .filter(key => !excludeLookup[key])
+          .concat(excludeObjects);
+
+      }
 
       if (arrInterface) {
 
         arrInterface.forEach(key => {
 
+          let joinObject;
+
           if (typeof key === 'object' && key !== null) {
             let subInterface = key;
             key = Object.keys(key)[0];
-            let joinObject = this._joinsCache[key] || this._joinedByCache[key];
-            joinObject && (obj[key] = joinObject.toObject(subInterface[key]));
-          } else if (this._data[key]) {
+            joinObject = this._joinsCache[key] || this._joinedByCache[key];
+            joinObject && (obj[key] = joinObject.toObject(subInterface[key], opts));
+          } else if (this._data[key] !== undefined) {
             obj[key] = this._data[key];
-          } else if (this._calculations[key]) {
+          } else if (this._calculations[key] !== undefined) {
             obj[key] = this.calculate(key);
+          } else if (joinObject = (this._joinsCache[key] || this._joinedByCache[key])) {
+            obj[key] = joinObject.toObject();
           }
 
         });

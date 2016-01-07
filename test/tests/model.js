@@ -24,12 +24,28 @@ module.exports = (function(Nodal) {
 
     Parent.validates('name', 'should be at least five characters long', v => v && v.length >= 5);
 
+    let schemaHouse = {
+      table: 'houses',
+      columns: [
+        {name: 'id', type: 'serial'},
+        {name: 'material', type: 'string'},
+        {name: 'color', type: 'string'},
+        {name: 'created_at', type: 'datetime'}
+      ]
+    };
+    class House extends Nodal.Model {}
+
+    House.setDatabase(db);
+    House.setSchema(schemaHouse);
+
+    House.joinsTo(Parent);
+
     before(function(done) {
 
       db.connect(Nodal.my.Config.db.main);
 
       db.transaction(
-        [schemaParent].map(schema => {
+        [schemaParent, schemaHouse].map(schema => {
           return db.adapter.generateCreateTableQuery(schema.table, schema.columns);
         }).join(';'),
         function(err, result) {
@@ -92,6 +108,116 @@ module.exports = (function(Nodal) {
       expect(parent.hasErrors()).to.equal(true);
       parent.set('name', 'abcdef');
       expect(parent.hasErrors()).to.equal(false);
+
+    });
+
+    it('should toObject with interface', function() {
+
+      let parent = new Parent();
+      let obj = parent.toObject();
+
+      expect(obj).to.have.ownProperty('id');
+      expect(obj).to.have.ownProperty('name');
+      expect(obj).to.have.ownProperty('age');
+      expect(obj).to.have.ownProperty('created_at');
+
+      obj = parent.toObject(['id', 'name']);
+
+      expect(obj).to.have.ownProperty('id');
+      expect(obj).to.have.ownProperty('name');
+      expect(obj).to.not.have.ownProperty('age');
+      expect(obj).to.not.have.ownProperty('created_at');
+
+      obj = parent.toObject(['id', 'name'], {exclude: true});
+
+      expect(obj).to.not.have.ownProperty('id');
+      expect(obj).to.not.have.ownProperty('name');
+      expect(obj).to.have.ownProperty('age');
+      expect(obj).to.have.ownProperty('created_at');
+
+    });
+
+    it('should toObject with interface, with joined', function() {
+
+      let parent = new Parent();
+      let house = new House();
+      parent.set('house', house);
+
+      let obj = parent.toObject();
+
+      expect(obj).to.have.ownProperty('id');
+      expect(obj).to.have.ownProperty('name');
+      expect(obj).to.have.ownProperty('age');
+      expect(obj).to.have.ownProperty('created_at');
+      expect(obj).to.have.ownProperty('house');
+      expect(obj.house).to.have.ownProperty('id');
+      expect(obj.house).to.have.ownProperty('material');
+      expect(obj.house).to.have.ownProperty('color');
+      expect(obj.house).to.have.ownProperty('created_at');
+
+      obj = parent.toObject(['id', 'name']);
+
+      expect(obj).to.have.ownProperty('id');
+      expect(obj).to.have.ownProperty('name');
+      expect(obj).to.not.have.ownProperty('age');
+      expect(obj).to.not.have.ownProperty('created_at');
+      expect(obj).to.not.have.ownProperty('house');
+
+      obj = parent.toObject(['id', 'name', 'house']);
+
+      expect(obj).to.have.ownProperty('id');
+      expect(obj).to.have.ownProperty('name');
+      expect(obj).to.not.have.ownProperty('age');
+      expect(obj).to.not.have.ownProperty('created_at');
+      expect(obj).to.have.ownProperty('house');
+      expect(obj.house).to.have.ownProperty('id');
+      expect(obj.house).to.have.ownProperty('material');
+      expect(obj.house).to.have.ownProperty('color');
+      expect(obj.house).to.have.ownProperty('created_at');
+
+      obj = parent.toObject(['id', 'name', {house: ['id', 'material']}]);
+
+      expect(obj).to.have.ownProperty('id');
+      expect(obj).to.have.ownProperty('name');
+      expect(obj).to.not.have.ownProperty('age');
+      expect(obj).to.not.have.ownProperty('created_at');
+      expect(obj).to.have.ownProperty('house');
+      expect(obj.house).to.have.ownProperty('id');
+      expect(obj.house).to.have.ownProperty('material');
+      expect(obj.house).to.not.have.ownProperty('color');
+      expect(obj.house).to.not.have.ownProperty('created_at');
+
+      obj = parent.toObject(['id', 'name'], {exclude: true});
+
+      expect(obj).to.not.have.ownProperty('id');
+      expect(obj).to.not.have.ownProperty('name');
+      expect(obj).to.have.ownProperty('age');
+      expect(obj).to.have.ownProperty('created_at');
+      expect(obj).to.have.ownProperty('house');
+      expect(obj.house).to.have.ownProperty('id');
+      expect(obj.house).to.have.ownProperty('material');
+      expect(obj.house).to.have.ownProperty('color');
+      expect(obj.house).to.have.ownProperty('created_at');
+
+      obj = parent.toObject(['id', 'name', 'house'], {exclude: true});
+
+      expect(obj).to.not.have.ownProperty('id');
+      expect(obj).to.not.have.ownProperty('name');
+      expect(obj).to.have.ownProperty('age');
+      expect(obj).to.have.ownProperty('created_at');
+      expect(obj).to.not.have.ownProperty('house');
+
+      obj = parent.toObject(['id', 'name', {house: ['id', 'material']}], {exclude: true});
+
+      expect(obj).to.not.have.ownProperty('id');
+      expect(obj).to.not.have.ownProperty('name');
+      expect(obj).to.have.ownProperty('age');
+      expect(obj).to.have.ownProperty('created_at');
+      expect(obj).to.have.ownProperty('house');
+      expect(obj.house).to.not.have.ownProperty('id');
+      expect(obj.house).to.not.have.ownProperty('material');
+      expect(obj.house).to.have.ownProperty('color');
+      expect(obj.house).to.have.ownProperty('created_at');
 
     });
 

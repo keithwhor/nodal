@@ -38,9 +38,10 @@ module.exports = (function() {
 
     /**
     * Creates an Array of plain objects from the ModelArray, with properties matching an optional interface
-    * @param {optional Array} arrInterface Interface to use for object creation for each model
+    * @param {Array} arrInterface Interface to use for object creation for each model
+    * @param {Object} opts Options for the object conversion
     */
-    toObject(arrInterface) {
+    toObject(arrInterface, opts) {
 
       return this.map(m => m.toObject(arrInterface));
 
