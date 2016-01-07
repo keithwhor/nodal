@@ -84,6 +84,15 @@
             fs.readFileSync(__dirname + '/package.json.jst').toString()
           )(promptResult));
 
+          fs.writeFileSync('./' + dirname + '/app/controllers/index_controller.js', dot.template(
+            fs.readFileSync(__dirname + '/index_controller.jst').toString()
+          )(promptResult));
+
+          fs.writeFileSync('./' + dirname + '/README.md', dot.template(
+            fs.readFileSync(__dirname + '/README.md.jst').toString()
+          )(promptResult));
+
+
           let spawn = require('child_process').spawn;
 
           let child = spawn('npm', ['cache', 'clean'], {cwd: process.cwd() + '/' + dirname, stdio: [process.stdin, process.stdout, process.stderr]});
