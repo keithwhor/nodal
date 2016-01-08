@@ -106,13 +106,13 @@
           )(promptResult));
 
 
-          let spawn = require('child_process').spawn;
+          let spawn = require('cross-spawn-async');
 
-          let child = spawn('npm', ['cache', 'clean'], {cwd: process.cwd() + '/' + dirname, stdio: [process.stdin, process.stdout, process.stderr]});
+          let child = spawn('npm', ['cache', 'clean'], {cwd: process.cwd() + '/' + dirname, stdio: 'inherit'});
 
           child.on('exit', function() {
 
-            let child = spawn('npm',  ['install'], {cwd: process.cwd() + '/' + dirname, stdio: [process.stdin, process.stdout, process.stderr]});
+            let child = spawn('npm',  ['install'], {cwd: process.cwd() + '/' + dirname, stdio: 'inherit'});
 
             console.log('Installing packages in this directory...');
             console.log('');
@@ -175,8 +175,8 @@
       _: function(args, flags) {
 
         let Nodal = require('../core/module.js');
-        let spawn = require('child_process').spawn;
-        let child = spawn('npm',  ['start'], {stdio: [process.stdin, process.stdout, process.stderr]});
+        let spawn = require('cross-spawn-async');
+        let child = spawn('npm',  ['start'], {stdio: 'inherit'});
 
         process.on('exit', function() {
           child && child.kill();
