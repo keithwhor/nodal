@@ -277,7 +277,7 @@ module.exports = (function() {
 
 Our database is set from `./db/main.js` which grabs connection data from
 `./config/db.json`. (Explore both files to see what's happening. Same as
-`./config/secrets.json` above.) Not that Nodal currently only supports PostgreSQL.
+`./config/secrets.json` above.) Note that Nodal currently only supports PostgreSQL.
 
 Our schema is set from `Nodal.my.Schema` which automatically loaded `./db/schema.json`
 upon starting the server. (**For this reason, Schema changes require app shutdowns and reloads.**)
