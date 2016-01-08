@@ -124,6 +124,19 @@
               console.log('Your new Nodal project, ' + colors.bold(promptResult.name) + ', is ready to go! :)');
               console.log('');
               console.log('Have fun ' + promptResult.author + ', and check out https://github.com/keithwhor/nodal for the most up-to-date Nodal information')
+
+              if ( promptResult.heroku ) {
+                console.log('')
+                console.log(colors.bold.magenta('Heroku Deployment: ') + 'Please run the following (assumes Heroku Toolbelt installed)')
+                console.log('')
+                console.log('  cd ' + dirname)
+                console.log('  heroku create')
+                console.log('  git push heroku master')
+                console.log('  heroku addons:create heroku-postgresql:hobby-dev')
+                console.log('  heroku run nodal db:prepare')
+                console.log('  heroku open')
+              }
+
               console.log('');
               console.log(colors.bold('Pro tip: ') + 'You can try running your server right away with:');
               console.log('');
