@@ -159,6 +159,12 @@ module.exports = (function() {
 
       let formatTableField = (table, column) => `${this.escapeField(table)}.${this.escapeField(column)}`;
 
+      if (typeof subQuery === 'object' && subQuery !== null) {
+        subQuery = this.escapeField(subQuery.table);
+      } else {
+        subQuery = `(${subQuery})`;
+      }
+
       return [
         'SELECT ',
           columns.map(field => {
@@ -168,7 +174,7 @@ module.exports = (function() {
             return `(${formatTableField(field.name || field.table || table, field.columnName)}) AS ${this.escapeField(field.alias)}`;
           }).join(','),
         ' FROM ',
-          subQuery ? `(${subQuery}) AS ` : '',
+          subQuery ? `${subQuery} AS ` : '',
           this.escapeField(table),
           this.generateJoinClause(table, joinArray),
           this.generateWhereClause(table, multiFilter, paramOffset),

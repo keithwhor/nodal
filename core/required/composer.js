@@ -149,11 +149,11 @@ module.exports = (function() {
     }
 
     /**
-    * Generate query information from the linked list of previous queries. Can squash multiple composer commands into a single query.
+    * Collapses linked list of queries into an array (for .reduce, .map etc)
     * @private
-    * @return {Object}
+    * @return {Array}
     */
-    __generateQueryInformation__() {
+    __collapse__() {
 
       let composerArray = [];
       let composer = this;
@@ -162,6 +162,18 @@ module.exports = (function() {
         composerArray.unshift(composer);
         composer = composer._parent;
       }
+
+      return composerArray;
+
+    }
+
+    /**
+    * Reduces an array of composer queries to a single query information object
+    * @private
+    * @param {Array} [composerArray]
+    * @return {Object} Looks like {commands: [], joins: []}
+    */
+    __reduceToQueryInformation__(composerArray) {
 
       let joins = [];
 
@@ -198,7 +210,46 @@ module.exports = (function() {
       return {
         commands: commands,
         joins: joins
-      };
+      }
+
+    }
+
+    /**
+    * Reduces an array of commands from query informtion to a SQL query
+    * @private
+    * @param {Array} [commandArray]
+    * @param {Array} [includeColumns=*] Which columns to include, includes all by default
+    * @return {Object} Looks like {sql: [], params: []}
+    */
+    __reduceCommandsToQuery__(commandArray, includeColumns) {
+
+      return commandArray.reduce((prev, command, i) => {
+
+        let table = `t${i}`;
+
+        let multiFilter = this.db.adapter.createMultiFilter(table, command.where ? command.where.comparisons : []);
+        let params = this.db.adapter.getParamsFromMultiFilter(multiFilter);
+
+        let joins = null;
+        let columns = includeColumns || this.Model.columnNames();
+
+        let orderBy = command.orderBy ? [command.orderBy] : []
+
+        return {
+          sql: this.db.adapter.generateSelectQuery(
+            prev.sql || {table: this.Model.table()},
+            table,
+            columns,
+            multiFilter,
+            joins,
+            orderBy,
+            command.limit,
+            prev.params.length
+          ),
+          params: prev.params.concat(params)
+        }
+
+      }, {sql: null, params: []});
 
     }
 
@@ -222,52 +273,59 @@ module.exports = (function() {
     /**
     * Generate a SQL query and its associated parameters from the current composer instance
     * @private
+    * @param {Array} [includeColumns=*] Which columns to include, includes all by default
+    * @param {boolean} [disableJoins=false] Disable joins if you just want a subset of data
     * @return {Object} Has "params" and "sql" properties.
     */
-    __generateQuery__() {
+    __generateQuery__(includeColumns, disableJoins) {
 
-      let queryInfo = this.__generateQueryInformation__();
+      let queryInfo = this.__reduceToQueryInformation__(this.__collapse__());
+      let query = this.__reduceCommandsToQuery__(queryInfo.commands, includeColumns);
 
-      return queryInfo.commands.concat({joins: queryInfo.joins}).reduce((prev, command, i) => {
-
-        let table = !prev.sql ? this.Model.table() : `t${i}`;
-
-        let multiFilter = this.db.adapter.createMultiFilter(table, command.where ? command.where.comparisons : []);
-        let params = this.db.adapter.getParamsFromMultiFilter(multiFilter);
-
-        let joins = null;
-        let columns = this.Model.columnNames();
-
-        let orderBy = command.orderBy ? [command.orderBy] : []
-
-        // Only add in joins at the end
-        if (command.joins) {
-
-          joins = command.joins;
-
-          joins.forEach(j => {
-            columns = columns.concat(this.__joinedColumns__(j.name));
-          });
-
-        }
-
-        return {
-          sql: this.db.adapter.generateSelectQuery(
-            prev.sql,
-            table,
-            columns,
-            multiFilter,
-            joins,
-            orderBy,
-            command.limit,
-            prev.params.length
-          ),
-          params: prev.params.concat(params)
-        }
-
-      }, {sql: null, params: []});
+      return disableJoins ? query : this.__addJoinsToQuery__(
+        query,
+        queryInfo,
+        includeColumns
+      );
 
     };
+
+    /**
+    * Add Joins to a query from queryInfo
+    * @param {Object} query Must be format {sql: '', params: []}
+    * @param {Object} queryInfo Must be format {commands: [], joins: []}
+    * @param {Array} [includeColumns=*] Which columns to include, includes all by default
+    * @return {Object} Has "params" and "sql" properties.
+    */
+    __addJoinsToQuery__(query, queryInfo, includeColumns) {
+
+      let columns = includeColumns || this.Model.columnNames();
+
+      queryInfo.joins.forEach(j => {
+        columns = columns.concat(this.__joinedColumns__(j.name));
+      });
+
+      // We make sure we order by the orders... in reverse order
+      let orderBy = queryInfo.commands.reduce((arr, command) => {
+        command.orderBy && arr.unshift(command.orderBy);
+        return arr;
+      }, []);
+
+      return {
+        sql: this.db.adapter.generateSelectQuery(
+          query.sql,
+          'j',
+          columns,
+          null,
+          queryInfo.joins,
+          orderBy,
+          null,
+          query.params.length
+        ),
+        params: query.params
+      };
+
+    }
 
     /**
     * When using Composer#where, format all provided comparisons
@@ -500,6 +558,65 @@ module.exports = (function() {
         let models = this.__parseModelsFromRows__(rows);
 
         callback.call(this, err, models);
+
+      });
+
+    }
+
+    /**
+    * Execute query as an update query, changed all fields specified.
+    * @param {Object} fields The object containing columns (keys) and associated values you'd like to update
+    * @param {function({Error}, {Nodal.ModelArray})} callback The callback for the update query
+    */
+    update(fields, callback) {
+
+      let query = this.__generateQuery__(['id'], true);
+      let columns = Object.keys(fields);
+      let params = columns.map(c => fields[c]);
+
+      query.sql = this.db.adapter.generateUpdateAllQuery(
+        this.Model.table(),
+        'id',
+        columns,
+        query.params.length,
+        query.sql
+      );
+
+      query.params = query.params.concat(params);
+
+      return this.db.query(query.sql, query.params, (err, result) => {
+
+        let rows = result ? (result.rows || []).slice() : [];
+
+        if (err) {
+          let models = this.__parseModelsFromRows__(rows);
+          return callback.call(this, err, models);
+        }
+
+        let ids = result.rows.map(row => row.id);
+
+        /* Grab all items with ids, sorted by order */
+        /* Only need to grab joins and order */
+
+        let composerArray = this.__collapse__()
+          .filter(composer => composer._command)
+          .filter(composer => composer._command.type === 'orderBy' || composer._command.type === 'join');
+
+        // Add in id filter
+        composerArray.unshift(new Composer(this.Model).where({id__in: ids})._parent);
+
+        let queryInfo = this.__reduceToQueryInformation__(composerArray);
+        let query = this.__reduceCommandsToQuery__(queryInfo.commands);
+        query = this.__addJoinsToQuery__(query, queryInfo);
+
+        return this.db.query(query.sql, query.params, (err, result) => {
+
+          let rows = result ? (result.rows || []).slice() : [];
+          let models = this.__parseModelsFromRows__(rows);
+
+          callback.call(this, err, models);
+
+        });
 
       });
 

@@ -738,6 +738,63 @@ module.exports = (function(Nodal) {
 
     });
 
+    it('Should update all parents names', (done) => {
+
+      Parent.query()
+        .update({name: 'Dave'}, (err, parents) => {
+
+          expect(parents.length).to.equal(10);
+
+          parents.forEach(parent => {
+            expect(parent.get('name')).to.equal('Dave');
+          });
+
+          done();
+
+        });
+
+    });
+
+    it('Should update all parents names and join children', (done) => {
+
+      Parent.query()
+        .join('children')
+        .update({name: 'Bertrand'}, (err, parents) => {
+
+          expect(parents.length).to.equal(10);
+
+          parents.forEach(parent => {
+            expect(parent.get('children').length).to.equal(10);
+            expect(parent.get('name')).to.equal('Bertrand');
+          });
+
+          done();
+
+        });
+
+    });
+
+    it('Should update all parents names and join children, and order by id DESC', (done) => {
+
+      Parent.query()
+        .join('children')
+        .orderBy('id', 'DESC')
+        .update({name: 'Bertrand'}, (err, parents) => {
+
+          expect(parents.length).to.equal(10);
+
+          parents.forEach((parent, i) => {
+            expect(parent.get('children').length).to.equal(10);
+            expect(parent.get('name')).to.equal('Bertrand');
+            expect(parent.get('id')).to.equal(10 - i);
+          });
+
+          done();
+
+        });
+
+    });
+
   });
 
 });
