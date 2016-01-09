@@ -16,10 +16,60 @@
 
   command = command ? command : '_';
   command = {name: command.split(':')[0], value: command.split(':')[1] || '_'};
+  
+  let commandDefinitions = {
+      "new": "Initialize the current directory as a new Nodal project",
+      "s": "Start the Nodal server based on the current project",
+      "db:create": "Create a new PostgreSQL database for the current project",
+      "db:prepare": "Prepare the PostgreSQL database",
+      "g:model --<modelname>": "Add a new model",
+      "g:controller <namespace> --for:<modelname>": "Add a new controller for the model",
+      "db:migrate": "Run all pending Database migrations",
+      "db:rollback": "Rollback migrations"
+  };
+  
+  function repeatChar(char, r) {
+    // Repeats a character to create a string
+    // Useful for logging
+    var str = '';
+    for (var i = 0; i < Math.ceil(r); i++) str += char;
+    return str; 
+  }
+  
+  // Check for `nodal help` command
+  if (command.name === 'help') {
+      
+    console.log('');
+    console.log(' Nodal commands');
+    console.log('');
+    
+    let highPad = 0;
+    // Find the longest length
+    for (var keys in commandDefinitions) { if(keys.length > highPad) highPad = keys.length; }
+    for (var cKey in commandDefinitions) {
+      // Extract base command (e.g. `g:model`)
+      let fullCommand = cKey;
+      let padding = '';
+      // Add padding to the end
+      if(fullCommand.length < highPad) padding = repeatChar(' ', highPad - fullCommand.length);
+      
+      // Parse Command to colorize
+      let splitCommand = fullCommand.split(' ');
+      let baseCommand = splitCommand.shift();
+      let tags = splitCommand.join(' ');
+      let definition = commandDefinitions[cKey];
+      
+      console.log(colors.yellow.bold(' nodal ' + baseCommand), (tags)?colors.gray(tags):'', padding, '\t' + definition);
+      console.log(colors.gray(repeatChar('-', highPad + 7)));
+    }
+    process.exit(1);
+    
+  }
 
   if (command.name !== 'new' && !fs.existsSync(process.cwd() + '/.nodal')) {
 
     console.error(colors.red.bold('Error: ') + 'No Nodal project found here. Use `nodal new` to initialize a project.');
+    console.error(colors.green('Help: ') + 'Type `nodal help` to get more information about what Nodal can do for you.');
     process.exit(1);
 
   } else if (command.name === 'new') {
