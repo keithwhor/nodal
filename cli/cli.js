@@ -59,6 +59,7 @@
         }
 
         promptResult.simpleName = promptResult.name.replace(/\s/gi, '-');
+        promptResult.databaseName = inflect.underscore(promptResult.name);
         let dirname = promptResult.name.replace(/[^A-Za-z0-9-_]/gi, '-').toLowerCase();
 
         console.log('');
@@ -105,6 +106,11 @@
             fs.readFileSync(__dirname + '/README.md.jst').toString()
           )(promptResult));
 
+          // read in the dbjson template, replace the development database name
+          // generate new config/db.json in the generated app
+          let dbjson = JSON.parse(fs.readFileSync(__dirname + '/templates/db.json'));
+          dbjson.development.main.database = promptResult.databaseName + '_development';
+          fs.writeFileSync('./' + dirname + '/config/db.json', JSON.stringify(dbjson, null, 4));
 
           let spawn = require('child_process').spawn;
 
