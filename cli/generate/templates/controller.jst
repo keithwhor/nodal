@@ -41,7 +41,7 @@ module.exports = (function() {
 
     update() {
 
-      {{= data.for.name }}.update(this.params.id, params.body.data, (err, model) => {
+      {{= data.for.name }}.update(this.params.id, this.params.body.data, (err, model) => {
 
         this.respond(err || model);
 

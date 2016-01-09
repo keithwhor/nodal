@@ -25,7 +25,7 @@ module.exports = (function() {
 
       let connection;
 
-      if (cfg.connectionString) {
+      if (cfg.connectionString && cfg.connectionString.length) {
         connection = anyDB.createPool(cfg.connectionString, {min: 2, max: 20});
       } else {
         connection = anyDB.createPool(

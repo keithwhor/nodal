@@ -41,6 +41,13 @@
           },
           author: {
             default: 'mysterious author'
+          },
+          heroku: {
+            message: 'heroku support?',
+            validator: /y[es]*|n[o]?/,
+            warning: 'Must respond yes or no',
+            default: 'no',
+            before: (value) => value === 'yes'
           }
         }
       };
@@ -83,6 +90,12 @@
           fs.writeFileSync('./' + dirname + '/package.json', dot.template(
             fs.readFileSync(__dirname + '/package.json.jst').toString()
           )(promptResult));
+
+          if (promptResult.heroku) {
+            fs.writeFileSync('./' + dirname + '/app.json', dot.template(
+              fs.readFileSync(__dirname + '/app.json.jst').toString()
+            )(promptResult));
+          }
 
           fs.writeFileSync('./' + dirname + '/app/controllers/index_controller.js', dot.template(
             fs.readFileSync(__dirname + '/index_controller.jst').toString()
