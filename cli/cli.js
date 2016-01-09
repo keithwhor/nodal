@@ -22,8 +22,11 @@
       "s": "Start the Nodal server based on the current project",
       "db:create": "Create a new PostgreSQL database for the current project",
       "db:prepare": "Prepare the PostgreSQL database",
-      "g:model --<modelname>": "Add a new model",
-      "g:controller <namespace> --for:<modelname>": "Add a new controller for the model",
+      "g:model --<user>": "Add a new model",
+      "g:model --<access_token>": "Add a new model through access token",
+      "g:model <path_to_model>": "Add a new model from a path",
+      "g:controller <path_to_controller>": "Add a new controller",
+      "g:controller <path_to> --for:<modelname>": "Add a new controller for a model",
       "db:migrate": "Run all pending Database migrations",
       "db:rollback": "Rollback migrations"
   };
