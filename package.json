@@ -2,6 +2,7 @@
   "name": "nodal",
   "version": "0.5.6-rc2",
   "description": "An API Server and Framework for node.js",
+  "keywords": ["framework", "api", "application", "branding", "server", "modular", "nodal"],
   "author": "Keith Horwood",
   "main": "core/module.js",
   "dependencies": {
