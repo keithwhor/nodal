@@ -156,12 +156,11 @@ module.exports = (function() {
     }
 
     generateSelectQuery(subQuery, table, columns, multiFilter, joinArray, orderObjArray, limitObj, paramOffset) {
-
       let formatTableField = (table, column) => `${this.escapeField(table)}.${this.escapeField(column)}`;
 
       if (typeof subQuery === 'object' && subQuery !== null) {
         subQuery = this.escapeField(subQuery.table);
-      } else {
+      } else if (subQuery !== null ){
         subQuery = `(${subQuery})`;
       }
 
