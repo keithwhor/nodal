@@ -214,7 +214,7 @@
   let generateCommands = require('./generate/commands.js');
 
   // bind the db funcs so that they can call each other
-  Object.keys(dbCommands).forEach( (f) => {
+  Object.keys(dbCommands).forEach((f) => {
     dbCommands[f] = dbCommands[f].bind(dbCommands);
   });
 

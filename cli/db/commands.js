@@ -340,7 +340,7 @@ module.exports = {
           console.error(colors.red.bold('ERROR: ') + err.message);
           console.log('Database bootstrap could not be completed');
         } else {
-          console.log('Migration bootstrap complete!');
+          console.log('Database bootstrap complete!');
         }
         process.exit(0);
 
