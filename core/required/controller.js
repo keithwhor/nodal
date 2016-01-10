@@ -239,9 +239,10 @@ module.exports = (function() {
     * Using API formatting, generate an error or respond with model / object data.
     * @param {Error|Object|Array|Nodal.Model|Nodal.ModelArray} data Object to be formatted for API response
     * @param {optional Array} The interface to use for the data being returned, if not an error.
+    * @param {Object} options Options object to send to Model#toObject
     * @return {boolean}
     */
-    respond(data, arrInterface, useResource) {
+    respond(data, arrInterface, options) {
 
       if (data instanceof Error) {
 
@@ -253,7 +254,7 @@ module.exports = (function() {
 
       }
 
-      this.render(API.format(data, arrInterface, useResource));
+      this.render(API.format(data, arrInterface, options));
       return true;
 
     }
