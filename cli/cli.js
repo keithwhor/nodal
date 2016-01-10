@@ -31,6 +31,7 @@
       "g:task <task name>": "Add a new task",
       "db:migrate": "Run all pending Database migrations",
       "db:rollback": "Rollback migrations"
+      "db:bootstrap": "Runs db:prepare and db:migrate in a single command"
   };
 
   function repeatChar(char, r) {
@@ -212,6 +213,11 @@
   let dbCommands = require('./db/commands.js');
   let generateCommands = require('./generate/commands.js');
 
+  // bind the db funcs so that they can call each other
+  Object.keys(dbCommands).forEach( (f) => {
+    dbCommands[f] = dbCommands[f].bind(dbCommands);
+  });
+
   let args = [];
   let flags = {};
 
@@ -255,7 +261,8 @@
       prepare: dbCommands.prepare,
       migrate: dbCommands.migrate,
       rollback: dbCommands.rollback,
-      version: dbCommands.version
+      version: dbCommands.version,
+      bootstrap: dbCommands.bootstrap
     },
     g: {
       _: function(args, flags) {
