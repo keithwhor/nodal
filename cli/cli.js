@@ -30,7 +30,7 @@
       "g:middleware <path_to_middleware>": "Add a new middleware",
       "g:task <task name>": "Add a new task",
       "db:migrate": "Run all pending Database migrations",
-      "db:rollback": "Rollback migrations"
+      "db:rollback": "Rollback migrations",
       "db:bootstrap": "Runs db:prepare and db:migrate in a single command"
   };
 
