@@ -13,11 +13,15 @@ let colors = require('colors/safe');
 let MODEL_PATH = './app/models';
 let MIGRATION_PATH = './db/migrations';
 
-function errorHandler(err) {
+function errorHandler(err, callback) {
 
   if (err) {
     console.error(colors.red.bold('ERROR: ') + err.message);
-    process.exit(0);
+    if ( undefined === callback) {
+      process.exit(0);
+    } else {
+      callback(err)
+    }
   }
 
   return true;
@@ -106,8 +110,7 @@ module.exports = {
 
   },
 
-  prepare: function() {
-
+  prepare: function(args, flags, callback) {
     let dbCredentials = Nodal.my.Config.db.main;
 
     let db = new Database();
@@ -128,8 +131,11 @@ module.exports = {
         errorHandler(err);
         Database.prototype.info('Prepared database "' + dbCredentials.database + '" for migrations');
         schema.save();
-        process.exit(0);
-
+        if ( undefined === callback) {
+          process.exit(0);
+        } else {
+          callback();
+        }
       }
     );
 
@@ -170,7 +176,7 @@ module.exports = {
 
   },
 
-  migrate: function(args, flags) {
+  migrate: function(args, flags, callback) {
 
     let dbCredentials = Nodal.my.Config.db.main;
 
@@ -184,7 +190,11 @@ module.exports = {
 
       if (err) {
         db.error('Could not get schema migrations, try `nodal db:prepare` first');
-        process.exit(0);
+        if ( undefined === callback) {
+          process.exit(0);
+        } else {
+          callback(err);
+        }
       }
 
       let schema_ids = result.rows.map(function(v) { return v.id; });
@@ -202,7 +212,11 @@ module.exports = {
 
       if (migrations.length === 0) {
         console.log('No pending migrations');
-        process.exit(0);
+        if ( undefined === callback) {
+          process.exit(0);
+        } else {
+          callback();
+        }
       }
 
       let migrateFuncs = migrations.map(function(v) {
@@ -230,7 +244,11 @@ module.exports = {
             console.log('Migration complete!');
           }
 
-          process.exit(0);
+          if ( undefined === callback) {
+            process.exit(0);
+          } else {
+            callback(err);
+          }
 
         }
       );
@@ -301,6 +319,33 @@ module.exports = {
 
     });
 
+  },
+
+  // db:bootstrap executes db:prepare and db:migrate in a single command. This
+  // is really helpful for things like web auto deploy to heroku of a sample
+  // application
+  // TODO: Integrate db:seed when its implemented
+  bootstrap: function(args, flags) {
+
+    async.series([
+        (callback) => {
+          this.prepare(args, flags, callback);
+        },
+        (callback) => {
+          this.migrate(args, flags, callback);
+        }
+      ],
+      function(err) {
+        if (err) {
+          console.error(colors.red.bold('ERROR: ') + err.message);
+          console.log('Database bootstrap could not be completed');
+        } else {
+          console.log('Database bootstrap complete!');
+        }
+        process.exit(0);
+
+      }
+    );
   }
 
 };
