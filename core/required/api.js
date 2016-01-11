@@ -7,7 +7,7 @@ module.exports = (function() {
 
   class APIConstructor {
 
-    format(obj, arrInterface, useResource) {
+    format(obj, arrInterface, options, useResource) {
 
       if (obj instanceof Error) {
         return this.error(obj.message, obj.details);
@@ -20,10 +20,10 @@ module.exports = (function() {
       }
 
       if (!(obj instanceof ModelArray)) {
-        return this.spoof(obj, useResource);
+        return this.spoof(obj);
       }
 
-      return this.response(obj, arrInterface, useResource);
+      return this.response(obj, arrInterface, options);
 
     }
 
@@ -59,7 +59,7 @@ module.exports = (function() {
 
     }
 
-    spoof(obj, useResource) {
+    spoof(obj, options, useResource) {
 
       if (!(obj instanceof Array)) {
         obj = [obj];
@@ -79,7 +79,7 @@ module.exports = (function() {
 
     }
 
-    response(modelArray, arrInterface, useResource) {
+    response(modelArray, arrInterface, options, useResource) {
 
       return {
         meta: this.meta(
@@ -88,9 +88,9 @@ module.exports = (function() {
           0,
           null,
           null,
-          useResource && this.resourceFromModelArray(modelArray, arrInterface)
+          useResource && this.resourceFromModelArray(modelArray, arrInterface, options)
         ),
-        data: modelArray.toObject(arrInterface)
+        data: modelArray.toObject(arrInterface, options)
       }
 
     }

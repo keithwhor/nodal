@@ -16,7 +16,7 @@
 
   command = command ? command : '_';
   command = {name: command.split(':')[0], value: command.split(':')[1] || '_'};
-  
+
   let commandDefinitions = {
       "new": "Initialize the current directory as a new Nodal project",
       "s": "Start the Nodal server based on the current project",
@@ -27,25 +27,28 @@
       "g:model <path_to_model>": "Add a new model from a path",
       "g:controller <path_to_controller>": "Add a new controller",
       "g:controller <path_to> --for:<modelname>": "Add a new controller for a model",
+      "g:middleware <path_to_middleware>": "Add a new middleware",
+      "g:task <task name>": "Add a new task",
       "db:migrate": "Run all pending Database migrations",
-      "db:rollback": "Rollback migrations"
+      "db:rollback": "Rollback migrations",
+      "db:bootstrap": "Runs db:prepare and db:migrate in a single command"
   };
-  
+
   function repeatChar(char, r) {
     // Repeats a character to create a string
     // Useful for logging
     var str = '';
     for (var i = 0; i < Math.ceil(r); i++) str += char;
-    return str; 
+    return str;
   }
-  
+
   // Check for `nodal help` command
   if (command.name === 'help') {
-      
+
     console.log('');
     console.log(' Nodal commands');
     console.log('');
-    
+
     let highPad = 0;
     // Find the longest length
     for (var keys in commandDefinitions) { if(keys.length > highPad) highPad = keys.length; }
@@ -55,18 +58,18 @@
       let padding = '';
       // Add padding to the end
       if(fullCommand.length < highPad) padding = repeatChar(' ', highPad - fullCommand.length);
-      
+
       // Parse Command to colorize
       let splitCommand = fullCommand.split(' ');
       let baseCommand = splitCommand.shift();
       let tags = splitCommand.join(' ');
       let definition = commandDefinitions[cKey];
-      
+
       console.log(colors.yellow.bold(' nodal ' + baseCommand), (tags)?colors.gray(tags):'', padding, '\t' + definition);
       console.log(colors.gray(repeatChar('-', highPad + 7)));
     }
     process.exit(1);
-    
+
   }
 
   if (command.name !== 'new' && !fs.existsSync(process.cwd() + '/.nodal')) {
@@ -112,6 +115,7 @@
         }
 
         promptResult.simpleName = promptResult.name.replace(/\s/gi, '-');
+        promptResult.databaseName = inflect.underscore(promptResult.name);
         let dirname = promptResult.name.replace(/[^A-Za-z0-9-_]/gi, '-').toLowerCase();
 
         console.log('');
@@ -158,14 +162,19 @@
             fs.readFileSync(__dirname + '/README.md.jst').toString()
           )(promptResult));
 
+          // read in the dbjson template, replace the development database name
+          // generate new config/db.json in the generated app
+          let dbjson = JSON.parse(fs.readFileSync(__dirname + '/templates/db.json'));
+          dbjson.development.main.database = promptResult.databaseName + '_development';
+          fs.writeFileSync('./' + dirname + '/config/db.json', JSON.stringify(dbjson, null, 4));
 
-          let spawn = require('child_process').spawn;
+          let spawn = require('cross-spawn-async');
 
-          let child = spawn('npm', ['cache', 'clean'], {cwd: process.cwd() + '/' + dirname, stdio: [process.stdin, process.stdout, process.stderr]});
+          let child = spawn('npm', ['cache', 'clean'], {cwd: process.cwd() + '/' + dirname, stdio: 'inherit'});
 
           child.on('exit', function() {
 
-            let child = spawn('npm',  ['install'], {cwd: process.cwd() + '/' + dirname, stdio: [process.stdin, process.stdout, process.stderr]});
+            let child = spawn('npm',  ['install'], {cwd: process.cwd() + '/' + dirname, stdio: 'inherit'});
 
             console.log('Installing packages in this directory...');
             console.log('');
@@ -204,6 +213,11 @@
   let dbCommands = require('./db/commands.js');
   let generateCommands = require('./generate/commands.js');
 
+  // bind the db funcs so that they can call each other
+  Object.keys(dbCommands).forEach((f) => {
+    dbCommands[f] = dbCommands[f].bind(dbCommands);
+  });
+
   let args = [];
   let flags = {};
 
@@ -228,8 +242,8 @@
       _: function(args, flags) {
 
         let Nodal = require('../core/module.js');
-        let spawn = require('child_process').spawn;
-        let child = spawn('npm',  ['start'], {stdio: [process.stdin, process.stdout, process.stderr]});
+        let spawn = require('cross-spawn-async');
+        let child = spawn('npm',  ['start'], {stdio: 'inherit'});
 
         process.on('exit', function() {
           child && child.kill();
@@ -247,7 +261,8 @@
       prepare: dbCommands.prepare,
       migrate: dbCommands.migrate,
       rollback: dbCommands.rollback,
-      version: dbCommands.version
+      version: dbCommands.version,
+      bootstrap: dbCommands.bootstrap
     },
     g: {
       _: function(args, flags) {
