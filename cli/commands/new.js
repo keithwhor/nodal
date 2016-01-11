@@ -11,9 +11,9 @@ prompt.delimiter = '';
 module.exports = function(Command) {
   new Command("new", null, (args, flags, callback) => {
     "use strict";
-    
+
     const rootPath = path.resolve(__dirname, '../');
-    
+
     console.log('');
     console.log('Welcome to Nodal!');
     console.log('');
@@ -70,21 +70,21 @@ module.exports = function(Command) {
         dot.templateSettings.varname = 'data';
 
         fs.writeFileSync('./' + dirname + '/package.json', dot.template(
-          fs.readFileSync(rootPath + '/package.json.jst').toString()
+          fs.readFileSync(rootPath + '/templates/package.json.jst').toString()
         )(promptResult));
 
         if (promptResult.heroku) {
           fs.writeFileSync('./' + dirname + '/app.json', dot.template(
-            fs.readFileSync(rootPath + '/app.json.jst').toString()
+            fs.readFileSync(rootPath + '/templates/app.json.jst').toString()
           )(promptResult));
         }
 
         fs.writeFileSync('./' + dirname + '/app/controllers/index_controller.js', dot.template(
-          fs.readFileSync(rootPath + '/index_controller.jst').toString()
+          fs.readFileSync(rootPath + '/templates/index_controller.jst').toString()
         )(promptResult));
 
         fs.writeFileSync('./' + dirname + '/README.md', dot.template(
-          fs.readFileSync(rootPath + '/README.md.jst').toString()
+          fs.readFileSync(rootPath + '/templates/README.md.jst').toString()
         )(promptResult));
 
         // read in the dbjson template, replace the development database name
