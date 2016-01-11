@@ -38,17 +38,28 @@
 
   // Command Definition
   class Command {
-    constructor(name, options, fn, def, prefix) {
-      this._name = name;
+    constructor(cmd, options, fn, def, prefix) {
+      this._cmd = cmd;
+      this._name = cmd.split(' ')[0];
       this._prefix = prefix;
       this._options = options || {};
+      this._ext = (this._options.ext || []);
+      this._ext.unshift(cmd.split(' ').splice(1).join(' '));
       this._def = def;
       this._fn = fn;
       commandMap.set(this.full(), this);
     }
     
     full() {
-      return ((this._prefix)?(this._prefix + ':'):'') + this._name;
+      return ((this._prefix)?(this._prefix + ':'):'') + this._cmd;
+    }
+    
+    ext(n) {
+      return this._ext[n || 0];
+    }
+    
+    extLength() {
+      return this._ext.length;
     }
     
     isHidden() {
@@ -71,15 +82,6 @@
    * @todo Implement Command method options such as tags, flags, hidden, etc.
    * @todo Implement nested help (info on tags, flags)
    */
-  
-  /* Commands to implement
-  model: generateCommands.model,
-  migration: generateCommands.migration,
-  controller: generateCommands.controller,
-  initializer: generateCommands.initializer,
-  middleware: generateCommands.middleware,
-  task: generateCommands.task
-  */
   
   /* Definition Leftovers (nom nom nom)
    * Remove as you implement
@@ -108,8 +110,14 @@
     console.log('');
 
     let highPad = 0;
-    // Find the longest length
-    commandMap.forEach((command) => { if(command.full().length > highPad) highPad = command.full().length; });
+    // Find the longest length (deep search to include ext)
+    commandMap.forEach((command) => {
+      if(command.full().length > highPad) highPad = command.full().length;
+      // Start at 1 to skip above
+      for(let i = 1; i < command.extLength(); i++) {
+        if(command.ext(i).length > highPad) highPad = command.ext(i).split('#')[0].length + command.full().split(' ')[0].length;
+      }
+    });
     commandMap.forEach((command) => {
       // If command is hidden continue (return in case of forEach)
       if(command.isHidden()) return;
@@ -126,6 +134,16 @@
       let definition = command.getDefinition();
 
       console.log(colors.yellow.bold(' nodal ' + baseCommand.toLowerCase()), (tags)?colors.gray(tags):'', padding, '\t' + definition);
+
+      // SubCommand we start at 1 to skip the original (printed above)
+      for(let i = 1; i < command.extLength(); i++) {
+        let localDef = command.ext(i).split('#');
+        let localCommand = localDef.shift();
+        let localPad = repeatChar(' ', (highPad - baseCommand.length - localCommand.length));
+        console.log(colors.yellow.bold(' nodal ' + baseCommand.toLowerCase()), colors.gray(localCommand.toLowerCase()), localPad, '\t' + localDef.join(''));
+      }
+      
+      // Line under
       console.log(colors.gray(repeatChar('-', highPad + 7)));
     });
     
