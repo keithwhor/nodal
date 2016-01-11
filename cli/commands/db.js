@@ -37,9 +37,8 @@ module.exports = function(Command) {
     interfaceDBCommands.version(args, flags, callback);
   }, "");
 
-  new DBCommand("bootstrap", { hidden: true }, (args, flags, callback) => {
-    console.log(this);
-    return callback(new Error("Bootstrap is broken."));
-    // interfaceDBCommands.bootstrap(callback);
-  }, "Runs db:prepare and db:migrate in a single command");
+  new DBCommand("seed", null, (args, flags, callback) => {
+    interfaceDBCommands.seed(args, flags, callback);
+  }, "Populate database with default data");
+
 };

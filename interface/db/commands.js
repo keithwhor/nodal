@@ -321,31 +321,9 @@ module.exports = {
 
   },
 
-  // db:bootstrap executes db:prepare and db:migrate in a single command. This
-  // is really helpful for things like web auto deploy to heroku of a sample
-  // application
-  // TODO: Integrate db:seed when its implemented
-  bootstrap: function(args, flags, callback) {
-
-    async.series([
-        (callback) => {
-          this.prepare(args, flags, callback);
-        },
-        (callback) => {
-          this.migrate(args, flags, callback);
-        }
-      ],
-      function(err) {
-        if (err) {
-          console.error(colors.red.bold('ERROR: ') + err.message);
-          console.log('Database bootstrap could not be completed');
-        } else {
-          console.log('Database bootstrap complete!');
-        }
-        process.exit(0);
-
-      }
-    );
+  seed: function(args, flags, callback) {
+    console.log('Database seeding complete!');
+    callback()
   }
 
 };
