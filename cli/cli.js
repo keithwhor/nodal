@@ -47,7 +47,11 @@
       this._ext.unshift(cmd.split(' ').splice(1).join(' '));
       this._def = def;
       this._fn = fn;
-      commandMap.set(this.full(), this);
+      commandMap.set(this.index(), this);
+    }
+    
+    index() {
+      return ((this._prefix)?(this._prefix + ':'):'') + this._name;
     }
     
     full() {
