@@ -66,15 +66,6 @@
    */
   
   /* Commands to implement
-  upgrade: dbCommands.upgrade,
-  create: dbCommands.create,
-  drop: dbCommands.drop,
-  prepare: dbCommands.prepare,
-  migrate: dbCommands.migrate,
-  rollback: dbCommands.rollback,
-  version: dbCommands.version,
-  bootstrap: dbCommands.bootstrap
-      
   model: generateCommands.model,
   migration: generateCommands.migration,
   controller: generateCommands.controller,
@@ -85,8 +76,6 @@
   
   /* Definition Leftovers (nom nom nom)
    * Remove as you implement
-    "db:create": "Create a new PostgreSQL database for the current project",
-    "db:prepare": "Prepare the PostgreSQL database",
     "g:model --<user>": "Add a new model",
     "g:model --<access_token>": "Add a new model through access token",
     "g:model <path_to_model>": "Add a new model from a path",
@@ -94,9 +83,6 @@
     "g:controller <path_to> --for:<modelname>": "Add a new controller for a model",
     "g:middleware <path_to_middleware>": "Add a new middleware",
     "g:task <task name>": "Add a new task",
-    "db:migrate": "Run all pending Database migrations",
-    "db:rollback": "Rollback migrations",
-    "db:bootstrap": "Runs db:prepare and db:migrate in a single command"
   */
   
   // Internally implemented commands (require access to Set) //
