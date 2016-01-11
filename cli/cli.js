@@ -83,17 +83,6 @@
    * @todo Implement nested help (info on tags, flags)
    */
   
-  /* Definition Leftovers (nom nom nom)
-   * Remove as you implement
-    "g:model --<user>": "Add a new model",
-    "g:model --<access_token>": "Add a new model through access token",
-    "g:model <path_to_model>": "Add a new model from a path",
-    "g:controller <path_to_controller>": "Add a new controller",
-    "g:controller <path_to> --for:<modelname>": "Add a new controller for a model",
-    "g:middleware <path_to_middleware>": "Add a new middleware",
-    "g:task <task name>": "Add a new task",
-  */
-  
   // Internally implemented commands (require access to Set) //
   // Define `nodal help` command
   new Command("help", null, (args, flags, callback) => {
