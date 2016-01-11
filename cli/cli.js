@@ -34,14 +34,18 @@
   class Command {
     constructor(name, options, fn, def) {
       this._name = name;
-      this._options = options;
+      this._options = options || {};
       this._def = def;
       this._fn = fn;
       commandMap.set(name, this);
     }
     
     full() {
-      return this._name;
+      return ((this._prefix)?(this._prefix + ':'):'') + this._name;
+    }
+    
+    isHidden() {
+      return (this._options.hidden === true);
     }
     
     getDefinition() {
@@ -58,6 +62,7 @@
    * @todo Order requires a sort implement a sort or use v8's Array#Sort
    * @todo Define _base_ somewhere
    * @todo Implement Command method options such as tags, flags, hidden, etc.
+   * @todo Implement nested help (info on tags, flags)
    */
   
   /* Commands to implement
@@ -113,6 +118,8 @@
     // Find the longest length
     commandMap.forEach((command) => { if(command.full().length > highPad) highPad = command.full().length; });
     commandMap.forEach((command) => {
+      // If command is hidden continue (return in case of forEach)
+      if(command.isHidden()) return;
       // Extract base command (e.g. `g:model`)
       let fullCommand = command.full();
       let padding = '';
