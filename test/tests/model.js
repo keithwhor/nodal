@@ -22,7 +22,7 @@ module.exports = (function(Nodal) {
     Parent.setDatabase(db);
     Parent.setSchema(schemaParent);
 
-    Parent.validates('name', 'should be at least five characters long', v => v && v.length >= 5);
+    Parent.validates('name', 'should be at least four characters long', v => v && v.length >= 4);
 
     let schemaHouse = {
       table: 'houses',
@@ -91,13 +91,13 @@ module.exports = (function(Nodal) {
       let parent = new Parent();
       expect(parent.errorObject()).to.not.equal(null);
       expect(parent.errorObject().details).to.have.property('name');
-      expect(parent.errorObject().details.name[0]).to.equal('should be at least five characters long');
+      expect(parent.errorObject().details.name[0]).to.equal('should be at least four characters long');
 
     });
 
     it('should not have errors if validations pass', function() {
 
-      let parent = new Parent({name: 'abcdef'});
+      let parent = new Parent({name: 'abcd'});
       expect(parent.hasErrors()).to.equal(false);
 
     });
@@ -276,6 +276,70 @@ module.exports = (function(Nodal) {
           expect(modelArray.filter(m => m.inStorage()).length).to.equal(modelArray.length);
           done();
         });
+
+      });
+
+    });
+
+    describe('ModelFactory', () => {
+
+      let ParentFactory = new Nodal.ModelFactory(Parent);
+      let HouseFactory = new Nodal.ModelFactory(House);
+
+      it('should save all parents', (done) => {
+
+        ParentFactory.create([
+          {name: 'Kate'},
+          {name: 'Sayid'},
+          {name: 'Jack'},
+          {name: 'Sawyer'},
+        ], (err, models) => {
+
+          if (err) {
+            console.log(err);
+            process.exit(0);
+          }
+
+          let data = ['Kate', 'Sayid', 'Jack', 'Sawyer'];
+
+          expect(models.length).to.equal(4);
+          models.forEach(m => data.splice(data.indexOf(m.get('name')), 1));
+          expect(data.length).to.equal(0);
+          done();
+
+        });
+
+      });
+
+      it('should save data from both Parents and Houses', (done) => {
+
+        Nodal.ModelFactory.createFromModels(
+          [Parent, House],
+          {
+            Parent: [
+              {name: 'Hurley'},
+              {name: 'Boone'}
+            ],
+            House: [
+              {material: 'straw'},
+              {material: 'wood'}
+            ]
+          },
+          (err, results) => {
+
+            expect(err).to.equal(null);
+            expect(results.length).to.equal(2);
+
+            let parents = results[0];
+            let houses = results[1];
+
+            expect(parents.length).to.equal(2);
+            expect(houses.length).to.equal(2);
+
+            done();
+
+          }
+        );
 
       });
 
