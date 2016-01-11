@@ -76,7 +76,12 @@
 
     exec(args, flags, callback) {
       if(typeof this._fn !== 'function') return callback(new Error("Method not implemented yet."));
-      this._fn(args, flags, callback);
+      // Prevent throws (overhead is not important in CLI)
+      try {
+        this._fn(args, flags, callback);
+      }catch(e) {
+        callback(e);
+      }
     }
   }
   
