@@ -71,6 +71,7 @@
     }
 
     exec(args, flags, callback) {
+      if(typeof this._fn !== 'function') return callback(new Error("Method not implemented yet."));
       this._fn(args, flags, callback);
     }
   }
@@ -78,9 +79,6 @@
   /**
    * @todo Implement order of Commands for display purposes
    * @todo Order requires a sort implement a sort or use v8's Array#Sort
-   * @todo Define _base_ somewhere
-   * @todo Implement Command method options such as tags, flags, hidden, etc.
-   * @todo Implement nested help (info on tags, flags)
    */
   
   // Internally implemented commands (require access to Set) //
