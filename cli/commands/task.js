@@ -3,7 +3,7 @@
 const fs = require('fs');
 
 module.exports = function(Command) {
-  new Command("task <task name>", { hidden: false }, (args, flags, callback) => {
+  new Command("task <task name>", { hidden: false, order: 3 }, (args, flags, callback) => {
     'use strict';
 
     let taskName = args[0] && args[0][0] || '';

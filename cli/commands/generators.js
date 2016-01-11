@@ -6,6 +6,7 @@ module.exports = function(Command) {
   class GeneratorCommand extends Command {
     constructor(name, options, fn, def) {
       super(name, options, fn, def, 'g');
+      this._order = 20;
     }
   }
 

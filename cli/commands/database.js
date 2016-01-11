@@ -6,6 +6,7 @@ module.exports = function(Command) {
   class DBCommand extends Command {
     constructor(name, options, fn, def) {
       super(name, options, fn, def, 'db');
+      this._order = 10;
     }
   }
 

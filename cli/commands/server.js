@@ -1,5 +1,5 @@
 module.exports = function(Command) {
-  new Command("s", null, (args, flags, callback) => {
+  new Command("s", { order: 2 }, (args, flags, callback) => {
     "use strict";
     let Nodal = require('../../core/module.js');
     let spawn = require('cross-spawn-async');
