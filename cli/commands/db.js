@@ -10,31 +10,31 @@ module.exports = function(Command) {
   }
   
   new DBCommand("upgrade", { hidden: true }, (args, flags, callback) => {
-    interfaceDBCommands.upgrade(callback);
+    interfaceDBCommands.upgrade(args, flags, callback);
   }, "");
   
   new DBCommand("create", null, (args, flags, callback) => {
-    interfaceDBCommands.create(callback);
+    interfaceDBCommands.create(args, flags, callback);
   }, "Create a new PostgreSQL database for the current project");
   
   new DBCommand("drop", { hidden: true }, (args, flags, callback) => {
-    interfaceDBCommands.drop(callback);
+    interfaceDBCommands.drop(args, flags, callback);
   }, "");
   
   new DBCommand("prepare", null, (args, flags, callback) => {
-    interfaceDBCommands.prepare(callback);
+    interfaceDBCommands.prepare(args, flags, callback);
   }, "Prepare the PostgreSQL database");
   
   new DBCommand("migrate", null, (args, flags, callback) => {
-    interfaceDBCommands.migrate(callback);
+    interfaceDBCommands.migrate(args, flags, callback);
   }, "Run all pending Database migrations");
   
   new DBCommand("rollback", null, (args, flags, callback) => {
-    interfaceDBCommands.rollback(callback);
+    interfaceDBCommands.rollback(args, flags, callback);
   }, "Rollback migrations");
   
   new DBCommand("version", { hidden: true }, (args, flags, callback) => {
-    interfaceDBCommands.version(callback);
+    interfaceDBCommands.version(args, flags, callback);
   }, "");
   
   new DBCommand("bootstrap", { hidden: true }, (args, flags, callback) => {

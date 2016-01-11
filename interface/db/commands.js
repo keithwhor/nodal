@@ -30,7 +30,7 @@ function errorHandler(err, callback) {
 
 module.exports = {
 
-  upgrade: function() {
+  upgrade: function(args, flags, callback) {
 
     let dbCredentials = Nodal.my.Config.db.main;
     let cfg = dbCredentials;
@@ -62,7 +62,7 @@ module.exports = {
 
             errorHandler(err);
             db.info('populated most recent "schema" in "schema_migrations"');
-            process.exit(0);
+            if(callback) callback();
 
           }
         )
@@ -72,7 +72,7 @@ module.exports = {
 
   },
 
-  drop: function() {
+  drop: function(args, flags, callback) {
 
     let dbCredentials = Nodal.my.Config.db.main;
     let cfg = dbCredentials;
@@ -91,7 +91,7 @@ module.exports = {
 
   },
 
-  create: function() {
+  create: function(args, flags, callback) {
 
     let dbCredentials = Nodal.my.Config.db.main;
     let cfg = dbCredentials;
@@ -141,7 +141,7 @@ module.exports = {
 
   },
 
-  version: function() {
+  version: function(args, flags, callback) {
     let dbCredentials = Nodal.my.Config.db.main;
 
     let db = new Database();
@@ -257,7 +257,7 @@ module.exports = {
 
   },
 
-  rollback: function(args, flags) {
+  rollback: function(args, flags, callback) {
 
     let dbCredentials = Nodal.my.Config.db.main;
 
@@ -325,7 +325,7 @@ module.exports = {
   // is really helpful for things like web auto deploy to heroku of a sample
   // application
   // TODO: Integrate db:seed when its implemented
-  bootstrap: function(args, flags) {
+  bootstrap: function(args, flags, callback) {
 
     async.series([
         (callback) => {
