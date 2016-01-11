@@ -60,7 +60,7 @@ module.exports = function(Command) {
       console.log('Copying Nodal directory structure and files...');
       console.log('');
 
-      fs_extra.copy(rootPath + '../../src', './' + dirname, function(err) {
+      fs_extra.copy(rootPath + '/../src', './' + dirname, function(err) {
 
         if (err) return callback(err);
 
