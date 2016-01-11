@@ -47,6 +47,7 @@
       this._ext.unshift(cmd.split(' ').splice(1).join(' '));
       this._def = def;
       this._fn = fn;
+      this._order = (this._name === 'help')?-1:Math.abs(this._options.order || 100);
       commandMap.set(this.index(), this);
     }
     
@@ -85,11 +86,6 @@
     }
   }
   
-  /**
-   * @todo Implement order of Commands for display purposes
-   * @todo Order requires a sort implement a sort or use v8's Array#Sort
-   */
-  
   // Internally implemented commands (require access to Set) //
   // Define `nodal help` command
   new Command("help", null, (args, flags, callback) => {
@@ -114,7 +110,20 @@
         if(command.ext(i).length > highPad) highPad = command.ext(i).split('#')[0].length + command.full().split(' ')[0].length;
       }
     });
-    commandMap.forEach((command) => {
+    
+    // Sort Command map
+    let commandsList = [];
+    // We use commandsList to store all the keys
+    for(var key of commandMap.keys()) { commandsList.push(key); }
+    // Sort the keys based on Class options
+    commandsList.sort((a, b) => {
+      return commandMap.get(a)._order - commandMap.get(b)._order;
+    });
+    
+    // Go through the sorted keys
+    commandsList.forEach((key) => {
+      // Get the actual class
+      let command = commandMap.get(key);
       // If command is hidden continue (return in case of forEach)
       if(command.isHidden()) return;
       // Extract base command (e.g. `g:model`)
