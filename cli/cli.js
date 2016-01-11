@@ -71,7 +71,7 @@
     }
 
     exec(args, flags, callback) {
-      if(typeof this._fn !== 'function') callback(new Error("Method not implemented yet."));
+      if(typeof this._fn !== 'function') return callback(new Error("Method not implemented yet."));
       this._fn(args, flags, callback);
     }
   }
