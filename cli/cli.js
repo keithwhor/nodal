@@ -12,7 +12,7 @@
   command = command ? command : '_base_';
   
   // Make sure we are in a project directory
-  if (command !== 'new' && !fs.existsSync(process.cwd() + '/.nodal')) {
+  if ((command !== 'new') && (command !== 'help') && (!fs.existsSync(process.cwd() + '/.nodal'))) {
     console.error(colors.red.bold('Error: ') + 'No Nodal project found here. Use `nodal new` to initialize a project.');
     console.error(colors.green('Help: ') + 'Type `nodal help` to get more information about what Nodal can do for you.');
     process.exit(1);
