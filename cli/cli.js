@@ -82,7 +82,7 @@
 
     (function() {
 
-      let ncp = require('ncp');
+      let fs_extra = require('fs-extra');
 
       console.log('');
       console.log('Welcome to Nodal!');
@@ -131,7 +131,7 @@
         console.log('Copying Nodal directory structure and files...');
         console.log('');
 
-        ncp(__dirname + '/../src', './' + dirname, function (err) {
+        fs_extra.copy(__dirname + '/../src', './' + dirname, function (err) {
 
           if (err) {
             console.error(err);
