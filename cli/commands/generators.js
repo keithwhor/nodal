@@ -10,7 +10,7 @@ module.exports = function(Command) {
   }
 
   new GeneratorCommand("model <path_to_model>", {
-    ext: ["--<access_token> #Add a new access_token model", "--<user> #Add a new user model from a built-in generator"]
+    ext: ["--access_token #Add a new access_token model", "--user #Add a new user model from a built-in generator"]
   }, (args, flags, callback) => {
     interfaceDBCommands.model(args, flags, callback);
   }, "Add a new model");
