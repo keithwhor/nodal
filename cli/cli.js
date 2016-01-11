@@ -10,7 +10,6 @@
   let command = process.argv.slice(2, 3).pop();
 
   command = command ? command : '_base_';
-  command = {name: command.split(':')[0], value: command.split(':')[1] || '_base_'};
 
   /// Improve ///
   let args = [];
@@ -32,12 +31,13 @@
 
   // Command Definition
   class Command {
-    constructor(name, options, fn, def) {
+    constructor(name, options, fn, def, prefix) {
       this._name = name;
+      this._prefix = prefix;
       this._options = options || {};
       this._def = def;
       this._fn = fn;
-      commandMap.set(name, this);
+      commandMap.set(this.full(), this);
     }
     
     full() {
@@ -153,8 +153,8 @@
   }
   
   // Check if our constructed Map has the command
-  if(commandMap.has(command.name)) {
-    commandMap.get(command.name).exec(args, flags, function(error) {
+  if(commandMap.has(command)) {
+    commandMap.get(command).exec(args, flags, function(error) {
       if(error) {
         console.error(colors.red.bold('Error: ') + error.message);
         // Append help to all errors
@@ -163,7 +163,7 @@
       process.exit((error)?1:0);
     });
   }else{
-    console.error(colors.red.bold('Error: ') + 'Command "' + command.name + '" not found');
+    console.error(colors.red.bold('Error: ') + 'Command "' + command + '" not found');
     console.log(colors.green('Help: ') + 'Type `nodal help` to get more information about what Nodal can do for you.');
   }
 })();
