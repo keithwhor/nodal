@@ -1,6 +1,6 @@
-module.exports = (function() {
+"use strict";
 
-  'use strict';
+module.exports = (function() {
 
   let fs = require('fs');
 
