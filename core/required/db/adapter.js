@@ -34,6 +34,9 @@ module.exports = (function() {
     generateCreateIndex(table, columnName, indexType) {}
     generateDropIndex(table, columnName) {}
 
+    generateSimpleForeignKeyQuery(table, referenceTable) {}
+    generateDropSimpleForeignKeyQuery(table, referenceTable) {}
+
     sanitize(type, value) {
 
       let fnSanitize = this.sanitizeType[type];
@@ -569,6 +572,8 @@ module.exports = (function() {
   DatabaseAdapter.prototype.types = {};
   DatabaseAdapter.prototype.sanitizeType = {};
   DatabaseAdapter.prototype.escapeFieldCharacter = '';
+
+  DatabaseAdapter.prototype.supportsForeignKey = false;
 
   return DatabaseAdapter;
 

@@ -164,6 +164,23 @@ module.exports = (function() {
 
     }
 
+    addForeignKey(table, referenceTable) {
+
+      this.schema.addForeignKey(table, referenceTable);
+
+      return this.db.adapter.generateSimpleForeignKeyQuery(table, referenceTable);
+
+    }
+
+    dropForeignKey(table, referenceTable) {
+
+      this.schema.dropForeignKey(table, referenceTable);
+
+      return this.db.adapter.generateDropSimpleForeignKeyQuery(table, referenceTable);
+
+    }
+
+
   };
 
   return Migration;

@@ -1,7 +1,7 @@
-"use strict";
-
 module.exports = (function() {
+  'use strict';
 
+  const inflect = require('i')();
   const DatabaseAdapter = require('../adapter.js');
 
   class PostgresAdapter extends DatabaseAdapter {
@@ -322,6 +322,30 @@ module.exports = (function() {
 
     }
 
+    generateSimpleForeignKeyQuery(table, referenceTable) {
+      return [
+        'ALTER TABLE',
+          this.escapeField(table),
+        'ADD CONSTRAINT',
+          `${this.generateConstraint(table, referenceTable, 'id_fk')}`,
+        'FOREIGN KEY',
+          `(${this.escapeField(`${inflect.singularize(referenceTable)}_id`)})`,
+        'REFERENCES',
+          `${this.escapeField(referenceTable)} (${this.escapeField('id')})`
+      ].join(' ');
+
+    }
+
+    generateDropSimpleForeignKeyQuery(table, referenceTable) {
+      return [
+        'ALTER TABLE',
+          this.escapeField(table),
+        'DROP CONSTRAINT IF EXISTS',
+          `${this.generateConstraint(table, referenceTable, 'id_fk')}`,
+      ].join(' ');
+
+    }
+
     generateRenameSequenceQuery(table, columnName, newTable, newColumnName) {
 
       return [
@@ -417,6 +441,8 @@ module.exports = (function() {
       dbName: 'BOOLEAN'
     }
   };
+
+  PostgresAdapter.prototype.supportsForeignKey = true;
 
   return PostgresAdapter;
 

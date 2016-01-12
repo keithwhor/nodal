@@ -319,6 +319,40 @@ module.exports = (function() {
 
     }
 
+    addForeignKey(table, referenceTable) {
+
+      let tableClass = inflect.classify(table);
+      let referenceTableClass = inflect.classify(referenceTable);
+
+      if (!this.models[tableClass]) {
+        throw new Error(`Model ${tableClass} does not exist.`);
+      }
+
+      if (!this.models[referenceTableClass]) {
+        throw new Error(`Model ${referenceTableClass} does not exist.`);
+      }
+
+      return true;
+
+    }
+
+    dropForeignKey(table, referenceTable) {
+
+      let tableClass = inflect.classify(table);
+      let referenceTableClass = inflect.classify(referenceTable);
+
+      if (!this.models[tableClass]) {
+        throw new Error(`Model ${tableClass} does not exist.`);
+      }
+
+      if (!this.models[referenceTableClass]) {
+        throw new Error(`Model ${referenceTableClass} does not exist.`);
+      }
+
+      return true;
+
+    }
+
     read(json) {
       return this.set(JSON.parse(json));
     }
