@@ -1,6 +1,5 @@
-"use strict";
-
 module.exports = (function() {
+  'use strict';
 
   let fs = require('fs');
   let inflect = require('i')();

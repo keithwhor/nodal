@@ -3,7 +3,7 @@
 let fs = require('fs');
 let pg = require('pg');
 let async = require('async');
-let Nodal = require('../../core/module.js');
+let Nodal = require('../../../core/module.js');
 
 let Database = Nodal.Database;
 let SchemaGenerator = Nodal.SchemaGenerator;
@@ -13,11 +13,15 @@ let colors = require('colors/safe');
 let MODEL_PATH = './app/models';
 let MIGRATION_PATH = './db/migrations';
 
-function errorHandler(err) {
+function errorHandler(err, callback) {
 
   if (err) {
     console.error(colors.red.bold('ERROR: ') + err.message);
-    process.exit(0);
+    if ( undefined === callback) {
+      process.exit(0);
+    } else {
+      callback(err)
+    }
   }
 
   return true;
@@ -26,7 +30,7 @@ function errorHandler(err) {
 
 module.exports = {
 
-  upgrade: function() {
+  upgrade: function(args, flags, callback) {
 
     let dbCredentials = Nodal.my.Config.db.main;
     let cfg = dbCredentials;
@@ -58,7 +62,7 @@ module.exports = {
 
             errorHandler(err);
             db.info('populated most recent "schema" in "schema_migrations"');
-            process.exit(0);
+            if(callback) callback();
 
           }
         )
@@ -68,7 +72,7 @@ module.exports = {
 
   },
 
-  drop: function() {
+  drop: function(args, flags, callback) {
 
     let dbCredentials = Nodal.my.Config.db.main;
     let cfg = dbCredentials;
@@ -87,7 +91,7 @@ module.exports = {
 
   },
 
-  create: function() {
+  create: function(args, flags, callback) {
 
     let dbCredentials = Nodal.my.Config.db.main;
     let cfg = dbCredentials;
@@ -106,8 +110,7 @@ module.exports = {
 
   },
 
-  prepare: function() {
-
+  prepare: function(args, flags, callback) {
     let dbCredentials = Nodal.my.Config.db.main;
 
     let db = new Database();
@@ -128,14 +131,17 @@ module.exports = {
         errorHandler(err);
         Database.prototype.info('Prepared database "' + dbCredentials.database + '" for migrations');
         schema.save();
-        process.exit(0);
-
+        if ( undefined === callback) {
+          process.exit(0);
+        } else {
+          callback();
+        }
       }
     );
 
   },
 
-  version: function() {
+  version: function(args, flags, callback) {
     let dbCredentials = Nodal.my.Config.db.main;
 
     let db = new Database();
@@ -170,7 +176,7 @@ module.exports = {
 
   },
 
-  migrate: function(args, flags) {
+  migrate: function(args, flags, callback) {
 
     let dbCredentials = Nodal.my.Config.db.main;
 
@@ -184,7 +190,11 @@ module.exports = {
 
       if (err) {
         db.error('Could not get schema migrations, try `nodal db:prepare` first');
-        process.exit(0);
+        if ( undefined === callback) {
+          process.exit(0);
+        } else {
+          callback(err);
+        }
       }
 
       let schema_ids = result.rows.map(function(v) { return v.id; });
@@ -202,7 +212,11 @@ module.exports = {
 
       if (migrations.length === 0) {
         console.log('No pending migrations');
-        process.exit(0);
+        if ( undefined === callback) {
+          process.exit(0);
+        } else {
+          callback();
+        }
       }
 
       let migrateFuncs = migrations.map(function(v) {
@@ -230,7 +244,11 @@ module.exports = {
             console.log('Migration complete!');
           }
 
-          process.exit(0);
+          if ( undefined === callback) {
+            process.exit(0);
+          } else {
+            callback(err);
+          }
 
         }
       );
@@ -239,7 +257,7 @@ module.exports = {
 
   },
 
-  rollback: function(args, flags) {
+  rollback: function(args, flags, callback) {
 
     let dbCredentials = Nodal.my.Config.db.main;
 
@@ -301,6 +319,11 @@ module.exports = {
 
     });
 
+  },
+
+  seed: function(args, flags, callback) {
+    console.log('Database seeding complete!');
+    callback()
   }
 
 };
