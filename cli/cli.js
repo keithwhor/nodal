@@ -3,224 +3,25 @@
 "use strict";
 
 (function() {
-
   const colors = require('colors/safe');
   const fs = require('fs');
-  const prompt = require('prompt');
-  const inflect = require('i')();
-
-  prompt.message = '';
-  prompt.delimiter = '';
+  const path = require('path');
 
   let command = process.argv.slice(2, 3).pop();
 
-  command = command ? command : '_';
-  command = {name: command.split(':')[0], value: command.split(':')[1] || '_'};
-
-  let commandDefinitions = {
-      "new": "Initialize the current directory as a new Nodal project",
-      "s": "Start the Nodal server based on the current project",
-      "db:create": "Create a new PostgreSQL database for the current project",
-      "db:prepare": "Prepare the PostgreSQL database",
-      "g:model --<user>": "Add a new model",
-      "g:model --<access_token>": "Add a new model through access token",
-      "g:model <path_to_model>": "Add a new model from a path",
-      "g:controller <path_to_controller>": "Add a new controller",
-      "g:controller <path_to> --for:<modelname>": "Add a new controller for a model",
-      "g:middleware <path_to_middleware>": "Add a new middleware",
-      "g:task <task name>": "Add a new task",
-      "db:migrate": "Run all pending Database migrations",
-      "db:rollback": "Rollback migrations",
-      "db:bootstrap": "Runs db:prepare and db:migrate in a single command"
-  };
-
-  function repeatChar(char, r) {
-    // Repeats a character to create a string
-    // Useful for logging
-    var str = '';
-    for (var i = 0; i < Math.ceil(r); i++) str += char;
-    return str;
-  }
-
-  // Check for `nodal help` command
-  if (command.name === 'help') {
-
-    console.log('');
-    console.log(' Nodal commands');
-    console.log('');
-
-    let highPad = 0;
-    // Find the longest length
-    for (var keys in commandDefinitions) { if(keys.length > highPad) highPad = keys.length; }
-    for (var cKey in commandDefinitions) {
-      // Extract base command (e.g. `g:model`)
-      let fullCommand = cKey;
-      let padding = '';
-      // Add padding to the end
-      if(fullCommand.length < highPad) padding = repeatChar(' ', highPad - fullCommand.length);
-
-      // Parse Command to colorize
-      let splitCommand = fullCommand.split(' ');
-      let baseCommand = splitCommand.shift();
-      let tags = splitCommand.join(' ');
-      let definition = commandDefinitions[cKey];
-
-      console.log(colors.yellow.bold(' nodal ' + baseCommand), (tags)?colors.gray(tags):'', padding, '\t' + definition);
-      console.log(colors.gray(repeatChar('-', highPad + 7)));
-    }
-    process.exit(1);
-
-  }
-
-  if (command.name !== 'new' && !fs.existsSync(process.cwd() + '/.nodal')) {
-
+  command = command ? command : '';
+  
+  // Make sure we are in a project directory
+  if ((command !== 'new') && (command !== 'help') && (!fs.existsSync(process.cwd() + '/.nodal'))) {
     console.error(colors.red.bold('Error: ') + 'No Nodal project found here. Use `nodal new` to initialize a project.');
     console.error(colors.green('Help: ') + 'Type `nodal help` to get more information about what Nodal can do for you.');
     process.exit(1);
-
-  } else if (command.name === 'new') {
-
-    (function() {
-
-      let ncp = require('ncp');
-
-      console.log('');
-      console.log('Welcome to Nodal!');
-      console.log('');
-      console.log('Let\'s get some information about your project...');
-      console.log('');
-
-      var schema = {
-        properties: {
-          name: {
-            default: 'my-nodal-project'
-          },
-          author: {
-            default: 'mysterious author'
-          },
-          heroku: {
-            message: 'heroku support?',
-            validator: /y[es]*|n[o]?/,
-            warning: 'Must respond yes or no',
-            default: 'no',
-            before: (value) => value === 'yes'
-          }
-        }
-      };
-
-      prompt.get(schema, function (err, promptResult) {
-
-        if (err) {
-          process.exit(1);
-        }
-
-        promptResult.simpleName = promptResult.name.replace(/\s/gi, '-');
-        promptResult.databaseName = inflect.underscore(promptResult.name);
-        let dirname = promptResult.name.replace(/[^A-Za-z0-9-_]/gi, '-').toLowerCase();
-
-        console.log('');
-        console.log('Creating directory "' + dirname + '"...');
-        console.log('');
-
-        if (fs.existsSync('./' + dirname)) {
-          console.log(colors.bold.red('Directory "' + dirname + '" already exists, try a different project name'));
-          process.exit(1);
-        }
-        fs.mkdirSync('./' + dirname);
-
-        console.log('Copying Nodal directory structure and files...');
-        console.log('');
-
-        ncp(__dirname + '/../src', './' + dirname, function (err) {
-
-          if (err) {
-            console.error(err);
-            process.exit(0);
-            return
-          }
-
-          let dot = require('dot');
-
-          dot.templateSettings.strip = false;
-          dot.templateSettings.varname = 'data';
-
-          fs.writeFileSync('./' + dirname + '/package.json', dot.template(
-            fs.readFileSync(__dirname + '/package.json.jst').toString()
-          )(promptResult));
-
-          if (promptResult.heroku) {
-            fs.writeFileSync('./' + dirname + '/app.json', dot.template(
-              fs.readFileSync(__dirname + '/app.json.jst').toString()
-            )(promptResult));
-          }
-
-          fs.writeFileSync('./' + dirname + '/app/controllers/index_controller.js', dot.template(
-            fs.readFileSync(__dirname + '/index_controller.jst').toString()
-          )(promptResult));
-
-          fs.writeFileSync('./' + dirname + '/README.md', dot.template(
-            fs.readFileSync(__dirname + '/README.md.jst').toString()
-          )(promptResult));
-
-          // read in the dbjson template, replace the development database name
-          // generate new config/db.json in the generated app
-          let dbjson = JSON.parse(fs.readFileSync(__dirname + '/templates/db.json'));
-          dbjson.development.main.database = promptResult.databaseName + '_development';
-          fs.writeFileSync('./' + dirname + '/config/db.json', JSON.stringify(dbjson, null, 4));
-
-          let spawn = require('cross-spawn-async');
-
-          let child = spawn('npm', ['cache', 'clean'], {cwd: process.cwd() + '/' + dirname, stdio: 'inherit'});
-
-          child.on('exit', function() {
-
-            let child = spawn('npm',  ['install'], {cwd: process.cwd() + '/' + dirname, stdio: 'inherit'});
-
-            console.log('Installing packages in this directory...');
-            console.log('');
-
-            child.on('exit', function() {
-              console.log('');
-              console.log(colors.bold.green('All done!'));
-              console.log('');
-              console.log('Your new Nodal project, ' + colors.bold(promptResult.name) + ', is ready to go! :)');
-              console.log('');
-              console.log('Have fun ' + promptResult.author + ', and check out https://github.com/keithwhor/nodal for the most up-to-date Nodal information')
-              console.log('');
-              console.log(colors.bold('Pro tip: ') + 'You can try running your server right away with:');
-              console.log('');
-              console.log('  cd ' + dirname + ' && nodal s');
-              console.log('');
-              process.exit(0);
-            });
-
-            process.on('exit', function() {
-              child && child.kill();
-            });
-
-          });
-
-        });
-
-      });
-
-    })();
-
-    return;
-
   }
-
-  let dbCommands = require('./db/commands.js');
-  let generateCommands = require('./generate/commands.js');
-
-  // bind the db funcs so that they can call each other
-  Object.keys(dbCommands).forEach((f) => {
-    dbCommands[f] = dbCommands[f].bind(dbCommands);
-  });
 
   let args = [];
   let flags = {};
 
+  // Parse arguments & flags from argv
   process.argv.slice(3).forEach(function(v) {
     let values = v.split(':');
     if (v.substr(0, 2) === '--') {
@@ -230,103 +31,152 @@
       args.push(values);
     }
   });
+  
+  // A Map that stores all commands
+  let commandMap = new Map();
 
-  let commands = {
-    _: {
-      _: function(args, flags) {
-        console.error(colors.red.bold('Error: ') + 'No command specified');
-        process.exit(0);
-      }
-    },
-    s: {
-      _: function(args, flags) {
+  // Command Definition
+  class Command {
+    constructor(cmd, options, fn, def, prefix) {
+      this._cmd = cmd;
+      this._name = cmd.split(' ')[0];
+      this._prefix = prefix;
+      this._options = options || {};
+      this._ext = (this._options.ext || []);
+      this._ext.unshift(cmd.split(' ').splice(1).join(' '));
+      this._def = def;
+      this._fn = fn;
+      this._order = (this._name === 'help')?-1:Math.abs(this._options.order || 100);
+      commandMap.set(this.index(), this);
+    }
+    
+    index() {
+      return ((this._prefix)?(this._prefix + ':'):'') + this._name;
+    }
+    
+    full() {
+      return ((this._prefix)?(this._prefix + ':'):'') + this._cmd;
+    }
+    
+    ext(n) {
+      return this._ext[n || 0];
+    }
+    
+    extLength() {
+      return this._ext.length;
+    }
+    
+    isHidden() {
+      return (this._options.hidden === true);
+    }
+    
+    getDefinition() {
+      return this._def;
+    }
 
-        let Nodal = require('../core/module.js');
-        let spawn = require('cross-spawn-async');
-        let child = spawn('npm',  ['start'], {stdio: 'inherit'});
-
-        process.on('exit', function() {
-          child && child.kill();
-        });
-
-      }
-    },
-    db: {
-      _: function(args, flags) {
-        console.log('Please specify an action');
-      },
-      upgrade: dbCommands.upgrade,
-      create: dbCommands.create,
-      drop: dbCommands.drop,
-      prepare: dbCommands.prepare,
-      migrate: dbCommands.migrate,
-      rollback: dbCommands.rollback,
-      version: dbCommands.version,
-      bootstrap: dbCommands.bootstrap
-    },
-    g: {
-      _: function(args, flags) {
-        console.log('Please specify an action');
-      },
-      model: generateCommands.model,
-      migration: generateCommands.migration,
-      controller: generateCommands.controller,
-      initializer: generateCommands.initializer,
-      middleware: generateCommands.middleware,
-      task: generateCommands.task
-    },
-    task: {
-      _: function(args, flags) {
-
-        let taskName = args[0] && args[0][0] || '';
-        let cwd = process.cwd();
-        let taskPath = cwd + '/tasks/' + taskName + '.js';
-
-        if (!fs.existsSync(taskPath)) {
-          console.log('Task "' + taskName + '" does not exist');
-          process.exit(1);
-        }
-
-        const Daemon = new require('../core/required/daemon.js');
-        let daemon = new Daemon('./app/app.js');
-
-        daemon.start(function(app) {
-
-          const Task = require(taskPath);
-          let task = new Task();
-
-          task.exec(app, function(err) {
-
-            if (err) {
-              console.log('Error executing task: ' + err.message);
-            } else {
-              console.log('Task complete!');
-            }
-
-            process.exit(0);
-
-          });
-
-        });
-
+    exec(args, flags, callback) {
+      if(typeof this._fn !== 'function') return callback(new Error("Method not implemented yet."));
+      // Prevent throws (overhead is not important in CLI)
+      try {
+        this._fn(args, flags, callback);
+      }catch(e) {
+        callback(e);
       }
     }
-  };
-
-  let cmd = commands[command.name];
-  let subCmd;
-
-  if (cmd) {
-    subCmd = cmd[command.value];
-    if (subCmd) {
-      subCmd(args, flags);
-    } else {
-      console.error(colors.red.bold('Error: ') + 'Sub command "' + command.value + '" of "' + command.name + '" not found');
-      process.exit(1);
-    }
-  } else {
-    console.error(colors.red.bold('Error: ') + 'Command "' + command.name + '" not found');
-    process.exit(1);
   }
+  
+  // Internally implemented commands (require access to Set) //
+  // Define `nodal help` command
+  new Command("help", null, (args, flags, callback) => {
+    let repeatChar = (char, r) => {
+      // Repeats a character to create a string
+      // Useful for logging
+      var str = '';
+      for (var i = 0; i < Math.ceil(r); i++) str += char;
+      return str;
+    };
+    
+    console.log('');
+    console.log(' Nodal commands');
+    console.log('');
 
+    let highPad = 0;
+    // Find the longest length (deep search to include ext)
+    commandMap.forEach((command) => {
+      if(command.full().length > highPad) highPad = command.full().length;
+      // Start at 1 to skip above
+      for(let i = 1; i < command.extLength(); i++) {
+        if(command.ext(i).length > highPad) highPad = command.ext(i).split('#')[0].length + command.full().split(' ')[0].length;
+      }
+    });
+    
+    // Sort Command map
+    let commandsList = [];
+    // We use commandsList to store all the keys
+    for(var key of commandMap.keys()) { commandsList.push(key); }
+    // Sort the keys based on Class options
+    commandsList.sort((a, b) => {
+      return commandMap.get(a)._order - commandMap.get(b)._order;
+    });
+    
+    // Go through the sorted keys
+    commandsList.forEach((key) => {
+      // Get the actual class
+      let command = commandMap.get(key);
+      // If command is hidden continue (return in case of forEach)
+      if(command.isHidden()) return;
+      // Extract base command (e.g. `g:model`)
+      let fullCommand = command.full();
+      let padding = '';
+      // Add padding to the end
+      if(fullCommand.length < highPad) padding = repeatChar(' ', highPad - fullCommand.length);
+
+      // Parse Command to colorize
+      let splitCommand = fullCommand.split(' ');
+      let baseCommand = splitCommand.shift();
+      let tags = splitCommand.join(' ');
+      let definition = command.getDefinition();
+
+      console.log(colors.yellow.bold(' nodal ' + baseCommand.toLowerCase()), (tags)?colors.gray(tags):'', padding, '\t' + definition);
+
+      // SubCommand we start at 1 to skip the original (printed above)
+      for(let i = 1; i < command.extLength(); i++) {
+        let localDef = command.ext(i).split('#');
+        let localCommand = localDef.shift();
+        let localPad = repeatChar(' ', (highPad - baseCommand.length - localCommand.length));
+        console.log(colors.yellow.bold(' nodal ' + baseCommand.toLowerCase()), colors.gray(localCommand.toLowerCase()), localPad, '\t' + localDef.join(''));
+      }
+      
+      // Line under
+      console.log(colors.gray(repeatChar('-', highPad + 7)));
+    });
+    
+    callback();
+  }, "Help and information on all Nodal CLI commands");
+  
+  // Recursive Importer
+  let commandDir = path.resolve(__dirname, 'commands');
+  let commandFiles = fs.readdirSync(commandDir);
+
+  for(let i = 0; i < commandFiles.length; i++) {
+    // Make sure task is a .js file
+    if(!path.extname(commandFiles[i])) continue;
+    // Require command file & pass Command class to it
+    require(path.resolve(commandDir, commandFiles[i]))(Command);
+  }
+  
+  // Check if our constructed Map has the command
+  if(commandMap.has(command)) {
+    commandMap.get(command).exec(args, flags, function(error) {
+      if(error) {
+        console.error(colors.red.bold('Error: ') + error.message);
+        // Append help to all errors
+        console.log(colors.green('Help: ') + 'Type `nodal help` to get more information about what Nodal can do for you.');
+      }
+      process.exit((error)?1:0);
+    });
+  }else{
+    console.error(colors.red.bold('Error: ') + 'Command "' + command + '" not found');
+    console.log(colors.green('Help: ') + 'Type `nodal help` to get more information about what Nodal can do for you.');
+  }
 })();
