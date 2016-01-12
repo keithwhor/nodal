@@ -145,8 +145,8 @@ module.exports = (function() {
         console.log('Installing additional packages in this directory...');
         console.log('');
 
-        let spawn = require('cross-spawn-async');
-        let child = spawn('npm',  ['install', 'bcrypt', '--save'], {cwd: process.cwd(), stdio: 'inherit'});
+        let spawn = require('child_process').spawn;
+        let child = spawn('npm',  ['install', 'bcrypt', '--save'], {cwd: process.cwd(), stdio: [process.stdin, process.stdout, process.stderr]});
 
         child.on('exit', function() {
 

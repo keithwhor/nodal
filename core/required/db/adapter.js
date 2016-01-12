@@ -162,7 +162,7 @@ module.exports = (function() {
       if (typeof subQuery === 'object' && subQuery !== null) {
         subQuery = this.escapeField(subQuery.table);
       } else {
-        subQuery = subQuery ? `(${subQuery})` : table;
+        subQuery = `(${subQuery})`;
       }
 
       return [
@@ -174,8 +174,7 @@ module.exports = (function() {
             return `(${formatTableField(field.name || field.table || table, field.columnName)}) AS ${this.escapeField(field.alias)}`;
           }).join(','),
         ' FROM ',
-          subQuery,
-          ' AS ',
+          subQuery ? `${subQuery} AS ` : '',
           this.escapeField(table),
           this.generateJoinClause(table, joinArray),
           this.generateWhereClause(table, multiFilter, paramOffset),

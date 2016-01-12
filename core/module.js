@@ -23,7 +23,6 @@ module.exports = (function() {
     Migration: null,
     Model: null,
     ModelArray: null,
-    ModelFactory: null,
     Router: null,
     Scheduler: null,
     SchedulerTask: null,
@@ -118,12 +117,6 @@ module.exports = (function() {
     ModelArray: {
       get: function() {
         return Nodal.ModelArray || (Nodal.ModelArray = require('./required/model_array.js'));
-      },
-      enumerable: true
-    },
-    ModelFactory: {
-      get: function() {
-        return Nodal.ModelFactory || (Nodal.ModelFactory = require('./required/model_factory.js'));
       },
       enumerable: true
     },
