@@ -8,8 +8,12 @@ module.exports = (function() {
 
   let dot = require('dot');
 
-  dot.templateSettings.strip = false;
-  dot.templateSettings.varname = 'data';
+  let templateSettings = Object.keys(dot.templateSettings).reduce((o, k) => {
+    o[k] = dot.templateSettings[k];
+    return o;
+  }, {})
+  templateSettings.strip = false;
+  templateSettings.varname = 'data';
 
   let taskDir = './tasks';
 
@@ -20,8 +24,11 @@ module.exports = (function() {
     };
 
     var fn = dot.template(
-      fs.readFileSync(__dirname + '/templates/task.jst').toString()
+      fs.readFileSync(__dirname + '/templates/task.jst').toString(),
+      templateSettings
     );
+
+    console.log(fn.toString());
 
     return fn(task);
 

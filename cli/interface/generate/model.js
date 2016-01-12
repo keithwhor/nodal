@@ -10,9 +10,12 @@ module.exports = (function() {
   let generateMigration = require('./migration.js').generate;
 
   let dot = require('dot');
-
-  dot.templateSettings.strip = false;
-  dot.templateSettings.varname = 'data';
+  let templateSettings = Object.keys(dot.templateSettings).reduce((o, k) => {
+    o[k] = dot.templateSettings[k];
+    return o;
+  }, {})
+  templateSettings.strip = false;
+  templateSettings.varname = 'data';
 
   let modelDir = './app/models';
 
@@ -24,10 +27,8 @@ module.exports = (function() {
     };
 
     return dot.template(
-      fs.readFileSync(__dirname + '/templates/model.jst', {
-        varname: 'data',
-        strip: false
-      }).toString()
+      fs.readFileSync(__dirname + '/templates/model.jst').toString(),
+      templateSettings
     )(model);
 
   }

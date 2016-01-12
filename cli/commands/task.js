@@ -1,34 +1,46 @@
-module.exports = function(Command) {
+module.exports = (() => {
+
   'use strict';
 
+  const Command = require('../command.js');
   const fs = require('fs');
 
-  new Command("task <task name>", { hidden: false, order: 3 }, (args, flags, callback) => {
-    'use strict';
+  const Daemon = require('../../core/required/daemon.js');
 
-    let taskName = args[0] && args[0][0] || '';
-    let cwd = process.cwd();
-    let taskPath = cwd + '/tasks/' + taskName + '.js';
+  return new Command(
+    null,
+    'task <task name>',
+    {definition: 'Run the named task', hidden: false, order: 3},
+    (args, flags, callback) => {
 
-    if (!fs.existsSync(taskPath)) callback(new Error('Task "' + taskName + '" does not exist'));
+      let taskName = args[0] && args[0][0] || '';
+      let cwd = process.cwd();
+      let taskPath = cwd + '/tasks/' + taskName + '.js';
 
-    const Daemon = new require('../../core/required/daemon.js');
-    let daemon = new Daemon('./app/app.js');
+      if (!fs.existsSync(taskPath)) callback(new Error('Task "' + taskName + '" does not exist'));
 
-    daemon.start(function(app) {
-      const Task = require(taskPath);
-      let task = new Task();
+      let daemon = new Daemon('./app/app.js');
 
-      task.exec(app, args, function(err) {
-        if (err) {
+      daemon.start(function(app) {
+
+        const Task = require(taskPath);
+        let task = new Task();
+
+        task.exec(app, args, (err) => {
+
+          if (err) {
             console.log(`${colors.red.bold('Task Error:')} ${err.message}`);
-        } else {
+          } else {
             console.log('Task complete!');
-        }
+          }
 
-        callback();
+          callback();
+
+        });
 
       });
-    });
-  }, "Run the named task");
-};
+
+    }
+  );
+
+})();

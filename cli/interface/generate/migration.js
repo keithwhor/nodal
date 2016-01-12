@@ -6,8 +6,12 @@ module.exports = (function() {
   let colors = require('colors/safe');
   let dot = require('dot');
 
-  dot.templateSettings.strip = false;
-  dot.templateSettings.varname = 'data';
+  let templateSettings = Object.keys(dot.templateSettings).reduce((o, k) => {
+    o[k] = dot.templateSettings[k];
+    return o;
+  }, {})
+  templateSettings.strip = false;
+  templateSettings.varname = 'data';
 
   let migrationDir = './db/migrations';
 
@@ -32,10 +36,8 @@ module.exports = (function() {
       };
 
       return dot.template(
-        fs.readFileSync(__dirname + '/templates/migration.jst', {
-          varname: 'data',
-          strip: false
-        }).toString()
+        fs.readFileSync(__dirname + '/templates/migration.jst').toString(),
+        templateSettings
       )(migration);
 
     };
