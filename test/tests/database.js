@@ -12,9 +12,21 @@ module.exports = (function(Nodal) {
       columns: [
         {name: 'id', type: 'serial'},
         {name: 'test', type: 'string'},
+        {name: 'created_at', type: 'datetime'},
+        {name: 'reference_id', type: 'int'}
+      ]
+    };
+
+    let myReferenceTable = {
+      table: 'reference',
+      columns: [
+        {name: 'id', type: 'serial'},
+        {name: 'test', type: 'string'},
         {name: 'created_at', type: 'datetime'}
       ]
     };
+
+
 
     after(function(done) {
 
@@ -98,7 +110,10 @@ module.exports = (function(Nodal) {
       it('should be able to create a table', function(done) {
 
         db.transaction(
-          db.adapter.generateCreateTableQuery(myTable.table, myTable.columns),
+          [
+            db.adapter.generateCreateTableQuery(myTable.table, myTable.columns),
+            db.adapter.generateCreateTableQuery(myReferenceTable.table, myReferenceTable.columns)
+          ].join(';'),
           function(err, result) {
             expect(err).to.equal(null);
             done();
@@ -107,11 +122,53 @@ module.exports = (function(Nodal) {
 
       });
 
-      it('should be able to drop a table', function(done) {
+      it('should be able to add a foreign key constraint', function(done) {
 
         db.query(
-          db.adapter.generateDropTableQuery(myTable.table),
+          db.adapter.generateSimpleForeignKeyQuery(myTable.table, myReferenceTable.table),
           [],
+          function(err, result) {
+            expect(err).to.equal(null);
+            done();
+          }
+        );
+
+      });
+
+      it('should not be able to drop a table that has a constraint', function(done) {
+
+        db.query(
+          db.adapter.generateDropTableQuery(myReferenceTable.table),
+          [],
+          function(err, result) {
+            expect(err).to.not.equal(null);
+            done();
+          }
+        );
+
+      });
+
+      it('should be able to drop a foreign key constraint', function(done) {
+
+        db.query(
+          db.adapter.generateDropSimpleForeignKeyQuery(myTable.table, myReferenceTable.table),
+          [],
+          function(err, result) {
+            expect(err).to.equal(null);
+            done();
+          }
+        );
+
+      });
+
+
+      it('should be able to drop a tables', function(done) {
+
+        db.transaction(
+          [
+            db.adapter.generateDropTableQuery(myTable.table),
+            db.adapter.generateDropTableQuery(myReferenceTable.table),
+          ].join(';'),
           function(err, result) {
             expect(err).to.equal(null);
             done();
