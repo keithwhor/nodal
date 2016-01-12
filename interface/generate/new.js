@@ -3,7 +3,7 @@
 const fs = require('fs');
 const fs_extra = require('fs-extra');
 const path = require('path');
-const prompt = require('prompt');
+const inquirer = require('inquirer');
 const inflect = require('i')();
 const colors = require('colors/safe');
 
@@ -11,39 +11,36 @@ module.exports = (function() {
 
   return {
     new: function(args, flags, callback) {
-      prompt.message = '';
-      prompt.delimiter = '';
       const rootPath = path.resolve(__dirname);
 
       console.log('');
-      console.log('Welcome to Nodal!');
+      console.log(`Welcome to ${colors.bold.green('Nodal!')}`);
       console.log('');
       console.log('Let\'s get some information about your project...');
       console.log('');
 
-      var schema = {
-        properties: {
-          name: {
-            default: 'my-nodal-project'
-          },
-          author: {
-            default: 'mysterious author'
-          },
-          heroku: {
-            message: 'heroku support?',
-            validator: /y[es]*|n[o]?/,
-            warning: 'Must respond yes or no',
-            default: 'no',
-            before: (value) => value === 'yes'
-          }
-        }
-      };
+      var questions = [
+        {
+          name: 'name',
+          type: 'input',
+          default: 'my-nodal-project',
+          message: 'Name',
+        },
+        {
+          name: 'author',
+          type: 'input',
+          default: 'mysterious author',
+          message: 'Author',
+        },
+       {
+         name: 'heroku',
+         type: "confirm",
+         default: false,
+         message: 'heroku support?',
+       }
+      ];
 
-      prompt.get(schema, function(err, promptResult) {
-
-        if (err) {
-          callback(error);
-        }
+      inquirer.prompt(questions, (promptResult) => {
 
         promptResult.simpleName = promptResult.name.replace(/\s/gi, '-');
         promptResult.databaseName = inflect.underscore(promptResult.name);
