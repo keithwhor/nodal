@@ -1,13 +1,12 @@
-'use strict';
-
-const fs = require('fs');
-const fs_extra = require('fs-extra');
-const path = require('path');
-const inquirer = require('inquirer');
-const inflect = require('i')();
-const colors = require('colors/safe');
-
 module.exports = (function() {
+  'use strict';
+
+  const fs = require('fs');
+  const fs_extra = require('fs-extra');
+  const path = require('path');
+  const inquirer = require('inquirer');
+  const inflect = require('i')();
+  const colors = require('colors/safe');
 
   return {
     new: function(args, flags, callback) {

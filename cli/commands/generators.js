@@ -1,6 +1,7 @@
-"use strict";
-
 module.exports = function(Command) {
+
+  'use strict';
+
   let interfaceDBCommands = require('../interface/generate/commands');
 
   class GeneratorCommand extends Command {

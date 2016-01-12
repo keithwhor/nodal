@@ -1,6 +1,6 @@
-'use strict';
-
 module.exports = function(Command) {
+  'use strict';
+
   let interfaceCommands = require('../interface/generate/new');
 
   new Command("new", { order: 1 }, (args, flags, callback) => {

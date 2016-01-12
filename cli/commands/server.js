@@ -1,4 +1,6 @@
 module.exports = function(Command) {
+  'use strict';
+
   new Command("s", { order: 2 }, (args, flags, callback) => {
     "use strict";
     let Nodal = require('../../core/module.js');

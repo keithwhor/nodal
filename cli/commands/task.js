@@ -1,8 +1,8 @@
-'use strict';
-
-const fs = require('fs');
-
 module.exports = function(Command) {
+  'use strict';
+
+  const fs = require('fs');
+
   new Command("task <task name>", { hidden: false, order: 3 }, (args, flags, callback) => {
     'use strict';
 
