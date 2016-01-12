@@ -319,11 +319,6 @@ module.exports = {
 
     });
 
-  },
-
-  seed: function(args, flags, callback) {
-    console.log('Database seeding complete!');
-    callback()
   }
 
 };

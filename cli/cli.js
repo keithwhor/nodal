@@ -153,7 +153,8 @@
 
     if (error) {
       console.error(colors.red.bold('Error: ') + error.message);
-      console.error(error.stack);
+      error.details && console.error(error.details);
+      error.stack && console.error(error.stack);
       // Append help to all errors
       console.log(colors.green('Help: ') + 'Type `nodal help` to get more information about what Nodal can do for you.');
     }

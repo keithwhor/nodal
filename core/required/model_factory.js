@@ -29,8 +29,8 @@ module.exports = (function() {
     static loadModels() {
 
       return fs
-        .readDirSync('./app/models')
-        .map(filename => require(`./app/models/${filename}`))
+        .readdirSync('./app/models')
+        .map(filename => require(`${process.cwd()}/app/models/${filename}`))
 
     }
 
