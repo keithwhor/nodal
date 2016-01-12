@@ -166,18 +166,23 @@ module.exports = (function() {
 
     addForeignKey(table, referenceTable) {
 
-      this.schema.addForeignKey(table, referenceTable);
-
-      return this.db.adapter.generateSimpleForeignKeyQuery(table, referenceTable);
+      if (this.db.adapter.supportsForeignKey) {
+        this.schema.addForeignKey(table, referenceTable);
+        return this.db.adapter.generateSimpleForeignKeyQuery(table, referenceTable);
+      } else {
+        throw new Error(`${this.db.adapter.constructor.name} does not support foreign keys`);
+      }
 
     }
 
     dropForeignKey(table, referenceTable) {
 
-      this.schema.dropForeignKey(table, referenceTable);
-
-      return this.db.adapter.generateDropSimpleForeignKeyQuery(table, referenceTable);
-
+      if (this.db.adapter.supportsForeignKey) {
+        this.schema.dropForeignKey(table, referenceTable);
+        return this.db.adapter.generateDropSimpleForeignKeyQuery(table, referenceTable);
+      } else {
+        throw new Error(`${this.db.adapter.constructor.name} does not support foreign keys`);
+      }
     }
 
 
