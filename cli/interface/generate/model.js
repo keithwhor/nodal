@@ -3,7 +3,7 @@
 module.exports = (function() {
 
   let fs = require('fs');
-  let Database = require('../../core/module.js').Database;
+  let Database = require('../../../core/module.js').Database;
 
   let colors = require('colors/safe');
   let inflect = require('i')();

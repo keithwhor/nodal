@@ -3,7 +3,7 @@
 let fs = require('fs');
 let pg = require('pg');
 let async = require('async');
-let Nodal = require('../../core/module.js');
+let Nodal = require('../../../core/module.js');
 
 let Database = Nodal.Database;
 let SchemaGenerator = Nodal.SchemaGenerator;

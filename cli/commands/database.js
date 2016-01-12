@@ -1,7 +1,7 @@
 "use strict";
 
 module.exports = function(Command) {
-  let interfaceDBCommands = require('../../interface/db/commands');
+  let interfaceDBCommands = require('../interface/db/commands');
 
   class DBCommand extends Command {
     constructor(name, options, fn, def) {
