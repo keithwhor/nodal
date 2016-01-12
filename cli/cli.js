@@ -18,10 +18,10 @@
     process.exit(1);
   }
 
-  /// Improve ///
   let args = [];
   let flags = {};
 
+  // Parse arguments & flags from argv
   process.argv.slice(3).forEach(function(v) {
     let values = v.split(':');
     if (v.substr(0, 2) === '--') {
@@ -31,7 +31,6 @@
       args.push(values);
     }
   });
-  /// ------ ///
   
   // A Map that stores all commands
   let commandMap = new Map();
