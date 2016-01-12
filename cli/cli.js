@@ -9,7 +9,7 @@
 
   let command = process.argv.slice(2, 3).pop();
 
-  command = command ? command : '_base_';
+  command = command ? command : '';
   
   // Make sure we are in a project directory
   if ((command !== 'new') && (command !== 'help') && (!fs.existsSync(process.cwd() + '/.nodal'))) {
