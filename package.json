@@ -1,6 +1,6 @@
 {
   "name": "nodal",
-  "version": "0.5.6-rc4",
+  "version": "0.5.6-rc5",
   "description": "An API Server and Framework for node.js",
   "keywords": ["framework", "api", "application", "branding", "server", "modular", "nodal"],
   "author": "Keith Horwood",
