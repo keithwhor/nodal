@@ -1,8 +1,9 @@
+"use strict";
+
 module.exports = (function() {
-  'use strict';
 
   let fs = require('fs');
-  let Database = require('../../../core/module.js').Database;
+  let Database = require('../../core/module.js').Database;
 
   let colors = require('colors/safe');
   let inflect = require('i')();
@@ -144,8 +145,8 @@ module.exports = (function() {
         console.log('Installing additional packages in this directory...');
         console.log('');
 
-        let spawn = require('cross-spawn-async');
-        let child = spawn('npm',  ['install', 'bcrypt', '--save'], {cwd: process.cwd(), stdio: 'inherit'});
+        let spawn = require('child_process').spawn;
+        let child = spawn('npm',  ['install', 'bcrypt', '--save'], {cwd: process.cwd(), stdio: [process.stdin, process.stdout, process.stderr]});
 
         child.on('exit', function() {
 

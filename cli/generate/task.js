@@ -1,5 +1,6 @@
+"use strict";
+
 module.exports = (function() {
-  'use strict';
 
   let fs = require('fs');
 
@@ -44,7 +45,7 @@ module.exports = (function() {
         return inflect.underscore(v);
       });
 
-      let createPath = [taskDir].concat(taskPath).join('/') + '/' + inflect.underscore(taskName) + '.js';
+      let createPath = [taskDir].concat(taskPath).join('/') + '/' + inflect.underscore(taskName) + '_task.js';
 
       if (fs.existsSync(createPath)) {
         throw new Error('task already exists');
