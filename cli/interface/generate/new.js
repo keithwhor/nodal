@@ -31,18 +31,31 @@ module.exports = (function() {
           default: 'mysterious author',
           message: 'Author',
         },
-       {
-         name: 'heroku',
-         type: "confirm",
-         default: false,
-         message: 'heroku support?',
-       }
+        {
+          name: 'heroku',
+          type: 'confirm',
+          default: false,
+          message: 'heroku support?',
+        },
+        {
+          name: 'database',
+          type: 'confirm',
+          default: false,
+          message: 'Database support?',
+        },
+        {
+          name: 'databaseName',
+          type: 'input',
+          default: (answers) => inflect.underscore(answers.name),
+          message: 'Database name',
+          when: (answers) => answers.database
+        },
       ];
 
       inquirer.prompt(questions, (promptResult) => {
 
         promptResult.simpleName = promptResult.name.replace(/\s/gi, '-');
-        promptResult.databaseName = inflect.underscore(promptResult.name);
+        promptResult.databaseName = inflect.underscore(promptResult.databaseName);
         let dirname = promptResult.name.replace(/[^A-Za-z0-9-_]/gi, '-').toLowerCase();
 
         console.log('');
@@ -86,9 +99,21 @@ module.exports = (function() {
 
           // read in the dbjson template, replace the development database name
           // generate new config/db.json in the generated app
+          // NOTE: The db.json is intentionally not conditionally wrapped based
+          // on DB support since if users want to enable it later, worse case it
+          // defaults to an underscored version  <appname>_development
           let dbjson = JSON.parse(fs.readFileSync(rootPath + '/templates/db.json'));
           dbjson.development.main.database = promptResult.databaseName + '_development';
           fs.writeFileSync('./' + dirname + '/config/db.json', JSON.stringify(dbjson, null, 4));
+
+          // Lets enable database support by default if the user said yes to the prompt
+          // NOTE: I didnt see the need to templatize this since it was quicker to re-write
+          //       the copied in file
+          if (promptResult.database) {
+            const appFile = './' + dirname + '/app/app.js';
+            let contents = fs.readFileSync(appFile).toString()
+            fs.writeFileSync(appFile, contents.replace(/\/\/ /g, ''));
+          }
 
           let spawn = require('cross-spawn-async');
 
