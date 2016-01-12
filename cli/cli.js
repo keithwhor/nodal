@@ -160,10 +160,8 @@
   let commandFiles = fs.readdirSync(commandDir);
 
   for(let i = 0; i < commandFiles.length; i++) {
-    /**
-     * @todo Add check for stats here (just to double check it exists)
-     * @todo Add check if file ext is .js
-    */
+    // Make sure task is a .js file
+    if(!path.extname(commandFiles[i])) continue;
     // Require command file & pass Command class to it
     require(path.resolve(commandDir, commandFiles[i]))(Command);
   }
