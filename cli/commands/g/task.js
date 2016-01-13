@@ -7,7 +7,7 @@ module.exports = (() => {
 
   return new GenerateCommand(
     'task <task name>',
-    {definition: 'Add a new task', hidden: false},
+    {definition: 'Add a new task'},
     (args, flags, callback) => interfaceGenerateCommands.task(args, flags, callback)
   );
 

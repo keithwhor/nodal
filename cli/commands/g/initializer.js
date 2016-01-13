@@ -7,7 +7,7 @@ module.exports = (() => {
 
   return new GenerateCommand(
     'initializer',
-    {hidden: true},
+    {definition: 'Generate a new initializer'},
     (args, flags, callback) => interfaceGenerateCommands.initializer(args, flags, callback)
   );
 

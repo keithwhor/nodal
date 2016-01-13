@@ -7,7 +7,7 @@ module.exports = (() => {
 
   return new GenerateCommand(
     'migration',
-    {hidden: true},
+    {definition: 'Generate an empty migration'},
     (args, flags, callback) => interfaceGenerateCommands.migration(args, flags, callback)
   );
 
