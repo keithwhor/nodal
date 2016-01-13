@@ -66,7 +66,8 @@
           if(command.full().length > highPad) highPad = command.full().length;
           // Start at 1 to skip above
           for(let i = 1; i < command.extLength(); i++) {
-            if(command.ext(i).length > highPad) highPad = command.ext(i).split('#')[0].length + command.full().split(' ')[0].length;
+            let extLength = command.ext(i).split('#')[0].length + command.full().split(' ')[0].length;
+            if((command.ext(i).length > highPad) && extLength > highPad) highPad = extLength;
           }
         });
 
