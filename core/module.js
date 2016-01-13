@@ -46,7 +46,8 @@ module.exports = (function() {
       mime: require('mime-types'),
       inflect: require('i')()
     },
-    rootDirectory: process.cwd()
+    rootDirectory: process.cwd(),
+    env: process.env.NODE_ENV || 'development'
   };
 
   Object.defineProperties(LazyNodal, {
@@ -163,13 +164,13 @@ module.exports = (function() {
   Object.defineProperties(LazyNodal.my, {
     Config: {
       get: function() {
-        return Nodal.my.Config || (Nodal.my.Config = require('./required/my/config.js')(LazyNodal.rootDirectory));
+        return Nodal.my.Config || (Nodal.my.Config = require('./required/my/config.js')(LazyNodal));
       },
       enumerable: true
     },
     Schema: {
       get: function() {
-        return Nodal.my.Schema || (Nodal.my.Schema = require('./required/my/schema.js')(LazyNodal.rootDirectory));
+        return Nodal.my.Schema || (Nodal.my.Schema = require('./required/my/schema.js')(LazyNodal));
       },
       enumerable: true
     }

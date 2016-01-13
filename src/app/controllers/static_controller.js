@@ -56,7 +56,7 @@ module.exports = (function() {
 
       } else {
 
-        if (Nodal.my.Config.env === 'production') {
+        if (Nodal.env === 'production') {
           this.setHeader('Cache-Control', 'max-age=60');
           this.setHeader('ETag', staticData.tag);
         }

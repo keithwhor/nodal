@@ -9,7 +9,7 @@ describe('Test Suite', function() {
 
   let Nodal = require('../core/module.js');
   Nodal.rootDirectory = __dirname;
-  
+
   if(os.platform() === 'win32') {
     // `psql` can take a long time to respond to a request on Windows
     // Here we pass a ~15 seconds timeout to allow for the
@@ -17,7 +17,7 @@ describe('Test Suite', function() {
     let processOptions = {
       timeout: 14900
     };
-    
+
     before(function(done) {
       this.timeout(30000); // Set timeout to 30 seconds
       if (global.env === 'development') {
@@ -25,7 +25,7 @@ describe('Test Suite', function() {
         // Errors are not thrown and instead are treated as warnings
         child_process.exec('psql -q -c "drop database if exists nodal_test;" -U postgres', processOptions, function(error, stdout, stderr) {
           if(error) console.warn("Warning:", stderr, "\nErrors ignored.");
-          // 
+          //
           child_process.exec('psql -a -c "create database nodal_test;" -U postgres', processOptions, function(error, stdout, stderr) {
             if(error) console.warn("Warning:", stderr, "\nErrors ignored.");
             done();
@@ -59,7 +59,7 @@ describe('Test Suite', function() {
       }
     });
   }
-  
+
 
   require('./tests/nodal.js')(Nodal);
 

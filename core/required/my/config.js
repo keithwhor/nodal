@@ -1,21 +1,17 @@
-"use strict";
+module.exports = Nodal => {
 
-const fs = require('fs');
-const dot = require('dot');
+  'use strict';
 
-module.exports = (function(rootDirectory) {
+  const fs = require('fs');
+  const dot = require('dot');
 
-  let config = {
-    env: process.env.NODE_ENV || 'development',
-  };
-
-  let credentials, secrets;
+  let config = {};
 
   let varname = dot.templateSettings.varname;
 
   dot.templateSettings.varname = 'env';
 
-  let dir = rootDirectory + '/config';
+  let dir = Nodal.rootDirectory + '/config';
   let configFiles = fs.readdirSync(dir);
 
   let ext = '.json';
@@ -35,7 +31,7 @@ module.exports = (function(rootDirectory) {
       configData = {};
     }
 
-    config[filename.substr(0, filename.length - ext.length)] = configData[config.env];
+    config[filename.substr(0, filename.length - ext.length)] = configData[Nodal.env];
 
   });
 
@@ -43,4 +39,4 @@ module.exports = (function(rootDirectory) {
 
   return config;
 
-});
+};

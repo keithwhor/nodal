@@ -1,13 +1,13 @@
-"use strict";
+module.exports = Nodal => {
 
-const fs = require('fs');
+  'use strict';
 
-module.exports = (function(rootDirectory) {
+  const fs = require('fs');
 
   try {
-    return JSON.parse(fs.readFileSync(rootDirectory + '/db/schema.json'));
+    return JSON.parse(fs.readFileSync(Nodal.rootDirectory + '/db/schema.json'));
   } catch(e) {
     return {migration_id: null};
   }
 
-});
+};
