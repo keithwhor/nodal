@@ -2,8 +2,6 @@ module.exports = (() => {
 
   'use strict';
 
-  const Nodal = require('nodal');
-
   const DatabaseCommand = require('../../database_command.js');
   const fs = require('fs');
   const async = require('async');
