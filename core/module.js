@@ -29,6 +29,7 @@ module.exports = (function() {
     SchedulerTask: null,
     SchemaGenerator: null,
     Test: null,
+    TestRunner: null,
     my: {
       Config: null,
       Schema: null
@@ -156,6 +157,12 @@ module.exports = (function() {
     Test: {
       get: function() {
         return Nodal.Test || (Nodal.Test = require('./required/test.js'));
+      },
+      enumerable: true
+    },
+    TestRunner: {
+      get: function() {
+        return Nodal.TestRunner || (Nodal.TestRunner = require('./required/test_runner.js'));
       },
       enumerable: true
     }

@@ -1,14 +1,27 @@
-module.exports = (function() {
+module.exports = (() => {
 
   'use strict';
 
   const Nodal = require('nodal');
+  Nodal.env = 'test';
 
-  let daemon = new Nodal.Daemon('./app/app.js');
+  const daemon = new Nodal.Daemon('./app/app.js');
+  const TestRunner = new Nodal.TestRunner('./test/tests');
 
-  daemon.start(function(app) {
+  describe('My Application', () => {
 
-    /* Load tests here */
+    before((done) => {
+
+      daemon.start(app => {
+
+        TestRunner.ready(app);
+        done();
+
+      });
+
+    });
+
+    TestRunner.start(require('chai').expect);
 
   });
 
