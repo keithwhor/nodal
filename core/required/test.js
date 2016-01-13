@@ -15,21 +15,17 @@ module.exports = (() => {
 
       describe(this.constructor.name, () => {
 
-        before(this.before.bind(this, verb));
+        this.before && before(this.before.bind(this, verb));
 
         this.test(verb);
 
-        after(this.after.bind(this, verb));
+        this.after && after(this.after.bind(this, verb));
 
       });
 
     }
 
-    before() {}
-
     test() {}
-
-    after() {}
 
   }
 
