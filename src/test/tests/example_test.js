@@ -21,7 +21,7 @@ module.exports = (() => {
           expect(1 + 1).to.equal(2);
           done();
 
-        });
+        }, 10);
 
       });
 
