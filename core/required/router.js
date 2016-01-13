@@ -173,7 +173,7 @@ module.exports = (function() {
           'OPTIONS': ['options', 'options']
         }[request.method] || ['index', 'index'])[(id !== null) | 0];
 
-        controller[method](controller, params, app);
+        controller[method](controller, controller.params, controller.app);
 
       });
 

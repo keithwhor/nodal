@@ -10,8 +10,12 @@
   "dependencies": {
     "nodal": "latest"
   },
+  "devDependencies": {
+    "chai": "~2.3.0",
+    "mocha": "~2.2.4"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha ./test/runner.js",
     "start": "node server.js --harmony_classes",
     "worker": "node worker.js --harmony_classes"
   },

@@ -28,6 +28,7 @@ module.exports = (function() {
     Scheduler: null,
     SchedulerTask: null,
     SchemaGenerator: null,
+    Test: null,
     my: {
       Config: null,
       Schema: null
@@ -148,6 +149,12 @@ module.exports = (function() {
     SchemaGenerator: {
       get: function() {
         return Nodal.SchemaGenerator || (Nodal.SchemaGenerator = require('./required/db/schema_generator.js'));
+      },
+      enumerable: true
+    },
+    Test: {
+      get: function() {
+        return Nodal.Test || (Nodal.Test = require('./required/test.js'));
       },
       enumerable: true
     }
