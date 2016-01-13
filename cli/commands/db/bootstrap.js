@@ -6,9 +6,9 @@ module.exports = (() => {
   const interfaceDBCommands = require('../../interface/db/commands.js');
 
   return new DatabaseCommand(
-    'seed',
-    {definition: 'Populate database with default data'},
-    (args, flags, callback) => interfaceDBCommands.seed(args, flags, callback)
+    'bootstrap',
+    {definition: 'Run db:prepare, db:migrate and db:seed with one command'},
+    (args, flags, callback) => interfaceDBCommands.bootstrap(args, flags, callback)
   );
 
 })();
