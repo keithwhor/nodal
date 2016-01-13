@@ -2,6 +2,8 @@ module.exports = (() => {
 
   'use strict';
 
+  const Nodal = require('nodal');
+
   const DatabaseCommand = require('../../database_command.js');
   const fs = require('fs');
   const ModelFactory = require('../../../core/required/model_factory.js');
@@ -11,18 +13,10 @@ module.exports = (() => {
     {definition: 'Populate database with default data'},
     (args, flags, callback) => {
 
-      let seedExists = fs.existsSync('./db/seed.json');
+      let seed = Nodal.my.Config.seed;
 
-      if (!seedExists) {
-        return callback(new Error('Could not seed, "./db/seed.json" does not exist.'));
-      }
-
-      let seed = fs.readFileSync('./db/seed.json').toString();
-
-      try {
-        seed = JSON.parse(seed);
-      } catch (e) {
-        return callback(new Error('Could not parse "./db/seed.json"'));
+      if (!seed) {
+        return callback(new Error('Could not seed, no seed found in "./config/seed.json"'));
       }
 
       return ModelFactory.populate(seed, callback);

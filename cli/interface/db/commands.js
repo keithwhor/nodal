@@ -13,21 +13,6 @@ let colors = require('colors/safe');
 let MODEL_PATH = './app/models';
 let MIGRATION_PATH = './db/migrations';
 
-function errorHandler(err, callback) {
-
-  if (err) {
-    console.error(colors.red.bold('ERROR: ') + err.message);
-    if ( undefined === callback) {
-      process.exit(0);
-    } else {
-      callback(err)
-    }
-  }
-
-  return true;
-
-}
-
 module.exports = {
 
   upgrade: function(args, flags, callback) {
@@ -49,7 +34,10 @@ module.exports = {
       [],
       function(err, result) {
 
-        errorHandler(err);
+        if (err) {
+          return callback(err);
+        }
+
         db.info('Added column "schema" to "schema_migrations"');
 
         let schema = new SchemaGenerator(db);
@@ -60,9 +48,12 @@ module.exports = {
           [schema.migrationId, schema.generate()],
           function(err, result) {
 
-            errorHandler(err);
+            if (err) {
+              return callback(err);
+            }
+
             db.info('populated most recent "schema" in "schema_migrations"');
-            if(callback) callback();
+            callback(null);
 
           }
         )
@@ -83,9 +74,12 @@ module.exports = {
 
     db.query(db.adapter.generateDropDatabaseQuery(dbCredentials.database), [], function(err, result) {
 
-      errorHandler(err);
+      if (err) {
+        return callback(err);
+      }
+
       db.info('Dropped database "' + dbCredentials.database + '"');
-      process.exit(0);
+      callback(null);
 
     });
 
@@ -102,9 +96,12 @@ module.exports = {
 
     db.query(db.adapter.generateCreateDatabaseQuery(dbCredentials.database), [], function(err, result) {
 
-      errorHandler(err);
+      if (err) {
+        return callback(err);
+      }
+
       db.info('Created empty database "' + dbCredentials.database + '"');
-      process.exit(0);
+      callback(null);
 
     });
 
@@ -128,14 +125,15 @@ module.exports = {
       ].join(';'),
       function(err, result) {
 
-        errorHandler(err);
+        if (err) {
+          return callback(err);
+        }
+
         Database.prototype.info('Prepared database "' + dbCredentials.database + '" for migrations');
         schema.save();
-        if ( undefined === callback) {
-          process.exit(0);
-        } else {
-          callback();
-        }
+
+        callback(null);
+
       }
     );
 
@@ -160,17 +158,18 @@ module.exports = {
     }
 
     db.query(db.adapter.generateSelectQuery(null, 'schema_migrations', ['id'], null, null, orderClause, limitClause), [], function(err, result) {
+
       if (err) {
-        db.error('Could not get schema migration version,  try `nodal db:prepare` first');
-        process.exit(0);
+        return callback(new Error('Could not get schema migration version,  try `nodal db:prepare` first'));
       }
 
       if (result.rows && result.rows.length) {
         console.log(colors.green.bold('Current Schema Version: ') + result.rows[0].id);
       } else {
-        console.log(colors.red.bold('Database Error: ') + 'No Migrations have been run, try `nodal db:migrate` first');
+        return callback(new Error('No Migrations have been run, try `nodal db:migrate` first'));
       }
-      process.exit(0);
+
+      callback(null);
 
     });
 
@@ -189,12 +188,7 @@ module.exports = {
     db.query(db.adapter.generateSelectQuery(null, 'schema_migrations', ['id']), [], function(err, result) {
 
       if (err) {
-        db.error('Could not get schema migrations, try `nodal db:prepare` first');
-        if ( undefined === callback) {
-          process.exit(0);
-        } else {
-          callback(err);
-        }
+        return callback(new Error('Could not get schema migrations, try `nodal db:prepare` first'));
       }
 
       let schema_ids = result.rows.map(function(v) { return v.id; });
@@ -211,12 +205,7 @@ module.exports = {
       });
 
       if (migrations.length === 0) {
-        console.log('No pending migrations');
-        if ( undefined === callback) {
-          process.exit(0);
-        } else {
-          callback();
-        }
+        return callback(new Error('No pending migrations'));
       }
 
       let migrateFuncs = migrations.map(function(v) {
@@ -238,17 +227,11 @@ module.exports = {
         function(err) {
 
           if (err) {
-            console.error(colors.red.bold('ERROR: ') + err.message);
-            console.log('Migration could not be completed');
-          } else {
-            console.log('Migration complete!');
+            return callback(err);
           }
 
-          if ( undefined === callback) {
-            process.exit(0);
-          } else {
-            callback(err);
-          }
+          console.log('Migration complete!');
+          callback(null);
 
         }
       );
@@ -270,8 +253,7 @@ module.exports = {
     db.query(db.adapter.generateSelectQuery(null, 'schema_migrations', ['id']), [], function(err, result) {
 
       if (err) {
-        db.error('Could not get schema migrations, try `nodal db:prepare` first');
-        process.exit(0);
+        return callback(new Error('Could not get schema migrations, try `nodal db:prepare` first'));
       }
 
       let schema_ids = result.rows.map(function(v) { return v.id; });
@@ -286,8 +268,7 @@ module.exports = {
       }).reverse();
 
       if (migrations.length === 0) {
-        console.log('Could not find any completed migrations');
-        process.exit(0);
+        return callback(new Error('Could not find any completed migrations'));
       }
 
       let migrateFuncs = migrations.map(function(v, i) {
@@ -306,13 +287,11 @@ module.exports = {
         function(err) {
 
           if (err) {
-            console.error(colors.red.bold('ERROR: ') + err.message);
-            console.log('Migration rollback could not be completed');
-          } else {
-            console.log('Migration rollback complete!');
+            return callback(new Error('Migration rollback could not be completed'));
           }
 
-          process.exit(0);
+          console.log('Migration rollback complete!');
+          callback(null);
 
         }
       );
