@@ -5,6 +5,8 @@ let pg = require('pg');
 let async = require('async');
 let Nodal = require('../../../core/module.js');
 
+let ModelFactory = require('../../../core/required/model_factory.js');
+
 let Database = Nodal.Database;
 let SchemaGenerator = Nodal.SchemaGenerator;
 
@@ -319,6 +321,52 @@ module.exports = {
 
     });
 
+  },
+
+  seed: function(args, flags, callback) {
+    let seedExists = fs.existsSync('./db/seed.json');
+
+    if (!seedExists) {
+      return callback(new Error('Could not seed, "./db/seed.json" does not exist.'));
+    }
+
+    let seed = fs.readFileSync('./db/seed.json').toString();
+    try {
+      seed = JSON.parse(seed);
+    } catch (e) {
+      return callback(new Error('Could not parse "./db/seed.json"'));
+    }
+
+    return ModelFactory.populate(seed, callback);
+  },
+
+  // db:bootstrap executes db:prepare, db:migrate and db:seed in a single command. This
+  // is really helpful for things like web auto deploy to heroku of a sample
+  // application
+  bootstrap: function(args, flags, callback) {
+
+    async.series([
+        (callback) => {
+          this.prepare(args, flags, callback);
+        },
+        (callback) => {
+          this.migrate(args, flags, callback);
+        },
+        (callback) => {
+          this.seed(args, flags, callback);
+        }
+      ],
+      function(err) {
+        if (err) {
+          console.error(colors.red.bold('ERROR: ') + err.message);
+          console.log('Database bootstrap could not be completed');
+        } else {
+          console.log('Database bootstrap complete!');
+        }
+        process.exit(0);
+
+      }
+    );
   }
 
 };
