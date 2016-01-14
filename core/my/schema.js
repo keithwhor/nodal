@@ -2,7 +2,7 @@ module.exports = (() => {
 
   'use strict';
 
-  const environment = require('./../env.js');
+  const env = require('./../env.js');
   const fs = require('fs');
 
   try {

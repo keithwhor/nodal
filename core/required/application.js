@@ -8,6 +8,7 @@ module.exports = (function() {
   const Authorizer = require('./authorizer.js');
   const ExecutionQueue = require('./execution_queue.js');
   const Scheduler = require('./scheduler.js');
+  const EndpointRequest = require('./endpoint_request.js');
 
   const dummyRouter = require('./dummy_router.js');
 
@@ -316,6 +317,18 @@ module.exports = (function() {
     db(alias) {
 
       return this._db[alias] || null;
+
+    }
+
+    /**
+    * Creates a new MockRequest object (emulates an HTTP request)
+    * @param {string} path The path you wish to hit
+    * @param {Object} query The query parameters you wish to pass
+    * @return {Nodal.EndpointRequest}
+    */
+    endpoint(path, query) {
+
+      return new EndpointRequest(this, path, query);
 
     }
 

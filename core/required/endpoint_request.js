@@ -6,7 +6,7 @@ module.exports = (() => {
   const qs = require('querystring');
   const path = require('path');
 
-  class MockRequest {
+  class EndpointRequest {
 
     constructor(app, path, params) {
 
@@ -73,6 +73,6 @@ module.exports = (() => {
 
   }
 
-  return MockRequest;
+  return EndpointRequest;
 
 })();
