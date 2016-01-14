@@ -1,11 +1,11 @@
 # Nodal
 ## Web Servers Made Easy With Node.js
 
-[![Join the chat at https://gitter.im/keithwhor/nodal](https://badges.gitter.im/keithwhor/nodal.svg)](https://gitter.im/keithwhor/nodal?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Build Status](https://travis-ci.org/keithwhor/nodal.svg?branch=master)](https://travis-ci.org/keithwhor/nodal) [![Join the chat at https://gitter.im/keithwhor/nodal](https://badges.gitter.im/keithwhor/nodal.svg)](https://gitter.im/keithwhor/nodal?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ![Nodal Logo](./nodal.png)
 
-[![Build Status](https://travis-ci.org/keithwhor/nodal.svg?branch=master)](https://travis-ci.org/keithwhor/nodal)
+View the website at [nodaljs.com](http://nodaljs.com).
 
 Nodal is a web server for Node.js that was built with the sole purpose of making
 the developer's life easier.
@@ -198,9 +198,7 @@ You'll be able to learn more about Nodal at [nodaljs.com](http://nodaljs.com).
 
 ## Documentation
 
-Nodal has the majority of its important methods fully documented inline, in the
-codebase. You will be able to find this translated and prettified at
-[nodaljs.com](http://nodaljs.com).
+Check out the website at [nodaljs.com](http://nodaljs.com).
 
 ## About
 
