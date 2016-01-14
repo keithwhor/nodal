@@ -63,6 +63,14 @@ module.exports = (function() {
           callback(new Error("Worker failed on initialization and has been terminated."));
         }
       });
+      
+      // Handle Crashes & Redeploy
+      worker.once('exit', () => {
+        this._workers.delete(WID);
+        // Fork new Worker
+        this.fork(() => {});
+      });
+      
     }
 
     /**
