@@ -11,7 +11,12 @@ module.exports = (() => {
 
     before((done) => {
 
-      Nodal.my.bootstrapper.bootstrap(() => {
+      Nodal.my.bootstrapper.bootstrap((err) => {
+
+        if (err) {
+          console.error(err);
+          throw err;
+        }
 
         daemon.start(app => {
 
