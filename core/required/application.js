@@ -53,10 +53,6 @@ module.exports = (function() {
       this._forceProxyTLS = false; // not related to above
       this._forceWWW = false;
 
-      this._templateContents = {
-        '!': '<!-- Invalid Template //-->'
-      };
-
       this._templates = {
         '!': new Template(this, function() { return '<!-- Invalid Template //-->'; })
       };
@@ -351,12 +347,12 @@ module.exports = (function() {
     getTemplate(name, raw) {
       raw = !!raw | 0; // coerce to 0, 1
 
-      if (!this._templateContents[name]) {
-        this._templateContents[name] = Array(2);
+      if (!this._templates[name]) {
+        this._templates[name] = Array(2);
       }
 
-      if(this._templateContents[name][raw]) {
-        return this._templateContents[name][raw];
+      if(this._templates[name][raw]) {
+        return this._templates[name][raw];
       }
 
       let filename = './app/templates/' + name;
@@ -365,9 +361,9 @@ module.exports = (function() {
 
         let contents = fs.readFileSync(filename);
 
-        this._templateContents[name][raw] = contents;
+        this._templates[name][raw] = raw ? contents : dot.template(contents);
 
-        return this._templateContents[name][raw];
+        return this._templates[name][raw];
 
       } catch(e) {
 
@@ -376,7 +372,7 @@ module.exports = (function() {
 
       }
 
-      return this._templateContents['!'];
+      return this._templates['!'];
     }
 
     /**
@@ -388,30 +384,17 @@ module.exports = (function() {
 
       let templates = Array.prototype.slice.call(arguments)
 
-      // Take the last template from the spread args to use as the name for The
-      // template cache.
-      let name = templates[templates.length -1];
-
-      // If the template is already cached, return it
-      if (this._templates[name]) {
-        return this._templates[name];
-      }
-
       try {
-
         // Loop the template hierarchy, and return the first templates contents
-        let templateContents = templates.map((templateName) => {
-          return this.getTemplate(templateName, false);
+        let templateContents = templates.map((name) => {
+          return this.getTemplate(name, false);
         })[0];
 
-        this._templates[name] = new Template(
+        return new Template(
           this,
-          dot.template(templateContents),
-          templates.shift()
+          templateContents,
+          templates.slice(1).join(',')
         );
-
-       return this._templates[name];
-
 
       } catch(e) {
 
@@ -419,6 +402,8 @@ module.exports = (function() {
         console.log('Could not load template ' + name);
 
       }
+
+      return this._templates['!'];
 
     }
 
@@ -429,19 +414,14 @@ module.exports = (function() {
     */
     rawTemplate(name) {
 
-      if (this._templates[name]) {
-        return this._templates[name];
-      }
-
       let contents = this.getTemplate(name, true);
 
       try {
 
-        this._templates[name] = new Template(
+        return new Template(
           this,
           function() { return contents; }
         );
-        return this._templates[name];
 
       } catch(e) {
 

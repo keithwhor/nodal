@@ -29,6 +29,7 @@ module.exports = (function() {
 
       return this.template._fn.call(this, this._params, this._data);
 
+
     }
 
     /**
@@ -72,13 +73,12 @@ module.exports = (function() {
     /**
     * @param {Nodal.Application} app Your Nodal Application
     * @param {function} fn The method to render your template with
-    * @param {array} children Remaining children template in heirarchy
+    * @param {string} children Remaining children template in heirarchy
     */
     constructor(app, fn, children) {
-
       this._app = app;
       this._fn = fn;
-      this._children = children.join(',');
+      this._children = children;
 
     }
 
@@ -89,7 +89,6 @@ module.exports = (function() {
     * @return {ActiveTemplate}
     */
     generate(params, data) {
-
       params = params || {};
       data = data || {};
 
