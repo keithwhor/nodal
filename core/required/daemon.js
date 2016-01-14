@@ -56,7 +56,7 @@ module.exports = (function() {
       
       // Our own specific version of `online`
       worker.once('message', function(message) {
-        if ((message) && (message.alive === true)) {
+        if ((message) && (message.__alive__ === true)) {
           callback(null, worker);
         }else{
           if (worker) worker.kill();
