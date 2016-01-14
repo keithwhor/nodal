@@ -8,6 +8,7 @@ module.exports = (function() {
   const fs = require('fs');
   const cluster = require('cluster');
   const coreCount = require('os').cpus().length;
+  const WIDstatic = 0;
 
   /**
   * Daemon for running servers. Restarts when changes are made to the underlying file structure.
@@ -23,6 +24,8 @@ module.exports = (function() {
       this._path = path;
       this._watchers = null;
       this._workers = new Map();
+      // Keep instances from colliding WIDs
+      this._WIDcounter = WIDstatic;
 
       this._onStart = function() {};
 
