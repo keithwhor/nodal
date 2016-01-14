@@ -22,6 +22,7 @@ module.exports = (function() {
 
       this._path = path;
       this._watchers = null;
+      this._workers = new Map();
 
       this._onStart = function() {};
 
