@@ -82,7 +82,7 @@ module.exports = (function() {
       });
       
       // Handle Crashes & Redeploy
-      worker.once('exit', () => {
+      worker.once('exit', (worker, code, signal) => {
         this._workers.delete(WID);
         // Fork new Worker
         this.fork(() => {});
@@ -134,7 +134,7 @@ module.exports = (function() {
       // Make sure we have a Worker
       if (this._workers.size) {
         // We only have one worker for now so this is rather easy
-        let mapIterator = this._workers.value();
+        let mapIterator = this._workers.values();
         let worker = mapIter.next().value;
         
         worker.send({ __destroy__: true });
