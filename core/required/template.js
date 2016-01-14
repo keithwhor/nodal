@@ -35,9 +35,29 @@ module.exports = (function() {
     * Renders another template template based upon this ActiveTemplate's params and data
     * @return {string}
     */
-    partial(name, raw) {
+    partial(name) {
 
-      return this.template._app.template(name, !!raw).generate(this._params, this._data);
+      return this.template._app.template(name).generate(this._params, this._data);
+
+    }
+
+    /**
+    * Renders another raw template template based upon this ActiveTemplate's params and data
+    * @return {string} name The raw partial to render
+    */
+    rawPartial(name) {
+
+      return this.template._app.rawTemplate(name).generate(this._params, this._data);
+
+    }
+
+    /**
+    * Renders another template template based upon this ActiveTemplate's params and data
+    * @return {string}
+    */
+    child() {
+
+       return this.template._app.template(this.template._children).generate(this._params, this._data)
 
     }
 
@@ -52,11 +72,13 @@ module.exports = (function() {
     /**
     * @param {Nodal.Application} app Your Nodal Application
     * @param {function} fn The method to render your template with
+    * @param {array} children Remaining children template in heirarchy
     */
-    constructor(app, fn) {
+    constructor(app, fn, children) {
 
       this._app = app;
       this._fn = fn;
+      this._children = children.join(',');
 
     }
 
