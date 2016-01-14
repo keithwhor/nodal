@@ -74,49 +74,10 @@ module.exports = (function() {
       this._onStart = callback;
 
       let self = this;
-      let init = function() {
-
-        if ((process.env.NODE_ENV || 'development') === 'development') {
-          self.watch('', self.restart.bind(self));
-        }
-
-        callback.call(self, this);
-
-      };
-
-      try {
-
-        let App = require(process.cwd() + '/' + this._path);
-
-        if (!(Application.prototype.isPrototypeOf(App.prototype))) {
-          throw new Error('Daemon requires valid Nodal.Application');
-        }
-
-        App.prototype.__initialize__ = init;
-        this._app = new App();
-
-        let listener = (function(err) {
-
-          if (!(err instanceof Error)) {
-            err = new Error(err);
-          }
-
-          console.error('Caught exception: ' + err.message);
-          console.error(err.stack);
-
-          process.removeListener('uncaughtException', listener);
-          this.restart(err);
-
-        }).bind(this);
-
-        process.on('uncaughtException', listener);
-
-      } catch(err) {
-
-        this.startError(err, init);
-
-      }
-
+      
+      this.fork((error, worker) => {
+        if (error) return callback(error);
+      });
     }
 
     /**
