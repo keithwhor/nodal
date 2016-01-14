@@ -36,6 +36,6 @@ module.exports = (function() {
 
   }
 
-  return App;
+  return new App;
 
 })();
