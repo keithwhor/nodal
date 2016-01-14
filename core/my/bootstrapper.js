@@ -25,9 +25,6 @@ module.exports = (() => {
       this.rootDb = new Database();
       this.rootDb.connect(this.rootCfg);
 
-      this.db = new Database();
-      this.db.connect(this.cfg);
-
     }
 
     create(callback) {
@@ -44,12 +41,16 @@ module.exports = (() => {
 
     prepare(callback) {
 
-      let schema = new SchemaGenerator(this.db);
+      let db = new Database();
+      db.connect(this.cfg);
+      callback = this.wrapCallback(db, callback);
 
-      this.db.transaction(
+      let schema = new SchemaGenerator(db);
+
+      db.transaction(
         [
-          this.db.adapter.generateClearDatabaseQuery(),
-          this.db.adapter.generateCreateTableQuery('schema_migrations', [
+          db.adapter.generateClearDatabaseQuery(),
+          db.adapter.generateCreateTableQuery('schema_migrations', [
             {name: 'id', type: 'int', properties: {nullable: false, primary_key: true}},
             {name: 'schema', type: 'string'}
           ])
@@ -60,7 +61,7 @@ module.exports = (() => {
             return callback(err);
           }
 
-          this.db.info(`Prepared database "${this.db._config.database}" for migrations`);
+          db.info(`Prepared database "${db._config.database}" for migrations`);
           schema.save();
 
           callback(null);
@@ -71,6 +72,10 @@ module.exports = (() => {
     }
 
     version(callback) {
+
+      let db = new Database();
+      db.connect(this.cfg);
+      callback = this.wrapCallback(db, callback);
 
       // Query schema by the Id column, descending
       let orderClause = [{
@@ -84,8 +89,8 @@ module.exports = (() => {
         count: 1
       }
 
-      this.db.query(
-        this.db.adapter.generateSelectQuery(
+      db.query(
+        db.adapter.generateSelectQuery(
           null,
           'schema_migrations',
           ['id'],
@@ -116,12 +121,16 @@ module.exports = (() => {
 
     migrate(steps, callback) {
 
+      let db = new Database();
+      db.connect(this.cfg);
+      callback = this.wrapCallback(db, callback);
+
       steps = steps || 0;
 
-      this.db.query(this.db.adapter.generateSelectQuery(null, 'schema_migrations', ['id']), [], (err, result) => {
+      db.query(db.adapter.generateSelectQuery(null, 'schema_migrations', ['id']), [], (err, result) => {
 
         if (err) {
-          return callback(new Error('Could not get schema migrations'));
+          return callback(err);
         }
 
         if (!fs.existsSync(MIGRATION_PATH)) {
@@ -133,7 +142,7 @@ module.exports = (() => {
         let migrations = fs.readdirSync(MIGRATION_PATH).map((v) => {
           return {
             id: parseInt(v.substr(0, v.indexOf('__'))),
-            migration: new (require(process.cwd() + '/' + MIGRATION_PATH + '/' + v))(this.db)
+            migration: new (require(process.cwd() + '/' + MIGRATION_PATH + '/' + v))(db)
           };
         });
 
@@ -179,12 +188,16 @@ module.exports = (() => {
 
     rollback(steps, callback) {
 
+      let db = new Database();
+      db.connect(this.cfg);
+      callback = this.wrapCallback(db, callback);
+
       steps = steps || 1;
 
-      this.db.query(this.db.adapter.generateSelectQuery(null, 'schema_migrations', ['id']), [], (err, result) => {
+      db.query(db.adapter.generateSelectQuery(null, 'schema_migrations', ['id']), [], (err, result) => {
 
         if (err) {
-          return callback(new Error('Could not get schema migrations'));
+          return callback(err);
         }
 
         if (!fs.existsSync(MIGRATION_PATH)) {
@@ -196,7 +209,7 @@ module.exports = (() => {
         let migrations = fs.readdirSync(MIGRATION_PATH).map((v) => {
           return {
             id: parseInt(v.substr(0, v.indexOf('__'))),
-            migration: new (require(process.cwd() + '/' + MIGRATION_PATH + '/' + v))(this.db)
+            migration: new (require(process.cwd() + '/' + MIGRATION_PATH + '/' + v))(db)
           };
         }).filter((v) => {
           return schema_ids.indexOf(v.id) !== -1;
@@ -237,6 +250,10 @@ module.exports = (() => {
 
     seed(callback) {
 
+      let db = new Database();
+      db.connect(this.cfg);
+      callback = this.wrapCallback(db, callback);
+
       let seed = Config.seed;
 
       if (!seed) {
@@ -244,6 +261,16 @@ module.exports = (() => {
       }
 
       return ModelFactory.populate(seed, callback);
+
+    }
+
+    wrapCallback(db, callback) {
+
+      return (err) => {
+        let cb = callback;
+        err && (cb = cb.bind(null, err));
+        db.close(cb);
+      }
 
     }
 
