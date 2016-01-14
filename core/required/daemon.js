@@ -102,6 +102,7 @@ module.exports = (function() {
       // Fork the Application into another process
       this.fork((error, worker) => {
         if (error) return callback(error);
+        callback(error, worker);
       });
       
       // When we are in development mode
