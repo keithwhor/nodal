@@ -72,8 +72,6 @@ module.exports = (function() {
 
       callback = typeof callback === 'function' ? callback : this._onStart;
       this._onStart = callback;
-
-      let self = this;
       
       this.fork((error, worker) => {
         if (error) return callback(error);
