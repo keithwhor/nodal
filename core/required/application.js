@@ -139,16 +139,21 @@ module.exports = (function() {
     * @private
     */
     __initialize__() {
+      
       if (cluster.isWorker) {
+        
         // Tell Daemon we are alive and well
         process.send({ __alive__: true });
+        
         process.on('message', (msg) => {
           // Listen for destroy
           if ((msg) && (typeof msg === 'object') && (msg.__destroy__ === true)) {
             // Tell Daemon we are ready to be killed
             process.send({ __destroy__: true, done: true });
           }
+          
         });
+        
         process.on('uncaughtException', (err) => {
           // Send exception
           process.send({
@@ -157,8 +162,11 @@ module.exports = (function() {
             message: err.message,
             code: err.code
           });
+          
         });
+        
       }
+      
     }
 
     /**

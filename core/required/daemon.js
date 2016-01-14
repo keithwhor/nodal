@@ -69,13 +69,14 @@ module.exports = (function() {
     * @param {function} callback Method to execute when Application is finished initializing.
     */
     start(callback) {
-
+      
       callback = typeof callback === 'function' ? callback : this._onStart;
       this._onStart = callback;
       
       this.fork((error, worker) => {
         if (error) return callback(error);
       });
+      
     }
 
     /**
