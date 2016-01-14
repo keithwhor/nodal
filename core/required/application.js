@@ -400,7 +400,7 @@ module.exports = (function() {
       try {
 
         // Loop the template hierarchy, and return the first templates contents
-        let templateContents = templates.map((templateName) {
+        let templateContents = templates.map((templateName) => {
           return this.getTemplate(templateName, false);
         })[0];
 
