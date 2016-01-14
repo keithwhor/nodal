@@ -1,8 +1,14 @@
 language: node_js
 node_js:
   - "4.2.4"
+env:
+  - CXX=g++-4.8 NODE_ENV=text
 addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-4.8
   postgresql: "9.3"
 before_script:
   - psql -c 'create database nodal_test;' -U postgres
-env: NODE_ENV=test

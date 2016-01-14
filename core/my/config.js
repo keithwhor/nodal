@@ -37,6 +37,9 @@ module.exports = (() => {
 
   });
 
+  console.log('ENVIRONMENT', env.name);
+  console.log(config);
+
   dot.templateSettings.varname = varname;
 
   return config;
