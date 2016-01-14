@@ -1,7 +1,6 @@
 module.exports = (() => {
 
   'use strict';
-  console.log('Bootstrapper');
 
   const fs = require('fs');
   const async = require('async');
