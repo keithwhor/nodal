@@ -104,6 +104,7 @@ module.exports = (function() {
           // defaults to an underscored version  <appname>_development
           let dbjson = JSON.parse(fs.readFileSync(rootPath + '/templates/db.json'));
           dbjson.development.main.database = promptResult.databaseName + '_development';
+          dbjson.test.main.database = promptResult.databaseName + '_test';
           fs.writeFileSync('./' + dirname + '/config/db.json', JSON.stringify(dbjson, null, 4));
 
           // Lets enable database support by default if the user said yes to the prompt

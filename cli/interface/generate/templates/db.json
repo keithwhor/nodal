@@ -11,6 +11,17 @@
     }
   },
 
+  "test": {
+    "main": {
+      "adapter": "postgres",
+      "host": "localhost",
+      "port": "5432",
+      "user": "postgres",
+      "password": "",
+      "database": "nodal_test"
+    }
+  },
+
   "production": {
     "main": {
       "adapter": "postgres",
