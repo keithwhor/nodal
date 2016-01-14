@@ -4,7 +4,7 @@ module.exports = (() => {
 
   const Nodal = require('nodal');
 
-  class ExampleTest extends Nodal.Test {
+  class ExampleTest extends Nodal.mocha.Test {
 
     test(expect) {
 

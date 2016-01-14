@@ -6,7 +6,7 @@ module.exports = (() => {
   Nodal.env = 'test';
 
   const daemon = new Nodal.Daemon('./app/app.js');
-  const TestRunner = new Nodal.TestRunner('./test/tests');
+  const TestRunner = new Nodal.mocha.TestRunner('./test/tests');
 
   describe('My Application', () => {
 

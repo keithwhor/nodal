@@ -28,11 +28,13 @@ module.exports = (function() {
     Scheduler: null,
     SchedulerTask: null,
     SchemaGenerator: null,
-    Test: null,
-    TestRunner: null,
     my: {
       Config: null,
       Schema: null
+    },
+    mocha: {
+      Test: null,
+      TestRunner: null
     }
   };
 
@@ -40,6 +42,7 @@ module.exports = (function() {
 
   let LazyNodal = {
     my: {},
+    mocha: {},
     require: function(filename) {
       return require(process.cwd() + '/' + filename);
     },
@@ -153,31 +156,34 @@ module.exports = (function() {
         return Nodal.SchemaGenerator || (Nodal.SchemaGenerator = require('./required/db/schema_generator.js'));
       },
       enumerable: true
-    },
-    Test: {
-      get: function() {
-        return Nodal.Test || (Nodal.Test = require('./required/test.js'));
-      },
-      enumerable: true
-    },
-    TestRunner: {
-      get: function() {
-        return Nodal.TestRunner || (Nodal.TestRunner = require('./required/test_runner.js'));
-      },
-      enumerable: true
     }
   });
 
   Object.defineProperties(LazyNodal.my, {
     Config: {
       get: function() {
-        return Nodal.my.Config || (Nodal.my.Config = require('./required/my/config.js')(LazyNodal));
+        return Nodal.my.Config || (Nodal.my.Config = require('./my/config.js')(LazyNodal));
       },
       enumerable: true
     },
     Schema: {
       get: function() {
-        return Nodal.my.Schema || (Nodal.my.Schema = require('./required/my/schema.js')(LazyNodal));
+        return Nodal.my.Schema || (Nodal.my.Schema = require('./my/schema.js')(LazyNodal));
+      },
+      enumerable: true
+    }
+  });
+
+  Object.defineProperties(LazyNodal.mocha, {
+    Test: {
+      get: function() {
+        return Nodal.mocha.Test || (Nodal.mocha.Test = require('./mocha/test.js'));
+      },
+      enumerable: true
+    },
+    TestRunner: {
+      get: function() {
+        return Nodal.mocha.TestRunner || (Nodal.mocha.TestRunner = require('./mocha/test_runner.js'));
       },
       enumerable: true
     }

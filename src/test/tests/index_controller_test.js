@@ -4,13 +4,13 @@ module.exports = (() => {
 
   const Nodal = require('nodal');
 
-  class IndexControllerTest extends Nodal.Test {
+  class IndexControllerTest extends Nodal.mocha.Test {
 
     test(expect) {
 
-      it('Should return an HTTP 200 OK', done => {
+      it('Should return an HTTP 200', done => {
 
-        this.app.mockRequest('/').get((status, headers, body) => {
+        this.endpoint('/').get((status, headers, body) => {
 
           expect(status).to.equal(200);
           done();
