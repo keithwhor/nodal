@@ -136,7 +136,7 @@ module.exports = (function() {
       if (this._workers.size) {
         // We only have one worker for now so this is rather easy
         let mapIterator = this._workers.values();
-        let worker = mapIter.next().value;
+        let worker = mapIterator.next().value;
         
         worker.send({ __destroy__: true });
         worker.once('message', (msg) => {
