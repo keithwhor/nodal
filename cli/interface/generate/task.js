@@ -28,8 +28,6 @@ module.exports = (function() {
       templateSettings
     );
 
-    console.log(fn.toString());
-
     return fn(task);
 
   }
