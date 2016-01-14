@@ -6,6 +6,8 @@ module.exports = (function() {
   const dummyRouter = require('./dummy_router.js');
 
   const fs = require('fs');
+  const cluster = require('cluster');
+  const coreCount = require('os').cpus().length;
 
   /**
   * Daemon for running servers. Restarts when changes are made to the underlying file structure.
