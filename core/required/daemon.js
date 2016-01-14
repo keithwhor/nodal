@@ -64,6 +64,17 @@ module.exports = (function() {
         }
       });
       
+      // Handle messages and exceptions
+      worker.on('message', (msg) {
+        if ((msg) && (typeof msg === 'object') && (msg.__exception__)) {
+          // Log error
+          console.log("EXCEPTION THROWN FROM WORKER ID", WID);
+          console.log("MESSAGE:", msg.message);
+          console.log("CODE:", msg.code);
+          console.log(msg.stack);
+        }
+      });
+      
       // Handle Crashes & Redeploy
       worker.once('exit', () => {
         this._workers.delete(WID);
