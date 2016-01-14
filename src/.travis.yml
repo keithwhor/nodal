@@ -2,7 +2,7 @@ language: node_js
 node_js:
   - "4.2.4"
 env:
-  - CXX=g++-4.8 NODE_ENV=text
+  - CXX=g++-4.8 NODE_ENV=test
 addons:
   apt:
     sources:
