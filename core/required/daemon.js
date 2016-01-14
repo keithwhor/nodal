@@ -73,9 +73,16 @@ module.exports = (function() {
       callback = typeof callback === 'function' ? callback : this._onStart;
       this._onStart = callback;
       
+      // Fork the Application into another process
       this.fork((error, worker) => {
         if (error) return callback(error);
       });
+      
+      // When we are in development mode
+      if ((process.env.NODE_ENV || 'development') === 'development') {
+        // Watch for code changes
+        this.watch('', this.restart.bind(this));
+      }
       
     }
 
