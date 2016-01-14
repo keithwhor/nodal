@@ -15,7 +15,7 @@
     "mocha": "~2.3.4"
   },
   "scripts": {
-    "test": "mocha ./test/runner.js",
+    "test": "NODE_ENV=test mocha ./test/runner.js",
     "start": "node server.js --harmony",
     "worker": "node worker.js --harmony"
   },
