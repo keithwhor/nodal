@@ -36,6 +36,9 @@ module.exports = (function() {
 
   }
 
-  return new App;
+  let app = new App();
+  app.listen(Nodal.my.Config.secrets.port);
+
+  return;
 
 })();
