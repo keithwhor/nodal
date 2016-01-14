@@ -41,7 +41,18 @@ module.exports = (() => {
       this.app.router.delegate(this.app, request, response);
 
       body && request.emit('data', body);
-      response.on('end', () => callback(response._status, response._headers, response._body));
+      response.on('end', () => {
+
+        let json = null;
+        try {
+          json = JSON.parse(response._body);
+        } catch (e) {
+          json = null;
+        }
+
+        callback(response._status, response._headers, response._body, json);
+
+      });
 
       setTimeout(() => request.emit('end'), 1);
 
