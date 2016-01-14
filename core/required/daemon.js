@@ -64,6 +64,12 @@ module.exports = (function() {
         }
       });
       
+      // Handle error
+      worker.on('error', (error) => {
+        console.log("ERROR FROM WORKER ID", WID);
+        console.log(error);
+      });
+      
       // Handle messages and exceptions
       worker.on('message', (msg) => {
         if ((msg) && (typeof msg === 'object') && (msg.__exception__)) {
