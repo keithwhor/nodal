@@ -3,7 +3,7 @@ module.exports = (() => {
   'use strict';
 
   const Nodal = require('nodal');
-  Nodal.env = 'test';
+  Nodal.env.name = 'test';
 
   const daemon = new Nodal.Daemon('./app/app.js');
   const TestRunner = new Nodal.mocha.TestRunner('./test/tests');
@@ -12,12 +12,16 @@ module.exports = (() => {
 
     before((done) => {
 
-      daemon.start(app => {
+      Nodal.my.bootstrapper.bootstrap(() => {
 
-        TestRunner.ready(app);
-        done();
+        daemon.start(app => {
 
-      });
+          TestRunner.ready(app);
+          done();
+
+        });
+
+      })
 
     });
 

@@ -38,6 +38,9 @@
     }
   });
 
+  if (flags.env) {
+    process.env.NODE_ENV = flags.env;
+  }
 
   // Internally implemented commands (require access to Set) //
   // Define `nodal help` command

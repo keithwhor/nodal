@@ -28,8 +28,13 @@ module.exports = (function() {
     */
     static loadModels() {
 
+      let dir = './app/models';
+      if (!fs.existsSync(dir)) {
+        return [];
+      }
+
       return fs
-        .readdirSync('./app/models')
+        .readdirSync(dir)
         .map(filename => require(`${process.cwd()}/app/models/${filename}`))
 
     }

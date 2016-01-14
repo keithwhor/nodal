@@ -1,6 +1,6 @@
-"use strict";
+module.exports = (() => {
 
-module.exports = (function() {
+  'use strict';
 
   const anyDB = require('any-db');
   const beginTransaction = require('any-db-transaction');
@@ -11,12 +11,10 @@ module.exports = (function() {
 
   class Database {
 
-    constructor(cfg) {
+    constructor() {
 
       this.adapter = new PostgresAdapter();
-
       this._connection = null;
-
       this._useLogColor = 0;
 
     }
@@ -35,6 +33,7 @@ module.exports = (function() {
       }
 
       this._connection = connection;
+      this._config = cfg || {};
 
       return true;
 
@@ -191,13 +190,45 @@ module.exports = (function() {
 
     }
 
+    /* Command functions... */
+
+    drop(databaseName, callback) {
+
+      this.query(this.adapter.generateDropDatabaseQuery(databaseName), [], (err, result) => {
+
+        if (err) {
+          return callback(err);
+        }
+
+        this.info(`Dropped database "${databaseName}"`);
+        callback(null);
+
+      });
+
+    }
+
+    create(databaseName, callback) {
+
+      this.query(this.adapter.generateCreateDatabaseQuery(databaseName), [], (err, result) => {
+
+        if (err) {
+          return callback(err);
+        }
+
+        this.info(`Created empty database "${databaseName}"`);
+        callback(null);
+
+      });
+
+    }
+
   }
 
   Database.prototype.__logColorFuncs = [
-    function(str) {
+    (str) => {
       return colors.yellow.bold(str);
     },
-    function(str) {
+    (str) => {
       return colors.white(str);
     }
   ];

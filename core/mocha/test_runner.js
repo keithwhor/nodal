@@ -4,6 +4,7 @@ module.exports = (() => {
 
   const fs = require('fs');
   const path = require('path');
+  const seedCommand = require('../../cli/commands/db/seed.js');
 
   class TestRunner {
 

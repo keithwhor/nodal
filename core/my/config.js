@@ -1,6 +1,8 @@
-module.exports = Nodal => {
+module.exports = (() => {
 
   'use strict';
+
+  const env = require('./../env.js');
 
   const fs = require('fs');
   const dot = require('dot');
@@ -11,7 +13,7 @@ module.exports = Nodal => {
 
   dot.templateSettings.varname = 'env';
 
-  let dir = Nodal.rootDirectory + '/config';
+  let dir = env.rootDirectory + '/config';
   let configFiles = fs.readdirSync(dir);
 
   let ext = '.json';
@@ -31,7 +33,7 @@ module.exports = Nodal => {
       configData = {};
     }
 
-    config[filename.substr(0, filename.length - ext.length)] = configData[Nodal.env];
+    config[filename.substr(0, filename.length - ext.length)] = configData[env.name];
 
   });
 
@@ -39,4 +41,4 @@ module.exports = Nodal => {
 
   return config;
 
-};
+})();
