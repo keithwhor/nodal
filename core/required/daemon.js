@@ -105,17 +105,22 @@ module.exports = (function() {
 
       err = err || new Error('Application Stopped');
 
-      let cwd = process.cwd();
+      // We only have one worker for now so this is rather easy
+      let mapIterator = this._workers.value();
+      let worker = mapIter.next().value;
 
-      Object.keys(require.cache).filter(function(v) {
-        return v.indexOf(cwd) === 0 &&
-          v.substr(cwd.length).indexOf('/node_modules/') !== 0;
-      }).forEach(function(key) {
-        delete require.cache[key];
+      worker.send({ __destroy__: true });
+      worker.once('message', (msg) => {
+        if ((msg) && (typeof msg === 'object') && (msg.__destroy__ && msg.ready)) {
+          
+          worker.kill();
+          worker.once('exit', (code, signal) => {
+            onStop();
+          });
+          
+        }
       });
-
-      this._app.__destroy__(err, onStop.bind(this));
-
+      
     }
 
     /**
