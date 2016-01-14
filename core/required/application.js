@@ -189,7 +189,7 @@ module.exports = (function() {
     }
 
     /**
-    * Starts the Application. First runs initializers, then calls Application#__initialize__ which should be provided by the Daemon.
+    * Starts the Application. First runs initializers, then calls Application#__initialize__
     * @private
     */
     __start__() {
