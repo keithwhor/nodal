@@ -9,7 +9,7 @@ module.exports = (function() {
     get() {
 
       this.render(
-        this.app.template('index.html').generate(
+        this.app.template('layout.html', 'index.html').generate(
           this.params,
           {
             test: this.params.query.test,
