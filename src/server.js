@@ -6,10 +6,6 @@ module.exports = (function() {
 
   let daemon = new Nodal.Daemon('./app/app.js');
 
-  daemon.start(function(app) {
-
-    app.listen(Nodal.my.Config.secrets.port);
-
-  });
+  daemon.start();
 
 })();
