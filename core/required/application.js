@@ -142,14 +142,22 @@ module.exports = (function() {
       
       if (cluster.isWorker) {
         
+        let self = this;
+        
         // Tell Daemon we are alive and well
         process.send({ __alive__: true });
         
         process.on('message', (msg) => {
           // Listen for destroy
           if ((msg) && (typeof msg === 'object') && (msg.__destroy__ === true)) {
-            // Tell Daemon we are ready to be killed
-            process.send({ __destroy__: true, done: true });
+            // Get ready to be killed
+            self.__destroy__(null, () => {
+              
+              // Tell Daemon we are ready to be killed
+              process.send({ __destroy__: true, done: true });
+            
+            });
+            
           }
           
         });
