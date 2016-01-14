@@ -83,6 +83,7 @@ module.exports = (function() {
       
       // Handle Crashes & Redeploy
       worker.once('exit', (worker, code, signal) => {
+        if (this._workers.get(WID).__destroyed__) return;
         this._workers.delete(WID);
         // Fork new Worker
         this.fork(() => {});
@@ -137,6 +138,9 @@ module.exports = (function() {
         // We only have one worker for now so this is rather easy
         let mapIterator = this._workers.values();
         let worker = mapIterator.next().value;
+        
+        // Set Worker to destroyed an alternative is to removeAllListeners
+        worker.__destroyed__ = true;
         
         worker.send({ __destroy__: true });
         worker.once('message', (msg) => {
