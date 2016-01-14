@@ -65,7 +65,7 @@ module.exports = (function() {
       });
       
       // Handle messages and exceptions
-      worker.on('message', (msg) {
+      worker.on('message', (msg) => {
         if ((msg) && (typeof msg === 'object') && (msg.__exception__)) {
           // Log error
           console.log("EXCEPTION THROWN FROM WORKER ID", WID);
