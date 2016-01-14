@@ -81,28 +81,6 @@ module.exports = (function() {
     }
 
     /**
-    * Begins the Daemon in error mode (will show the startup error).
-    * @param {Error} error The error the application encountered when it tried to start.
-    * @param {function} init The initialization function from Daemon#start
-    */
-    startError(error, init) {
-
-      class DummyApp extends Application {
-
-        __setup__() {
-
-          this.useRouter(dummyRouter(error));
-
-        }
-
-      }
-
-      DummyApp.prototype.__initialize__ = init;
-      this._app = new DummyApp();
-
-    }
-
-    /**
     * Restarts the Daemon
     */
     restart(err) {
