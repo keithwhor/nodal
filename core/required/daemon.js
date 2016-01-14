@@ -30,6 +30,39 @@ module.exports = (function() {
       this._onStart = function() {};
 
     }
+    
+    /**
+    * Creates a new Application fork on a child process
+    * @param {function} callback Method to execute when the forked Application on the Worker is online.
+    */
+    fork(callback) {
+      // Setup Master
+      /**
+       * Note that setup master doesn't
+       * pass enviromental variables so
+       * we create our own worker id and
+       * pass it through argv
+       */
+      cluster.setupMaster({
+        exec: process.cwd() + '/' + this._path,
+        args: [this._WIDcounter++],
+        silent: false
+      });
+
+      // Fork a single worker (for now we only use one)
+      let worker = cluster.fork();
+      this._workers.set(this._WIDcounter, worker);
+      
+      // Our own specific version of `online`
+      worker.once('message', function(message) {
+        if ((message) && (message.alive === true)) {
+          callback(null, worker);
+        }else{
+          if (worker) worker.kill();
+          callback(new Error("Worker failed on initialization and has been terminated."));
+        }
+      });
+    }
 
     /**
     * Begins the Daemon, instantiates your app. Initializers called first. Will only watch for changes when NODE_ENV is empty or set to "development"
