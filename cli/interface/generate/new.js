@@ -55,7 +55,12 @@ module.exports = (function() {
       inquirer.prompt(questions, (promptResult) => {
 
         promptResult.simpleName = promptResult.name.replace(/\s/gi, '-');
-        promptResult.databaseName = inflect.underscore(promptResult.databaseName);
+
+        promptResult.databaseName = inflect.underscore(promptResult.simpleName);
+        if ( promptResult.databaseName) {
+          promptResult.databaseName = inflect.underscore(promptResult.databaseName);
+        }
+
         let dirname = promptResult.name.replace(/[^A-Za-z0-9-_]/gi, '-').toLowerCase();
 
         console.log('');
