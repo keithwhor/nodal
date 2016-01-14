@@ -170,6 +170,10 @@ module.exports = (function() {
             message: err.message,
             code: err.code
           });
+          // Try a Graceful death
+          this.__destroy__(null, () => {
+            process.exit(1);
+          });
           
         });
         
