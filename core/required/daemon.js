@@ -36,6 +36,7 @@ module.exports = (function() {
     * @param {function} callback Method to execute when the forked Application on the Worker is online.
     */
     fork(callback) {
+      let WID = this._WIDcounter++;
       // Setup Master
       /**
        * Note that setup master doesn't
@@ -45,13 +46,13 @@ module.exports = (function() {
        */
       cluster.setupMaster({
         exec: process.cwd() + '/' + this._path,
-        args: [this._WIDcounter++],
+        args: [WID],
         silent: false
       });
 
       // Fork a single worker (for now we only use one)
       let worker = cluster.fork();
-      this._workers.set(this._WIDcounter, worker);
+      this._workers.set(WID, worker);
       
       // Our own specific version of `online`
       worker.once('message', function(message) {
