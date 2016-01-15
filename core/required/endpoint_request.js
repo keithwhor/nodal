@@ -20,7 +20,8 @@ module.exports = (() => {
       let request = new mocks.http.ServerRequest();
       let response = new mocks.http.ServerResponse();
 
-      request.setHeader = (header, value) => request.headers[header] = value;
+      request.setHeader = (header, value) => request.headers[header.toLowerCase()] = value;
+      request.getHeader = (header) => request.headers[header.toLowerCase()];
       request.url = path.resolve('localhost', this._path);
       request.method = method;
       request.connection = {
@@ -30,12 +31,12 @@ module.exports = (() => {
 
       if (typeof body === 'object' && body !== null) {
         request.setHeader('Content-Type', request.getHeader('Content-Type') || 'application/json; charset=utf-8');
-        mockData.body = JSON.stringify(body);
+        body = new Buffer(JSON.stringify(body));
       } else if (body instanceof Buffer) {
         request.setHeader('Content-Type', request.getHeader('Content-Type') || 'application/octet-steam');
-        mockData.body = body;
       } else if (body) {
         request.setHeader('Content-Type', 'x-www-form-urlencoded');
+        body = new Buffer(body);
       }
 
       this.app.router.delegate(this.app, request, response);
