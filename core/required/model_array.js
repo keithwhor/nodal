@@ -50,7 +50,7 @@ module.exports = (function() {
         return;
       }
 
-      return this.map(m => m.toObject(arrInterface));
+      return this.map(m => m.toObject(arrInterface, opts));
 
     }
 

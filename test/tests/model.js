@@ -222,6 +222,26 @@ module.exports = (function(Nodal) {
 
     });
 
+    it('should toObject with interface from ModelArray', function() {
+
+      let parents = new Nodal.ModelArray(Parent);
+
+      parents.push(new Parent({name: 'Parent'}));
+
+      let obj = parents.toObject(['id', 'name'])
+      expect(obj[0]).to.have.ownProperty('id');
+      expect(obj[0]).to.have.ownProperty('name');
+      expect(obj[0]).to.not.have.ownProperty('age');
+      expect(obj[0]).to.not.have.ownProperty('created_at');
+
+      obj = parents.toObject(['id', 'name'], {exclude: true});
+      expect(obj[0]).to.not.have.ownProperty('id');
+      expect(obj[0]).to.not.have.ownProperty('name');
+      expect(obj[0]).to.have.ownProperty('age');
+      expect(obj[0]).to.have.ownProperty('created_at');
+
+    });
+
     describe('#save', function() {
 
       it('should refuse to save with error', function(done) {
