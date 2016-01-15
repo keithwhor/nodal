@@ -564,6 +564,24 @@ module.exports = (function() {
     }
 
     /**
+    * Shortcut for .limit(1).end(callback) that only returns a model object or error if not found
+    * @param {Function} callback Callback to execute, provides an error and model parameter
+    */
+    first(callback) {
+
+      return this.limit(1).end((err, models) => {
+
+        if (!err && !models.length) {
+          err = new Error(`No ${this.Model} found`);
+        }
+
+        callback(err, models[0]);
+
+      });
+
+    }
+
+    /**
     * Execute query as an update query, changed all fields specified.
     * @param {Object} fields The object containing columns (keys) and associated values you'd like to update
     * @param {function({Error}, {Nodal.ModelArray})} callback The callback for the update query

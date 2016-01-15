@@ -323,6 +323,35 @@ module.exports = (function(Nodal) {
 
     });
 
+    it('Should first properly', function(done) {
+
+      Parent.query()
+        .orderBy('id', 'ASC')
+        .first((err, parent) => {
+
+          expect(err).to.equal(null);
+          expect(parent).to.exist;
+          expect(parent.get('id')).to.equal(1);
+          done();
+
+        });
+
+    });
+
+    it('Should give error on first if nothing found', function(done) {
+
+      Parent.query()
+        .where({name: 'Spongebob'})
+        .first((err, parent) => {
+
+          expect(err).to.exist;
+          expect(parent).to.not.exist;
+          done();
+
+        });
+
+    });
+
     it('Should do an "is" where query properly', (done) => {
 
       Parent.query()
