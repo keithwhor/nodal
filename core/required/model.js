@@ -1065,7 +1065,7 @@ module.exports = (function() {
         return;
       }
 
-      if (this.fieldList().includes('updated_at')) {
+      if (this.fieldList().indexOf('updated_at') !== -1) {
         this.set('updated_at', new Date());
       }
 
