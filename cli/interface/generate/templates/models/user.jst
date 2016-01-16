@@ -7,27 +7,24 @@ module.exports = (function() {
 
   class User extends Nodal.Model {
 
-    save(callback) {
-
-      let save = super.save.bind(this, callback);
+    beforeSave(callback) {
 
       if (!this.hasErrors() && this.hasChanged('password')) {
 
         bcrypt.hash(this.get('password'), 10, (err, hash) => {
 
           if (err) {
-            this.setError('password', 'Could not encrypt password');
-          } else {
-            this.__safeSet__('password', hash);
+            return callback(new Error('Could not encrypt password'));
           }
 
-          save();
+          this.__safeSet__('password', hash);
+          callback();
 
         });
 
       } else {
 
-        save();
+        callback();
 
       }
 

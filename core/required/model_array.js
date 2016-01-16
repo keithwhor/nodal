@@ -2,6 +2,8 @@ module.exports = (function() {
 
   'use strict';
 
+  const async = require('async');
+
   /**
   * Array of Models, for easy conversion to Objects
   * @class
@@ -73,8 +75,8 @@ module.exports = (function() {
     }
 
     /**
-    * Saves / updates all models in the ModelArray. Will return an error and rollback if *any* model errors out.
-    * @param {function({Error}, {ModelArray})} callback returning the error or saved ModelArray
+    * Saves / updates all models in the ModelArray. Uses beforeSave / afterSave. Will return an error and rollback if *any* model errors out.
+    * @param {function} callback returning the error and reference to self
     */
     saveAll(callback) {
 
@@ -82,9 +84,38 @@ module.exports = (function() {
         return callback.call(this, null, this);
       }
 
+      async.series(
+        this.map(m => m.beforeSave.bind(m)),
+        err => {
+
+          if (err) {
+            return callback(err);
+          }
+
+          this.__saveAll__(err => {
+
+            async.series(
+              this.map(m => m.afterSave.bind(m)),
+              err => callback(err || null, this)
+            );
+
+          });
+
+        }
+      );
+
+    }
+
+    /**
+    * save all models (outside of beforeSave / afterSave)
+    * @param {function} callback Called with error, if applicable
+    * @private
+    */
+    __saveAll__(callback) {
+
       let firstErrorModel = this.filter(m => m.hasErrors()).shift();
       if (firstErrorModel) {
-        return callback.call(this, firstErrorModel.errorObject(), this);
+        return callback.call(this, firstErrorModel.errorObject());
       }
 
       let db = this._modelConstructor.prototype.db;
@@ -97,14 +128,15 @@ module.exports = (function() {
         (err, result) => {
 
           if (err) {
-            return callback.call(this, new Error(err.message), this);
+            return callback.call(this, new Error(err.message));
           }
 
           this.forEach((m, i) => {
             m.__load__(result[i].rows[0], true);
             Object.keys(m._joinsCache).forEach(field => m.setJoinedId(field));
           });
-          callback.call(this, null, this);
+
+          callback.call(this, null);
 
         }
       )

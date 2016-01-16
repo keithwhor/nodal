@@ -1041,11 +1041,47 @@ module.exports = (function() {
     }
 
     /**
-    * Saves model to database
-    * @param {function({Error} err, {Nodal.Model} model)} callback
-    *   Method to execute upon completion, returns error if failed (including validations didn't pass)
+    * Logic to execute before a model saves. Intended to be overwritten when inherited.
+    * @param {Function} callback Invoke with first argument as an error if failure.
+    */
+    beforeSave(callback) {
+
+      callback(null, this);
+
+    }
+
+    /**
+    * Logic to execute after a model saves. Intended to be overwritten when inherited.
+    * @param {Function} callback Invoke with first argument as an error if failure.
+    */
+    afterSave(callback) {
+
+      callback(null, this);
+
+    }
+
+    /**
+    * Save a model (execute beforeSave and afterSave)
+    * @param {Function} callback Callback to execute upon completion
     */
     save(callback) {
+
+      async.series([
+        this.beforeSave,
+        this.__save__,
+        this.afterSave
+      ].map(f => f.bind(this)), (err) => {
+        callback(err || null, this);
+      });
+
+    }
+
+    /**
+    * Saves model to database
+    * @param {function} callback Method to execute upon completion, returns error if failed (including validations didn't pass)
+    * @private
+    */
+    __save__(callback) {
 
       let db = this.db;
 
@@ -1060,7 +1096,7 @@ module.exports = (function() {
       }
 
       if (this.hasErrors()) {
-        callback.call(this, this.errorObject(), this);
+        callback.call(this, this.errorObject());
         return;
       }
 
@@ -1077,7 +1113,7 @@ module.exports = (function() {
             result.rows.length && this.__load__(result.rows[0], true);
           }
 
-          callback.call(this, this.errorObject(), this);
+          callback.call(this, this.errorObject());
 
         }
       );
