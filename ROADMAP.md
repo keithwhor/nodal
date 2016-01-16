@@ -25,7 +25,7 @@
 * :x: Postgres JSON datatype support
 * :white_check_mark: Composer `.first()` support
 * :x: Joining in multiply-nested models
-* :x: Add updated_at support like existing created_at
+* :hourglass: Add updated_at support like existing created_at
 
 ### Nice-to-haves
 * :x: More meaningful errors
