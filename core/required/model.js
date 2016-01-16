@@ -89,6 +89,8 @@ module.exports = (function() {
           return callback(err);
         }
 
+        data.updated_at = new Date();
+
         model.read(data);
         model.save(callback);
 
@@ -452,6 +454,7 @@ module.exports = (function() {
 
       if (!fromStorage) {
         data.created_at = new Date();
+        data.updated_at = new Date();
       }
 
       let keys = Object.keys(data);
@@ -1166,12 +1169,14 @@ module.exports = (function() {
 
   Model.prototype.externalInterface = [
     'id',
-    'created_at'
+    'created_at',
+    'updated_at'
   ];
 
   Model.prototype.aggregateBy = {
     'id': 'count',
-    'created_at': 'min'
+    'created_at': 'min',
+    'updated_at': 'min'
   };
 
   return Model;

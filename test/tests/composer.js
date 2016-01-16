@@ -15,7 +15,8 @@ module.exports = (function(Nodal) {
       columns: [
         {name: 'id', type: 'serial'},
         {name: 'name', type: 'string'},
-        {name: 'created_at', type: 'datetime'}
+        {name: 'created_at', type: 'datetime'},
+        {name: 'updated_at', type: 'datetime'}
       ]
     };
 
@@ -25,7 +26,8 @@ module.exports = (function(Nodal) {
         {name: 'id', type: 'serial'},
         {name: 'from_parent_id', type: 'int'},
         {name: 'to_parent_id', type: 'int'},
-        {name: 'created_at', type: 'datetime'}
+        {name: 'created_at', type: 'datetime'},
+        {name: 'updated_at', type: 'datetime'}
       ]
     };
 
@@ -36,7 +38,8 @@ module.exports = (function(Nodal) {
         {name: 'parent_id', type: 'int'},
         {name: 'name', type: 'string'},
         {name: 'age', type: 'int'},
-        {name: 'created_at', type: 'datetime'}
+        {name: 'created_at', type: 'datetime'},
+        {name: 'updated_at', type: 'datetime'}
       ]
     };
 
@@ -47,7 +50,8 @@ module.exports = (function(Nodal) {
         {name: 'parent_id', type: 'int'},
         {name: 'name', type: 'string'},
         {name: 'job', type: 'string'},
-        {name: 'created_at', type: 'datetime'}
+        {name: 'created_at', type: 'datetime'},
+        {name: 'updated_at', type: 'datetime'}
       ]
     };
 
@@ -58,7 +62,8 @@ module.exports = (function(Nodal) {
         {name: 'parent_id', type: 'int'},
         {name: 'name', type: 'string'},
         {name: 'animal', type: 'string'},
-        {name: 'created_at', type: 'datetime'}
+        {name: 'created_at', type: 'datetime'},
+        {name: 'updated_at', type: 'datetime'}
       ]
     };
 
