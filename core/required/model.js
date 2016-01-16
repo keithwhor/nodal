@@ -89,8 +89,6 @@ module.exports = (function() {
           return callback(err);
         }
 
-        data.updated_at = new Date();
-
         model.read(data);
         model.save(callback);
 
@@ -1065,6 +1063,10 @@ module.exports = (function() {
       if (this.hasErrors()) {
         callback.call(this, this.errorObject(), this);
         return;
+      }
+
+      if (this.fieldList().includes('updated_at')) {
+        this.set('updated_at', new Date());
       }
 
       let query = this.__generateSaveQuery__();
