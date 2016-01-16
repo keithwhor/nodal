@@ -1135,7 +1135,7 @@ module.exports = (function() {
             model._inStorage = false;
           }
 
-          callback.call(model, model.errorObject(), model);
+          callback.call(model, err, model);
 
         }
       );
