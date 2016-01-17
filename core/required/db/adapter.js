@@ -234,6 +234,14 @@ module.exports = (function() {
 
     }
 
+    generateDeleteAllQuery(table, columnName, values) {
+      return [
+        `DELETE FROM ${this.escapeField(table)}`,
+        `WHERE ${this.escapeField(table)}.${this.escapeField(columnName)}`,
+        `IN (${values.map((v, i) => '\$' + (i + 1))})`
+      ].join(' ');
+    }
+
     generateInsertQuery(table, columnNames) {
       return [
         'INSERT INTO ',

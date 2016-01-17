@@ -320,6 +320,25 @@ module.exports = (function(Nodal) {
 
     });
 
+    it('should delete multiple parents', (done) => {
+
+      Parent.query()
+        .end((err, parents) => {
+
+          parents.destroyAll((err) => {
+
+            parents.forEach((parent) => {
+              expect(parent.inStorage()).to.equal(false);
+            });
+
+            done();
+
+          });
+
+        });
+
+    });
+
     describe('ModelFactory', () => {
 
       let ParentFactory = new Nodal.ModelFactory(Parent);

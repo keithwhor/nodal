@@ -17,7 +17,7 @@ module.exports = (function() {
     constructor(modelConstructor) {
 
       super();
-      this._modelConstructor = modelConstructor;
+      this.Model = modelConstructor;
 
     }
 
@@ -75,6 +75,39 @@ module.exports = (function() {
     }
 
     /**
+    * Destroys (deletes) all models in the ModelArray from the database
+    * @param {function} callback Method to invoke upon completion
+    */
+    destroyAll(callback) {
+
+      if (this.filter(m => !m.inStorage()).length) {
+        return callback(new Error('Not all models are in storage'))
+      }
+
+      let db = this.Model.prototype.db;
+
+      let params = this.map(m => m.get('id'));
+      let sql = db.adapter.generateDeleteAllQuery(this.Model.table(), 'id', params);
+
+      db.query(
+        sql,
+        params,
+        (err, result) => {
+
+          if (err) {
+            return callback.call(this, new Error(err.message));
+          }
+
+          this.forEach(m => m._inStorage = false);
+
+          callback.call(this, null);
+
+        }
+      );
+
+    }
+
+    /**
     * Saves / updates all models in the ModelArray. Uses beforeSave / afterSave. Will return an error and rollback if *any* model errors out.
     * @param {function} callback returning the error and reference to self
     */
@@ -114,11 +147,12 @@ module.exports = (function() {
     __saveAll__(callback) {
 
       let firstErrorModel = this.filter(m => m.hasErrors()).shift();
+
       if (firstErrorModel) {
         return callback.call(this, firstErrorModel.errorObject());
       }
 
-      let db = this._modelConstructor.prototype.db;
+      let db = this.Model.prototype.db;
 
       db.transaction(
         this.map(m => {
