@@ -92,7 +92,7 @@ module.exports = (function() {
           let cachedForRow = curRowObjectCache[name][id];
 
           if (!cached) {
-            objectCache[name][id] = cached = new (this.Model.joinInformation(name).Model)(
+            objectCache[name][id] = cached = new (this.Model.relationship(name).getModel())(
               joinSingle[name].reduce((prev, key) => {
                 prev[key] = row[`\$${name}\$${key}`];
                 return prev;
@@ -110,7 +110,7 @@ module.exports = (function() {
 
         joinMultipleNames.forEach(name => {
 
-          let modelArray = model.get(name) || model.set(name, new ModelArray(this.Model.joinInformation(name).Model));
+          let modelArray = model.get(name) || model.set(name, new ModelArray(this.Model.relationship(name).getModel()));
 
           let id = row[`\$\$${name}\$id`];
           if (id === null) {
@@ -124,7 +124,7 @@ module.exports = (function() {
           let cachedForRow = curRowObjectCache[name][id];
 
           if (!cached) {
-            objectCache[name][id] = cached = new (this.Model.joinInformation(name).Model)(
+            objectCache[name][id] = cached = new (this.Model.relationship(name).getModel())(
               joinMultiple[name].reduce((prev, key) => {
                 prev[key] = row[`\$\$${name}\$${key}`];
                 return prev;
@@ -191,9 +191,13 @@ module.exports = (function() {
 
         if (composerCommand.type === 'join') {
 
-          joins.push(Object.keys(composerCommand.data).reduce((p, c) => {
-            return (p[c] = composerCommand.data[c], p);
-          }, {}));
+          joins.push(
+            composerCommand.data.map(joinData => {
+              return Object.keys(joinData).reduce((p, c) => {
+                return (p[c] = joinData[c], p);
+              }, {});
+            })
+          );
 
         } else {
 
@@ -255,17 +259,17 @@ module.exports = (function() {
 
     /**
     * Retrieve all joined column data for a given join
-    * @private
     * @param {string} joinName The name of the join relationship
+    * @private
     */
     __joinedColumns__(joinName) {
-      let joinsObject = this.Model.joinInformation(joinName);
-      return joinsObject.Model.columnNames().map(columnName => {
+      let relationship = this.Model.relationships().find(joinName);
+      return relationship.getModel().columnNames().map(columnName => {
         return {
           name: joinName,
-          table: joinsObject.Model.table(),
+          table: relationship.getModel().table(),
           columnName: columnName,
-          alias: `${(joinsObject.child && joinsObject.multiple) ? '$$' : '$'}${joinName}\$${columnName}`
+          alias: `${(relationship.multiple()) ? '$$' : '$'}${joinName}\$${columnName}`
         };
       });
     }
@@ -302,7 +306,7 @@ module.exports = (function() {
       let columns = includeColumns || this.Model.columnNames();
 
       queryInfo.joins.forEach(j => {
-        columns = columns.concat(this.__joinedColumns__(j.name));
+        columns = columns.concat(this.__joinedColumns__(j[j.length - 1].alias));
       });
 
       // We make sure we order by the orders... in reverse order
@@ -342,26 +346,24 @@ module.exports = (function() {
         .map(comparison => {
 
           let column = comparison.split('__');
-          let rel = this.Model.joinInformation(column[0]);
+          let rel = this.Model.relationship(column[0]);
 
           let table = null;
-          let via = null;
-          let child = null;
           let joined = false;
+          let joins = null;
 
           if (rel) {
 
             let joinName = column.shift();
 
             // if it's not found, return null...
-            if (!rel.Model.hasColumn(column[0])) {
+            if (!rel.getModel().hasColumn(column[0])) {
               return null;
             }
 
-            table = rel.Model.table();
-            child = rel.child;
-            via = rel.via;
+            table = rel.getModel().table();
             joined = true;
+            joins = rel.joins();
 
           }
 
@@ -383,8 +385,7 @@ module.exports = (function() {
             comparator: comparator,
             value: comparisons[comparison],
             joined: joined,
-            via: via,
-            child: child
+            joins: joins
           };
 
         })
@@ -516,7 +517,8 @@ module.exports = (function() {
     */
     join(joinName) {
 
-      if (!this.Model.hasJoin(joinName)) {
+      let relationship = this.Model.relationships().find(joinName);
+      if (!relationship) {
         throw new Error(`Model ${this.Model.name} does not have relationship ${joinName}`);
       }
 
@@ -528,16 +530,45 @@ module.exports = (function() {
         composer = composer._parent;
       }
 
-      let joinsObject = this.Model.joinInformation(joinName);
+      let edge;
+      let joinData = relationship.path.slice().reverse().slice(1).reduce((joinData, item, i) => {
+
+        if (i % 2 === 0) {
+          edge = item;
+          return joinData;
+        }
+
+        let node = item;
+
+        let data = {
+          table: node.Model.table(),
+          alias: `${joinName}${i}`,
+          baseTable: joinData.length ? joinData[joinData.length - 1].alias : null
+        };
+
+        if (edge.hasChild(node)) {
+
+          data.field = edge.options.via;
+          data.baseField = 'id';
+
+        } else {
+
+          data.field = 'id';
+          data.baseField = edge.options.via;
+
+        }
+
+        joinData.push(data);
+        return joinData;
+
+      }, []);
+
+      // Set the last join to have the name of the join as its alias
+      joinData[joinData.length - 1].alias = joinName;
 
       this._command = {
         type: 'join',
-        data: {
-          name: joinName,
-          table: joinsObject.Model.table(),
-          field: joinsObject.child ? joinsObject.via : 'id',
-          baseField: joinsObject.child ? 'id' : joinsObject.via
-        }
+        data: joinData
       };
 
       return new Composer(this.Model, this);

@@ -69,4 +69,6 @@ describe('Test Suite', function() {
 
   require('./tests/composer.js')(Nodal);
 
+  require('./tests/relationship_graph.js')(Nodal);
+
 });

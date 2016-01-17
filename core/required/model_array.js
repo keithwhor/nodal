@@ -133,7 +133,6 @@ module.exports = (function() {
 
           this.forEach((m, i) => {
             m.__load__(result[i].rows[0], true);
-            Object.keys(m._joinsCache).forEach(field => m.setJoinedId(field));
           });
 
           callback.call(this, null);

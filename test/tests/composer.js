@@ -124,24 +124,26 @@ module.exports = (function(Nodal) {
 
           parents.forEach((p, i) => {
 
+            let id = i + 1;
+
             let children = 'ABCDEFGHIJ'.split('').map(name => {
-              return new Child({name: `Child${name}`, age: (Math.random() * 30) | 0});
+              return new Child({parent_id: id, name: `Child${name}`, age: (Math.random() * 30) | 0});
             });
 
             p.set('children', Nodal.ModelArray.from(children));
 
             let pets = ['Oliver', 'Ruby', 'Pascal'].map((name, i) => {
-              return new Pet({name: name, animal: ['Cat', 'Dog', 'Cat'][i]});
+              return new Pet({parent_id: id, name: name, animal: ['Cat', 'Dog', 'Cat'][i]});
             });
 
             p.set('pets', Nodal.ModelArray.from(pets));
 
-            let partner = new Partner({name: `Partner${i}`, job: ['Plumber', 'Engineer', 'Nurse'][(Math.random() * 3) | 0]});
+            let partner = new Partner({parent_id: id, name: `Partner${i}`, job: ['Plumber', 'Engineer', 'Nurse'][(Math.random() * 3) | 0]});
             p.set('partner', partner);
 
             let friendships = new Nodal.ModelArray(Friendship);
             while (i--) {
-              let friendship = new Friendship({to_parent_id: i + 1});
+              let friendship = new Friendship({from_parent_id: id, to_parent_id: i + 1});
               friendships.push(friendship);
             }
 
