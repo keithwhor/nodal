@@ -11,6 +11,10 @@ module.exports = (() => {
       this.path = path;
     }
 
+    toString() {
+      return this.path.join(' <-> ');
+    }
+
     add(node, edge) {
       return new this.constructor([node, edge].concat(this.path));
     }
@@ -44,17 +48,18 @@ module.exports = (() => {
         let edge = item;
 
         let join = {
-          fromTable: joins[joins.length - 1] ? joins[joins.length - 1].joinAlias : edge.opposite(node).Model.table(),
-          joinTable: node.Model.table(),
-          joinAlias: `${node.Model.table()}_${i}`
+          joinTable: edge.opposite(node).Model.table(),
+          prevTable: joins[joins.length - 1] ? joins[joins.length - 1].joinAlias : null
         };
 
+        join.joinAlias = `${join.joinTable}_${++i}`;
+
         if (edge.hasChild(node)) {
-          join.fromColumn = 'id';
-          join.joinColumn = edge.options.via;
-        } else {
-          join.fromColumn = edge.options.via;
+          join.prevColumn = edge.options.via;
           join.joinColumn = 'id';
+        } else {
+          join.prevColumn = 'id';
+          join.joinColumn = edge.options.via;
         }
 
         joins.push(join);
@@ -73,6 +78,10 @@ module.exports = (() => {
       this.Graph = Graph;
       this.Model = Model;
       this.edges = [];
+    }
+
+    toString() {
+      return `[Node: ${this.Model.name}]`;
     }
 
     joinsTo(Model, options) {
@@ -108,37 +117,26 @@ module.exports = (() => {
       while (queue.length) {
 
         let item = queue[0];
-        let edge = item.edge;
+        let curEdge = item.edge;
         let path = item.path;
         let node;
 
-        traversed[edge.id] = true;
+        traversed[curEdge.id] = true;
 
-        if (edge.hasChild(path.path[0])) {
+        let curNode = path.path[0];
+        node = curEdge.opposite(curNode);
 
-          node = edge.parent;
-
-          if (edge.options.name === name) {
-            return path.add(node, edge);
-          }
-
-        } else {
-
-          node = edge.child;
-
-          if (edge.options.as === name) {
-            return path.add(node, edge);
-          }
-
+        if ((curEdge.hasChild(curNode) && curEdge.options.name === name) || curEdge.options.as === name) {
+          return path.add(node, curEdge);
         }
 
         queue = queue.slice(1).concat(
           node.edges
-            .filter(e => !traversed[e.id])
+            .filter(edge => !traversed[edge.id])
             .map(edge => {
               return {
                 edge: edge,
-                path: path.add(node, edge)
+                path: path.add(node, curEdge)
               };
             })
         );
@@ -165,6 +163,10 @@ module.exports = (() => {
 
     }
 
+    toString() {
+      return `[Edge: ${this.parent.Model.name}, ${this.child.Model.name}]`;
+    }
+
     hasChild(child) {
       return this.child === child;
     }
@@ -174,7 +176,8 @@ module.exports = (() => {
     }
 
     opposite(node) {
-      return this.child === node ? this.parent : (this.parent === node ? this.child : null);
+      let opposite = this.child === node ? this.parent : (this.parent === node ? this.child : null);
+      return opposite;
     }
 
   }

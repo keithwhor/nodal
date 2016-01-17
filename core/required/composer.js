@@ -306,7 +306,7 @@ module.exports = (function() {
       let columns = includeColumns || this.Model.columnNames();
 
       queryInfo.joins.forEach(j => {
-        columns = columns.concat(this.__joinedColumns__(j[j.length - 1].alias));
+        columns = columns.concat(this.__joinedColumns__(j[j.length - 1].joinAlias));
       });
 
       // We make sure we order by the orders... in reverse order
@@ -530,41 +530,17 @@ module.exports = (function() {
         composer = composer._parent;
       }
 
-      let edge;
-      let joinData = relationship.path.slice().reverse().slice(1).reduce((joinData, item, i) => {
-
-        if (i % 2 === 0) {
-          edge = item;
-          return joinData;
+      let joinData = relationship.joins().map(j => {
+        return {
+          joinTable: j.joinTable,
+          joinColumn: j.joinColumn,
+          joinAlias: j.joinAlias,
+          prevTable: j.prevTable,
+          prevColumn: j.prevColumn
         }
+      });
 
-        let node = item;
-
-        let data = {
-          table: node.Model.table(),
-          alias: `${joinName}${i}`,
-          baseTable: joinData.length ? joinData[joinData.length - 1].alias : null
-        };
-
-        if (edge.hasChild(node)) {
-
-          data.field = edge.options.via;
-          data.baseField = 'id';
-
-        } else {
-
-          data.field = 'id';
-          data.baseField = edge.options.via;
-
-        }
-
-        joinData.push(data);
-        return joinData;
-
-      }, []);
-
-      // Set the last join to have the name of the join as its alias
-      joinData[joinData.length - 1].alias = joinName;
+      joinData[joinData.length - 1].joinAlias = joinName;
 
       this._command = {
         type: 'join',

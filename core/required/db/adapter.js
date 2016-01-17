@@ -414,14 +414,16 @@ module.exports = (function() {
               return [
                 `INNER JOIN ${this.escapeField(join.joinTable)} AS ${this.escapeField(join.joinAlias)} ON `,
                 `${this.escapeField(join.joinAlias)}.${this.escapeField(join.joinColumn)} = `,
-                `${this.escapeField(join.fromTable)}.${this.escapeField(join.fromColumn)}`,
-                i === jc.joins.length - 1 ? [
-                  ` AND ${this.escapeField(join.joinAlias)}.${this.escapeField(join.joinColumn)} = `,
-                  ` ${this.escapeField(table)}.${this.escapeField(join.joinColumn)}`
-                ].join('') : ''
+                `${this.escapeField(join.prevTable || table)}.${this.escapeField(join.prevColumn)}`,
+                i === jc.joins.length - 1 ?
+                  [
+                    `AND `,
+                    `${this.escapeField(join.joinAlias)}.${this.escapeField(join.joinColumn)} = `,
+                    `${this.escapeField(jc.table)}.${this.escapeField(join.joinColumn)} `,
+                    `AND (${jc.clauses.join(' AND ')}) `
+                  ].join('') : ''
               ].join('')
             }).join(' '),
-            ` WHERE (${jc.clauses.join(' AND ')}) `,
             `LIMIT 1`,
           `) IS NOT NULL`
         ].join('');
@@ -454,27 +456,27 @@ module.exports = (function() {
 
           return joinData.map(join => {
 
-            let fields = join.field instanceof Array ? join.field : [join.field]
-            let baseFields = join.baseField instanceof Array ? join.baseField : [join.baseField]
+            let joinColumns = join.joinColumn instanceof Array ? join.joinColumn : [join.joinColumn]
+            let prevColumns = join.prevColumn instanceof Array ? join.prevColumn : [join.prevColumn]
 
             let statements = [];
 
-            fields.forEach(field => {
-              baseFields.forEach(baseField => {
+            joinColumns.forEach(joinColumn => {
+              prevColumns.forEach(prevColumn => {
                 statements.push(
-                  `${this.escapeField(join.alias)}.${this.escapeField(field)} = ` +
-                  `${this.escapeField(join.baseTable || table)}.${this.escapeField(baseField)}`
+                  `${this.escapeField(join.joinAlias)}.${this.escapeField(joinColumn)} = ` +
+                  `${this.escapeField(join.prevTable || table)}.${this.escapeField(prevColumn)}`
                 );
               });
             });
 
             return [
-              ` LEFT JOIN ${this.escapeField(join.table)}`,
-              `AS ${this.escapeField(join.alias)}`,
+              ` LEFT JOIN ${this.escapeField(join.joinTable)}`,
+              `AS ${this.escapeField(join.joinAlias)}`,
               `ON (${statements.join(' OR ')})`
             ].join(' ');
 
-          })
+          }).join('')
 
         }).join('');
 

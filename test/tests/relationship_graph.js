@@ -86,6 +86,17 @@ module.exports = (function(Nodal) {
 
     });
 
+    it('Should trace nodes properly', () => {
+
+      let rpath = Relationships.of(Avatar).find('posts');
+
+      expect(rpath.path[1].parent.Model).to.equal(User);
+      expect(rpath.path[1].child.Model).to.equal(Post);
+      expect(rpath.path[3].parent.Model).to.equal(User);
+      expect(rpath.path[3].child.Model).to.equal(Avatar);
+
+    });
+
   });
 
 });
