@@ -34,7 +34,7 @@ module.exports = (() => {
       return false;
     }
 
-    joins() {
+    joins(alias) {
 
       let node;
       let i = 0;
@@ -49,18 +49,20 @@ module.exports = (() => {
 
         let join = {
           joinTable: edge.opposite(node).Model.table(),
-          prevTable: joins[joins.length - 1] ? joins[joins.length - 1].joinAlias : null
+          prevTable: joins[joins.length - 1] ? joins[joins.length - 1].joinAlias : null,
         };
-
-        join.joinAlias = `${join.joinTable}_${++i}`;
 
         if (edge.hasChild(node)) {
           join.prevColumn = edge.options.via;
           join.joinColumn = 'id';
+          join.joinAlias = edge.options.name;
         } else {
           join.prevColumn = 'id';
           join.joinColumn = edge.options.via;
+          join.joinAlias = edge.options.as;
         }
+
+        join.joinAlias = alias ? `${alias}${++i}` : join.joinAlias;
 
         joins.push(join);
 

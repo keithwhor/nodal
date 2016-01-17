@@ -842,6 +842,24 @@ module.exports = (function(Nodal) {
 
     });
 
+    it('Should join parent and children to pets', done => {
+
+      Pet.query()
+        .join('parent')
+        .join('children')
+        .first((err, pet) => {
+
+          expect(err).to.not.exist;
+          expect(pet).to.exist;
+          expect(pet.get('children')).to.exist;
+          expect(pet.get('children').length).to.equal(10);
+          expect(pet.get('parent')).to.exist;
+          done();
+
+        });
+
+    });
+
     it('Should query pet by children', done => {
 
       Pet.query()

@@ -309,7 +309,25 @@ module.exports = (function() {
         columns = columns.concat(this.__joinedColumns__(j[j.length - 1].joinAlias));
       });
 
-      // We make sure we order by the orders... in reverse order
+
+      // Make sure we don't join in parts of the same dependency tree repeatedly
+      let joins = queryInfo.joins;
+
+      joins.sort((a, b) => a.length < b.length ? 1 : -1);
+
+      let joinAdded = {};
+      joins.forEach(join => {
+        for (let i = 0; i < join.length; i++) {
+          if (!joinAdded[join[i].joinAlias]) {
+            joinAdded[join[i].joinAlias] = join;
+            return;
+          }
+        }
+      });
+
+      joins = Object.keys(joinAdded).map(k => joinAdded[k]);
+
+      // Order by the orders... in reverse order
       let orderBy = queryInfo.commands.reduce((arr, command) => {
         command.orderBy && arr.unshift(command.orderBy);
         return arr;
@@ -321,7 +339,7 @@ module.exports = (function() {
           'j',
           columns,
           null,
-          queryInfo.joins,
+          joins,
           orderBy,
           null,
           query.params.length
@@ -363,7 +381,7 @@ module.exports = (function() {
 
             table = rel.getModel().table();
             joined = true;
-            joins = rel.joins();
+            joins = rel.joins('w');
 
           }
 
@@ -530,16 +548,7 @@ module.exports = (function() {
         composer = composer._parent;
       }
 
-      let joinData = relationship.joins().map(j => {
-        return {
-          joinTable: j.joinTable,
-          joinColumn: j.joinColumn,
-          joinAlias: j.joinAlias,
-          prevTable: j.prevTable,
-          prevColumn: j.prevColumn
-        }
-      });
-
+      let joinData = relationship.joins();
       joinData[joinData.length - 1].joinAlias = joinName;
 
       this._command = {

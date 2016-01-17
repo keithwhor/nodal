@@ -417,7 +417,7 @@ module.exports = (function() {
                 `${this.escapeField(join.prevTable || table)}.${this.escapeField(join.prevColumn)}`,
                 i === jc.joins.length - 1 ?
                   [
-                    `AND `,
+                    ` AND `,
                     `${this.escapeField(join.joinAlias)}.${this.escapeField(join.joinColumn)} = `,
                     `${this.escapeField(jc.table)}.${this.escapeField(join.joinColumn)} `,
                     `AND (${jc.clauses.join(' AND ')}) `
