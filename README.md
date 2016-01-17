@@ -200,6 +200,10 @@ You'll be able to learn more about Nodal at [nodaljs.com](http://nodaljs.com).
 
 Check out the website at [nodaljs.com](http://nodaljs.com).
 
+## Roadmap
+
+View the roadmap at [ROADMAP.md](./ROADMAP.md).
+
 ## About
 
 Nodal is under active development and maintained by
