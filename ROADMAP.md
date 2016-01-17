@@ -20,9 +20,9 @@
 * :white_check_mark: Nested template hierarchy (parents w/ children)
 * :x: Use environment variables exclusively for app settings
 * :x: groupBy for Composer
-* :x: Refactor tasks
-* :x: Strong parameter support
-* :x: Postgres JSON datatype support
+* :hourglass: Refactor tasks
+* :hourglass: Strong parameter support
+* :hourglass: Postgres JSON datatype support
 * :white_check_mark: Composer `.first()` support
 * :x: Joining in multiply-nested models
 * :white_check_mark: Add updated_at support like existing created_at
