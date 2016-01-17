@@ -72,6 +72,10 @@ module.exports = (function() {
       this.middleware = new ExecutionQueue();
       this.initializers = new ExecutionQueue();
 
+      // Load all models for relationship dependencies
+      fs.existsSync('./app/models') &&
+        fs.readdirSync('./app/models').forEach(m => require(`${process.cwd()}/app/models/${m}`));
+
     }
 
     /**
