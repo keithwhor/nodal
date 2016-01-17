@@ -13,7 +13,8 @@ module.exports = (function(Nodal) {
         {name: 'id', type: 'serial'},
         {name: 'test', type: 'string'},
         {name: 'created_at', type: 'datetime'},
-        {name: 'reference_id', type: 'int'}
+        {name: 'reference_id', type: 'int'},
+        {name: 'updated_at', type: 'datetime'}
       ]
     };
 
@@ -22,7 +23,8 @@ module.exports = (function(Nodal) {
       columns: [
         {name: 'id', type: 'serial'},
         {name: 'test', type: 'string'},
-        {name: 'created_at', type: 'datetime'}
+        {name: 'created_at', type: 'datetime'},
+        {name: 'updated_at', type: 'datetime'}
       ]
     };
 
