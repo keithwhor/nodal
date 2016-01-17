@@ -125,6 +125,10 @@ module.exports = (function() {
         arrColumnData.push({name:'created_at', type: 'datetime'});
       }
 
+      if (columns.indexOf('updated_at') === -1) {
+        arrColumnData.push({name:'updated_at', type: 'datetime'});
+      }
+
       let defaults = this.db.adapter.typePropertyDefaults;
 
       arrColumnData.forEach((function(columnData) {
