@@ -34,7 +34,7 @@ module.exports = (() => {
       return false;
     }
 
-    joins(alias) {
+    joins(alias, firstTable) {
 
       let node;
       let i = 0;
@@ -49,7 +49,7 @@ module.exports = (() => {
 
         let join = {
           joinTable: edge.opposite(node).Model.table(),
-          prevTable: joins[joins.length - 1] ? joins[joins.length - 1].joinAlias : null,
+          prevTable: joins[joins.length - 1] ? joins[joins.length - 1].joinAlias : (firstTable || null),
         };
 
         if (edge.hasChild(node)) {
@@ -103,6 +103,32 @@ module.exports = (() => {
       }
 
       return edge;
+
+    }
+
+    childEdges() {
+      return this.edges.filter(edge => edge.parent === this);
+    }
+
+    cascade() {
+
+      let queue = this.childEdges();
+      let paths = queue.map(e => new RelationshipPath([e.child, e, e.parent]));
+
+      let i = 0;
+      while (queue.length) {
+
+        let edge = queue.shift();
+        let curPath = paths[i++];
+
+        let nextEdges = edge.child.childEdges();
+        queue = queue.concat(nextEdges);
+
+        paths = paths.concat(nextEdges.map(e => curPath.add(e.child, e)));
+
+      }
+
+      return paths;
 
     }
 

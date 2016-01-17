@@ -234,11 +234,38 @@ module.exports = (function() {
 
     }
 
-    generateDeleteAllQuery(table, columnName, values) {
+    generateDeleteAllQuery(table, columnName, values, joins) {
+
+      let subQuery;
+
+      if (!joins) {
+
+        subQuery = `${values.map((v, i) => '\$' + (i + 1))}`;
+
+      } else {
+
+        subQuery = [
+          `SELECT ${this.escapeField(table)}.${this.escapeField(columnName)} FROM ${this.escapeField(table)}`
+        ];
+
+        subQuery = subQuery.concat(
+          joins.slice().reverse().map((j, i) => {
+            return [
+              `INNER JOIN ${this.escapeField(j.prevTable)} ON `,
+              `${this.escapeField(j.prevTable)}.${this.escapeField(j.prevColumn)} = `,
+              `${this.escapeField(j.joinTable)}.${this.escapeField(j.joinColumn)}`,
+              i === joins.length - 1 ?
+                ` AND ${this.escapeField(j.prevTable)}.${this.escapeField(j.prevColumn)} IN (${values.map((v, i) => '\$' + (i + 1))})` : ''
+            ].join('')
+          })
+        ).join(' ');
+
+      }
+
       return [
         `DELETE FROM ${this.escapeField(table)}`,
         `WHERE ${this.escapeField(table)}.${this.escapeField(columnName)}`,
-        `IN (${values.map((v, i) => '\$' + (i + 1))})`
+        `IN (${subQuery})`
       ].join(' ');
     }
 

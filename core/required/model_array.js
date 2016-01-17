@@ -108,6 +108,45 @@ module.exports = (function() {
     }
 
     /**
+    * Destroys model and cascades all deletes.
+    * @param {function} callback method to run upon completion
+    */
+    destroyCascade(callback) {
+
+      let db = this.Model.prototype.db;
+
+      if (this.filter(m => !m.inStorage()).length) {
+        return callback(new Error('Not all models are in storage'))
+      }
+
+      let params = this.map(m => m.get('id'));
+      let txn = [[db.adapter.generateDeleteAllQuery(this.Model.table(), 'id', params), params]];
+
+      let children = this.Model.relationships().cascade();
+      txn = txn.concat(
+        children.map(p => {
+          return [db.adapter.generateDeleteAllQuery(p.getModel().table(), 'id', params, p.joins(null, this.Model.table())), params];
+        })
+      ).reverse();
+
+      db.transaction(
+        txn,
+        (err, result) => {
+
+          if (err) {
+            return callback(err);
+          }
+
+          this.forEach(m => m._inStorage = false);
+
+          callback(null);
+
+        }
+      );
+
+    }
+
+    /**
     * Saves / updates all models in the ModelArray. Uses beforeSave / afterSave. Will return an error and rollback if *any* model errors out.
     * @param {function} callback returning the error and reference to self
     */

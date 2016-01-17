@@ -896,6 +896,22 @@ module.exports = (function(Nodal) {
 
     });
 
+    it('Should do a destroy cascade', (done) => {
+
+      Parent.query()
+        .end((err, parents) => {
+
+          parents.destroyCascade(err => {
+
+            expect(err).to.not.exist;
+            done();
+
+          });
+
+        })
+
+    });
+
   });
 
 });

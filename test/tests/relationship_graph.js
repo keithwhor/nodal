@@ -12,9 +12,11 @@ module.exports = (function(Nodal) {
 
     class User extends Nodal.Model {}
     class Post extends Nodal.Model {}
+    class Comment extends Nodal.Model {}
     class Avatar extends Nodal.Model {}
 
     Relationships.of(Post).joinsTo(User, {multiple: true});
+    Relationships.of(Comment).joinsTo(Post, {multiple: true});
     Relationships.of(Avatar).joinsTo(User);
 
 
@@ -94,6 +96,32 @@ module.exports = (function(Nodal) {
       expect(rpath.path[1].child.Model).to.equal(Post);
       expect(rpath.path[3].parent.Model).to.equal(User);
       expect(rpath.path[3].child.Model).to.equal(Avatar);
+
+    });
+
+    it('Should cascade properly', () => {
+
+      let user = Relationships.of(User).cascade();
+      let post = Relationships.of(Post).cascade();
+      let comment = Relationships.of(Comment).cascade();
+      let avatar = Relationships.of(Avatar).cascade();
+
+      expect(user.length).to.equal(3);
+      expect(user[0].getModel()).to.equal(Post);
+      expect(user[0].path[1].child.Model).to.equal(Post);
+      expect(user[0].path[1].parent.Model).to.equal(User);
+      expect(user[1].getModel()).to.equal(Avatar);
+      expect(user[1].path[1].child.Model).to.equal(Avatar);
+      expect(user[1].path[1].parent.Model).to.equal(User);
+      expect(user[2].getModel()).to.equal(Comment);
+      expect(user[2].path[1].child.Model).to.equal(Comment);
+      expect(user[2].path[1].parent.Model).to.equal(Post);
+      expect(user[2].path[3].child.Model).to.equal(Post);
+      expect(user[2].path[3].parent.Model).to.equal(User);
+      expect(post.length).to.equal(1);
+      expect(post[0].getModel()).to.equal(Comment);
+      expect(comment.length).to.equal(0);
+      expect(avatar.length).to.equal(0);
 
     });
 

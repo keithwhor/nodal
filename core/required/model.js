@@ -136,7 +136,7 @@ module.exports = (function() {
     */
     static table() {
       return this.prototype.schema.table;
-    };
+    }
 
     /**
     * Get the model's column data
@@ -1055,6 +1055,16 @@ module.exports = (function() {
 
         }
       );
+
+    }
+
+    /**
+    * Destroys model and cascades all deletes.
+    * @param {function} callback method to run upon completion
+    */
+    destroyCascade(callback) {
+
+      ModelArray.from([this]).destroyCascade(callback);
 
     }
 
