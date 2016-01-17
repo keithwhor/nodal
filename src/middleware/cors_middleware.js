@@ -6,12 +6,10 @@ module.exports = (function() {
 
   class CORSMiddleware extends Nodal.Middleware {
 
-    exec(controller, data, callback) {
+    exec(controller, callback) {
 
       controller.allowOrigin('*');
-
-      callback(null, data);
-      return false;
+      callback(null);
 
     }
 

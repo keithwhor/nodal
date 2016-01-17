@@ -8,7 +8,10 @@ module.exports = (function() {
   const StaticAssetInitializer = Nodal.require('initializers/static_asset_initializer.js');
 
   /* Import Middleware */
-  const GzipMiddleware = Nodal.require('middleware/gzip_middleware.js');
+  const CORSMiddleware = Nodal.require('middleware/cors_middleware.js');
+
+  /* Import Renderware */
+  const GzipRenderware = Nodal.require('renderware/gzip_renderware.js');
 
   /* Import Router */
   const router = Nodal.require('app/router.js');
@@ -24,7 +27,10 @@ module.exports = (function() {
       this.initializers.use(StaticAssetInitializer);
 
       /* Middleware */
-      this.middleware.use(GzipMiddleware);
+      this.middleware.use(CORSMiddleware);
+
+      /* Renderware */
+      this.renderware.use(GzipRenderware);
 
       /* Router */
       this.useRouter(router);

@@ -34,6 +34,24 @@ module.exports = (function() {
     }
 
     /**
+    * Run the given method
+    * @private
+    */
+    __run__(method) {
+
+      this.app.middleware.exec(this, (err) => {
+
+        if (err) {
+          return this.error(err);
+        }
+
+        this[method](this, this.params, this.app);
+
+      });
+
+    }
+
+    /**
     * Specifies CORS (cross origin resource sharing) headers.
     * @param {string} value Use '*' for a generic API service that accepts requests from anywhere, otherwise specific a domain.
     * @return {this}
@@ -292,7 +310,7 @@ module.exports = (function() {
       this.getStatus() || this.status(200);
       this.getHeader('X-Powered-By') || this.setHeader('X-Powered-By', 'Nodal');
 
-      this.app.middleware.exec(this, data, (e, data) => {
+      this.app.renderware.exec(this, data, (e, data) => {
 
         if (e) {
           this.setHeader('Content-Type', 'text/plain');

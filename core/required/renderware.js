@@ -3,28 +3,28 @@ module.exports = (function() {
   'use strict';
 
   /**
-  * Do not need to extend from this class for new Middleware, just use this as a reference template.
+  * Do not need to extend from this class for new Renderware, just use this as a reference template.
   * @class
   */
-  class Middleware {
+  class Renderware {
 
     constructor() {}
 
     /**
-    * Execute the middleware.
+    * Execute the renderware.
     * @param {Nodal.Controller} controller the Controller Instance
     * @param {string|Buffer} data The data about the be rendered
     * @param {function({Error} err, {string|Buffer} data)} callback the callback to be run upon completion
     */
-    exec(controller, callback) {
+    exec(controller, data, callback) {
 
       let err = null;
-      return callback(err);
+      return callback(err, data);
 
     }
 
   }
 
-  return Middleware;
+  return Renderware;
 
 })();

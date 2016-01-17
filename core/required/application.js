@@ -70,6 +70,7 @@ module.exports = (function() {
       this.scheduler = null;
 
       this.middleware = new ExecutionQueue();
+      this.renderware = new ExecutionQueue();
       this.initializers = new ExecutionQueue();
 
       // Load all models for relationship dependencies
