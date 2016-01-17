@@ -18,11 +18,11 @@
 ### Features
 * :x: Use environment variables exclusively for app settings
 * :x: groupBy for Composer
-* :x: Refactor Middleware, add Renderware
 * :hourglass: Idiomatic tests in app (using mocha)
 * :hourglass: Refactor tasks
 * :hourglass: Strong parameter support
 * :hourglass: Postgres JSON datatype support
+* :white_check_mark: Refactor Middleware, add Renderware
 * :white_check_mark: Nested template hierarchy (parents w/ children)
 * :white_check_mark: Composer `.first()` support
 * :white_check_mark: Joining in multiply-nested models
