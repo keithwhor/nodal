@@ -12,9 +12,9 @@ To begin your project, first install the latest version of Node (4.x) from
 terminal and run:
 
 ```
-sudo npm install nodal -g
+npm install nodal -g
 ```
-
+(If you get an error, run `sudo npm install nodal -g` or fix permissions permanently by <a href="https://docs.npmjs.com/getting-started/fixing-npm-permissions" target="_blank">following these directions</a>)
 It will take a few seconds to finish. At this point, you have the Nodal
 command line tools available and you can really get started!
 
