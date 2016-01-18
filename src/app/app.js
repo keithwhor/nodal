@@ -17,7 +17,7 @@ module.exports = (function() {
   const router = Nodal.require('app/router.js');
 
   /* Import Database */
-  // const db = Nodal.require('db/main.js');
+  const db = Nodal.require('db/main.js');
 
   class App extends Nodal.Application {
 
@@ -36,12 +36,15 @@ module.exports = (function() {
       this.useRouter(router);
 
       /* Database */
-      // this.useDatabase(db, 'main');
+      this.useDatabase(db, 'main');
 
     }
 
   }
 
-  return App;
+  let app = new App();
+  app.listen(Nodal.my.Config.secrets.port);
+
+  return;
 
 })();

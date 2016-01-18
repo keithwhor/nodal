@@ -21,6 +21,7 @@ module.exports = (function() {
   const async = require('async');
 
   const domain = require('domain'); // TODO: Will be deprecated.
+  const cluster = require('cluster');
 
   // For templates
   dot.templateSettings.varname = 'params, data';
@@ -80,7 +81,7 @@ module.exports = (function() {
     }
 
     /**
-    * Cleans up the Application, closes outstanding HTTP requests
+    * Cleans up the Application, closes outstanding HTTP requests & shutdown
     * @param {Error} error An error message to send out to HTTP clients
     * @param {function} fnDone Method to execute when Application has been cleaned up successfully
     * @private
@@ -139,10 +140,51 @@ module.exports = (function() {
     __setup__() {}
 
     /**
-    * Boilerplater method, overwritten by Daemon when spinning up Application
+    * Initializes App and sets up a communication layer with the Daemon
     * @private
     */
-    __initialize__() {}
+    __initialize__() {
+      
+      if (cluster.isWorker) {
+        
+        let self = this;
+        
+        // Tell Daemon we are alive and well
+        process.send({ __alive__: true });
+        
+        process.on('message', (msg) => {
+          // Listen for destroy
+          if ((msg) && (typeof msg === 'object') && (msg.__destroy__ === true)) {
+            // Get ready to be killed
+            self.__destroy__(null, () => {
+              
+              // Tell Daemon we are ready to be killed
+              process.send({ __destroy__: true, done: true });
+            
+            });
+            
+          }
+          
+        });
+        
+        process.on('uncaughtException', (err) => {
+          // Send exception
+          process.send({
+            __exception__: true,
+            stack: err.stack,
+            message: err.message,
+            code: err.code
+          });
+          // Try a Graceful death
+          this.__destroy__(null, () => {
+            process.exit(1);
+          });
+          
+        });
+        
+      }
+      
+    }
 
     /**
     * Used by Daemon to tells the Application to use the DummyRouter when given an error
@@ -156,7 +198,7 @@ module.exports = (function() {
     }
 
     /**
-    * Starts the Application. First runs initializers, then calls Application#__initialize__ which should be provided by the Daemon.
+    * Starts the Application. First runs initializers, then calls Application#__initialize__
     * @private
     */
     __start__() {

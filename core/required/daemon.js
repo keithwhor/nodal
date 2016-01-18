@@ -6,6 +6,9 @@ module.exports = (function() {
   const dummyRouter = require('./dummy_router.js');
 
   const fs = require('fs');
+  const cluster = require('cluster');
+  const coreCount = require('os').cpus().length;
+  const WIDstatic = 0;
 
   /**
   * Daemon for running servers. Restarts when changes are made to the underlying file structure.
@@ -20,9 +23,72 @@ module.exports = (function() {
 
       this._path = path;
       this._watchers = null;
+      this._workers = new Map();
+      // Keep instances from colliding WIDs
+      this._WIDcounter = WIDstatic;
 
       this._onStart = function() {};
 
+    }
+    
+    /**
+    * Creates a new Application fork on a child process
+    * @param {function} callback Method to execute when the forked Application on the Worker is online.
+    */
+    fork(callback) {
+      let WID = this._WIDcounter++;
+      // Setup Master
+      /**
+       * Note that setup master doesn't
+       * pass enviromental variables so
+       * we create our own worker id and
+       * pass it through argv
+       */
+      cluster.setupMaster({
+        exec: process.cwd() + '/' + this._path,
+        args: [WID],
+        silent: false
+      });
+
+      // Fork a single worker (for now we only use one)
+      let worker = cluster.fork();
+      this._workers.set(WID, worker);
+      
+      // Our own specific version of `online`
+      worker.once('message', function(message) {
+        if ((message) && (message.__alive__ === true)) {
+          callback(null, worker);
+        }else{
+          if (worker) worker.kill();
+          callback(new Error("Worker failed on initialization and has been terminated."));
+        }
+      });
+      
+      // Handle error
+      worker.on('error', (error) => {
+        console.log("ERROR FROM WORKER ID", WID);
+        console.log(error);
+      });
+      
+      // Handle messages and exceptions
+      worker.on('message', (msg) => {
+        if ((msg) && (typeof msg === 'object') && (msg.__exception__)) {
+          // Log error
+          console.log("EXCEPTION THROWN FROM WORKER ID", WID);
+          console.log("MESSAGE:", msg.message);
+          console.log("CODE:", msg.code);
+          console.log(msg.stack);
+        }
+      });
+      
+      // Handle Crashes & Redeploy
+      worker.once('exit', (worker, code, signal) => {
+        if (this._workers.get(WID).__destroyed__) return;
+        this._workers.delete(WID);
+        // Fork new Worker
+        this.fork(() => {});
+      });
+      
     }
 
     /**
@@ -30,76 +96,22 @@ module.exports = (function() {
     * @param {function} callback Method to execute when Application is finished initializing.
     */
     start(callback) {
-
+      
       callback = typeof callback === 'function' ? callback : this._onStart;
       this._onStart = callback;
-
-      let self = this;
-      let init = function() {
-
-        if ((process.env.NODE_ENV || 'development') === 'development') {
-          self.watch('', self.restart.bind(self));
-        }
-
-        callback.call(self, this);
-
-      };
-
-      try {
-
-        let App = require(process.cwd() + '/' + this._path);
-
-        if (!(Application.prototype.isPrototypeOf(App.prototype))) {
-          throw new Error('Daemon requires valid Nodal.Application');
-        }
-
-        App.prototype.__initialize__ = init;
-        this._app = new App();
-
-        let listener = (function(err) {
-
-          if (!(err instanceof Error)) {
-            err = new Error(err);
-          }
-
-          console.error('Caught exception: ' + err.message);
-          console.error(err.stack);
-
-          process.removeListener('uncaughtException', listener);
-          this.restart(err);
-
-        }).bind(this);
-
-        process.on('uncaughtException', listener);
-
-      } catch(err) {
-
-        this.startError(err, init);
-
+      
+      // Fork the Application into another process
+      this.fork((error, worker) => {
+        if (error) return callback(error);
+        callback(error, worker);
+      });
+      
+      // When we are in development mode
+      if ((process.env.NODE_ENV || 'development') === 'development') {
+        // Watch for code changes
+        this.watch('', this.restart.bind(this));
       }
-
-    }
-
-    /**
-    * Begins the Daemon in error mode (will show the startup error).
-    * @param {Error} error The error the application encountered when it tried to start.
-    * @param {function} init The initialization function from Daemon#start
-    */
-    startError(error, init) {
-
-      class DummyApp extends Application {
-
-        __setup__() {
-
-          this.useRouter(dummyRouter(error));
-
-        }
-
-      }
-
-      DummyApp.prototype.__initialize__ = init;
-      this._app = new DummyApp();
-
+      
     }
 
     /**
@@ -121,17 +133,33 @@ module.exports = (function() {
 
       err = err || new Error('Application Stopped');
 
-      let cwd = process.cwd();
-
-      Object.keys(require.cache).filter(function(v) {
-        return v.indexOf(cwd) === 0 &&
-          v.substr(cwd.length).indexOf('/node_modules/') !== 0;
-      }).forEach(function(key) {
-        delete require.cache[key];
-      });
-
-      this._app.__destroy__(err, onStop.bind(this));
-
+      // Make sure we have a Worker
+      if (this._workers.size) {
+        // We only have one worker for now so this is rather easy
+        let mapIterator = this._workers.values();
+        let worker = mapIterator.next().value;
+        
+        // Set Worker to destroyed an alternative is to removeAllListeners
+        worker.__destroyed__ = true;
+        
+        worker.send({ __destroy__: true });
+        worker.once('message', (msg) => {
+          if ((msg) && (typeof msg === 'object') && (msg.__destroy__ && msg.ready)) {
+            
+            worker.kill();
+            worker.once('exit', (code, signal) => {
+              onStop(() => {});
+            });
+            
+          }
+        });
+        
+      }else{
+        
+        onStop(() => {});
+        
+      }
+      
     }
 
     /**
