@@ -14,6 +14,7 @@ module.exports = (function(Nodal) {
         {name: 'id', type: 'serial'},
         {name: 'name', type: 'string'},
         {name: 'age', type: 'int'},
+        {name: 'content', type: 'json'},
         {name: 'created_at', type: 'datetime'},
         {name: 'updated_at', type: 'datetime'}
       ]
@@ -31,6 +32,7 @@ module.exports = (function(Nodal) {
         {name: 'id', type: 'serial'},
         {name: 'material', type: 'string'},
         {name: 'color', type: 'string'},
+        {name: 'content', type: 'json'},
         {name: 'created_at', type: 'datetime'},
         {name: 'updated_at', type: 'datetime'}
       ]
@@ -121,6 +123,7 @@ module.exports = (function(Nodal) {
       expect(obj).to.have.ownProperty('id');
       expect(obj).to.have.ownProperty('name');
       expect(obj).to.have.ownProperty('age');
+      expect(obj).to.have.ownProperty('content');
       expect(obj).to.have.ownProperty('created_at');
       expect(obj).to.have.ownProperty('updated_at');
 
@@ -129,6 +132,7 @@ module.exports = (function(Nodal) {
       expect(obj).to.have.ownProperty('id');
       expect(obj).to.have.ownProperty('name');
       expect(obj).to.not.have.ownProperty('age');
+      expect(obj).to.not.have.ownProperty('content');
       expect(obj).to.not.have.ownProperty('created_at');
       expect(obj).to.not.have.ownProperty('updated_at');
 
@@ -137,6 +141,7 @@ module.exports = (function(Nodal) {
       expect(obj).to.not.have.ownProperty('id');
       expect(obj).to.not.have.ownProperty('name');
       expect(obj).to.have.ownProperty('age');
+      expect(obj).to.have.ownProperty('content');
       expect(obj).to.have.ownProperty('created_at');
       expect(obj).to.have.ownProperty('updated_at');
 
@@ -154,12 +159,14 @@ module.exports = (function(Nodal) {
       expect(obj).to.have.ownProperty('id');
       expect(obj).to.have.ownProperty('name');
       expect(obj).to.have.ownProperty('age');
+      expect(obj).to.have.ownProperty('content');
       expect(obj).to.have.ownProperty('created_at');
       expect(obj).to.have.ownProperty('updated_at');
       expect(obj).to.have.ownProperty('house');
       expect(obj.house).to.have.ownProperty('id');
       expect(obj.house).to.have.ownProperty('material');
       expect(obj.house).to.have.ownProperty('color');
+      expect(obj.house).to.have.ownProperty('content');
       expect(obj.house).to.have.ownProperty('created_at');
       expect(obj.house).to.have.ownProperty('updated_at');
 
@@ -168,6 +175,7 @@ module.exports = (function(Nodal) {
       expect(obj).to.have.ownProperty('id');
       expect(obj).to.have.ownProperty('name');
       expect(obj).to.not.have.ownProperty('age');
+      expect(obj).to.not.have.ownProperty('content');
       expect(obj).to.not.have.ownProperty('created_at');
       expect(obj).to.not.have.ownProperty('updated_at');
       expect(obj).to.not.have.ownProperty('house');
@@ -177,12 +185,14 @@ module.exports = (function(Nodal) {
       expect(obj).to.have.ownProperty('id');
       expect(obj).to.have.ownProperty('name');
       expect(obj).to.not.have.ownProperty('age');
+      expect(obj).to.not.have.ownProperty('content');
       expect(obj).to.not.have.ownProperty('created_at');
       expect(obj).to.not.have.ownProperty('updated_at');
       expect(obj).to.have.ownProperty('house');
       expect(obj.house).to.have.ownProperty('id');
       expect(obj.house).to.have.ownProperty('material');
       expect(obj.house).to.have.ownProperty('color');
+      expect(obj.house).to.have.ownProperty('content');
       expect(obj.house).to.have.ownProperty('created_at');
       expect(obj.house).to.have.ownProperty('updated_at');
 
@@ -191,12 +201,14 @@ module.exports = (function(Nodal) {
       expect(obj).to.have.ownProperty('id');
       expect(obj).to.have.ownProperty('name');
       expect(obj).to.not.have.ownProperty('age');
+      expect(obj).to.not.have.ownProperty('content');
       expect(obj).to.not.have.ownProperty('created_at');
       expect(obj).to.not.have.ownProperty('updated_at');
       expect(obj).to.have.ownProperty('house');
       expect(obj.house).to.have.ownProperty('id');
       expect(obj.house).to.have.ownProperty('material');
       expect(obj.house).to.not.have.ownProperty('color');
+      expect(obj.house).to.not.have.ownProperty('content');
       expect(obj.house).to.not.have.ownProperty('created_at');
       expect(obj.house).to.not.have.ownProperty('updated_at');
 
@@ -205,12 +217,14 @@ module.exports = (function(Nodal) {
       expect(obj).to.not.have.ownProperty('id');
       expect(obj).to.not.have.ownProperty('name');
       expect(obj).to.have.ownProperty('age');
+      expect(obj).to.have.ownProperty('content');
       expect(obj).to.have.ownProperty('created_at');
       expect(obj).to.have.ownProperty('updated_at');
       expect(obj).to.have.ownProperty('house');
       expect(obj.house).to.have.ownProperty('id');
       expect(obj.house).to.have.ownProperty('material');
       expect(obj.house).to.have.ownProperty('color');
+      expect(obj.house).to.have.ownProperty('content');
       expect(obj.house).to.have.ownProperty('created_at');
       expect(obj.house).to.have.ownProperty('updated_at');
 
@@ -219,6 +233,7 @@ module.exports = (function(Nodal) {
       expect(obj).to.not.have.ownProperty('id');
       expect(obj).to.not.have.ownProperty('name');
       expect(obj).to.have.ownProperty('age');
+      expect(obj).to.have.ownProperty('content');
       expect(obj).to.have.ownProperty('created_at');
       expect(obj).to.have.ownProperty('updated_at');
       expect(obj).to.not.have.ownProperty('house');
@@ -228,12 +243,14 @@ module.exports = (function(Nodal) {
       expect(obj).to.not.have.ownProperty('id');
       expect(obj).to.not.have.ownProperty('name');
       expect(obj).to.have.ownProperty('age');
+      expect(obj).to.have.ownProperty('content');
       expect(obj).to.have.ownProperty('created_at');
       expect(obj).to.have.ownProperty('updated_at');
       expect(obj).to.have.ownProperty('house');
       expect(obj.house).to.not.have.ownProperty('id');
       expect(obj.house).to.not.have.ownProperty('material');
       expect(obj.house).to.have.ownProperty('color');
+      expect(obj.house).to.have.ownProperty('content');
       expect(obj.house).to.have.ownProperty('created_at');
       expect(obj.house).to.have.ownProperty('updated_at');
 
@@ -249,6 +266,7 @@ module.exports = (function(Nodal) {
       expect(obj[0]).to.have.ownProperty('id');
       expect(obj[0]).to.have.ownProperty('name');
       expect(obj[0]).to.not.have.ownProperty('age');
+      expect(obj[0]).to.not.have.ownProperty('content');
       expect(obj[0]).to.not.have.ownProperty('created_at');
       expect(obj[0]).to.not.have.ownProperty('updated_at');
 
@@ -256,6 +274,7 @@ module.exports = (function(Nodal) {
       expect(obj[0]).to.not.have.ownProperty('id');
       expect(obj[0]).to.not.have.ownProperty('name');
       expect(obj[0]).to.have.ownProperty('age');
+      expect(obj[0]).to.have.ownProperty('content');
       expect(obj[0]).to.have.ownProperty('created_at');
       expect(obj[0]).to.have.ownProperty('updated_at');
 
