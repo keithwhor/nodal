@@ -36,6 +36,7 @@
 ### Features
 * :x: GraphQL Support
 * :x: Automatic document generator + formatter for producing docs on [nodaljs.com](http://nodaljs.com)
+* :hourglass: HTTPS support (including CLI certificate verification/generation)
 * :hourglass: WebSocket support
 * :hourglass: Clustering of processes (multiple cores, threads)
 * :hourglass: Docker integration
