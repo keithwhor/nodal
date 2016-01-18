@@ -769,6 +769,7 @@ module.exports = (function() {
         let joins = joinNames.map(joinName => {
           let join = model.get(joinName);
           join && this.set(joinName, join);
+          return join;
         });
 
         return callback.apply(this, [null].concat(joins));
