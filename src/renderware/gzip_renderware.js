@@ -5,7 +5,7 @@ module.exports = (function() {
   const Nodal = require('nodal');
   const zlib = require('zlib');
 
-  class GzipMiddleware extends Nodal.Middleware {
+  class GzipRenderware extends Nodal.Renderware {
 
     exec(controller, data, callback) {
 
@@ -62,6 +62,6 @@ module.exports = (function() {
 
   }
 
-  return GzipMiddleware;
+  return GzipRenderware;
 
 })();
