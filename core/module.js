@@ -25,6 +25,7 @@ module.exports = (function() {
     ModelArray: null,
     ModelFactory: null,
     RelationshipGraph: null,
+    Renderware: null,
     Router: null,
     Scheduler: null,
     SchedulerTask: null,
@@ -137,6 +138,12 @@ module.exports = (function() {
     RelationshipGraph: {
       get: function() {
         return Nodal.RelationshipGraph || (Nodal.RelationshipGraph = require('./required/relationship_graph.js'));
+      },
+      enumerable: true
+    },
+    Renderware: {
+      get: function() {
+        return Nodal.Renderware || (Nodal.Renderware = require('./required/renderware.js'));
       },
       enumerable: true
     },
