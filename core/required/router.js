@@ -124,7 +124,7 @@ module.exports = (function() {
       let transferSize = 0;
       let query = this.parseQueryParameters(urlParts.query);
       let path = [].slice.call(urlParts.pathname.match(this._regex), 0);
-      let id = urlParts.pathname.substr(path[0].length) || null;
+      let id = (urlParts.query.hasOwnProperty('id')) ? urlParts.query.id : null;
 
       request.on('data', function(data) {
         buffers.push(data);
