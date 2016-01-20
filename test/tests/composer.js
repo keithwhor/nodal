@@ -62,6 +62,7 @@ module.exports = (function(Nodal) {
         {name: 'parent_id', type: 'int'},
         {name: 'name', type: 'string'},
         {name: 'animal', type: 'string'},
+        {name: 'details', type: 'json'},
         {name: 'created_at', type: 'datetime'},
         {name: 'updated_at', type: 'datetime'}
       ]
@@ -138,7 +139,7 @@ module.exports = (function(Nodal) {
             p.set('children', Nodal.ModelArray.from(children));
 
             let pets = ['Oliver', 'Ruby', 'Pascal'].map((name, i) => {
-              return new Pet({parent_id: id, name: name, animal: ['Cat', 'Dog', 'Cat'][i]});
+              return new Pet({parent_id: id, name: name, animal: ['Cat', 'Dog', 'Cat'][i], details: { language: name === 'Pascal' }});
             });
 
             p.set('pets', Nodal.ModelArray.from(pets));
@@ -896,6 +897,35 @@ module.exports = (function(Nodal) {
 
     });
 
+    it('Should query a pet based on json key existance', (done) => {
+      Pet.query()
+        .where({details__jsoncontains: 'language'})
+        .end((err, pets) => {
+
+            expect(err).to.not.exist;
+            expect(pets.length).to.equal(30);
+            done();
+
+          });
+
+    });
+
+    it('Should query a pet based on json key value', (done) => {
+      Pet.query()
+        .where({details__json: { language: true }})
+        .end((err, pets) => {
+
+            expect(err).to.not.exist;
+            expect(pets.length).to.equal(10);
+            done();
+
+          });
+
+    });
+
+    // IMPORTANT: Do npt place any tests after the `Should do a destroy cascade`
+    // test since all models will be gone
+
     it('Should do a destroy cascade', (done) => {
 
       Parent.query()
@@ -911,6 +941,8 @@ module.exports = (function(Nodal) {
         })
 
     });
+
+
 
   });
 
