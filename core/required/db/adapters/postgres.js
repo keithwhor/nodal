@@ -3,6 +3,7 @@ module.exports = (function() {
 
   const inflect = require('i')();
   const DatabaseAdapter = require('../adapter.js');
+  const utilities = require('../../utilities.js');
 
   class PostgresAdapter extends DatabaseAdapter {
 
@@ -404,7 +405,7 @@ module.exports = (function() {
 
       let whereObjArray = []
       whereObj.forEach( where => {
-        if (typeof where.value === 'object' && Object.keys(where.value).length ) {
+        if (utilities.isObject(where.value)) {
           Object.keys(where.value).map( (k) => {
             whereObjArray.push(Object.assign({}, where, {
               columnName: `${where.columnName}${this.whereDepthDelimiter}'${k}'`,
