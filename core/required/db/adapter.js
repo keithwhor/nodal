@@ -353,6 +353,10 @@ module.exports = (function() {
 
     }
 
+    preprocessWhereObj(table, whereObj) {
+      return whereObj;
+    }
+
     parseWhereObj(table, whereObj) {
 
       return whereObj.map((where, i) => {
@@ -375,6 +379,7 @@ module.exports = (function() {
       return whereObjArray
         .filter(v => v)
         .sort((a, b) => a.joined === b.joined ? a.table > b.table : a.joined > b.joined) // important! must be sorted.
+        .map(v => this.preprocessWhereObj(table, v))
         .map(v => this.parseWhereObj(table, v));
 
     }
@@ -413,7 +418,7 @@ module.exports = (function() {
 
         if (!joined) {
 
-          clauses.push(comparators[whereObj.comparator](whereObj.refName));
+          clauses.push(comparators[whereObj.comparator](whereObj.refName, whereObj.value));
 
         } else {
 
@@ -433,7 +438,7 @@ module.exports = (function() {
 
           }
 
-          currentJoinedClauses.push(comparators[whereObj.comparator](whereObj.refName));
+          currentJoinedClauses.push(comparators[whereObj.comparator](whereObj.refName, whereObj.value));
 
         }
 
@@ -598,6 +603,8 @@ module.exports = (function() {
     not_null: true
   };
 
+  DatabaseAdapter.prototype.documentTypes = [];
+
   DatabaseAdapter.prototype.aggregates = {
     'sum': field => `SUM(${field})`,
     'avg': field => `AVG(${field})`,
@@ -616,6 +623,8 @@ module.exports = (function() {
   DatabaseAdapter.prototype.types = {};
   DatabaseAdapter.prototype.sanitizeType = {};
   DatabaseAdapter.prototype.escapeFieldCharacter = '';
+  DatabaseAdapter.prototype.columnDepthDelimiter = '';
+  DatabaseAdapter.prototype.whereDepthDelimiter = '';
 
   DatabaseAdapter.prototype.supportsForeignKey = false;
 

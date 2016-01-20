@@ -275,15 +275,22 @@ module.exports = (function() {
     generateCreateIndex(table, columnName, indexType) {
 
       indexType = this.indexTypes.indexOf(indexType) > -1 ? indexType : this.indexTypes[0];
+      let indexName = columnName;
+      let usingValue = this.escapeField(columnName);
 
+      if (columnName.indexOf(this.columnDepthDelimiter) != -1) {
+        // turn ex: recipie->name into recipe_name
+        indexName = columnName.replace(new RegExp(this.columnDepthDelimiter, 'i'), '_');
+        usingValue = `(${columnName})`;
+      }
       return [
         'CREATE INDEX',
-          this.generateIndex(table, columnName),
+          this.generateIndex(table, indexName),
         'ON',
           this.escapeField(table),
         'USING',
           indexType,
-        ['(', this.escapeField(columnName), ')'].join('')
+        ['(', usingValue, ')'].join('')
       ].join(' ');
 
     }
@@ -393,15 +400,40 @@ module.exports = (function() {
 
     }
 
+    preprocessWhereObj(table, whereObj) {
+
+      let whereObjArray = []
+      whereObj.forEach( where => {
+        if (typeof where.value === 'object' && Object.keys(where.value).length ) {
+          Object.keys(where.value).map( (k) => {
+            whereObjArray.push(Object.assign({}, where, {
+              columnName: `${where.columnName}${this.whereDepthDelimiter}'${k}'`,
+              value: where.value[k]
+            }));
+          });
+        } else {
+          whereObjArray.push(where);
+        }
+      });
+
+      return whereObjArray;
+
+    }
+
   }
 
   PostgresAdapter.prototype.sanitizeType = {
     boolean: function(v) {
       return ['f', 't'][v | 0];
+    },
+    json: function(v) {
+      return JSON.stringify(v);
     }
   }
 
   PostgresAdapter.prototype.escapeFieldCharacter = '"';
+  PostgresAdapter.prototype.columnDepthDelimiter = '->';
+  PostgresAdapter.prototype.whereDepthDelimiter = '->>';
 
   PostgresAdapter.prototype.indexTypes = [
     'btree',
@@ -409,6 +441,35 @@ module.exports = (function() {
     'gist',
     'gin'
   ];
+
+  PostgresAdapter.prototype.documentTypes = [
+    'json'
+  ];
+
+  PostgresAdapter.prototype.comparators = {
+    is: field => `${field} = __VAR__`,
+    not: field => `${field} <> __VAR__`,
+    lt: field => `${field} < __VAR__`,
+    lte: field => `${field} <= __VAR__`,
+    gt: field => `${field} > __VAR__`,
+    gte: field => `${field} >= __VAR__`,
+    like: field => `${field} LIKE '%' || __VAR__ || '%'`,
+    ilike: field => `${field} ILIKE '%' || __VAR__ || '%'`,
+    startswith: field => `${field} LIKE __VAR__ || '%'`,
+    istartswith: field => `${field} ILIKE __VAR__ || '%'`,
+    endswith: field => `${field} LIKE '%' || __VAR__`,
+    iendswith: field => `${field} ILIKE '%' || __VAR__`,
+    is_null: field => `${field} IS NULL`,
+    not_null: field => `${field} IS NOT NULL`,
+    in: field => `ARRAY[${field}] <@ __VAR__`,
+    not_in: field => `NOT (ARRAY[${field}] <@ __VAR__)`,
+    json: (field, value) => {
+      return `${field.replace(/"/g,"")} = __VAR__`;
+    },
+    jsoncontains: (field) => {
+      return `${field.replace(/"/g,"")} ? __VAR__`;
+    }
+  };
 
   PostgresAdapter.prototype.types = {
     serial: {
@@ -439,6 +500,9 @@ module.exports = (function() {
     },
     boolean: {
       dbName: 'BOOLEAN'
+    },
+    json: {
+      dbName: 'JSONB'
     }
   };
 
