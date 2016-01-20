@@ -13,6 +13,11 @@ module.exports = (function() {
         .replace(/^\(?(.*?)\)?$/g, '$1')
         .split(',')
         .filter(v => !!v);
+    },
+
+    isObject(value) {
+      return typeof value === 'object' &&
+             {}.toString.call(value) === '[object Object]';
     }
 
   };

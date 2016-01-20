@@ -21,6 +21,7 @@
     "async": "~0.9.0",
     "colors": "~1.1.0",
     "cross-spawn-async": "~2.1.6",
+    "deep-equal": "~1.0.1",
     "dot": "~1.0.3",
     "fs-extra": "~0.26.4",
     "http-proxy": "~1.11.1",
