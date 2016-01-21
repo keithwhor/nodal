@@ -368,6 +368,66 @@ query
   });
 ```
 
+## Postgres JSONB Column Type support
+
+Nodal has basic support for the Postgres [JSONB data type](http://www.postgresql.org/docs/9.4/static/datatype-json.html). Any model that has a json column that contains a valid JSON object will have the object automatically marshalled in and out of the database. Let's walk through how to setup and use a model with a json column.
+
+First, lets generate a new model
+
+```nodal g:model Recipe name:string, flags:json```
+
+Open the migration that was generated and you will see the following in the `up()` method.
+
+```javascript
+this.createTable("recipes", [{"name":"name","type":"string,"},{"name":"flags","type":"json"}])
+```
+Let's modify the up command to add an index on the json column. Your `up()` method should look something like this
+
+```javascript    
+up() {
+
+  return [
+    this.createTable("recipes", [{"name":"name","type":"string,"},{"name":"flags","type":"json"}])
+    this.createIndex("recipes", "flags", "gin")
+  ];
+
+}
+```
+
+Nodal provides two comparator's for querying the json data for matches or existence. Lets assume our Recipe table contains a collection of recipes, and the flags json column contains flags related to dietary restrictions like vegetarian, vegan or paleo. Lets query for recipes that are Paleo only
+
+```javascript
+Recipe.query()
+      .where({flags__json:{ paleo: true }})
+      .end( (err,recipes) => {
+        ......
+      });
+```
+
+The `__json` comparator also allows for multi key queries:
+
+```javascript
+Recipe.query()
+      .where({flags__json:{ vegan: true, paleo: true }})
+      .end( (err,recipes) => {
+        ......
+      });
+```
+
+
+
+
+What if you want to query for all recipes that contain a certain key.
+
+```javascript
+Recipe.query()
+      .where({flags__jsoncontains: 'paleo'})
+      .end( (err,recipes) => {
+        ......
+      });
+```
+
+
 ## What Now?
 
 There's still a bunch more to cover! Information on in-depth Migrations, Initializers,

@@ -11,6 +11,7 @@ module.exports = (function() {
   const utilities = require('./utilities.js');
   const async = require('async');
   const inflect = require('i')();
+  const deepEqual = require('deep-equal');
 
   const RelationshipGraph = require('./relationship_graph.js');
   const Relationships = new RelationshipGraph();
@@ -642,8 +643,15 @@ module.exports = (function() {
               break;
             }
           }
-
         }
+
+        // If we have an object value (json), do a deterministic diff using
+        // node-deep-equals
+        // NOTE: Lets do an extra deep object test
+        if ( utilities.isObject(value) ) {
+          changed = !deepEqual( curValue, value, { strict: true});
+        }
+
       }
 
       this._data[field] = value;

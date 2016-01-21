@@ -304,7 +304,7 @@ module.exports = (function() {
       if (this.indices.filter(function(v) {
         return v.table === table && v.column === column;
       }).length) {
-        throw new Error('Index already exists on column "' + column + '" of table "' + table + '"');
+        throw new Error(`Index already exists on column "${column}" of table "${table}"`);
       }
 
       this.indices.push({table: table, column: column, type: type});
