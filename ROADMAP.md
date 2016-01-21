@@ -21,7 +21,7 @@
 * :hourglass: Idiomatic tests in app (using mocha)
 * :hourglass: Refactor tasks
 * :hourglass: Strong parameter support
-* :hourglass: Postgres JSON datatype support
+* :white_check_mark: Postgres JSON datatype support
 * :white_check_mark: Refactor Middleware, add Renderware
 * :white_check_mark: Nested template hierarchy (parents w/ children)
 * :white_check_mark: Composer `.first()` support
