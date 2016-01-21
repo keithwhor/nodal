@@ -4,11 +4,11 @@ module.exports = (function() {
 
   const Nodal = require('nodal');
 
-  class {{= data.name }}Middleware {
+  class {{= data.name }}Middleware extends Nodal.Middleware {
 
-    exec(controller, data, callback) {
+    exec(controller, callback) {
 
-      callback(null, data);
+      callback(null);
       return false;
 
     }

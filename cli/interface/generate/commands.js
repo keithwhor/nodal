@@ -6,5 +6,6 @@ module.exports = {
   controller: require('./controller.js').command,
   initializer: require('./initializer.js').command,
   middleware: require('./middleware.js').command,
+  renderware: require('./renderware.js').command,
   task: require('./task.js').command
 };
