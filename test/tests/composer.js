@@ -302,12 +302,14 @@ module.exports = (function(Nodal) {
     it('Should limit properly (10)', function(done) {
 
       Child.query()
-        .limit(10)
+        .limit(5, 10)
         .end((err, children) => {
 
           expect(err).to.equal(null);
           expect(children).to.be.an.instanceOf(Nodal.ModelArray);
           expect(children.length).to.equal(10);
+          expect(children._meta.total).to.equal(100);
+          expect(children._meta.offset).to.equal(5);
           done();
 
         });

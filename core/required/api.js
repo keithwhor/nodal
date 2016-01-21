@@ -83,9 +83,9 @@ module.exports = (function() {
 
       return {
         meta: this.meta(
+          modelArray._meta.total,
           modelArray.length,
-          modelArray.length,
-          0,
+          modelArray._meta.offset,
           null,
           null,
           useResource && this.resourceFromModelArray(modelArray, arrInterface, options)

@@ -150,8 +150,8 @@ module.exports = (function() {
 
     /**
     * Collapses linked list of queries into an array (for .reduce, .map etc)
-    * @private
     * @return {Array}
+    * @private
     */
     __collapse__() {
 
@@ -164,6 +164,31 @@ module.exports = (function() {
       }
 
       return composerArray;
+
+    }
+
+    /**
+    * Removes last limit command from a collapsed array of composer commands
+    * @param {Array} [composerArray] Array of composer commands
+    * @return {Array}
+    */
+    __removeLastLimitCommand__(composerArray) {
+
+      let found = composerArray.map(c => c._command && c._command.type).lastIndexOf('limit');
+      (found !== -1) && composerArray.splice(found, 1);
+      return composerArray;
+
+    }
+
+    /**
+    * Gets last limit command from a collapsed array of composer commands
+    * @param {Array} [composerArray] Array of composer commands
+    * @return {Array}
+    */
+    __getLastLimitCommand__(composerArray) {
+
+      let found = composerArray.map(c => c._command && c._command.type).lastIndexOf('limit');
+      return found >= 0 ? composerArray.splice(found, 1)[0] : null;
 
     }
 
@@ -292,7 +317,23 @@ module.exports = (function() {
         includeColumns
       );
 
-    };
+    }
+
+    /**
+    * Generate a SQL count query
+    * @private
+    * @param {Array} [includeColumns=*] Which columns to include, includes all by default
+    * @param {boolean} [disableJoins=false] Disable joins if you just want a subset of data
+    * @return {Object} Has "params" and "sql" properties.
+    */
+    __generateCountQuery__() {
+
+      let queryInfo = this.__reduceToQueryInformation__(this.__removeLastLimitCommand__(this.__collapse__()));
+      let query = this.__reduceCommandsToQuery__(queryInfo.commands, ['id']);
+      query.sql = this.db.adapter.generateCountQuery(query.sql, 'c', 'id');
+      return query;
+
+    }
 
     /**
     * Add Joins to a query from queryInfo
@@ -567,13 +608,30 @@ module.exports = (function() {
     end(callback) {
 
       let query = this.__generateQuery__();
+      let countQuery = this.__generateCountQuery__();
 
-      return this.db.query(query.sql, query.params, (err, result) => {
+      let limitCommand = this.__getLastLimitCommand__(this.__collapse__());
+      let offset = limitCommand ? limitCommand._command.data.offset : 0;
+      let total = 0;
 
-        let rows = result ? (result.rows || []).slice() : [];
-        let models = this.__parseModelsFromRows__(rows);
+      this.db.query(countQuery.sql, countQuery.params, (err, result) => {
 
-        callback.call(this, err, models);
+        let total = (((result && result.rows) || [])[0] || {}).__total__ || 0;
+
+        if (!total) {
+          let models = this.__parseModelsFromRows__([]);
+          models.setMeta({offset: offset, total: total});
+          return callback.call(this, err, models);
+        }
+
+        this.db.query(query.sql, query.params, (err, result) => {
+
+          let rows = result ? (result.rows || []).slice() : [];
+          let models = this.__parseModelsFromRows__(rows);
+          models.setMeta({offset: offset, total: total});
+          callback.call(this, err, models);
+
+        });
 
       });
 

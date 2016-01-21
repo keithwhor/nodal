@@ -18,6 +18,10 @@ module.exports = (function() {
 
       super();
       this.Model = modelConstructor;
+      this._meta = {
+        total: 0,
+        offset: 0
+      };
 
     }
 
@@ -35,6 +39,17 @@ module.exports = (function() {
       modelArray.push.apply(modelArray, arr);
 
       return modelArray;
+
+    }
+
+    /**
+    * Sets metadata for the modelArray
+    * @param {Object} data values to set
+    */
+    setMeta(data) {
+
+      Object.keys(data).forEach(k => this._meta[k] = data[k]);
+      return this._meta;
 
     }
 

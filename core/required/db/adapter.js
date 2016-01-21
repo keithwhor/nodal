@@ -189,15 +189,14 @@ module.exports = (function() {
 
     }
 
-    generateCountQuery(table, columnName, multiFilter) {
+    generateCountQuery(subQuery, table, columnName) {
 
       return [
-        'SELECT COUNT(',
-          this.escapeField(columnName),
-        ') AS __total__ FROM ',
-          this.escapeField(table),
-          this.generateWhereClause(table, multiFilter)
-      ].join('');
+        `SELECT COUNT(${this.escapeField(table)}.${this.escapeField(columnName)}) `,
+        `AS __total__ FROM `,
+        subQuery ? `(${subQuery}) AS ` : '',
+        `${this.escapeField(table)}`
+      ].join(' ');
 
     }
 
