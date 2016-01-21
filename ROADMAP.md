@@ -2,9 +2,9 @@
 
 ### Legend:
 
-:x: Not Started
-:hourglass: WIP
-:white_check_mark: Complete
+* :x: Not Started
+* :hourglass: WIP
+* :white_check_mark: Complete
 
 ### 0.6, Target: 01/25/2016
 
