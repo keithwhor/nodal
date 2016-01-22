@@ -5,7 +5,7 @@ module.exports = (function() {
   const Nodal = require('nodal');
   const zlib = require('zlib');
 
-  class GzipRenderware extends Nodal.Renderware {
+  class GzipRenderware {
 
     exec(controller, data, callback) {
 
