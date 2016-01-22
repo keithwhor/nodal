@@ -169,7 +169,7 @@ module.exports = (function(Nodal) {
                 parents.map(p => p.get('outgoingFriendships').saveAll.bind(p.get('outgoingFriendships'))).filter(p => p)
               ), (err) => {
 
-                expect(err).to.be.undefined;
+                expect(err).to.not.exist;
                 done();
 
               }
