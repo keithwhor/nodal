@@ -170,7 +170,13 @@ module.exports = (function() {
         return Nodal.SchemaGenerator || (Nodal.SchemaGenerator = require('./required/db/schema_generator.js'));
       },
       enumerable: true
-    }
+    },
+    Task: {
+      get: function() {
+        return Nodal.Task || (Nodal.Task = require('./required/task.js'));
+      },
+      enumerable: true
+    },
   });
 
   Object.defineProperties(LazyNodal.my, {
