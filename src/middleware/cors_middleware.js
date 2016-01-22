@@ -4,7 +4,7 @@ module.exports = (function() {
 
   const Nodal = require('nodal');
 
-  class CORSMiddleware extends Nodal.Middleware {
+  class CORSMiddleware {
 
     exec(controller, callback) {
 
