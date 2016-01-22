@@ -646,7 +646,7 @@ module.exports = (function() {
       return this.limit(1).end((err, models) => {
 
         if (!err && !models.length) {
-          err = new Error(`No ${this.Model} found`);
+          err = new Error(`No ${this.Model.name} found`);
         }
 
         callback(err, models[0]);
