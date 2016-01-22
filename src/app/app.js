@@ -19,6 +19,10 @@ module.exports = (function() {
   /* Import Database */
   // const db = Nodal.require('db/main.js');
 
+  /* Import Scheduler */
+  // const scheduler = Nodal.require('schedulers/main.js');
+
+
   class App extends Nodal.Application {
 
     __setup__() {
@@ -37,6 +41,10 @@ module.exports = (function() {
 
       /* Database */
       // this.useDatabase(db, 'main');
+
+      /* Scheduler */
+      // this.useScheduler(scheduler);
+
 
     }
 
