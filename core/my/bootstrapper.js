@@ -4,6 +4,7 @@ module.exports = (() => {
 
   const fs = require('fs');
   const async = require('async');
+  const colors = require('colors/safe');
 
   const Database = require('../required/db/database.js');
   const SchemaGenerator = require('../required/db/schema_generator.js');
