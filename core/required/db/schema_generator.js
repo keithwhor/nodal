@@ -66,11 +66,7 @@ module.exports = (function() {
         }
       });
 
-      if (Object.keys(newProperties).length) {
-        columnData.properties = newProperties;
-      } else {
-        delete columnData.properties;
-      }
+      columnData.properties = newProperties;
 
       return columnData;
 
