@@ -88,15 +88,12 @@ module.exports = (function() {
     */
     filterParams(obj, fields) {
 
-      let filterObj = {};
-
-      fields
-        .map(k => ((filterObj[k] = obj[k]), k))
-        .filter(k => filterObj[k] === undefined)
-        .forEach(k => delete filterObj[k]);
-
-      return filterObj;
-
+      return fields
+        .filter(f => obj[f] !== undefined)
+        .reduce((prev, f) => {
+          prev[f] = obj[f];
+          return prev;
+        }, {});
     }
 
     /**
