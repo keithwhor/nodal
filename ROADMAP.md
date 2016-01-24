@@ -14,12 +14,16 @@
 * :white_check_mark: Model#destroyCascade should cascade
 * :white_check_mark: Model#destroy should not show validation errors
 * :white_check_mark: Model.joinsTo needs to be rethought, or all models need to be `required` on app start
+* :x: When joining objects, represent multiply-nested objects properly in `toObject` output
 
 ### Features
-* :x: Use environment variables exclusively for app settings
-* :x: groupBy for Composer
+* :x: Join in based on properties of joined table (i.e. only join in specific entries)
+* :hourglass: groupBy for Composer
+  * TODO:
 * :hourglass: Idiomatic tests in app (using mocha)
+  * TODO:
 * :hourglass: Refactor tasks
+  * TODO:
 * :hourglass: Strong parameter support
 * :white_check_mark: Postgres JSON datatype support
 * :white_check_mark: Refactor Middleware, add Renderware
@@ -28,10 +32,7 @@
 * :white_check_mark: Joining in multiply-nested models
 * :white_check_mark: Add updated_at support like existing created_at
 
-### Nice-to-haves
-* :x: More meaningful errors
-
-### 0.7, Target: Late Q1 2016
+### 0.7, Target: 02/22/2016
 
 ### Features
 * :x: GraphQL Support
