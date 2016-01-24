@@ -493,6 +493,8 @@ module.exports = (function() {
         } catch(e) {
 
           error = e.message;
+          console.error(`Error: ${e.message}`);
+          console.error(e.stack);
 
         }
 
@@ -503,7 +505,8 @@ module.exports = (function() {
       }
 
       response.writeHead(500, {'Content-Type': 'text/plain'});
-      response.end('500 - Internal Server Error' + (error ? ': ' + error : ''));
+      response.end('500 - Internal Server Error (Routing)' + (error ? ': ' + error : ''));
+
       return;
 
     }

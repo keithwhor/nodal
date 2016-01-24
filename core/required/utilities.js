@@ -25,12 +25,12 @@ module.exports = (function() {
 
       str = str.replace(/(?:(?:\/:(\w+?)\/)|(\*))/g, (m, name, aster) => {
         names.push(name);
-        return m === '*' ? '(.*?)' : '/(.+?)/';
+        return m === '*' ? '(.*?)' : '/([^\/]+?)/';
       });
 
       str = str.replace(/\/:(\w+?)$/, (m, name) => {
         names.push(name);
-        return '(?:/(.+?))?'
+        return '(?:/([^\/]+?))?'
       });
 
       return {

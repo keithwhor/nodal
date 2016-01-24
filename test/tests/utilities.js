@@ -48,6 +48,7 @@ module.exports = Nodal => {
       expect(parsed.regex.exec('/api/v1/a')[1]).to.equal('a');
       expect(parsed.regex.exec('/api/v1/a/')).to.exist;
       expect(parsed.regex.exec('/api/v1/a/')[1]).to.equal('a');
+      expect(parsed.regex.exec('/api/v1/a/b')).to.not.exist;
 
     });
 

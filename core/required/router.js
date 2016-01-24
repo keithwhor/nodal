@@ -142,13 +142,13 @@ module.exports = (function() {
       let urlMatch = [].slice.call(urlParts.pathname.match(this._regex), 0);
 
       let matches = urlMatch.slice(1);
-      let url = '/' + urlMatch[0].split('/').filter(v => !!v).join('/');
-      let path = this._names.reduce((obj, name, i) => {
+      let path = '/' + urlMatch[0].split('/').filter(v => !!v).join('/');
+      let route = this._names.reduce((obj, name, i) => {
         name && (obj[name] = matches[i] || null);
         return obj;
       }, {});
 
-      let id = path.id || null;
+      let id = route.id || null;
 
       request.on('data', function(data) {
         buffers.push(data);
@@ -169,8 +169,8 @@ module.exports = (function() {
         let body = buffer.toString();
 
         let params = {
-          url: url,
           path: path,
+          route: route,
           matches: matches,
           query: query,
           buffer: buffer,
