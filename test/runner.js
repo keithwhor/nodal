@@ -62,7 +62,7 @@ describe('Test Suite', function() {
   require('./tests/nodal.js')(Nodal);
 
   require('./tests/database.js')(Nodal);
-  
+
   require('./tests/api.js')(Nodal);
 
   require('./tests/model.js')(Nodal);

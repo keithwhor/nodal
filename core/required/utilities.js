@@ -33,6 +33,8 @@ module.exports = (function() {
         return '(?:/([^\/]+?))?'
       });
 
+      str = str.replace(/\/\(\.\*\?\)/g, '(?:\/(.*?))?');
+
       return {
         regex: new RegExp(`^${str}/?$`),
         names: names
