@@ -19,6 +19,7 @@ module.exports = (function() {
     Database: null,
     DummyRouter: null,
     Initializer: null,
+    ItemArray: null,
     Middleware: null,
     Migration: null,
     Model: null,
@@ -102,6 +103,12 @@ module.exports = (function() {
     Initializer: {
       get: function() {
         return Nodal.Initializer || (Nodal.Initializer = require('./required/initializer.js'));
+      },
+      enumerable: true
+    },
+    ItemArray: {
+      get: function() {
+        return Nodal.ItemArray || (Nodal.ItemArray = require('./required/item_array.js'));
       },
       enumerable: true
     },

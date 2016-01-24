@@ -61,6 +61,69 @@ module.exports = (function(Nodal) {
 
     });
 
+    it('should format ItemArrays properly', () => {
+
+      let groups = Nodal.ItemArray.from([
+        {count: 5, color: 'red'},
+        {count: 6, color: 'green'},
+        {count: 7, color: 'blue'}
+      ]);
+
+      groups.setMeta({offset: 1, total: 10});
+
+      let output = Nodal.API.format(groups);
+
+      expect(output).to.have.ownProperty('meta');
+      expect(output).to.have.ownProperty('data');
+      expect(output.data.length).to.equal(3);
+      expect(output.data[0].color).to.equal('red');
+      expect(output.data[2].color).to.equal('blue');
+      expect(output.meta.count).to.equal(3);
+      expect(output.meta.total).to.equal(10);
+      expect(output.meta.offset).to.equal(1);
+
+    });
+
+    it('should format ItemArrays properly with include', () => {
+
+      let groups = Nodal.ItemArray.from([
+        {count: 5, color: 'red'},
+        {count: 6, color: 'green'},
+        {count: 7, color: 'blue'}
+      ]);
+
+      groups.setMeta({offset: 1, total: 10});
+
+      let output = Nodal.API.format(groups, ['color']);
+
+      expect(output).to.have.ownProperty('meta');
+      expect(output).to.have.ownProperty('data');
+      expect(output.data.length).to.equal(3);
+      expect(output.data[0]).to.haveOwnProperty('color');
+      expect(output.data[0]).to.not.haveOwnProperty('count');
+
+    });
+
+    it('should format ItemArrays properly with exclude', () => {
+
+      let groups = Nodal.ItemArray.from([
+        {count: 5, color: 'red'},
+        {count: 6, color: 'green'},
+        {count: 7, color: 'blue'}
+      ]);
+
+      groups.setMeta({offset: 1, total: 10});
+
+      let output = Nodal.API.format(groups, ['color'], {exclude: true});
+
+      expect(output).to.have.ownProperty('meta');
+      expect(output).to.have.ownProperty('data');
+      expect(output.data.length).to.equal(3);
+      expect(output.data[0]).to.not.haveOwnProperty('color');
+      expect(output.data[0]).to.haveOwnProperty('count');
+
+    });
+
   });
 
 });

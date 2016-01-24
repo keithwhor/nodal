@@ -54,11 +54,17 @@ module.exports = (function() {
     */
     toObject(arrInterface, options) {
 
+      options = options || {};
       let keys = [];
 
-      if (this.length && arrInterface && arrInterface.length) {
-        keys = Object.keys(this[0])
-          .filter(k => arrInterface.indexOf(k) !== -1 && !options.exclude);
+      if (this.length) {
+
+        keys = Object.keys(this[0]);
+
+        if (arrInterface && arrInterface.length) {
+          keys = keys.filter(k => (arrInterface.indexOf(k) === -1) === !!options.exclude);
+        }
+
       }
 
       return this.map(m => {
