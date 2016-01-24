@@ -141,11 +141,13 @@ module.exports = (function() {
       let query = this.parseQueryParameters(urlParts.query);
       let urlMatch = [].slice.call(urlParts.pathname.match(this._regex), 0);
 
+      let matches = urlMatch.slice(1);
       let url = '/' + urlMatch[0].split('/').filter(v => !!v).join('/');
       let path = this._names.reduce((obj, name, i) => {
-        obj[name] = urlMatch[i + 1] || null;
+        name && (obj[name] = matches[i] || null);
+        return obj;
       }, {});
-      
+
       let id = path.id || null;
 
       request.on('data', function(data) {
@@ -169,6 +171,7 @@ module.exports = (function() {
         let params = {
           url: url,
           path: path,
+          matches: matches,
           query: query,
           buffer: buffer,
           body: this.parseBody(headers['content-type'], body),

@@ -19,6 +19,21 @@ module.exports = Nodal => {
 
     });
 
+    it('should parse regex with an asterisk', () => {
+
+      let parsed = utilities.parseRegexFromString('/api/*');
+
+      expect(parsed.names.length).to.equal(1);
+      expect(parsed.names[0]).to.be.undefined;
+      expect(parsed.regex.exec('/api/v1')).to.exist;
+      expect(parsed.regex.exec('/api/v1')[1]).to.equal('v1');
+      expect(parsed.regex.exec('/api/v1/')).to.exist;
+      expect(parsed.regex.exec('/api/v1/')[1]).to.equal('v1');
+      expect(parsed.regex.exec('/api/v1/a')).to.exist;
+      expect(parsed.regex.exec('/api/v1/a')[1]).to.equal('v1/a');
+
+    });
+
     it('should parse regex from string with id named group', () => {
 
       let parsed = utilities.parseRegexFromString('/api/v1/:id');
