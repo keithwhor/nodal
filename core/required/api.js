@@ -3,7 +3,7 @@ module.exports = (function() {
   'use strict';
 
   const Model = require('./model.js');
-  const ModelArray = require('./model_array.js');
+  const ItemArray = require('./item_array.js');
 
   class APIConstructor {
 
@@ -19,7 +19,7 @@ module.exports = (function() {
         obj = modelArray;
       }
 
-      if (!(obj instanceof ModelArray)) {
+      if (!(obj instanceof ItemArray)) {
         return this.spoof(obj);
       }
 
@@ -79,18 +79,18 @@ module.exports = (function() {
 
     }
 
-    response(modelArray, arrInterface, options, useResource) {
+    response(itemArray, arrInterface, options, useResource) {
 
       return {
         meta: this.meta(
-          modelArray._meta.total,
-          modelArray.length,
-          modelArray._meta.offset,
+          itemArray._meta.total,
+          itemArray.length,
+          itemArray._meta.offset,
           null,
           null,
-          useResource && this.resourceFromModelArray(modelArray, arrInterface, options)
+          useResource && this.resourceFromModelArray(itemArray, arrInterface, options)
         ),
-        data: modelArray.toObject(arrInterface, options)
+        data: itemArray.toObject(arrInterface, options)
       }
 
     }

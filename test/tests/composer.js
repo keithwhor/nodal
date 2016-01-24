@@ -15,6 +15,7 @@ module.exports = (function(Nodal) {
       columns: [
         {name: 'id', type: 'serial'},
         {name: 'name', type: 'string'},
+        {name: 'shirt_color', type: 'string'},
         {name: 'created_at', type: 'datetime'},
         {name: 'updated_at', type: 'datetime'}
       ]
@@ -124,7 +125,7 @@ module.exports = (function(Nodal) {
             'Samuel',
             'Suzy',
             'Zoolander'
-          ].map(name => new Parent({name: name}));
+          ].map((name, i) => new Parent({name: name, shirt_color: ['red', 'green', 'blue'][i % 3]}));
 
           parents = Nodal.ModelArray.from(parents);
 
@@ -925,6 +926,21 @@ module.exports = (function(Nodal) {
 
     });
 
+    it('Should group by shirt_color', done => {
+
+      Parent.query()
+        .groupBy('shirt_color')
+        .end((err, groups) => {
+
+          expect(err).to.not.exist;
+          expect(groups.length).to.equal(3);
+          console.log(groups);
+          done();
+
+        });
+
+    });
+
     // IMPORTANT: Do npt place any tests after the `Should do a destroy cascade`
     // test since all models will be gone
 
@@ -943,8 +959,6 @@ module.exports = (function(Nodal) {
         })
 
     });
-
-
 
   });
 

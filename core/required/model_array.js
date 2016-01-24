@@ -4,11 +4,13 @@ module.exports = (function() {
 
   const async = require('async');
 
+  const ItemArray = require('./item_array.js');
+
   /**
   * Array of Models, for easy conversion to Objects
   * @class
   */
-  class ModelArray extends Array {
+  class ModelArray extends ItemArray {
 
     /**
     * Create the ModelArray with a provided Model to use as a reference.
@@ -18,10 +20,6 @@ module.exports = (function() {
 
       super();
       this.Model = modelConstructor;
-      this._meta = {
-        total: 0,
-        offset: 0
-      };
 
     }
 
@@ -39,17 +37,6 @@ module.exports = (function() {
       modelArray.push.apply(modelArray, arr);
 
       return modelArray;
-
-    }
-
-    /**
-    * Sets metadata for the modelArray
-    * @param {Object} data values to set
-    */
-    setMeta(data) {
-
-      Object.keys(data).forEach(k => this._meta[k] = data[k]);
-      return this._meta;
 
     }
 

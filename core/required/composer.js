@@ -2,7 +2,10 @@ module.exports = (function() {
 
   'use strict';
 
+  const ItemArray = require('./item_array.js');
   const ModelArray = require('./model_array.js');
+
+  const utilities = require('./utilities.js');
 
   /**
   * The query composer (ORM)
@@ -29,11 +32,17 @@ module.exports = (function() {
     * Given rows with repeated data (due to joining in multiple children), return only parent models (but include references to their children)
     * @private
     * @param {Array} rows Rows from sql result
+    * @param {Boolean} grouped Are these models grouped, if so, different procedure
     * @return {Nodal.ModelArray}
     */
-    __parseModelsFromRows__(rows) {
+    __parseModelsFromRows__(rows, grouped) {
 
       // console.log('START PARSE', rows.length);
+
+      // No-op if grouped
+      if (grouped) {
+        return ItemArray.from(rows);
+      }
 
       let s = new Date().valueOf();
 
@@ -193,6 +202,14 @@ module.exports = (function() {
     }
 
     /**
+    * Determines whether this composer query represents a grouped query or not
+    * @return {Boolean}
+    */
+    __isGrouped__() {
+      return this.__collapse__().filter(c => c._command && c._command.type === 'groupBy').length > 0;
+    }
+
+    /**
     * Reduces an array of composer queries to a single query information object
     * @private
     * @param {Array} [composerArray]
@@ -205,14 +222,6 @@ module.exports = (function() {
       let commands = composerArray.reduce((p, c) => {
 
         let composerCommand = c._command || {type: 'where', data: {comparisons: []}};
-        let lastCommand = p[p.length - 1];
-        let command = {};
-
-        if (lastCommand && !lastCommand[composerCommand.type]) {
-          command = lastCommand;
-        } else {
-          p.push(command);
-        }
 
         if (composerCommand.type === 'join') {
 
@@ -222,6 +231,39 @@ module.exports = (function() {
                 return (p[c] = joinData[c], p);
               }, {});
             })
+          );
+
+          return p;
+
+        }
+
+        let lastCommand = p[p.length - 1];
+        let command = {
+          where: null,
+          limit: null,
+          orderBy: [],
+          groupBy: []
+        };
+        p.push(command);
+
+        if (
+          lastCommand && (
+            !lastCommand[composerCommand.type] ||
+            lastCommand[composerCommand.type] instanceof Array
+          )
+        ) {
+
+          command = lastCommand;
+          p.pop();
+
+        }
+
+        if (command[composerCommand.type] instanceof Array) {
+
+          command[composerCommand.type].push(
+            Object.keys(composerCommand.data).reduce((p, c) => {
+              return (p[c] = composerCommand.data[c], p);
+            }, {})
           );
 
         } else {
@@ -262,8 +304,6 @@ module.exports = (function() {
         let joins = null;
         let columns = includeColumns || this.Model.columnNames();
 
-        let orderBy = command.orderBy ? [command.orderBy] : []
-
         return {
           sql: this.db.adapter.generateSelectQuery(
             prev.sql || {table: this.Model.table()},
@@ -271,7 +311,8 @@ module.exports = (function() {
             columns,
             multiFilter,
             joins,
-            orderBy,
+            command.groupBy,
+            command.orderBy,
             command.limit,
             prev.params.length
           ),
@@ -370,7 +411,7 @@ module.exports = (function() {
 
       // Order by the orders... in reverse order
       let orderBy = queryInfo.commands.reduce((arr, command) => {
-        command.orderBy && arr.unshift(command.orderBy);
+        command.orderBy && (arr = command.orderBy.concat(arr));
         return arr;
       }, []);
 
@@ -381,6 +422,7 @@ module.exports = (function() {
           columns,
           null,
           joins,
+          null,
           orderBy,
           null,
           query.params.length
@@ -515,22 +557,31 @@ module.exports = (function() {
     * @param {string} direction Must be 'ASC' or 'DESC'
     * @return {Nodal.Composer} new Composer instance
     */
-    orderBy(field, direction, formatFunc) {
+    orderBy(field, direction) {
 
-      if (!this.Model.hasColumn(field)) {
-        throw new Error(`Cannot order by ${field}, it does not belong to ${this.Model.name}`);
+      let transformation;
+      let fields = [];
+
+      if (typeof field === 'function') {
+        fields = utilities.getFunctionParameters(field);
+        transformation = field;
+      } else {
+        fields = [field];
+        transformation = v => `${v}`;
       }
 
-      if (typeof formatFunc !== 'function') {
-        formatFunc = null;
-      }
+      fields.forEach(field => {
+        if (!this.Model.hasColumn(field)) {
+          throw new Error(`Cannot order by ${field}, it does not belong to ${this.Model.name}`);
+        }
+      });
 
       this._command = {
         type: 'orderBy',
         data: {
-          columnName: field,
-          direction: ({'asc': 'ASC', 'desc': 'DESC'}[(direction + '').toLowerCase()] || 'ASC'),
-          format: formatFunc
+          columnNames: fields,
+          transformation: transformation,
+          direction: ({'asc': 'ASC', 'desc': 'DESC'}[(direction + '').toLowerCase()] || 'ASC')
         }
       };
 
@@ -602,6 +653,35 @@ module.exports = (function() {
     }
 
     /**
+    * Groups by a specific field, or a transformation on a field
+    * @param {String} column The column to group by
+    */
+    groupBy(column) {
+
+      let columns;
+      let transformation;
+
+      if (typeof column === 'function') {
+        columns = utilities.getFunctionParameters(column);
+        transformation = column;
+      } else {
+        columns = [column]
+        transformation = v => `${v}`;
+      }
+
+      this._command = {
+        type: 'groupBy',
+        data: {
+          columnNames: columns,
+          transformation: transformation
+        }
+      };
+
+      return new Composer(this.Model, this);
+
+    }
+
+    /**
     * Execute the query you've been composing.
     * @param {function({Error}, {Nodal.ModelArray})} callback The method to execute when the query is complete
     */
@@ -609,6 +689,8 @@ module.exports = (function() {
 
       let query = this.__generateQuery__();
       let countQuery = this.__generateCountQuery__();
+
+      let grouped = this.__isGrouped__();
 
       let limitCommand = this.__getLastLimitCommand__(this.__collapse__());
       let offset = limitCommand ? limitCommand._command.data.offset : 0;
@@ -619,7 +701,7 @@ module.exports = (function() {
         let total = (((result && result.rows) || [])[0] || {}).__total__ || 0;
 
         if (!total) {
-          let models = this.__parseModelsFromRows__([]);
+          let models = this.__parseModelsFromRows__([], grouped);
           models.setMeta({offset: offset, total: total});
           return callback.call(this, err, models);
         }
@@ -627,7 +709,7 @@ module.exports = (function() {
         this.db.query(query.sql, query.params, (err, result) => {
 
           let rows = result ? (result.rows || []).slice() : [];
-          let models = this.__parseModelsFromRows__(rows);
+          let models = this.__parseModelsFromRows__(rows, grouped);
           models.setMeta({offset: offset, total: total});
           callback.call(this, err, models);
 
@@ -646,7 +728,7 @@ module.exports = (function() {
       return this.limit(1).end((err, models) => {
 
         if (!err && !models.length) {
-          err = new Error(`No ${this.Model.name} found`);
+          err = new Error(`No records for ${this.Model.name} found in your query`);
         }
 
         callback(err, models[0]);
@@ -661,6 +743,10 @@ module.exports = (function() {
     * @param {function({Error}, {Nodal.ModelArray})} callback The callback for the update query
     */
     update(fields, callback) {
+
+      if (this.__isGrouped__()) {
+        throw new Error('Cannot update grouped queries');
+      }
 
       let query = this.__generateQuery__(['id'], true);
       let columns = Object.keys(fields);
