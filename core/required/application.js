@@ -591,7 +591,9 @@ module.exports = (function() {
 
       this.server = server;
 
-      console.log('Nodal HTTP server listening on port ' + port);
+      let version = require('../../package.json').version;
+
+      console.log(`Nodal ${version} HTTP server listening on port ${port}`);
 
       return true;
 
