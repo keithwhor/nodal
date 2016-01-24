@@ -112,8 +112,8 @@ module.exports = (function() {
 
   /* generator: end imports */
 
-  router.route(/^\/?$/, IndexController);
-  router.route(/^\/static\/(.*)/, StaticController);
+  router.route('/', IndexController);
+  router.route('/static/*', StaticController);
 
   /* generator: begin routes */
 
@@ -165,7 +165,6 @@ module.exports = (function() {
         this.app.template('index.html').generate(
           this.params,
           {
-            test: this.params.query.test,
             name: 'My Nodal Application'
           }
         )

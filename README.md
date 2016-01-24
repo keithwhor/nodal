@@ -118,7 +118,6 @@ class IndexController extends Nodal.Controller {
       this.app.template('index.html').generate(
         this.params,
         {
-          test: this.params.query.test,
           name: 'My Nodal Application'
         }
       )
@@ -161,7 +160,7 @@ class BlogPostsController extends Nodal.Controller {
 
   show() {
 
-    BlogPost.find(params.id, (err, blogPost) => this.respond(err || blogPost));
+    BlogPost.find(this.params.route.id, (err, blogPost) => this.respond(err || blogPost));
 
   }
 
@@ -173,13 +172,13 @@ class BlogPostsController extends Nodal.Controller {
 
   update() {
 
-    BlogPost.update(params.id, params.body.data, (err, blogPost) => this.respond(err || blogPost));
+    BlogPost.update(this.params.route.id, params.body.data, (err, blogPost) => this.respond(err || blogPost));
 
   }
 
   destroy() {
 
-    BlogPost.destroy(params.id, (err, blogPost) => this.respond(err || blogPost));
+    BlogPost.destroy(this.params.route.id, (err, blogPost) => this.respond(err || blogPost));
 
   }
 
