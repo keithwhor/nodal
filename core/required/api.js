@@ -4,6 +4,7 @@ module.exports = (function() {
 
   const Model = require('./model.js');
   const ItemArray = require('./item_array.js');
+  const ModelArray = require('./model_array.js');
 
   class APIConstructor {
 
@@ -15,6 +16,7 @@ module.exports = (function() {
 
       if (obj instanceof Model) {
         let modelArray = new ModelArray(obj.constructor);
+        modelArray.setMeta({total: 1, offset: 0});
         modelArray.push(obj);
         obj = modelArray;
       }
