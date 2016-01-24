@@ -311,6 +311,15 @@ module.exports = (function() {
         let joins = null;
         let columns = includeColumns || lastAggregate || this.Model.columnNames();
 
+        columns = columns
+          .map(c => typeof c !== 'string' ? c : {columnNames: [c], alias: c, transformation: v => v})
+          .map(c => Object.keys(c).reduce((p, k) => { return (p[k] = c[k], p); }, {}));
+
+        !command.groupBy.length && columns.forEach(c => {
+          c.transformation = v => v;
+          c.columnNames = [c.alias];
+        });
+
         return {
           sql: this.db.adapter.generateSelectQuery(
             prev.sql || {table: this.Model.table()},

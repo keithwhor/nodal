@@ -15,7 +15,8 @@ module.exports = (function(Nodal) {
       columns: [
         {name: 'id', type: 'serial'},
         {name: 'name', type: 'string'},
-        {name: 'shirt_color', type: 'string'},
+        {name: 'shirt', type: 'string'},
+        {name: 'pantaloons', type: 'string'},
         {name: 'created_at', type: 'datetime'},
         {name: 'updated_at', type: 'datetime'}
       ]
@@ -125,7 +126,11 @@ module.exports = (function(Nodal) {
             'Samuel',
             'Suzy',
             'Zoolander'
-          ].map((name, i) => new Parent({name: name, shirt_color: ['red', 'green', 'blue'][i % 3]}));
+          ].map((name, i) => new Parent({
+            name: name,
+            shirt: ['red', 'green', 'blue'][i % 3],
+            pantaloons: ['jeans', 'shorts'][i % 2]
+          }));
 
           parents = Nodal.ModelArray.from(parents);
 
@@ -926,10 +931,10 @@ module.exports = (function(Nodal) {
 
     });
 
-    it('Should group by shirt_color', done => {
+    it('Should group by shirt', done => {
 
       Parent.query()
-        .groupBy('shirt_color')
+        .groupBy('shirt')
         .end((err, groups) => {
 
           expect(err).to.not.exist;
@@ -940,34 +945,34 @@ module.exports = (function(Nodal) {
 
     });
 
-    it('Should group and order by shirt_color', done => {
+    it('Should group and order by shirt', done => {
 
       Parent.query()
-        .groupBy('shirt_color')
-        .orderBy('shirt_color', 'ASC')
+        .groupBy('shirt')
+        .orderBy('shirt', 'ASC')
         .end((err, groups) => {
 
           expect(err).to.not.exist;
           expect(groups.length).to.equal(3);
-          expect(groups[0].shirt_color).to.equal('blue');
+          expect(groups[0].shirt).to.equal('blue');
           done();
 
         });
 
     });
 
-    it('Should group by shirt_color, and get a count alias and another mapping', done => {
+    it('Should group by shirt, and get a count alias and another mapping', done => {
 
       Parent.query()
-        .groupBy('shirt_color')
+        .groupBy('shirt')
         .aggregate('count', id => `COUNT(${id})`)
-        .aggregate('red_or_blue', shirt_color => `CASE WHEN ${shirt_color} IN ('red', 'blue') THEN TRUE ELSE FALSE END`)
-        .orderBy('shirt_color', 'ASC')
+        .aggregate('red_or_blue', shirt => `CASE WHEN ${shirt} IN ('red', 'blue') THEN TRUE ELSE FALSE END`)
+        .orderBy('shirt', 'ASC')
         .end((err, groups) => {
 
           expect(err).to.not.exist;
           expect(groups.length).to.equal(3);
-          expect(groups[0].shirt_color).to.equal('blue');
+          expect(groups[0].shirt).to.equal('blue');
           expect(groups[0].count).to.equal(3);
           expect(groups[0].red_or_blue).to.equal(true);
           done();
@@ -976,10 +981,10 @@ module.exports = (function(Nodal) {
 
     });
 
-    it('Should group by shirt_color, and get a count alias, order by count alias', done => {
+    it('Should group by shirt, and get a count alias, order by transformation', done => {
 
       Parent.query()
-        .groupBy('shirt_color')
+        .groupBy('shirt')
         .aggregate('count', id => `COUNT(${id})`)
         .orderBy(id => `COUNT(${id})`, 'DESC')
         .end((err, groups) => {
@@ -987,6 +992,44 @@ module.exports = (function(Nodal) {
           expect(err).to.not.exist;
           expect(groups.length).to.equal(3);
           expect(groups[0].count).to.equal(4);
+          done();
+
+        });
+
+    });
+
+    it('Should apply filter, group by shirt, and get a count alias, order by transformation', done => {
+
+      Parent.query()
+        .where({id__gt: 2})
+        .groupBy('shirt')
+        .aggregate('count', id => `COUNT(${id})`)
+        .orderBy(id => `COUNT(${id})`, 'DESC')
+        .end((err, groups) => {
+
+          expect(err).to.not.exist;
+          expect(groups.length).to.equal(3);
+          expect(groups[0].count).to.equal(3);
+          done();
+
+        });
+
+    });
+
+    it('Should apply filter, group by shirt and pantaloons', done => {
+
+      Parent.query()
+        .groupBy('shirt')
+        .groupBy('pantaloons')
+        .aggregate('count', id => `COUNT(${id})`)
+        .orderBy(id => `COUNT(${id})`, 'DESC')
+        .end((err, groups) => {
+
+          expect(err).to.not.exist;
+          expect(groups.length).to.equal(6);
+          expect(groups[0]).to.haveOwnProperty('shirt');
+          expect(groups[0]).to.haveOwnProperty('pantaloons');
+          expect(groups[0]).to.haveOwnProperty('count');
           done();
 
         });
