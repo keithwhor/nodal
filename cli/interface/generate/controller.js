@@ -47,9 +47,9 @@ module.exports = (function() {
     ].join('')
 
     let routeStatement = [
-      'router.route(/^\\/',
-      controllerPath.slice(0, -1).concat([controllerRoute]).join('\\/'),
-      '\\/?/, ',
+      `router.route('/`,
+      controllerPath.slice(0, -1).concat([controllerRoute]).join('/'),
+      `:id', `,
       controllerName,
       ');'
     ].join('');

@@ -5,6 +5,8 @@ module.exports = (function() {
   const url = require('url');
   const qs = require('querystring');
 
+  const utilities = require('./utilities.js');
+
   const Controller = require('./controller.js');
 
   /**
@@ -18,18 +20,32 @@ module.exports = (function() {
     * @param {class Nodal.Controller} controller The controller class to instantiate when a route is activated
     */
     constructor(regex, controller) {
+
       this._regex = null;
+      this._names = [];
+
       if (typeof regex === 'string') {
-        this._regex = new RegExp(regex);
-      } else if(regex instanceof RegExp) {
+
+        let parsed = utilities.parseRegexFromString(regex);
+        this._regex = parsed.regex;
+        this._names = parsed.names;
+
+      } else if (regex instanceof RegExp) {
+
         this._regex = regex;
+
       } else {
+
         throw new Error('Routes must be strings or valid regular expression');
+
       }
+
       if (!Controller.prototype.isPrototypeOf(controller.prototype)) {
         throw new Error('Route requires a valid Controller');
       }
+
       this._controller = controller;
+
     }
 
     /**
@@ -123,8 +139,14 @@ module.exports = (function() {
       let buffers = [];
       let transferSize = 0;
       let query = this.parseQueryParameters(urlParts.query);
-      let path = [].slice.call(urlParts.pathname.match(this._regex), 0);
-      let id = urlParts.pathname.substr(path[0].length) || null;
+      let urlMatch = [].slice.call(urlParts.pathname.match(this._regex), 0);
+
+      let url = '/' + urlMatch[0].split('/').filter(v => !!v).join('/');
+      let path = this._names.reduce((obj, name, i) => {
+        obj[name] = urlMatch[i + 1] || null;
+      }, {});
+      
+      let id = path.id || null;
 
       request.on('data', function(data) {
         buffers.push(data);
@@ -145,12 +167,8 @@ module.exports = (function() {
         let body = buffer.toString();
 
         let params = {
+          url: url,
           path: path,
-          location: {
-            path: '/' + path[0].split('/').filter(v => !!v).join('/'),
-            matches: path.slice(1)
-          },
-          id: id,
           query: query,
           buffer: buffer,
           body: this.parseBody(headers['content-type'], body),

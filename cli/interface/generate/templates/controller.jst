@@ -21,7 +21,7 @@ module.exports = (function() {
 
     show() {
 
-      {{= data.for.name }}.find(this.params.id, (err, model) => {
+      {{= data.for.name }}.find(this.params.path.id, (err, model) => {
 
         this.respond(err || model);
 
@@ -41,7 +41,7 @@ module.exports = (function() {
 
     update() {
 
-      {{= data.for.name }}.update(this.params.id, this.params.body.data, (err, model) => {
+      {{= data.for.name }}.update(this.params.path.id, this.params.body.data, (err, model) => {
 
         this.respond(err || model);
 
@@ -51,7 +51,7 @@ module.exports = (function() {
 
     destroy() {
 
-      {{= data.for.name }}.destroy(this.params.id, (err, model) => {
+      {{= data.for.name }}.destroy(this.params.path.id, (err, model) => {
 
         this.respond(err || model);
 
