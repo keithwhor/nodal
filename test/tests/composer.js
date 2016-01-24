@@ -934,7 +934,59 @@ module.exports = (function(Nodal) {
 
           expect(err).to.not.exist;
           expect(groups.length).to.equal(3);
-          console.log(groups);
+          done();
+
+        });
+
+    });
+
+    it('Should group and order by shirt_color', done => {
+
+      Parent.query()
+        .groupBy('shirt_color')
+        .orderBy('shirt_color', 'ASC')
+        .end((err, groups) => {
+
+          expect(err).to.not.exist;
+          expect(groups.length).to.equal(3);
+          expect(groups[0].shirt_color).to.equal('blue');
+          done();
+
+        });
+
+    });
+
+    it('Should group by shirt_color, and get a count alias and another mapping', done => {
+
+      Parent.query()
+        .groupBy('shirt_color')
+        .aggregate('count', id => `COUNT(${id})`)
+        .aggregate('red_or_blue', shirt_color => `CASE WHEN ${shirt_color} IN ('red', 'blue') THEN TRUE ELSE FALSE END`)
+        .orderBy('shirt_color', 'ASC')
+        .end((err, groups) => {
+
+          expect(err).to.not.exist;
+          expect(groups.length).to.equal(3);
+          expect(groups[0].shirt_color).to.equal('blue');
+          expect(groups[0].count).to.equal(3);
+          expect(groups[0].red_or_blue).to.equal(true);
+          done();
+
+        });
+
+    });
+
+    it('Should group by shirt_color, and get a count alias, order by count alias', done => {
+
+      Parent.query()
+        .groupBy('shirt_color')
+        .aggregate('count', id => `COUNT(${id})`)
+        .orderBy(id => `COUNT(${id})`, 'DESC')
+        .end((err, groups) => {
+
+          expect(err).to.not.exist;
+          expect(groups.length).to.equal(3);
+          expect(groups[0].count).to.equal(4);
           done();
 
         });

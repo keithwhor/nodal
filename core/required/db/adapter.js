@@ -158,7 +158,7 @@ module.exports = (function() {
 
     }
 
-    generateSelectQuery(subQuery, table, columns, multiFilter, joinArray, groupByArray, orderObjArray, limitObj, paramOffset) {
+    generateSelectQuery(subQuery, table, columns, multiFilter, joinArray, groupByArray, orderByArray, limitObj, paramOffset) {
 
       let formatTableField = (table, column) => `${this.escapeField(table)}.${this.escapeField(column)}`;
 
@@ -169,17 +169,16 @@ module.exports = (function() {
       }
 
       groupByArray = groupByArray || [];
+      orderByArray = orderByArray || [];
 
       return [
         'SELECT ',
           columns.map(field => {
-            field = typeof field === 'string' ? {columnName: field, alias: field} : field;
-            let isGrouping = groupByArray.filter(g => {
-              return g.columnNames.indexOf(field.columnName) !== -1;
-            }).length > 0;
-            return groupByArray.length && !isGrouping ?
-              `(COUNT(${formatTableField(field.name || field.table || table, field.columnName)})) AS ${this.escapeField(field.alias)}` :
-              `(${formatTableField(field.name || field.table || table, field.columnName)}) AS ${this.escapeField(field.alias)}`;
+            field = typeof field === 'string' ? {columnNames: [field], alias: field, transformation: v => v} : field;
+            let defn = field.transformation.apply(null, field.columnNames.map(columnName => {
+              return formatTableField(field.name || field.table || table, columnName);
+            }));
+            return `(${defn}) AS ${this.escapeField(field.alias)}`;
           }).join(','),
         ' FROM ',
           subQuery,
@@ -188,20 +187,20 @@ module.exports = (function() {
           this.generateJoinClause(table, joinArray),
           this.generateWhereClause(table, multiFilter, paramOffset),
           this.generateGroupByClause(table, groupByArray),
-          this.generateOrderByClause(table, orderObjArray),
+          this.generateOrderByClause(table, orderByArray, groupByArray),
           this.generateLimitClause(limitObj)
       ].join('');
 
     }
 
-    generateCountQuery(subQuery, table, columnName) {
+    generateCountQuery(subQuery, table) {
 
       return [
-        `SELECT COUNT(${this.escapeField(table)}.${this.escapeField(columnName)}) `,
+        `SELECT COUNT(*) `,
         `AS __total__ FROM `,
         subQuery ? `(${subQuery}) AS ` : '',
         `${this.escapeField(table)}`
-      ].join(' ');
+      ].join('');
 
     }
 
@@ -484,9 +483,9 @@ module.exports = (function() {
         .map(whereObj => whereObj.value);
     }
 
-    generateOrderByClause(table, orderObjArray) {
+    generateOrderByClause(table, orderByArray, groupByArray) {
 
-      return (!orderObjArray || !orderObjArray.length) ? '' : ' ORDER BY ' + orderObjArray.map(v => {
+      return !orderByArray.length ? '' : ' ORDER BY ' + orderByArray.map(v => {
         let columns = v.columnNames.map(columnName => `${this.escapeField(table)}.${this.escapeField(columnName)}`);
         return `${v.transformation.apply(null, columns)} ${v.direction}`;
       }).join(', ');
@@ -528,7 +527,7 @@ module.exports = (function() {
 
     generateGroupByClause(table, groupByArray) {
 
-      return (!groupByArray || !groupByArray.length) ? '' : ' GROUP BY ' + groupByArray.map(v => {
+      return !groupByArray.length ? '' : ' GROUP BY ' + groupByArray.map(v => {
         let columns = v.columnNames.map(column => `${this.escapeField(table)}.${this.escapeField(column)}`);
         return v.transformation.apply(null, columns);
       }).join(', ');

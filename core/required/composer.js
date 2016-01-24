@@ -242,7 +242,8 @@ module.exports = (function() {
           where: null,
           limit: null,
           orderBy: [],
-          groupBy: []
+          groupBy: [],
+          aggregate: []
         };
         p.push(command);
 
@@ -294,7 +295,13 @@ module.exports = (function() {
     */
     __reduceCommandsToQuery__(commandArray, includeColumns) {
 
+      let lastAggregate = null;
+
       return commandArray.reduce((prev, command, i) => {
+
+        if (command.aggregate.length && command.groupBy.length) {
+          lastAggregate = command.aggregate;
+        }
 
         let table = `t${i}`;
 
@@ -302,7 +309,7 @@ module.exports = (function() {
         let params = this.db.adapter.getParamsFromMultiFilter(multiFilter);
 
         let joins = null;
-        let columns = includeColumns || this.Model.columnNames();
+        let columns = includeColumns || lastAggregate || this.Model.columnNames();
 
         return {
           sql: this.db.adapter.generateSelectQuery(
@@ -334,8 +341,9 @@ module.exports = (function() {
         return {
           name: joinName,
           table: relationship.getModel().table(),
-          columnName: columnName,
-          alias: `${(relationship.multiple()) ? '$$' : '$'}${joinName}\$${columnName}`
+          columnNames: [columnName],
+          alias: `${(relationship.multiple()) ? '$$' : '$'}${joinName}\$${columnName}`,
+          transformation: v => v
         };
       });
     }
@@ -348,6 +356,8 @@ module.exports = (function() {
     * @return {Object} Has "params" and "sql" properties.
     */
     __generateQuery__(includeColumns, disableJoins) {
+
+      disableJoins = disableJoins || this.__isGrouped__();
 
       let queryInfo = this.__reduceToQueryInformation__(this.__collapse__());
       let query = this.__reduceCommandsToQuery__(queryInfo.commands, includeColumns);
@@ -370,8 +380,8 @@ module.exports = (function() {
     __generateCountQuery__() {
 
       let queryInfo = this.__reduceToQueryInformation__(this.__removeLastLimitCommand__(this.__collapse__()));
-      let query = this.__reduceCommandsToQuery__(queryInfo.commands, ['id']);
-      query.sql = this.db.adapter.generateCountQuery(query.sql, 'c', 'id');
+      let query = this.__reduceCommandsToQuery__(queryInfo.commands);
+      query.sql = this.db.adapter.generateCountQuery(query.sql, 'c');
       return query;
 
     }
@@ -672,6 +682,35 @@ module.exports = (function() {
       this._command = {
         type: 'groupBy',
         data: {
+          columnNames: columns,
+          transformation: transformation
+        }
+      };
+
+      return new Composer(this.Model, this).aggregate(column);
+
+    }
+
+    /**
+    * Aggregates a field
+    * @param {String} alias The alias for the new aggregate field
+    * @param {Function} transformation The transformation to apply to create the aggregate
+    */
+    aggregate(alias, transformation) {
+
+      let columns;
+
+      if (typeof transformation === 'function') {
+        columns = utilities.getFunctionParameters(transformation);
+      } else {
+        columns = [alias]
+        transformation = v => v;
+      }
+
+      this._command = {
+        type: 'aggregate',
+        data: {
+          alias: alias,
           columnNames: columns,
           transformation: transformation
         }
