@@ -311,7 +311,7 @@ module.exports = (function() {
           [
             this.generateAlterTableDropUniqueKey,
             this.generateAlterTableAddUniqueKey
-          ][properties.primary_key | 0].call(this, table, columnName)
+          ][properties.unique | 0].call(this, table, columnName)
         );
       }
 
