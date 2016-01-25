@@ -848,8 +848,8 @@ module.exports = (function(Nodal) {
 
           expect(err).to.not.exist;
           expect(pet).to.exist;
-          expect(pet.joined('parent__children')).to.exist;
-          expect(pet.joined('parent__children').length).to.equal(10);
+          expect(pet.joined('parent').joined('children')).to.exist;
+          expect(pet.joined('parent').joined('children').length).to.equal(10);
           done();
 
         });
@@ -864,8 +864,8 @@ module.exports = (function(Nodal) {
 
           expect(err).to.not.exist;
           expect(child).to.exist;
-          expect(child.joined('parent__pets')).to.exist;
-          expect(child.joined('parent__pets').length).to.equal(3);
+          expect(child.joined('parent').joined('pets')).to.exist;
+          expect(child.joined('parent').joined('pets').length).to.equal(3);
           done();
 
         });
@@ -881,8 +881,25 @@ module.exports = (function(Nodal) {
 
           expect(err).to.not.exist;
           expect(pet).to.exist;
-          expect(pet.joined('parent__children')).to.exist;
-          expect(pet.joined('parent__children').length).to.equal(10);
+          expect(pet.joined('parent').joined('children')).to.exist;
+          expect(pet.joined('parent').joined('children').length).to.equal(10);
+          expect(pet.joined('parent')).to.exist;
+          done();
+
+        });
+
+    });
+
+    it('Should join parent and children to pets with only lowest join', done => {
+
+      Pet.query()
+        .join('parent__children')
+        .first((err, pet) => {
+
+          expect(err).to.not.exist;
+          expect(pet).to.exist;
+          expect(pet.joined('parent').joined('children')).to.exist;
+          expect(pet.joined('parent').joined('children').length).to.equal(10);
           expect(pet.joined('parent')).to.exist;
           done();
 

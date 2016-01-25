@@ -28,6 +28,123 @@ module.exports = (function() {
 
     }
 
+    __parseModelsFromRows__(rows, grouped) {
+
+      if (grouped) {
+        return ItemArray.from(rows);
+      }
+
+      if (!rows.length) {
+        return new ModelArray(this.Model);
+      }
+
+      let keys = Object.keys(rows[0]);
+      let cache = {};
+      let mainCache = {};
+      cache[this.Model.name] = mainCache;
+
+      let columns = keys
+        .filter(k => k[0] !== '$');
+
+      let columnsObject = columns
+        .reduce((columns, k) => {
+
+          columns[k] = null;
+          return columns;
+
+        }, {});
+
+      let joinsObject = keys
+        .filter(k => k[0] === '$')
+        .reduce((joinsObject, k) => {
+
+          let mid = k.indexOf('$', 1);
+          let name = k.substring(1, mid)
+          let field = k.substring(mid + 1);
+          let relationship = this.Model.relationship(name);
+
+          joinsObject[name] = joinsObject[name] || {};
+
+          let rModel = relationship.getModel()
+          joinsObject[name].Model = rModel;
+          cache[rModel.name] = {};
+
+          joinsObject[name].name = name;
+          joinsObject[name].key = k;
+          joinsObject[name].multiple = relationship.immediateMultiple();
+
+          joinsObject[name].columns = joinsObject[name].columns || [];
+          joinsObject[name].columns.push(field);
+
+          joinsObject[name].columnsObject = joinsObject[name].columnsObject || {};
+          joinsObject[name].columnsObject[field] = null;
+
+          joinsObject[name].cachedModel = null;
+
+          return joinsObject;
+
+        }, {});
+
+      let joins = Object
+        .keys(joinsObject)
+        .sort((a, b) => a.length > b.length ? 1 : -1)
+        .map(k => joinsObject[k]);
+
+      let models = new ModelArray(this.Model);
+
+      rows.forEach(row => {
+
+        let model = mainCache[row.id];
+
+        if (!model) {
+
+          model = mainCache[row.id] = new this.Model(columns.reduce((obj, k) => {
+            obj[k] = row[k];
+            return obj;
+          }, columnsObject), true);
+
+          models.push(model);
+
+        }
+
+        joins.forEach(join => {
+
+          let id = row[`\$${join.name}\$id`];
+
+          let joinCache = cache[join.Model.name];
+          let joinModel = join.cachedModel = joinCache[id];
+
+          if (!joinModel) {
+            joinModel = join.cachedModel = joinCache[id] = new join.Model(join.columns.reduce((obj, k) => {
+              obj[k] = row[`\$${join.name}\$${k}`];
+              return obj;
+            }, join.columnsObject), true)
+          }
+
+          let name = join.name;
+          let names = name.split('__');
+          let joinName = names.pop();
+          let parentName = names.join('__');
+
+          let parentModel = parentName ? joinsObject[parentName].cachedModel : model;
+
+          if (join.multiple) {
+            let modelArray = parentModel.joined(joinName) ||
+              parentModel.setJoined(joinName, new ModelArray(join.Model));
+            // null sanity check
+            joinModel.get('id') && !modelArray.has(joinModel) && modelArray.push(joinModel);
+          } else {
+            parentModel.joined(joinName) || parentModel.setJoined(joinName, joinModel);
+          }
+
+        });
+
+      });
+
+      return models;
+
+    }
+
     /**
     * Given rows with repeated data (due to joining in multiple children), return only parent models (but include references to their children)
     * @private
@@ -35,7 +152,7 @@ module.exports = (function() {
     * @param {Boolean} grouped Are these models grouped, if so, different procedure
     * @return {Nodal.ModelArray}
     */
-    __parseModelsFromRows__(rows, grouped) {
+    x__parseModelsFromRows__(rows, grouped) {
 
       // console.log('START PARSE', rows.length);
 
@@ -351,7 +468,7 @@ module.exports = (function() {
           name: joinName,
           table: relationship.getModel().table(),
           columnNames: [columnName],
-          alias: `${(relationship.multiple()) ? '$$' : '$'}${joinName}\$${columnName}`,
+          alias: `\$${joinName}\$${columnName}`,
           transformation: v => v
         };
       });
@@ -672,6 +789,14 @@ module.exports = (function() {
         type: 'join',
         data: joinData
       };
+
+      let joinNames = joinName.split('__');
+      joinNames.pop();
+
+      // Join in everything in the chain
+      if (joinNames.length) {
+        return new Composer(this.Model, this).join(joinNames.join('__'));
+      }
 
       return new Composer(this.Model, this);
 

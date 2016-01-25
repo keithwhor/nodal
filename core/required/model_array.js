@@ -47,7 +47,7 @@ module.exports = (function() {
     */
     toObject(arrInterface, opts, list) {
 
-      list = list || [];
+      list = list ? list.slice() : [];
 
       if (list.indexOf(this) > -1) {
         return;
@@ -57,6 +57,14 @@ module.exports = (function() {
 
       return this.map(m => m.toObject(arrInterface, opts, list));
 
+    }
+
+    /**
+    * Checks if ModelArray has a model in it
+    * @param {Nodal.Model} model
+    */
+    has(model) {
+      return this.filter(m => m.get('id') === model.get('id')).length > 0;
     }
 
     /**

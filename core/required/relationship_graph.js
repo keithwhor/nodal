@@ -54,6 +54,15 @@ module.exports = (() => {
       return false;
     }
 
+    immediateMultiple() {
+      let node = this.path[0];
+      let edge = this.path[1];
+      if (edge.hasChild(node) && edge.options.multiple) {
+        return true;
+      }
+      return false;
+    }
+
     joins(alias, firstTable) {
 
       let node;

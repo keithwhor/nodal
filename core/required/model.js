@@ -793,7 +793,7 @@ module.exports = (function() {
     */
     toObject(arrInterface, opts, list) {
 
-      list = list || [];
+      list = list ? list.slice() : [];
 
       if (list.indexOf(this) > -1) {
         return;
