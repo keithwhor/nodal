@@ -35,7 +35,7 @@ module.exports = (function() {
           name: 'heroku',
           type: 'confirm',
           default: false,
-          message: 'heroku support?',
+          message: 'Heroku support?',
         },
         {
           name: 'database',
