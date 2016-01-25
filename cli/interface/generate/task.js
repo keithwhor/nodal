@@ -8,6 +8,9 @@ module.exports = (function() {
 
   let dot = require('dot');
 
+  // TODO: Possibly better optimized RegEx
+  let durationMatcher = /((\d+(\.\d+)?)\s*(m|h|d|w|M|H|D|W))?/i
+
   let templateSettings = Object.keys(dot.templateSettings).reduce((o, k) => {
     o[k] = dot.templateSettings[k];
     return o;
@@ -32,6 +35,69 @@ module.exports = (function() {
 
   }
 
+
+  function addScheduledTask(taskName, taskPath, frequency, duration) {
+
+    let freqMap = {
+      m: 'minutely',
+      h: 'hourly',
+      d: 'daily',
+      w: 'weekly'
+    }
+
+    let importStatement = `const ${taskName} = Nodal.require('tasks/${taskPath}');`;
+    let taskStatement = `scheduler.${freqMap[frequency]}(${duration}).perform(${taskName});`;
+
+    let mainSchedular = fs.readFileSync('./schedulers/main.js').toString();
+
+    mainSchedular = mainSchedular.split('\n');
+
+    let importIndex = mainSchedular.map(function(v, i) {
+      return {
+        spaces: v.indexOf('/* generator: end imports */'),
+        index: i
+      }
+    }).filter(function(v) {
+      return v.spaces > -1;
+    }).pop();
+
+    if (importIndex !== undefined) {
+
+      mainSchedular = mainSchedular.slice(0, importIndex.index - 1).concat(
+        [
+          Array(importIndex.spaces + 1).join(' ') + importStatement,
+        ],
+        mainSchedular.slice(importIndex.index - 1)
+      );
+
+    }
+
+    let taskIndex = mainSchedular.map(function(v, i) {
+      return {
+        spaces: v.indexOf('/* generator: end tasks */'),
+        index: i
+      }
+    }).filter(function(v) {
+      return v.spaces > -1;
+    }).pop();
+
+    if (taskIndex !== undefined) {
+
+      mainSchedular = mainSchedular.slice(0, taskIndex.index - 1).concat(
+        [
+          Array(taskIndex.spaces + 1).join(' ') + taskStatement,
+        ],
+        mainSchedular.slice(taskIndex.index - 1)
+      );
+
+    }
+
+    fs.writeFileSync('./schedulers/main.js', mainSchedular.join('\n'));
+    console.log(colors.green.bold('Modify: ') + './schedulers/main.js');
+
+  }
+
+
   return {
     command: function(args, flags) {
 
@@ -40,8 +106,18 @@ module.exports = (function() {
         return;
       }
 
+      let scheduled = false;
+
       let taskPath = args[0][0].split('/');
       let cd = taskPath;
+
+      let durationTime;
+      let durationFreq;
+      if (flags.schedule) {
+        let matches = flags.schedule.match(durationMatcher)
+        durationTime = matches[2];
+        durationFreq = matches[4];
+      }
 
       let taskName = inflect.classify(taskPath.pop());
 
@@ -63,6 +139,10 @@ module.exports = (function() {
       fs.writeFileSync(createPath, generateTask(taskName));
 
       console.log(colors.green.bold('Create: ') + createPath);
+
+      if (flags.schedule) {
+        addScheduledTask(taskName, createPath, durationFreq.toLowerCase(), durationTime);
+      }
 
       process.exit(0);
 
