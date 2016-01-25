@@ -20,11 +20,10 @@
 * :x: Join in based on properties of joined table (i.e. only join in specific entries)
 * :hourglass: groupBy for Composer
   * TODO: `.having()`
-* :hourglass: Idiomatic tests in app (using mocha)
-  * TODO: Settle on endpoint testing method location
 * :hourglass: Refactor tasks
   * TODO: Decide on syntax
 * :hourglass: Strong parameter support
+* :white_check_mark: Idiomatic tests in app (using mocha)
 * :white_check_mark: Postgres JSON datatype support
 * :white_check_mark: Refactor Middleware, add Renderware
 * :white_check_mark: Nested template hierarchy (parents w/ children)
