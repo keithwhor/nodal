@@ -28,6 +28,13 @@ module.exports = (function() {
 
     }
 
+    /**
+    * Given rows with repeated data (due to joining in multiple children), return only parent models (but include references to their children)
+    * @private
+    * @param {Array} rows Rows from sql result
+    * @param {Boolean} grouped Are these models grouped, if so, different procedure
+    * @return {Nodal.ModelArray}
+    */
     __parseModelsFromRows__(rows, grouped) {
 
       if (grouped) {
@@ -140,135 +147,6 @@ module.exports = (function() {
         });
 
       });
-
-      return models;
-
-    }
-
-    /**
-    * Given rows with repeated data (due to joining in multiple children), return only parent models (but include references to their children)
-    * @private
-    * @param {Array} rows Rows from sql result
-    * @param {Boolean} grouped Are these models grouped, if so, different procedure
-    * @return {Nodal.ModelArray}
-    */
-    x__parseModelsFromRows__(rows, grouped) {
-
-      // console.log('START PARSE', rows.length);
-
-      // No-op if grouped
-      if (grouped) {
-        return ItemArray.from(rows);
-      }
-
-      let s = new Date().valueOf();
-
-      let models = new ModelArray(this.Model);
-
-      let rowKeys = [];
-      rows.length && (rowKeys = Object.keys(rows[0]));
-
-      // First, grab all the keys and multiple keys we need...
-      let coreKeys = rowKeys.filter(key => key[0] !== '$');
-      let joinSingleKeys = rowKeys.filter(key => key[0] === '$' && key[1] !== '$').map(key => key.substr(1));
-      let joinMultipleKeys = rowKeys.filter(key => key[0] === '$' && key[1] === '$').map(key => key.substr(2));
-
-      let reduceKeys = (prev, key) => {
-
-        let i = key.indexOf('$');
-        let joinName = key.substr(0, i);
-        key = key.substr(i + 1);
-        prev[joinName] = prev[joinName] || [];
-        prev[joinName].push(key);
-        return prev;
-
-      };
-
-      let joinSingle = joinSingleKeys.reduce(reduceKeys, {});
-      let joinSingleNames = Object.keys(joinSingle);
-
-      let joinMultiple = joinMultipleKeys.reduce(reduceKeys, {});
-      let joinMultipleNames = Object.keys(joinMultiple);
-
-      let rowCache = {};
-      let objectCache = {};
-      let rowObjectCache = {};
-
-      rows.forEach(row => {
-
-        let model = rowCache[row.id];
-        let curRowObjectCache = rowObjectCache[row.id] = rowObjectCache[row.id] || {};
-
-        if (!model) {
-          model = rowCache[row.id] = new this.Model(row, true);
-          models.push(model);
-        }
-
-        joinSingleNames.forEach(name => {
-
-          let id = row[`\$${name}\$id`];
-          if (id === null) {
-            return;
-          }
-
-          objectCache[name] = objectCache[name] || {};
-          let cached = objectCache[name][id];
-
-          curRowObjectCache[name] = curRowObjectCache[name] || {};
-          let cachedForRow = curRowObjectCache[name][id];
-
-          if (!cached) {
-            objectCache[name][id] = cached = new (this.Model.relationship(name).getModel())(
-              joinSingle[name].reduce((prev, key) => {
-                prev[key] = row[`\$${name}\$${key}`];
-                return prev;
-              }, {}),
-              true
-            );
-          }
-
-          if (!cachedForRow) {
-            curRowObjectCache[name][id] = cachedForRow = cached;
-            model.setJoined(name, cached);
-          }
-
-        });
-
-        joinMultipleNames.forEach(name => {
-
-          let modelArray = model.joined(name) || model.setJoined(name, new ModelArray(this.Model.relationship(name).getModel()));
-
-          let id = row[`\$\$${name}\$id`];
-          if (id === null) {
-            return;
-          }
-
-          objectCache[name] = objectCache[name] || {};
-          let cached = objectCache[name][id];
-
-          curRowObjectCache[name] = curRowObjectCache[name] || {};
-          let cachedForRow = curRowObjectCache[name][id];
-
-          if (!cached) {
-            objectCache[name][id] = cached = new (this.Model.relationship(name).getModel())(
-              joinMultiple[name].reduce((prev, key) => {
-                prev[key] = row[`\$\$${name}\$${key}`];
-                return prev;
-              }, {}),
-              true
-            );
-          }
-
-          if (!cachedForRow) {
-            curRowObjectCache[name][id] = cachedForRow = cached;
-            modelArray.push(cached);
-          }
-
-        });
-
-      });
-
-      // console.log('END PARSE', new Date().valueOf() - s);
 
       return models;
 
