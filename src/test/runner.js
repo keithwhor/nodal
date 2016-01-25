@@ -5,31 +5,40 @@ module.exports = (() => {
   const Nodal = require('nodal');
 
   const daemon = new Nodal.Daemon('./app/app.js');
-  const TestRunner = new Nodal.mocha.TestRunner('./test/tests');
+  const testRunner = new Nodal.mocha.TestRunner('./test/tests');
 
-  describe('My Application', () => {
+  function startDaemon(done) {
 
-    before((done) => {
+    daemon.start(app => {
 
-      Nodal.my.bootstrapper.bootstrap((err) => {
-
-        if (err) {
-          console.error(err);
-          throw err;
-        }
-
-        daemon.start(app => {
-
-          TestRunner.ready(app);
-          done();
-
-        });
-
-      })
+      testRunner.ready(app);
+      done();
 
     });
 
-    TestRunner.start(require('chai').expect);
+  }
+
+  function bootstrap(done) {
+
+    Nodal.my.bootstrapper.bootstrap((err) => {
+
+      if (err) {
+        console.error(err);
+        throw err;
+      }
+
+      startDaemon(done);
+
+    })
+
+  }
+
+  return describe('My Application', () => {
+
+    // before(bootstrap); // Use if you need database support
+    before(startDaemon);
+
+    testRunner.start(require('chai').expect);
 
   });
 

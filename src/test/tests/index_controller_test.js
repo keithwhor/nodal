@@ -10,7 +10,7 @@ module.exports = (() => {
 
       it('Should return an HTTP 200', done => {
 
-        this.app.endpoint('/').get((status, headers, body) => {
+        this.endpoint('/').get((status, headers, body, json) => {
 
           expect(status).to.equal(200);
           done();
