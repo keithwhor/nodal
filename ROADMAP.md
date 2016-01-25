@@ -14,7 +14,7 @@
 * :white_check_mark: Model#destroyCascade should cascade
 * :white_check_mark: Model#destroy should not show validation errors
 * :white_check_mark: Model.joinsTo needs to be rethought, or all models need to be `required` on app start
-* :x: When joining objects, represent multiply-nested objects properly in `toObject` output
+* :white_check_mark: When joining objects, represent multiply-nested objects properly in `toObject` output
 
 ### Features
 * :hourglass: Strong parameter support
