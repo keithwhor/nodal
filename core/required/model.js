@@ -300,7 +300,7 @@ module.exports = (function() {
     static relationship(name) {
 
       this._relationshipCache = this._relationshipCache || {};
-      this._relationshipCache[name] = (this._relationshipCache[name] || this.relationships().find(name));
+      this._relationshipCache[name] = (this._relationshipCache[name] || this.relationships().findExplicit(name));
       return this._relationshipCache[name];
 
     }
@@ -608,12 +608,6 @@ module.exports = (function() {
     */
     set(field, value) {
 
-      if (this.relationship(field)) {
-
-        return this.setJoined(field, value);
-
-      }
-
       if (!this.hasField(field)) {
 
         throw new Error('Field ' + field + ' does not belong to model ' + this.constructor.name);
@@ -721,12 +715,18 @@ module.exports = (function() {
         return this.calculate(field);
       }
 
-      if (this._joinsCache[field]) {
-        return this._joinsCache[field];
-      }
-
       let datum = this._data[field];
       return (!ignoreFormat && this.formatters[field]) ? this.formatters[field](datum) : datum;
+
+    }
+
+    /**
+    * Retrieves joined Model or ModelArray
+    * @param {String} joinName the name of the join (list of connectors separated by __)
+    */
+    joined(joinName) {
+
+      return this._joinsCache[joinName];
 
     }
 
@@ -775,8 +775,8 @@ module.exports = (function() {
 
         let model = models[0];
         let joins = joinNames.map(joinName => {
-          let join = model.get(joinName);
-          join && this.set(joinName, join);
+          let join = model.joined(joinName);
+          join && this.setJoined(joinName, join);
           return join;
         });
 

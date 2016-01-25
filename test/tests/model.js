@@ -151,8 +151,8 @@ module.exports = (function(Nodal) {
 
       let parent = new Parent({id: 1});
       let house = new House({id: 1});
-      parent.set('house', house);
-      house.set('parent', parent);
+      parent.setJoined('house', house);
+      house.setJoined('parent', parent);
 
       let obj = parent.toObject();
 

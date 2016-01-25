@@ -142,16 +142,16 @@ module.exports = (function(Nodal) {
               return new Child({parent_id: id, name: `Child${name}`, age: (Math.random() * 30) | 0});
             });
 
-            p.set('children', Nodal.ModelArray.from(children));
+            p.setJoined('children', Nodal.ModelArray.from(children));
 
             let pets = ['Oliver', 'Ruby', 'Pascal'].map((name, i) => {
               return new Pet({parent_id: id, name: name, animal: ['Cat', 'Dog', 'Cat'][i], details: { language: name === 'Pascal' }});
             });
 
-            p.set('pets', Nodal.ModelArray.from(pets));
+            p.setJoined('pets', Nodal.ModelArray.from(pets));
 
             let partner = new Partner({parent_id: id, name: `Partner${i}`, job: ['Plumber', 'Engineer', 'Nurse'][(Math.random() * 3) | 0]});
-            p.set('partner', partner);
+            p.setJoined('partner', partner);
 
             let friendships = new Nodal.ModelArray(Friendship);
             while (i--) {
@@ -159,7 +159,7 @@ module.exports = (function(Nodal) {
               friendships.push(friendship);
             }
 
-            p.set('outgoingFriendships', friendships);
+            p.setJoined('outgoingFriendships', friendships);
 
           });
 
@@ -169,10 +169,10 @@ module.exports = (function(Nodal) {
 
             async.series(
               [].concat(
-                parents.map(p => p.get('children').saveAll.bind(p.get('children'))),
-                parents.map(p => p.get('pets').saveAll.bind(p.get('pets'))),
-                parents.map(p => p.get('partner').save.bind(p.get('partner'))),
-                parents.map(p => p.get('outgoingFriendships').saveAll.bind(p.get('outgoingFriendships'))).filter(p => p)
+                parents.map(p => p.joined('children').saveAll.bind(p.joined('children'))),
+                parents.map(p => p.joined('pets').saveAll.bind(p.joined('pets'))),
+                parents.map(p => p.joined('partner').save.bind(p.joined('partner'))),
+                parents.map(p => p.joined('outgoingFriendships').saveAll.bind(p.joined('outgoingFriendships'))).filter(p => p)
               ), (err) => {
 
                 expect(err).to.not.exist;
@@ -247,16 +247,16 @@ module.exports = (function(Nodal) {
           let parent = parents[0];
 
           expect(err).to.equal(null);
-          expect(parent.get('children')).to.be.undefined;
-          expect(parent.get('partner')).to.be.undefined;
+          expect(parent.joined('children')).to.be.undefined;
+          expect(parent.joined('partner')).to.be.undefined;
 
           parent.include((err, children, partner) => {
 
             expect(err).to.equal(null);
             expect(children.length).to.equal(10);
             expect(partner).to.exist;
-            expect(parent.get('children')).to.equal(children);
-            expect(parent.get('partner')).to.equal(partner);
+            expect(parent.joined('children')).to.equal(children);
+            expect(parent.joined('partner')).to.equal(partner);
             done();
 
           });
@@ -280,7 +280,7 @@ module.exports = (function(Nodal) {
 
             expect(err).to.equal(null);
             expect(parent).to.exist;
-            expect(child.get('parent')).to.equal(parent);
+            expect(child.joined('parent')).to.equal(parent);
             done();
 
           });
@@ -639,8 +639,8 @@ module.exports = (function(Nodal) {
 
           expect(err).to.equal(null);
           expect(parents.length).to.equal(2);
-          expect(parents[0].get('children').length).to.equal(10);
-          expect(parents[1].get('children').length).to.equal(10);
+          expect(parents[0].joined('children').length).to.equal(10);
+          expect(parents[1].joined('children').length).to.equal(10);
           done();
 
         });
@@ -708,8 +708,8 @@ module.exports = (function(Nodal) {
           expect(parents.length).to.equal(3);
 
           parents.forEach(parent => {
-            expect(parent.get('children').length).to.equal(10);
-            expect(parent.get('pets').length).to.equal(3);
+            expect(parent.joined('children').length).to.equal(10);
+            expect(parent.joined('pets').length).to.equal(3);
           });
 
           done();
@@ -729,8 +729,8 @@ module.exports = (function(Nodal) {
           expect(err).to.equal(null);
 
           parents.forEach((parent, i) => {
-            expect(parent.get('incomingFriendships').length).to.equal(9 - i);
-            expect(parent.get('outgoingFriendships').length).to.equal(i);
+            expect(parent.joined('incomingFriendships').length).to.equal(9 - i);
+            expect(parent.joined('outgoingFriendships').length).to.equal(i);
           });
 
           done();
@@ -750,8 +750,8 @@ module.exports = (function(Nodal) {
           expect(friendships.length).to.equal(45);
 
           friendships.forEach((friendship, i) => {
-            expect(friendship.get('fromParent')).to.not.be.undefined;
-            expect(friendship.get('toParent')).to.not.be.undefined;
+            expect(friendship.joined('fromParent')).to.not.be.undefined;
+            expect(friendship.joined('toParent')).to.not.be.undefined;
           });
 
           done();
@@ -772,8 +772,8 @@ module.exports = (function(Nodal) {
 
           friendships.forEach(friendship => {
             expect(
-              friendship.get('fromParent').get('id') === 5 ||
-              friendship.get('toParent').get('id') === 5
+              friendship.joined('fromParent').get('id') === 5 ||
+              friendship.joined('toParent').get('id') === 5
             ).to.equal(true);
           });
 
@@ -809,7 +809,7 @@ module.exports = (function(Nodal) {
           expect(parents.length).to.equal(10);
 
           parents.forEach(parent => {
-            expect(parent.get('children').length).to.equal(10);
+            expect(parent.joined('children').length).to.equal(10);
             expect(parent.get('name')).to.equal('Bertrand');
           });
 
@@ -829,7 +829,7 @@ module.exports = (function(Nodal) {
           expect(parents.length).to.equal(10);
 
           parents.forEach((parent, i) => {
-            expect(parent.get('children').length).to.equal(10);
+            expect(parent.joined('children').length).to.equal(10);
             expect(parent.get('name')).to.equal('Bertrand');
             expect(parent.get('id')).to.equal(10 - i);
           });
@@ -843,13 +843,13 @@ module.exports = (function(Nodal) {
     it('Should join children to pets', done => {
 
       Pet.query()
-        .join('children')
+        .join('parent__children')
         .first((err, pet) => {
 
           expect(err).to.not.exist;
           expect(pet).to.exist;
-          expect(pet.get('children')).to.exist;
-          expect(pet.get('children').length).to.equal(10);
+          expect(pet.joined('parent__children')).to.exist;
+          expect(pet.joined('parent__children').length).to.equal(10);
           done();
 
         });
@@ -859,13 +859,13 @@ module.exports = (function(Nodal) {
     it('Should join pets to children', done => {
 
       Child.query()
-        .join('pets')
+        .join('parent__pets')
         .first((err, child) => {
 
           expect(err).to.not.exist;
           expect(child).to.exist;
-          expect(child.get('pets')).to.exist;
-          expect(child.get('pets').length).to.equal(3);
+          expect(child.joined('parent__pets')).to.exist;
+          expect(child.joined('parent__pets').length).to.equal(3);
           done();
 
         });
@@ -876,14 +876,14 @@ module.exports = (function(Nodal) {
 
       Pet.query()
         .join('parent')
-        .join('children')
+        .join('parent__children')
         .first((err, pet) => {
 
           expect(err).to.not.exist;
           expect(pet).to.exist;
-          expect(pet.get('children')).to.exist;
-          expect(pet.get('children').length).to.equal(10);
-          expect(pet.get('parent')).to.exist;
+          expect(pet.joined('parent__children')).to.exist;
+          expect(pet.joined('parent__children').length).to.equal(10);
+          expect(pet.joined('parent')).to.exist;
           done();
 
         });
@@ -893,7 +893,7 @@ module.exports = (function(Nodal) {
     it('Should query pet by children', done => {
 
       Pet.query()
-        .where({children__id__lte: 50})
+        .where({parent__children__id__lte: 50})
         .end((err, pets) => {
 
           expect(err).to.not.exist;

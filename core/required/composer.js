@@ -112,14 +112,14 @@ module.exports = (function() {
 
           if (!cachedForRow) {
             curRowObjectCache[name][id] = cachedForRow = cached;
-            model.set(name, cached);
+            model.setJoined(name, cached);
           }
 
         });
 
         joinMultipleNames.forEach(name => {
 
-          let modelArray = model.get(name) || model.set(name, new ModelArray(this.Model.relationship(name).getModel()));
+          let modelArray = model.joined(name) || model.setJoined(name, new ModelArray(this.Model.relationship(name).getModel()));
 
           let id = row[`\$\$${name}\$id`];
           if (id === null) {
@@ -345,7 +345,7 @@ module.exports = (function() {
     * @private
     */
     __joinedColumns__(joinName) {
-      let relationship = this.Model.relationships().find(joinName);
+      let relationship = this.Model.relationships().findExplicit(joinName);
       return relationship.getModel().columnNames().map(columnName => {
         return {
           name: joinName,
@@ -466,15 +466,26 @@ module.exports = (function() {
         .map(comparison => {
 
           let column = comparison.split('__');
-          let rel = this.Model.relationship(column[0]);
+          let rel = null;
+          let joinName;
+
+          let comparator = column.pop();
+          if (!comparators[comparator]) {
+            column.push(comparator);
+            comparator = 'is';
+          }
+
+          if (column.length > 1) {
+            joinName = column.slice(0, column.length - 1).join('__');
+            rel = this.Model.relationship(joinName);
+            column = column.slice(column.length - 1);
+          }
 
           let table = null;
           let joined = false;
           let joins = null;
 
           if (rel) {
-
-            let joinName = column.shift();
 
             // if it's not found, return null...
             if (!rel.getModel().hasColumn(column[0])) {
@@ -487,15 +498,10 @@ module.exports = (function() {
 
           }
 
-          let comparator = column.length > 1 ? column.pop() : 'is';
-          let columnName = column.join('__');
+          let columnName = column[0];
 
           // block out bad column names
           if (!rel && !this.Model.hasColumn(columnName)) {
-            return null;
-          }
-
-          if (!comparators[comparator]) {
             return null;
           }
 
@@ -646,7 +652,7 @@ module.exports = (function() {
     */
     join(joinName) {
 
-      let relationship = this.Model.relationships().find(joinName);
+      let relationship = this.Model.relationships().findExplicit(joinName);
       if (!relationship) {
         throw new Error(`Model ${this.Model.name} does not have relationship ${joinName}`);
       }

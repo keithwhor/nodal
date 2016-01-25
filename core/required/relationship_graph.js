@@ -132,6 +132,37 @@ module.exports = (() => {
 
     }
 
+    findExplicit(pathname) {
+
+      let names = pathname.split('__');
+      let node = this;
+      let path = new RelationshipPath([node]);
+
+
+      while (names.length) {
+
+        let name = names.shift();
+
+        let edges = node.edges.filter(edge => {
+          return (edge.hasChild(node) && edge.options.name === name) || edge.options.as === name;
+        });
+
+        if (edges.length === 0) {
+          return null;
+        }
+
+        let edge = edges.pop();
+        let nextNode = edge.opposite(node);
+
+        path = path.add(nextNode, edge);
+        node = nextNode;
+
+      }
+
+      return path;
+
+    }
+
     find(name) {
 
       let queue = this.edges

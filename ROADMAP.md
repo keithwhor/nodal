@@ -17,9 +17,6 @@
 * :x: When joining objects, represent multiply-nested objects properly in `toObject` output
 
 ### Features
-* :x: Join in based on properties of joined table (i.e. only join in specific entries)
-* :hourglass: groupBy for Composer
-  * TODO: `.having()`
 * :hourglass: Strong parameter support
 * :white_check_mark: Refactor tasks
 * :white_check_mark: Idiomatic tests in app (using mocha)
@@ -36,6 +33,8 @@
 * :x: GraphQL Support
 * :x: Automatic document generator + formatter for producing docs on [nodaljs.com](http://nodaljs.com)
 * :x: Implement hardcoded security features such as (CSP Headers and Blocking sensitive fields)
+* :x: `.having()` support for `Composer#groupBy`
+* :x: Join in based on properties of joined table (i.e. only join in specific entries)
 * :hourglass: HTTPS support (including CLI certificate verification/generation)
 * :hourglass: WebSocket support
 * :hourglass: Clustering of processes (multiple cores, threads)
