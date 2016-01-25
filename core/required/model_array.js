@@ -45,16 +45,17 @@ module.exports = (function() {
     * @param {Array} arrInterface Interface to use for object creation for each model
     * @param {Object} opts Options for the object conversion
     */
-    toObject(arrInterface, opts, maxDepth, depth) {
+    toObject(arrInterface, opts, list) {
 
-      maxDepth = maxDepth || 1;
-      depth = depth || 0;
+      list = list || [];
 
-      if (depth > maxDepth) {
+      if (list.indexOf(this) > -1) {
         return;
       }
 
-      return this.map(m => m.toObject(arrInterface, opts));
+      list.push(this);
+
+      return this.map(m => m.toObject(arrInterface, opts, list));
 
     }
 

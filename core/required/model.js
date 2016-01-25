@@ -791,14 +791,15 @@ module.exports = (function() {
     * @param {Array} arrInterface Interface to use for object creation
     * @param {Object} opts Options like whether to exclude the fields. {exclude: true}
     */
-    toObject(arrInterface, opts, maxDepth, depth) {
+    toObject(arrInterface, opts, list) {
 
-      maxDepth = maxDepth || 1;
-      depth = depth || 0;
+      list = list || [];
 
-      if (depth > maxDepth) {
+      if (list.indexOf(this) > -1) {
         return;
       }
+
+      list.push(this);
 
       let obj = {};
       opts = opts || {};
@@ -833,7 +834,7 @@ module.exports = (function() {
             let subInterface = key;
             key = Object.keys(key)[0];
             joinObject = this._joinsCache[key];
-            joinObject && (obj[key] = joinObject.toObject(subInterface[key], opts, maxDepth, depth + 1));
+            joinObject && (obj[key] = joinObject.toObject(subInterface[key], opts, list));
           } else if (this._data[key] !== undefined) {
             obj[key] = this._data[key];
           } else if (this._calculations[key] !== undefined) {
@@ -850,7 +851,7 @@ module.exports = (function() {
         this._calculationsList.forEach(key => obj[key] = this.calculate(key));
         this._joinsList.forEach(key => {
           let cacheValue = this._joinsCache[key];
-          cacheValue && (obj[key] = cacheValue.toObject(null, opts, maxDepth, depth + 1));
+          cacheValue && (obj[key] = cacheValue.toObject(null, opts, list));
         });
 
       }

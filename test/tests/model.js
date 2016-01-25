@@ -44,6 +44,37 @@ module.exports = (function(Nodal) {
 
     House.joinsTo(Parent);
 
+    class User extends Nodal.Model {}
+    User.setSchema({
+      table: 'users',
+      columns: [
+        {name: 'id', type: 'serial'},
+        {name: 'username', type: 'string'}
+      ]
+    });
+
+    class Post extends Nodal.Model {}
+    Post.setSchema({
+      table: 'posts',
+      columns: [
+        {name: 'id', type: 'serial'},
+        {name: 'user_id', type: 'int'},
+        {name: 'title', type: 'string'},
+        {name: 'body', type: 'string'}
+      ]
+    });
+    Post.joinsTo(User, {multiple: true});
+
+    class Comment extends Nodal.Model {}
+    Comment.setSchema({
+      table: 'comments',
+      columns: [
+        {name: 'id', type: 'serial'},
+        {name: 'post_id', type: 'int'},
+        {name: 'body', type: 'string'}      ]
+    });
+    Comment.joinsTo(Post, {multiple: true});
+
     before(function(done) {
 
       db.connect(Nodal.my.Config.db.main);
@@ -277,6 +308,22 @@ module.exports = (function(Nodal) {
       expect(obj[0]).to.have.ownProperty('content');
       expect(obj[0]).to.have.ownProperty('created_at');
       expect(obj[0]).to.have.ownProperty('updated_at');
+
+    });
+
+    it('should toObject with multiply-nested ModelArray', function() {
+
+      let comments = Nodal.ModelArray.from([new Comment({body: 'Hello, World'})]);
+      let posts = Nodal.ModelArray.from([new Post({title: 'Hello', body: 'Everybody'})]);
+      let users =  Nodal.ModelArray.from([new User({username: 'Ruby'})]);
+
+      posts[0].setJoined('comments', comments);
+      users[0].setJoined('posts', posts);
+
+      let obj = users.toObject();
+
+      expect(obj[0].posts).to.exist;
+      expect(obj[0].posts[0].comments).to.exist;
 
     });
 

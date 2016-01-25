@@ -15,6 +15,26 @@ module.exports = (() => {
       return this.path.join(' <-> ');
     }
 
+    joinName(reverse) {
+
+      let path = [].slice.call(this.path);
+
+      if (reverse) {
+        path = path.reverse();
+      }
+
+      let names = [];
+
+      while (path.length > 1) {
+        let node = path.pop();
+        let edge = path.pop();
+        names.push(edge.hasChild(node) ? edge.options.name : edge.options.as);
+      }
+
+      return names.join('__');
+
+    }
+
     add(node, edge) {
       return new this.constructor([node, edge].concat(this.path));
     }

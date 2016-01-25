@@ -99,6 +99,15 @@ module.exports = (function(Nodal) {
 
     });
 
+    it('Should get join name properly', () => {
+
+      let rpath = Relationships.of(Avatar).find('comments');
+
+      expect(rpath.joinName()).to.equal('user__posts__comments');
+      expect(rpath.joinName(true)).to.equal('post__user__avatar');
+
+    });
+
     it('Should trace nodes properly, explicitly', () => {
 
       let rpath = Relationships.of(Avatar).findExplicit('user__posts');
