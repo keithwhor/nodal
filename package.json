@@ -1,6 +1,6 @@
 {
   "name": "nodal",
-  "version": "0.6.0-rc1",
+  "version": "0.6.0-rc2",
   "description": "An API Server and Framework for node.js",
   "keywords": [
     "framework",
@@ -36,7 +36,8 @@
     "mocha": "~2.3.4"
   },
   "scripts": {
-    "test": "mocha ./test/runner.js"
+    "test": "mocha ./test/runner.js",
+    "docs": "documentation core/module.js -o docs -f html"
   },
   "repository": {
     "type": "git",

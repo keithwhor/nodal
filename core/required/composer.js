@@ -30,10 +30,10 @@ module.exports = (function() {
 
     /**
     * Given rows with repeated data (due to joining in multiple children), return only parent models (but include references to their children)
-    * @private
     * @param {Array} rows Rows from sql result
     * @param {Boolean} grouped Are these models grouped, if so, different procedure
     * @return {Nodal.ModelArray}
+    * @private
     */
     __parseModelsFromRows__(rows, grouped) {
 
@@ -188,6 +188,7 @@ module.exports = (function() {
     * Gets last limit command from a collapsed array of composer commands
     * @param {Array} [composerArray] Array of composer commands
     * @return {Array}
+    * @private
     */
     __getLastLimitCommand__(composerArray) {
 
@@ -199,6 +200,7 @@ module.exports = (function() {
     /**
     * Determines whether this composer query represents a grouped query or not
     * @return {Boolean}
+    * @private
     */
     __isGrouped__() {
       return this.__collapse__().filter(c => c._command && c._command.type === 'groupBy').length > 0;
@@ -206,9 +208,9 @@ module.exports = (function() {
 
     /**
     * Reduces an array of composer queries to a single query information object
-    * @private
     * @param {Array} [composerArray]
     * @return {Object} Looks like {commands: [], joins: []}
+    * @private
     */
     __reduceToQueryInformation__(composerArray) {
 
@@ -283,10 +285,10 @@ module.exports = (function() {
 
     /**
     * Reduces an array of commands from query informtion to a SQL query
-    * @private
     * @param {Array} [commandArray]
     * @param {Array} [includeColumns=*] Which columns to include, includes all by default
     * @return {Object} Looks like {sql: [], params: []}
+    * @private
     */
     __reduceCommandsToQuery__(commandArray, includeColumns) {
 
@@ -354,10 +356,10 @@ module.exports = (function() {
 
     /**
     * Generate a SQL query and its associated parameters from the current composer instance
-    * @private
     * @param {Array} [includeColumns=*] Which columns to include, includes all by default
     * @param {boolean} [disableJoins=false] Disable joins if you just want a subset of data
     * @return {Object} Has "params" and "sql" properties.
+    * @private
     */
     __generateQuery__(includeColumns, disableJoins) {
 
@@ -376,10 +378,10 @@ module.exports = (function() {
 
     /**
     * Generate a SQL count query
-    * @private
     * @param {Array} [includeColumns=*] Which columns to include, includes all by default
     * @param {boolean} [disableJoins=false] Disable joins if you just want a subset of data
     * @return {Object} Has "params" and "sql" properties.
+    * @private
     */
     __generateCountQuery__() {
 
@@ -396,6 +398,7 @@ module.exports = (function() {
     * @param {Object} queryInfo Must be format {commands: [], joins: []}
     * @param {Array} [includeColumns=*] Which columns to include, includes all by default
     * @return {Object} Has "params" and "sql" properties.
+    * @private
     */
     __addJoinsToQuery__(query, queryInfo, includeColumns) {
 
@@ -448,9 +451,9 @@ module.exports = (function() {
 
     /**
     * When using Composer#where, format all provided comparisons
-    * @private
     * @param {Object} comparisons Comparisons object. {age__lte: 27}, for example.
     * @return {Array}
+    * @private
     */
     __parseComparisons__(comparisons) {
 
