@@ -53,7 +53,14 @@ module.exports = (function() {
 
   function convertArgListToPropertyList(argList) {
 
+    // Instantiate Database so we can get access to the Adapater types
+    let db = new Database();
+
     return argList.slice(1).map(function(v) {
+
+      if (Object.keys(db.adapter.types).indexOf(v[1]) == -1) {
+        throw new Error(`Un-supported column type ${colors.yellow.bold(v[1])} for field ${colors.yellow.bold(v[0])}`);
+      }
 
       let obj = {name: inflect.underscore(v[0]), type: v[1]};
       let rest = v.slice(2);
