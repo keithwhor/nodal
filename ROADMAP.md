@@ -17,7 +17,6 @@
 * :white_check_mark: When joining objects, represent multiply-nested objects properly in `toObject` output
 
 ### Features
-* :hourglass: Strong parameter support
 * :white_check_mark: Refactor tasks
 * :white_check_mark: Idiomatic tests in app (using mocha)
 * :white_check_mark: Postgres JSON datatype support
@@ -35,6 +34,7 @@
 * :x: Implement hardcoded security features such as (CSP Headers and Blocking sensitive fields)
 * :x: `.having()` support for `Composer#groupBy`
 * :x: Join in based on properties of joined table (i.e. only join in specific entries)
+* :hourglass: Strong parameter support
 * :hourglass: HTTPS support (including CLI certificate verification/generation)
 * :hourglass: WebSocket support
 * :hourglass: Clustering of processes (multiple cores, threads)
