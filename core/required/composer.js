@@ -175,6 +175,7 @@ module.exports = (function() {
     * Removes last limit command from a collapsed array of composer commands
     * @param {Array} [composerArray] Array of composer commands
     * @return {Array}
+    * @private
     */
     __removeLastLimitCommand__(composerArray) {
 
