@@ -40,6 +40,10 @@
 * :hourglass: Clustering of processes (multiple cores, threads)
 * :hourglass: Docker integration
 
+### Bugs
+* :x: Generator type checking (#138)
+* :x: `nodal db:bootstrap` throwing an error when there is no migrations (#141)
+
 ### 1.0, Target: Q2 2016
 
 ### Features
