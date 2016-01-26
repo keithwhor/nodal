@@ -58,11 +58,11 @@ module.exports = (function() {
 
     return argList.slice(1).map(function(v) {
 
-      if (Object.keys(db.adapter.types).indexOf(v[1]) == -1) {
+      if (Object.keys(db.adapter.types).indexOf(v[1].toLowerCase()) == -1) {
         throw new Error(`Un-supported column type ${colors.yellow.bold(v[1])} for field ${colors.yellow.bold(v[0])}`);
       }
 
-      let obj = {name: inflect.underscore(v[0]), type: v[1]};
+      let obj = {name: inflect.underscore(v[0]), type: v[1].toLowerCase()};
       let rest = v.slice(2);
       let properties = {};
 
