@@ -16,12 +16,18 @@ module.exports = (function() {
 
     /**
     * Tell the manager to put an object in the queue.
-    * @param {Object} itemConstructor The item constructor (must have exec function) you wish to add to the queue.
+    * @param {Object} arguments The item constructor (must have exec function) plus other arguments you wish to add to the queue.
     */
-    use(itemConstructor) {
+    use() {
 
-      let item = new itemConstructor();
-      this._queue.push(item);
+      let args = [].slice.call(arguments);
+
+      if (args.length) {
+        let itemConstructor = args[0];
+        let item = new (itemConstructor.bind.apply(itemConstructor, args))();
+
+        this._queue.push(item);
+      }
 
     }
 
