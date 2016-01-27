@@ -11,9 +11,10 @@ module.exports = (function() {
   return {
     new: function(args, flags, callback) {
       const rootPath = path.resolve(__dirname);
+      const version = require('../../../package.json').version;
 
       console.log('');
-      console.log(`Welcome to ${colors.bold.green('Nodal!')}`);
+      console.log(`Welcome to ${colors.bold.green('Nodal! v' + version)}`);
       console.log('');
       console.log('Let\'s get some information about your project...');
       console.log('');
