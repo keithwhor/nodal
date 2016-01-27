@@ -64,9 +64,11 @@ module.exports = (function() {
         promptResult.simpleName = promptResult.name.replace(/\s/gi, '-');
 
         promptResult.databaseName = inflect.underscore(promptResult.simpleName);
-        if ( promptResult.databaseName) {
+        if (promptResult.databaseName) {
           promptResult.databaseName = inflect.underscore(promptResult.databaseName);
         }
+
+        promptResult.version = require('../../../package.json').version;
 
         let dirname = promptResult.name.replace(/[^A-Za-z0-9-_]/gi, '-').toLowerCase();
 

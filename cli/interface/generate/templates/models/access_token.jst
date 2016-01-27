@@ -76,13 +76,13 @@ module.exports = (function() {
 
           let accessToken = accessTokens[0];
 
-          if (!accessToken.get('user')) {
+          if (!accessToken.joined('user')) {
 
             return callback(new Error('Your access token belongs to an invalid user.'));
 
           }
 
-          return callback(null, accessToken, accessToken.get('user'));
+          return callback(null, accessToken, accessToken.joined('user'));
 
         });
 
