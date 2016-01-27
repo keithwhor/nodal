@@ -135,53 +135,54 @@ module.exports = (() => {
         }
 
         if (!fs.existsSync(MIGRATION_PATH)) {
-          return callback(new Error(`No migrations in "${MIGRATION_PATH}"`))
-        }
+          return callback(db.info(`No migrations in "${MIGRATION_PATH}"`))
+        } else {
 
-        let schema_ids = result.rows.map((v) => { return v.id; });
+          let schema_ids = result.rows.map((v) => { return v.id; });
 
-        let migrations = fs.readdirSync(MIGRATION_PATH).map((v) => {
-          return {
-            id: parseInt(v.substr(0, v.indexOf('__'))),
-            migration: new (require(process.cwd() + '/' + MIGRATION_PATH + '/' + v))(db)
-          };
-        });
+          let migrations = fs.readdirSync(MIGRATION_PATH).map((v) => {
+            return {
+              id: parseInt(v.substr(0, v.indexOf('__'))),
+              migration: new (require(process.cwd() + '/' + MIGRATION_PATH + '/' + v))(db)
+            };
+          });
 
-        migrations = migrations.filter((v) => {
-          return schema_ids.indexOf(v.id) === -1;
-        });
+          migrations = migrations.filter((v) => {
+            return schema_ids.indexOf(v.id) === -1;
+          });
 
-        if (migrations.length === 0) {
-          return callback(new Error('No pending migrations'));
-        }
-
-        let migrateFuncs = migrations.map((v) => {
-
-          let migrationInstance = v.migration;
-
-          return (callback) => {
-            migrationInstance.executeUp(callback);
-          };
-
-        });
-
-        if (steps) {
-          migrateFuncs = migrateFuncs.slice(0, steps);
-        }
-
-        async.series(
-          migrateFuncs,
-          (err) => {
-
-            if (err) {
-              return callback(err);
-            }
-
-            console.log('Migration complete!');
-            callback(null);
-
+          if (migrations.length === 0) {
+            return callback(db.info('No pending migrations'));
           }
-        );
+
+          let migrateFuncs = migrations.map((v) => {
+
+            let migrationInstance = v.migration;
+
+            return (callback) => {
+              migrationInstance.executeUp(callback);
+            };
+
+          });
+
+          if (steps) {
+            migrateFuncs = migrateFuncs.slice(0, steps);
+          }
+
+          async.series(
+            migrateFuncs,
+            (err) => {
+
+              if (err) {
+                return callback(err);
+              }
+
+              console.log('Migration complete!');
+              callback(null);
+
+            }
+          );
+        }
 
       });
 
