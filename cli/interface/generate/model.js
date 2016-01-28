@@ -142,6 +142,16 @@ module.exports = (function() {
 
       console.log(colors.green.bold('Create: ') + createPath);
 
+      filename = 'db/schema.json';
+      filename = process.cwd() + '/' + filename;
+      schemaObjects = JSON.parse(fs.readFileSync(filename));
+
+      schemaObjects.models[modelName] = schemaObject;
+
+      fs.writeFileSync(filename, schemaObjects);
+
+      console.log(colors.green.bold('Update: ') + filename);
+
       generateMigration('Create' + modelName,
         ['this.createTable(\"' + schemaObject.table + '\", ' + JSON.stringify(schemaObject.columns) + ')'],
         ['this.dropTable(\"' + schemaObject.table + '\")']
