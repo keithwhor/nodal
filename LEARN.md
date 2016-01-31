@@ -2,7 +2,7 @@
 
 Nodal follows MVC patterns you're probably familiar with from the simplicity
 of Django and Rails. If you need more in-depth help,
-[full API documentation is available here](./docs/index.html). Otherwise,
+[full API documentation is available here](http://www.nodaljs.com/static/docs/index.html). Otherwise,
 let's get started!
 
 # Starting Your Project
@@ -212,7 +212,7 @@ destroy() // DELETE
 To render a string from within a controller, use `this.render()`. It can also
 render JSON automatically if you provide a serializable object. **For API-formatted
 responses use:** `this.respond()`. Other ways to respond to requests are
-available [in the API documentation](./docs/index.html).
+available [in the API documentation](http://www.nodaljs.com/static/docs/index.html).
 
 ## Using 'this' in Controllers
 
