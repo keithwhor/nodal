@@ -18,25 +18,29 @@ module.exports = (function() {
     parseRegexFromString: (str) => {
 
       let names = [];
+      let replacements = [];
 
       if (str[str.length - 1] === '/') {
         str = str.substr(0, str.length - 1);
       }
 
-      str = str.replace(/(?:(?:\/\{(\w+?)\/)\}|(\*))/g, (m, name, aster) => {
+      str = str.replace(/(\{(\w+?)\}|(\*))/g, (m, all, name) => {
         names.push(name);
-        return m === '*' ? '(.*?)' : '/([^\/]+?)/';
+        replacements.push((all === '*' ? '(.*?)' : '([^\/]+?)'));
+        return `\{${replacements.length - 1}\}`;
       });
 
-      str = str.replace(/\/\{(\w+?)\}$/, (m, name) => {
-        names.push(name);
-        return '(?:/([^\/]+?))?'
+      str = str.replace(/\/\{([^\/]*?)\}$/g, (m, i) => {
+        replacements[i | 0] = `(?:\/${replacements[i | 0]})?`;
+        return `\{${i | 0}\}`;
       });
 
-      str = str.replace(/\/\(\.\*\?\)/g, '(?:\/(.*?))?');
+      let final = str.replace(/\{(.*?)\}/g, (m, i) => {
+        return replacements[i | 0];
+      });
 
       return {
-        regex: new RegExp(`^${str}/?$`),
+        regex: new RegExp(`^${final}/?$`),
         names: names
       };
 

@@ -58,7 +58,6 @@ describe('Test Suite', function() {
     });
   }
 
-
   require('./tests/nodal.js')(Nodal);
 
   require('./tests/database.js')(Nodal);
@@ -67,12 +66,10 @@ describe('Test Suite', function() {
 
   require('./tests/model.js')(Nodal);
 
-  require('./tests/application.js')(Nodal);
-
   require('./tests/composer.js')(Nodal);
 
   require('./tests/relationship_graph.js')(Nodal);
-  
+
   require('./tests/utilities.js')(Nodal);
 
 });
