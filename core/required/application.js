@@ -11,7 +11,7 @@ module.exports = (() => {
 
     constructor(port) {
 
-      process.on('uncaughtException', (e) => {
+      process.on('uncaughtException', e => {
         process.send({
           error: {
             name: e.name,
@@ -20,6 +20,10 @@ module.exports = (() => {
           }
         });
         process.exit(1);
+      });
+
+      process.on('message', data => {
+        data.invalidate && process.exit(0);
       });
 
       this.server = http.createServer(this.handler.bind(this));
