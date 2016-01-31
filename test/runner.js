@@ -70,6 +70,8 @@ describe('Test Suite', function() {
 
   require('./tests/relationship_graph.js')(Nodal);
 
+  require('./tests/strong_param.js')(Nodal);
+
   require('./tests/utilities.js')(Nodal);
 
 });

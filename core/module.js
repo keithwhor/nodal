@@ -32,6 +32,7 @@ module.exports = (function() {
     Scheduler: null,
     SchedulerTask: null,
     SchemaGenerator: null,
+    StrongParam: null,
     Task: null,
     Template: null,
     my: {
@@ -184,6 +185,12 @@ module.exports = (function() {
     SchemaGenerator: {
       get: function() {
         return Nodal.SchemaGenerator || (Nodal.SchemaGenerator = require('./required/db/schema_generator.js'));
+      },
+      enumerable: true
+    },
+   StrongParam: {
+      get: function() {
+        return Nodal.StrongParam || (Nodal.StrongParam = require('./required/strong_param.js'));
       },
       enumerable: true
     },
