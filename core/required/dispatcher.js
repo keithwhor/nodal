@@ -3,9 +3,18 @@ module.exports = (() => {
   'use strict';
 
   const url = require('url');
-  const domain = require('domain'); // TODO: Will be deprecated.
+  const domain = require('domain'); // TODO: Will be deprecated
+
+  const ExecutionQueue = require('./execution_queue.js');
 
   class Dispatcher {
+
+    constructor() {
+
+      this.middleware = new ExecutionQueue();
+      this.renderware = new ExecutionQueue();
+
+    }
 
     parseBody(body, headers) {
 
@@ -110,13 +119,21 @@ module.exports = (() => {
       d.run(() => {
 
         const DispatchController = require(`${process.cwd()}/app/controllers/${routeData.controller}`);
-        return new DispatchController(
+
+        let controller = new DispatchController(
           routeData.path,
           routeData.method,
           routeData.headers,
           params,
           responder
         );
+
+        controller.middleware.prepend(this.middleware);
+        controller.renderware.append(this.renderware);
+
+        controller.run(routeData.method, params.id);
+
+        return controller;
 
       });
 

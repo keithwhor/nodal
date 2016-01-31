@@ -24,7 +24,7 @@ module.exports = (() => {
 
       this.server = http.createServer(this.handler.bind(this));
       this.router = require(`${process.cwd()}/app/router.js`);
-      this.dispatcher = new Dispatcher();
+      this.dispatcher = require(`${process.cwd()}/app/dispatcher.js`);
 
       console.log(`[Nodal.${process.pid}] Startup: Starting HTTP Worker`);
 

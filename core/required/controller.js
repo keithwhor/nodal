@@ -7,14 +7,6 @@ module.exports = (() => {
 
   class Controller {
 
-    static middleware() {
-      return (this._middleware = this._middleware || new ExecutionQueue());
-    }
-
-    static renderware() {
-      return (this._renderware = this._renderware || new ExecutionQueue());
-    }
-
     constructor(path, method, requestHeaders, params, responder) {
 
       this._path = path || '';
@@ -28,13 +20,18 @@ module.exports = (() => {
 
       this.params = params || {};
 
+      this.middleware = new ExecutionQueue();
+      this.renderware = new ExecutionQueue();
+
       this.setHeader('Content-Type', 'text/html; charset=utf-8');
 
-      this.__run__(method, this.params.id);
+      this.before();
 
     }
 
-    __run__(method, id) {
+    run(method, id) {
+
+      this.before();
 
       let acceptMethods = {
         'GET': ['index', 'show'],
@@ -47,7 +44,7 @@ module.exports = (() => {
       method = method in acceptMethods ? method : 'GET';
       method = acceptMethods[method][(id !== undefined) | 0];
 
-      this.constructor.middleware().exec(this, (err) => {
+      this.middleware.exec(this, (err) => {
 
         if (err) {
           return this.error(err);
@@ -58,6 +55,9 @@ module.exports = (() => {
       });
 
     }
+
+    before() {}
+    after() {}
 
     /**
     * Method called when a route is hit with a GET request, if not first intercepted by custom Controller#index or Controller#show methods. Intended to be overwritten when inherited.
@@ -163,10 +163,11 @@ module.exports = (() => {
 
     render(data) {
 
-      this.constructor.renderware().exec(this, data, (e, data) => {
+      this.renderware.exec(this, data, (e, data) => {
 
         if (e) {
           this._responder(e);
+          this.after();
           return;
         }
 
@@ -187,6 +188,7 @@ module.exports = (() => {
         }
 
         this._responder(null, this._status, this._headers, data);
+        this.after();
 
       });
 

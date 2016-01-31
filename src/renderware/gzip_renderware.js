@@ -11,7 +11,7 @@ module.exports = (function() {
 
       let contentType = controller.getHeader('Content-Type', '').split(';')[0];
 
-      let acceptEncoding = controller._request.headers['accept-encoding'] || '';
+      let acceptEncoding = controller._requestHeaders['accept-encoding'] || '';
       let canCompress = !!{
         'text/plain': 1,
         'text/html': 1,
