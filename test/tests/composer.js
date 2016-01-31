@@ -322,6 +322,57 @@ module.exports = (function(Nodal) {
 
     });
 
+    it('Should limit properly (query params, offset)', (done) => {
+
+      Child.query()
+        .where({__offset: 5})
+        .end((err, children) => {
+
+          expect(err).to.equal(null);
+          expect(children).to.be.an.instanceOf(Nodal.ModelArray);
+          expect(children.length).to.equal(95);
+          expect(children._meta.total).to.equal(100);
+          expect(children._meta.offset).to.equal(5);
+          done();
+
+        });
+
+    });
+
+    it('Should limit properly (query params, count)', (done) => {
+
+      Child.query()
+        .where({__count: 10})
+        .end((err, children) => {
+
+          expect(err).to.equal(null);
+          expect(children).to.be.an.instanceOf(Nodal.ModelArray);
+          expect(children.length).to.equal(10);
+          expect(children._meta.total).to.equal(100);
+          expect(children._meta.offset).to.equal(0);
+          done();
+
+        });
+
+    });
+
+    it('Should limit properly (query params, count + offset)', (done) => {
+
+      Child.query()
+        .where({__offset: 5, __count: 10})
+        .end((err, children) => {
+
+          expect(err).to.equal(null);
+          expect(children).to.be.an.instanceOf(Nodal.ModelArray);
+          expect(children.length).to.equal(10);
+          expect(children._meta.total).to.equal(100);
+          expect(children._meta.offset).to.equal(5);
+          done();
+
+        });
+
+    });
+
     it('Should limit and orderBy properly (ASC)', function(done) {
 
       Child.query()

@@ -558,7 +558,7 @@ module.exports = (function() {
       if (order || offset || count) {
         let composer = this;
         order && (composer = composer.orderBy(order[0], order[1]));
-        count && (composer = composer.limit(offset || 0, count || 0));
+        (offset || count) && (composer = composer.limit(offset || 0, count || 0));
         return composer.where(comparisonsArray);
       }
 
