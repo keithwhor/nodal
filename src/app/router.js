@@ -5,10 +5,20 @@ module.exports = (function() {
   const Nodal = require('nodal');
   const router = new Nodal.Router();
 
-  /* generator: begin imports */
+  const CORSMiddleware = Nodal.require('middleware/cors_middleware.js');
+  const GZipRenderware = Nodal.require('renderware/gzip_renderware.js');
 
+  /* Middleware */
+  /* executed *before* Controller-specific middleware */
 
-  /* generator: end imports */
+  router.middleware.use(CORSMiddleware);
+
+  /* Renderware */
+  /* executed *after* Controller-specific renderware */
+
+  router.renderware.use(GZipRenderware);
+
+  /* Routes */
 
   router.route('/').use('index_controller.js');
   router.route('/static/*').use('static_controller.js');

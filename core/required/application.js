@@ -5,8 +5,6 @@ module.exports = (() => {
   const http = require('http');
   const url = require('url');
 
-  const Dispatcher = require('./dispatcher.js');
-
   class Application {
 
     constructor(port) {
@@ -28,7 +26,6 @@ module.exports = (() => {
 
       this.server = http.createServer(this.handler.bind(this));
       this.router = require(`${process.cwd()}/app/router.js`);
-      this.dispatcher = require(`${process.cwd()}/app/dispatcher.js`);
 
       console.log(`[Nodal.${process.pid}] Startup: Starting HTTP Worker`);
 
@@ -139,8 +136,8 @@ module.exports = (() => {
           ]
         );
 
-        return this.dispatcher.dispatch(
-          this.dispatcher.parse(args),
+        return this.router.dispatch(
+          this.router.parse(args),
           (err, status, headers, data) => {
 
             let t = this.getTime() - start;

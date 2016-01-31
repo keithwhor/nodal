@@ -17,7 +17,6 @@ module.exports = (function() {
     Controller: null,
     Daemon: null,
     Database: null,
-    Dispatcher: null,
     DummyRouter: null,
     Initializer: null,
     ItemArray: null,
@@ -95,12 +94,6 @@ module.exports = (function() {
     Database: {
       get: function() {
         return Nodal.Database || (Nodal.Database = require('./required/db/database.js'));
-      },
-      enumerable: true
-    },
-    Dispatcher: {
-      get: function() {
-        return Nodal.Dispatcher || (Nodal.Dispatcher = require('./required/dispatcher.js'));
       },
       enumerable: true
     },
