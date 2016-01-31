@@ -118,6 +118,21 @@ module.exports = (function() {
 
           let id = row[`\$${join.name}\$id`];
 
+          let name = join.name;
+          let names = name.split('__');
+          let joinName = names.pop();
+          let parentName = names.join('__');
+
+          let parentModel = parentName ? joinsObject[parentName].cachedModel : model;
+
+          if (join.multiple) {
+            parentModel.joined(joinName) || parentModel.setJoined(joinName, new ModelArray(join.Model));
+          }
+
+          if (!id) {
+            return;
+          }
+
           let joinCache = cache[join.Model.name];
           let joinModel = join.cachedModel = joinCache[id];
 
@@ -128,18 +143,10 @@ module.exports = (function() {
             }, join.columnsObject), true)
           }
 
-          let name = join.name;
-          let names = name.split('__');
-          let joinName = names.pop();
-          let parentName = names.join('__');
-
-          let parentModel = parentName ? joinsObject[parentName].cachedModel : model;
 
           if (join.multiple) {
-            let modelArray = parentModel.joined(joinName) ||
-              parentModel.setJoined(joinName, new ModelArray(join.Model));
-            // null sanity check
-            joinModel.get('id') && !modelArray.has(joinModel) && modelArray.push(joinModel);
+            let modelArray = parentModel.joined(joinName);
+            !modelArray.has(joinModel) && modelArray.push(joinModel);
           } else {
             parentModel.joined(joinName) || parentModel.setJoined(joinName, joinModel);
           }
@@ -558,7 +565,7 @@ module.exports = (function() {
       if (order || offset || count) {
         let composer = this;
         order && (composer = composer.orderBy(order[0], order[1]));
-        count && (composer = composer.limit(offset || 0, count || 0));
+        (offset || count) && (composer = composer.limit(offset || 0, count || 0));
         return composer.where(comparisonsArray);
       }
 
