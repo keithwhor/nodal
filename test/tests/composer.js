@@ -1104,6 +1104,26 @@ module.exports = (function(Nodal) {
 
     });
 
+    it('Should not fetch parents if they don\'t exist', done => {
+
+      Child.create({name: 'Ada'}, (err, child) => {
+
+        Child.query()
+          .join('parent')
+          .where({name: 'Ada'})
+          .first((err, child) => {
+
+            expect(err).to.not.exist;
+            expect(child).to.exist;
+            expect(child.joined('parent')).to.not.exist;
+            done();
+
+          });
+
+      });
+
+    });
+
     // IMPORTANT: Do npt place any tests after the `Should do a destroy cascade`
     // test since all models will be gone
 
