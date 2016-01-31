@@ -7,7 +7,7 @@ module.exports = (() => {
   const domain = require('domain'); // TODO: Will be deprecated
 
   const utilities = require('./utilities.js');
-
+  const StrongParam = require('./strong_param.js');
   const ExecutionQueue = require('./execution_queue.js');
 
   class Route {
@@ -151,8 +151,8 @@ module.exports = (() => {
 
       let params = {
         buffer: new Buffer(routeData.body, 'binary'),
-        query: this.parseQueryParameters(url.parse(routeData.url, true).query),
-        body: this.parseBody(routeData.body, routeData.headers),
+        query: new StrongParam(this.parseQueryParameters(url.parse(routeData.url, true).query)),
+        body: new StrongParam(this.parseBody(routeData.body, routeData.headers)),
         path: routeData.path,
         matches: routeData.matches,
         route: routeData.route,
