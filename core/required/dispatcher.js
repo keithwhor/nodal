@@ -3,6 +3,7 @@ module.exports = (() => {
   'use strict';
 
   const url = require('url');
+  const querystring = require('querystring');
   const domain = require('domain'); // TODO: Will be deprecated
 
   const ExecutionQueue = require('./execution_queue.js');

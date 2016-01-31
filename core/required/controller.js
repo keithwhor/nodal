@@ -23,8 +23,6 @@ module.exports = (() => {
       this.middleware = new ExecutionQueue();
       this.renderware = new ExecutionQueue();
 
-      this.setHeader('Content-Type', 'text/html; charset=utf-8');
-
       this.before();
 
     }
@@ -41,8 +39,10 @@ module.exports = (() => {
         'OPTIONS': ['options', 'options']
       };
 
+      id = !!(id | 0);
+
       method = method in acceptMethods ? method : 'GET';
-      method = acceptMethods[method][(id !== undefined) | 0];
+      method = acceptMethods[method][id | 0];
 
       this.middleware.exec(this, (err) => {
 
@@ -142,11 +142,11 @@ module.exports = (() => {
 
     }
 
-    getHeader(key) {
+    getHeader(key, value) {
       key = key.split('-').map(function(v) {
         return v[0].toUpperCase() + v.substr(1).toLowerCase();
       }).join('-');
-      return this._headers[key];
+      return this._headers.hasOwnProperty(key) ? this._headers[key] : value;
     }
 
     status(code) {
@@ -163,6 +163,22 @@ module.exports = (() => {
 
     render(data) {
 
+      if (data instanceof Buffer) {
+
+        this.getHeader('Content-Type') || this.setHeader('Content-Type', 'application/octet-stream');
+
+      } else {
+
+        if (typeof data === 'object' && data !== null) {
+          this.getHeader('Content-Type') || this.setHeader('Content-Type', 'application/json');
+          data = JSON.stringify(data, null, 2);
+        }
+
+        data = data + '';
+        data = new Buffer(data);
+
+      }
+
       this.renderware.exec(this, data, (e, data) => {
 
         if (e) {
@@ -171,22 +187,7 @@ module.exports = (() => {
           return;
         }
 
-        if (data instanceof Buffer) {
-
-          this.getHeader('Content-Type') || this.setHeader('Content-Type', 'application/octet-stream');
-
-        } else {
-
-          if (typeof data === 'object' && data !== null) {
-            this.getHeader('Content-Type') || this.setHeader('Content-Type', 'application/json');
-            data = JSON.stringify(data, null, 2);
-          }
-
-          data = data + '';
-          data = new Buffer(data);
-
-        }
-
+        this.getHeader('Content-Type') || this.setHeader('Content-Type', 'text/html');
         this._responder(null, this._status, this._headers, data);
         this.after();
 
