@@ -11,7 +11,7 @@ module.exports = (function() {
       this.status(404);
 
       this.render(
-        this.app.template('error/404.html').generate(this.params)
+        Nodal.Template.generate('error/404.html').render(this.params)
       );
 
     }

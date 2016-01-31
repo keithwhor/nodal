@@ -1,51 +1,192 @@
-module.exports = (function() {
+module.exports = (() => {
 
   'use strict';
 
-  const url = require('url');
-  const Template = require('./template.js');
-  const Model = require('./model.js');
   const API = require('./api.js');
+  const ExecutionQueue = require('./execution_queue.js');
 
-  /**
-  * A new Controller instance is created by the Router when its associated route is hit, handles all business logic
-  * @class
-  */
   class Controller {
 
-    /**
-    * @param {http.ClientRequest} request Incoming HTTP Request
-    * @param {http.ServerResponse} response Outgoing HTTP Response
-    * @param {Object} params HTTP request parameters containing: location (route), query (GET), body (POST), and id values
-    * @param {Nodal.Application} app Parent application object
-    */
-    constructor(request, response, params, app) {
+    static middleware() {
+      return (this._middleware = this._middleware || new ExecutionQueue());
+    }
 
-      this._initializeTime = (new Date()).valueOf();
-      this._request = request;
-      this._response = response;
-      this._path = url.parse(this._request.url, true).pathname;
-      this._status = null;
+    static renderware() {
+      return (this._renderware = this._renderware || new ExecutionQueue());
+    }
+
+    constructor(path, method, requestHeaders, params, responder) {
+
+      this._path = path || '';
+      this._method = method || '';
+      this._requestHeaders = requestHeaders || {};
+
       this._headers = {};
+      this._status = 200;
 
-      Object.defineProperty(this, 'app', {enumerable: true, value: app});
-      Object.defineProperty(this, 'params', {enumerable: true, value: params});
+      this._responder = responder || () => {};
+
+      this.params = params || {};
+
+      this.setHeader('Content-Type', 'text/html; charset=utf-8');
+
+      this.__run__(method, this.params.id);
 
     }
 
-    /**
-    * Run the given method
-    * @private
-    */
-    __run__(method) {
+    __run__(method, id) {
 
-      this.app.middleware.exec(this, (err) => {
+      let acceptMethods = {
+        'GET': ['index', 'show'],
+        'PUT': ['put', 'update'],
+        'POST': ['create', 'post'],
+        'DELETE': ['del', 'destroy'],
+        'OPTIONS': ['options', 'options']
+      };
+
+      method = method in acceptMethods ? method : 'GET';
+      method = acceptMethods[method][(id !== undefined) | 0];
+
+      this.constructor.middleware().exec(this, (err) => {
 
         if (err) {
           return this.error(err);
         }
 
-        this[method](this, this.params, this.app);
+        this[method]();
+
+      });
+
+    }
+
+    /**
+    * Method called when a route is hit with a GET request, if not first intercepted by custom Controller#index or Controller#show methods. Intended to be overwritten when inherited.
+    */
+    get() {
+      this.status(501);
+      this.setHeader('Content-Type', 'text/plain');
+      this.render('501 - Not Implemented');
+    }
+
+    /**
+    * Method called when a route is hit with a PUT request, if not first intercepted by custom Controller#update method. Intended to be overwritten when inherited.
+    */
+    put() {
+      this.status(501);
+      this.setHeader('Content-Type', 'text/plain');
+      this.render('501 - Not Implemented');
+    }
+
+    /**
+    * Method called when a route is hit with a POST request, if not first intercepted by custom Controller#create method. Intended to be overwritten when inherited.
+    */
+    post() {
+      this.status(501);
+      this.setHeader('Content-Type', 'text/plain');
+      this.render('501 - Not Implemented');
+    }
+
+    /**
+    * Method called when a route is hit with a DELETE request, if not first intercepted by custom Controller#destroy method. Intended to be overwritten when inherited.
+    */
+    del() {
+      this.status(501);
+      this.setHeader('Content-Type', 'text/plain');
+      this.render('501 - Not Implemented');
+    }
+
+    /**
+    * Method called when a route is hit with an OPTIONS request. Typically unused, exists for CORS purposes.
+    */
+    options() {
+      this.status(200);
+      this.render();
+    }
+
+    index() { this.get(); }
+    show() { this.get(); }
+    update() { this.put(); }
+    create() { this.post(); }
+    destroy() { this.del(); }
+
+    /**
+    * Set HTTP headers to be used by the outgoing http.ServerResponse
+    * @param {Object} object Object containing key-value pairs for HTTP headers
+    * @return {Object} The headers object created
+    */
+    setHeaders(object) {
+      return (this._headers = Object.keys(object).reduce((o, key) => {
+        key = key.split('-').map(function(v) {
+          return v[0].toUpperCase() + v.substr(1).toLowerCase();
+        }).join('-');
+        o[key.toLowerCase()] = object[key];
+        return o;
+      }, {}));
+    }
+
+    setHeader(key, value) {
+
+      key = key.split('-').map(function(v) {
+        return v[0].toUpperCase() + v.substr(1).toLowerCase();
+      }).join('-');
+
+      if (key === 'content-type' && value.indexOf(';') === -1 && (
+        value === 'application/javascript' ||
+        value === 'application/json' ||
+        value.indexOf('text/') === 0
+      )) {
+        value = value + '; charset=utf-8';
+      }
+
+      return this._headers[key] = value;
+
+    }
+
+    getHeader(key) {
+      key = key.split('-').map(function(v) {
+        return v[0].toUpperCase() + v.substr(1).toLowerCase();
+      }).join('-');
+      return this._headers[key];
+    }
+
+    status(code) {
+      return this._status = code;
+    }
+
+    /**
+    * The current HTTP status code expected to be used by the outgoing http.ServerResponse
+    * @return {number}
+    */
+    getStatus() {
+      return this._status;
+    }
+
+    render(data) {
+
+      this.constructor.renderware().exec(this, data, (e, data) => {
+
+        if (e) {
+          this._responder(e);
+          return;
+        }
+
+        if (data instanceof Buffer) {
+
+          this.getHeader('Content-Type') || this.setHeader('Content-Type', 'application/octet-stream');
+
+        } else {
+
+          if (typeof data === 'object' && data !== null) {
+            this.getHeader('Content-Type') || this.setHeader('Content-Type', 'application/json');
+            data = JSON.stringify(data, null, 2);
+          }
+
+          data = data + '';
+          data = new Buffer(data);
+
+        }
+
+        this._responder(null, this._status, this._headers, data);
 
       });
 
@@ -64,120 +205,6 @@ module.exports = (function() {
 
       return this;
 
-    }
-
-    /**
-    * Intended to be overwritten when inherited. Used in AuthorizationController class.
-    * @param {string} permissionName The permission name (and everything below) you'd like to allow.
-    * @param {function({Error} err)} callback Function to execute upon authorization check.
-    * @return {this}
-    */
-    authorize(permissionName, callback) {
-
-      callback(null);
-      return this;
-
-    }
-
-    /**
-    * Return a copy of an object with only the specified fields allowed.
-    * @experimental
-    * @param {Object} obj The object to copy from
-    * @param {Array} fields The keys you wish to keep
-    * @return {Object}
-    */
-    filterParams(obj, fields) {
-
-      return fields
-        .filter(f => obj[f] !== undefined)
-        .reduce((prev, f) => {
-          prev[f] = obj[f];
-          return prev;
-        }, {});
-    }
-
-    /**
-    * Return the HTTP Request object
-    * @return {http.ClientRequest}
-    */
-    request() {
-      return this._request;
-    }
-
-    /**
-    * The pathname used by the router to instantiate this controller
-    * @return {string}
-    */
-    path() {
-      return this._path;
-    }
-
-    /**
-    * The current HTTP status code expected to be used by the outgoing http.ServerResponse
-    * @return {number}
-    */
-    getStatus() {
-      return this._status;
-    }
-
-    /**
-    * Set the HTTP status code to be used by the outgoing http.ServerResponse
-    * @param {number} value Outgoing HTTP status code
-    * @return {number}
-    */
-    status(value) {
-      this._status = value | 0;
-      return this._status;
-    }
-
-    /**
-    * Set HTTP headers to be used by the outgoing http.ServerResponse
-    * @param {Object} object Object containing key-value pairs for HTTP headers
-    * @return {Object} The headers object created
-    */
-    setHeaders(object) {
-      let keys = Object.keys(object);
-      let headers = {};
-      for(let i = 0, len = keys.length; i < len; i++) {
-        headers[keys[i]] = object[keys[i]];
-      }
-      this._headers = headers;
-      return headers;
-    }
-
-    /**
-    * Set HTTP header key-value pairs individually for the outgoing http.ServerResponse
-    * @param {string} key HTTP header name
-    * @param {string} value HTTP header value
-    * @return {string} HTTP header value
-    */
-    setHeader(key, value) {
-
-      key = key.split('-').map(function(v) {
-        return v[0].toUpperCase() + v.substr(1);
-      }).join('-');
-
-      if (key === 'Content-Type' && value.indexOf(';') === -1 && (
-        value === 'application/javascript' ||
-        value === 'application/json' ||
-        value.indexOf('text/') === 0
-      )) {
-        value = value + '; charset=utf-8';
-      }
-
-      this._headers[key] = value;
-      return value;
-
-    }
-
-    /**
-    * Return the value of an outgoing expected HTTP header
-    * @param {string} key HTTP header value
-    * @param {optional string} defaultValue The value to be returned if header is not set
-    * @return {string}
-    */
-    getHeader(key, defaultValue) {
-      return this._headers.hasOwnProperty(key) ? this._headers[key] : defaultValue;
     }
 
     /**
@@ -272,155 +299,6 @@ module.exports = (function() {
       this.render(API.format(data, arrInterface, options));
       return true;
 
-    }
-
-    /**
-    * Send an http.ServerResponse back to the client with data to render
-    * @param {string|Buffer|Object} data Data to be returned to the client. Buffers will be written as binary, Objects will be JSON-serialized, and strings will be output as-is.
-    * @return {boolean}
-    */
-    render(data) {
-
-      if (!data) { data = ''; }
-
-      if (data instanceof Buffer) {
-
-        this.getHeader('Content-Type') || this.setHeader('Content-Type', 'text/html');
-
-      } else if (typeof data === 'object') {
-
-        this.getHeader('Content-Type') || this.setHeader('Content-Type', 'application/json');
-
-        try {
-          data = JSON.stringify(data);
-        } catch(e) {
-          data = {};
-        }
-
-      } else {
-
-        this.getHeader('Content-Type') || this.setHeader('Content-Type', 'text/html');
-        data = data + '';
-
-      }
-
-      this.getStatus() || this.status(200);
-      this.getHeader('X-Powered-By') || this.setHeader('X-Powered-By', 'Nodal');
-
-      this.app.renderware.exec(this, data, (e, data) => {
-
-        if (e) {
-          this.setHeader('Content-Type', 'text/plain');
-          this.status(500);
-          this.write(e.message || 'Unresolved error');
-          return;
-        }
-
-        if (data instanceof Buffer) {
-          this.write(data, 'binary');
-        } else {
-          this.write(data);
-        }
-
-      });
-
-      return true;
-
-    }
-
-    /**
-    * Use Controller#render instead (which calls this method). Ends the http.ServerResponse by sending data.
-    * @param {string|Buffer} data Response to send to client
-    * @return {boolean}
-    */
-    write(data) {
-
-      this._response.writeHead(this._status, this._headers);
-      this._response.end(data);
-
-      console.log(this._request.url + ' loaded in: ' + ((new Date()).valueOf() - this._initializeTime) + 'ms');
-
-      return true;
-
-    }
-
-    /**
-    * Method called when a route is hit with a GET request and no "id" parameter. Intended to be overwritten when inherited. Defaults to calling Controller#get.
-    */
-    index() {
-      this.get.apply(this, arguments);
-    }
-
-    /**
-    * Method called when a route is hit with a GET request and an "id" parameter. Intended to be overwritten when inherited. Defaults to calling Controller#get.
-    */
-    show() {
-      this.get.apply(this, arguments);
-    }
-
-    /**
-    * Method called when a route is hit with a POST request. Intended to be overwritten when inherited. Defaults to calling Controller#post.
-    */
-    create() {
-      this.post.apply(this, arguments);
-    }
-
-    /**
-    * Method called when a route is hit with a PUT request. Intended to be overwritten when inherited. Defaults to calling Controller#put.
-    */
-    update() {
-      this.put.apply(this, arguments);
-    }
-
-    /**
-    * Method called when a route is hit with a DELETE request. Intended to be overwritten when inherited. Defaults to calling Controller#post.
-    */
-    destroy() {
-      this.del.apply(this, arguments);
-    }
-
-    /**
-    * Method called when a route is hit with a GET request, if not first intercepted by custom Controller#index or Controller#show methods. Intended to be overwritten when inherited.
-    */
-    get() {
-      this.status(501);
-      this.setHeader('Content-Type', 'text/plain');
-      this.render('501 - Not Implemented');
-    }
-
-    /**
-    * Method called when a route is hit with a PUT request, if not first intercepted by custom Controller#update method. Intended to be overwritten when inherited.
-    */
-    put() {
-      this.status(501);
-      this.setHeader('Content-Type', 'text/plain');
-      this.render('501 - Not Implemented');
-    }
-
-    /**
-    * Method called when a route is hit with a POST request, if not first intercepted by custom Controller#create method. Intended to be overwritten when inherited.
-    */
-    post() {
-      this.status(501);
-      this.setHeader('Content-Type', 'text/plain');
-      this.render('501 - Not Implemented');
-    }
-
-    /**
-    * Method called when a route is hit with a DELETE request, if not first intercepted by custom Controller#destroy method. Intended to be overwritten when inherited.
-    */
-    del() {
-      this.status(501);
-      this.setHeader('Content-Type', 'text/plain');
-      this.render('501 - Not Implemented');
-    }
-
-    /**
-    * Method called when a route is hit with an OPTIONS request. Typically unused, exists for CORS purposes.
-    */
-    options() {
-      this.status(200);
-      this.render();
     }
 
   }

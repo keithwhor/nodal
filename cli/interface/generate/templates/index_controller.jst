@@ -9,7 +9,7 @@ module.exports = (function() {
     get() {
 
       this.render(
-        this.app.template('layout.html', 'index.html').generate(
+        Nodal.Template.generate('layout.html', 'index.html').render(
           this.params,
           {
             test: this.params.query.test,

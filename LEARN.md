@@ -162,7 +162,7 @@ module.exports = (function() {
     get() {
 
       this.render(
-        this.app.template('index.html').generate(
+        Nodal.Template.generate('index.html').render(
           this.params,
           {
             name: 'My Nodal Application'

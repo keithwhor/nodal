@@ -22,6 +22,7 @@ module.exports = (function() {
     ItemArray: null,
     Middleware: null,
     Migration: null,
+    Mime: null,
     Model: null,
     ModelArray: null,
     ModelFactory: null,
@@ -31,6 +32,8 @@ module.exports = (function() {
     Scheduler: null,
     SchedulerTask: null,
     SchemaGenerator: null,
+    Task: null,
+    Template: null,
     my: {
       Config: null,
       Schema: null,
@@ -124,6 +127,12 @@ module.exports = (function() {
       },
       enumerable: true
     },
+    Mime: {
+      get: function() {
+        return Nodal.Mime || (Nodal.Mime = require('./required/mime.js'));
+      },
+      enumerable: true
+    },
     Model: {
       get: function() {
         return Nodal.Model || (Nodal.Model = require('./required/model.js'));
@@ -181,6 +190,12 @@ module.exports = (function() {
     Task: {
       get: function() {
         return Nodal.Task || (Nodal.Task = require('./required/task.js'));
+      },
+      enumerable: true
+    },
+    Template: {
+      get: function() {
+        return Nodal.Template || (Nodal.Template = require('./required/template.js'));
       },
       enumerable: true
     },
