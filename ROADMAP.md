@@ -13,12 +13,12 @@
 
 #### Features
 * :x: GraphQL Support
-* :x: CSP Headers
-* :x: Sensitive fields support (Model output)
 * :x: `.having()` support for `Composer#groupBy`
 * :x: Join in based on properties of joined table (i.e. only join in specific entries)
 * :hourglass: HTTPS support (including CLI certificate verification/generation)
 * :hourglass: Docker integration
+* :white_check_mark: CSP Headers
+* :white_check_mark: `.hides()` Sensitive fields support (Model output)
 * :white_check_mark: Strong parameter support
 * :white_check_mark: Clustering of processes (multiple cores, threads)
 

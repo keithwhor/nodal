@@ -18,6 +18,8 @@ module.exports = (() => {
 
       this._responder = responder || () => {};
 
+      this._securityPolicies = {};
+
       this.params = params || {};
 
       this.middleware = new ExecutionQueue();
@@ -130,7 +132,7 @@ module.exports = (() => {
         return v[0].toUpperCase() + v.substr(1).toLowerCase();
       }).join('-');
 
-      if (key === 'content-type' && value.indexOf(';') === -1 && (
+      if (key === 'Content-Type' && value.indexOf(';') === -1 && (
         value === 'application/javascript' ||
         value === 'application/json' ||
         value.indexOf('text/') === 0
@@ -207,6 +209,37 @@ module.exports = (() => {
       this.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
 
       return this;
+
+    }
+
+    /**
+    * Add Content-Security-Policy headers
+    * @param {string} directive The directive of the security policy
+    * @param {string} src The value (domain) to add to the policy
+    */
+    securityPolicy(directive, src) {
+
+      if (!src.match(/^https?:\/\/.+$/)) {
+
+        if (['none', 'self', 'unsafe-inline', 'unsafe-eval'].indexOf(src) === -1) {
+          throw new Error(`Invalid security policy src: "${src}"`);
+        }
+
+        src = `'${src}'`;
+
+      }
+
+      directive = directive.toLowerCase();
+      src = src.toLowerCase();
+
+      this._securityPolicies[directive] = this._securityPolicies[directive] || {};
+      this._securityPolicies[directive][src] = true;
+
+      let contentSecurityPolicy = Object.keys(this._securityPolicies)
+        .map(policy => `${policy} ${Object.keys(this._securityPolicies[policy]).join(' ')}`)
+        .join('; ')
+
+      return this.setHeader('Content-Security-Policy', contentSecurityPolicy);
 
     }
 
