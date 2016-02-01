@@ -14,12 +14,14 @@ module.exports = (function(Nodal) {
         {name: 'id', type: 'serial'},
         {name: 'name', type: 'string'},
         {name: 'age', type: 'int'},
+        {name: 'secret', type: 'string'},
         {name: 'content', type: 'json'},
         {name: 'created_at', type: 'datetime'},
         {name: 'updated_at', type: 'datetime'}
       ]
     };
     class Parent extends Nodal.Model {}
+    Parent.hides('secret');
 
     Parent.setDatabase(db);
     Parent.setSchema(schemaParent);
@@ -157,8 +159,9 @@ module.exports = (function(Nodal) {
       expect(obj).to.have.ownProperty('content');
       expect(obj).to.have.ownProperty('created_at');
       expect(obj).to.have.ownProperty('updated_at');
+      expect(obj).to.not.have.ownProperty('secret'); // hidden
 
-      obj = parent.toObject(['id', 'name']);
+      obj = parent.toObject(['id', 'name', 'secret']);
 
       expect(obj).to.have.ownProperty('id');
       expect(obj).to.have.ownProperty('name');
@@ -166,6 +169,7 @@ module.exports = (function(Nodal) {
       expect(obj).to.not.have.ownProperty('content');
       expect(obj).to.not.have.ownProperty('created_at');
       expect(obj).to.not.have.ownProperty('updated_at');
+      expect(obj).to.not.have.ownProperty('secret'); // hidden
 
       obj = parent.toObject(['id', 'name'], {exclude: true});
 
@@ -175,6 +179,7 @@ module.exports = (function(Nodal) {
       expect(obj).to.have.ownProperty('content');
       expect(obj).to.have.ownProperty('created_at');
       expect(obj).to.have.ownProperty('updated_at');
+      expect(obj).to.not.have.ownProperty('secret'); // hidden
 
     });
 

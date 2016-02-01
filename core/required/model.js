@@ -383,6 +383,17 @@ module.exports = (function() {
     }
 
     /**
+    * Hides fields from being output in .toObject() (i.e. API responses), even if asked for
+    * @param {String} field
+    */
+    static hides(field) {
+
+      this.prototype._hides[field] = true;
+      return true;
+
+    }
+
+    /**
     * Prepare model for use
     * @private
     */
@@ -829,6 +840,9 @@ module.exports = (function() {
         arrInterface.forEach(key => {
 
           let joinObject;
+          if (this._hides[key]) {
+            return;
+          }
 
           if (typeof key === 'object' && key !== null) {
             let subInterface = key;
@@ -847,9 +861,22 @@ module.exports = (function() {
 
       } else {
 
-        this.fieldList().forEach(key => obj[key] = this._data[key]);
-        this._calculationsList.forEach(key => obj[key] = this.calculate(key));
+        this.fieldList().forEach(key => {
+          if (this._hides[key]) {
+            return;
+          }
+          obj[key] = this._data[key];
+        });
+        this._calculationsList.forEach(key => {
+          if (this._hides[key]) {
+            return;
+          }
+          obj[key] = this.calculate(key);
+        });
         this._joinsList.forEach(key => {
+          if (this._hides[key]) {
+            return;
+          }
           let cacheValue = this._joinsCache[key];
           cacheValue && (obj[key] = cacheValue.toObject(null, opts, list));
         });
@@ -1151,6 +1178,8 @@ module.exports = (function() {
 
   Model.prototype._calculations = {};
   Model.prototype._calculationsList = [];
+
+  Model.prototype._hides = {};
 
   Model.prototype.formatters = {};
 
