@@ -22,78 +22,79 @@ module.exports = (function(Nodal) {
 
     });
 
-    it('should filter query keys with except()', () => {
+    it('should filter top level keys with except()', () => {
 
       let param = new Nodal.StrongParam({
         title: 'Some Title',
         name: 'Some Name',
-        query: new Nodal.StrongParam({
+        query: {
           name: 'Tom Saywer',
           task: 'Paint Fence'
-        })
-      }).except('task')
+        }
+      }).except('name');
 
+      expect(param).to.have.ownProperty('title');
+      expect(param).to.not.have.ownProperty('name');
+      expect(param).to.have.ownProperty('query');
+      expect(param.query).to.have.ownProperty('name');
+      expect(param.query).to.have.ownProperty('task');
+
+    });
+
+    it('should filter sub level keys with except()', () => {
+
+      let param = new Nodal.StrongParam({
+        title: 'Some Title',
+        name: 'Some Name',
+        query: {
+          name: 'Tom Saywer',
+          task: 'Paint Fence'
+        }
+      }).except({query: ['name']});
+
+      expect(param).to.have.ownProperty('title');
+      expect(param).to.have.ownProperty('name');
+      expect(param).to.have.ownProperty('query');
+      expect(param.query).to.not.have.ownProperty('name');
+      expect(param.query).to.have.ownProperty('task');
+
+    });
+
+    it('should filter top level keys with permit()', () => {
+
+      let param = new Nodal.StrongParam({
+        title: 'Some Title',
+        name: 'Some Name',
+        query: {
+          name: 'Tom Saywer',
+          task: 'Paint Fence'
+        }
+      }).permit('name');
+
+      expect(param).to.not.have.ownProperty('title');
+      expect(param).to.have.ownProperty('name');
+      expect(param).to.not.have.ownProperty('query');
+
+    });
+
+    it('should filter sub level keys with permit()', () => {
+
+      let param = new Nodal.StrongParam({
+        title: 'Some Title',
+        name: 'Some Name',
+        query: {
+          name: 'Tom Saywer',
+          task: 'Paint Fence'
+        }
+      }).permit({query: ['name']});
+
+      expect(param).to.not.have.ownProperty('title');
+      expect(param).to.not.have.ownProperty('name');
+      expect(param).to.have.ownProperty('query');
       expect(param.query).to.have.ownProperty('name');
       expect(param.query).to.not.have.ownProperty('task');
 
     });
-
-    it('should filter body keys with except()', () => {
-
-      let param = new Nodal.StrongParam({
-        title: 'Some Title',
-        name: 'Some Name',
-        task: 'Some Task',
-        body: new Nodal.StrongParam({
-          name: 'Tom Saywer',
-          task: 'Paint Fence'
-        })
-      }).except('task')
-
-      expect(param).to.not.have.ownProperty('task');
-      expect(param.body).to.have.ownProperty('name');
-      expect(param.body).to.not.have.ownProperty('task');
-
-    });
-
-    it('should allow body keys with permit()', () => {
-
-      let param = new Nodal.StrongParam({
-        title: 'Some Title',
-        name: 'Some Name',
-        task: 'Some Task',
-        body: new Nodal.StrongParam({
-          name: 'Tom Saywer',
-          task: 'Paint Fence'
-        })
-      }).permit('name')
-
-      console.log(param)
-
-      expect(param).to.have.ownProperty('name');
-
-    });
-
-    it('should filter body data multiple keys with permit()', () => {
-
-      let param = new Nodal.StrongParam({
-        title: 'Some Title',
-        name: 'Some Name',
-        task: 'Some Task',
-        body: new Nodal.StrongParam({
-          name: 'Tom Saywer',
-          task: 'Paint Fence'
-        })
-      }).except('name', 'task')
-
-
-      expect(param).to.not.have.ownProperty('task');
-      expect(param.body).to.not.have.ownProperty('name');
-      expect(param.body).to.not.have.ownProperty('task');
-
-    });
-
-
 
   });
 

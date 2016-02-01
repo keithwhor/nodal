@@ -5,7 +5,7 @@ module.exports = (function() {
   const utilities = require('./utilities.js');
 
   /**
-  * StrongParam are what the router uses to actually instantiate Controllers
+  * Used to filter parameters from HTTP query string or body data
   * @class
   */
   class StrongParam {
@@ -15,71 +15,51 @@ module.exports = (function() {
     */
     constructor(props) {
 
-      if (props instanceof StrongParam) {
-        return props;
-      }
-
-      Object.keys(props).forEach((key) => {
-        Object.defineProperty(this, key, {
-          enumerable: true,
-          value: utilities.isObject(props[key])  ? new StrongParam(props[key]) : props[key],
-          writable: true
-        });
-      });
+      Object.keys(props).forEach(key => this[key] = props[key]);
 
     }
 
-    except() {
-      let list = Array.prototype.slice.call(arguments);
+    __filter__(fromObject, args, except) {
 
-      let filteredObject = {};
-      Object.keys(this).forEach( key => {
-        if ( list.indexOf(key) === -1 ) {
-          if (utilities.isObject(this[key])) {
-            filteredObject[key] = this[key].except.apply(this[key], arguments)
-          } else {
-            filteredObject[key] = this[key];
-          }
+      let keys = args
+        .filter(arg => typeof arg === 'string')
+        .reduce((o, key) => {
+          o[key] = true;
+          return o;
+        }, {});
+
+      let objKeys = args
+        .filter(arg => typeof arg === 'object' && arg !== null)
+        .reduce((o, obj) => {
+          Object.keys(obj).forEach(key => o[key] = obj[key]);
+          return o;
+        }, {});
+
+      return Object.keys(fromObject).reduce((o, key) => {
+
+        if (objKeys[key]) {
+          o[key] = this.__filter__(fromObject[key], objKeys[key], except);
+        } else if (!!except ^ !!keys[key]) {
+          o[key] = fromObject[key];
         }
 
-      });
+        return o;
 
-      return new StrongParam(filteredObject);
+      }, {});
 
     }
 
     permit() {
-      let list = Array.prototype.slice.call(arguments);
 
-      let filteredObject = {};
-      Object.keys(this).forEach( key => {
-        if ( list.indexOf(key) !== -1 ) {
-          if (utilities.isObject(this[key])) {
-            filteredObject[key] = this[key].permit.apply(this[key], arguments)
-          } else {
-            filteredObject[key] = this[key];
-          }
-        }
-
-      });
-
-      return new StrongParam(filteredObject);
+      return new StrongParam(this.__filter__(this, [].slice.call(arguments), false));
 
     }
 
-    toObject() {
-      let flattenedObject = {};
-      Object.keys(this).forEach( key => {
-          if (this[key] instanceof StrongParam) {
-            flattenedObject[key] = this[key].toObject()
-          } else {
-            flattenedObject[key] = this[key];
-          }
-      });
-      return flattenedObject;
+    except() {
+
+      return new StrongParam(this.__filter__(this, [].slice.call(arguments), true));
+
     }
-
-
 
   };
 
