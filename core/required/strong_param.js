@@ -21,12 +21,15 @@ module.exports = (function() {
 
     __filter__(fromObject, args, except) {
 
-      let keys = args
+      let keyMatch = args
         .filter(arg => typeof arg === 'string')
-        .reduce((o, key) => {
-          o[key] = true;
-          return o;
-        }, {});
+        .map(key => {
+          return key
+            .replace(/(\||\.|\{|\}|\[|\]|\+|\?|\$|\^)/g, '\\$1')
+            .replace(/\((.*?)\)/, (m, sub) => `(${sub.split(',').join('|')})`)
+            .replace(/\*/g, '(.*?)');
+        });
+      keyMatch = new RegExp(`^${keyMatch.join('|')}\$`);
 
       let objKeys = args
         .filter(arg => typeof arg === 'object' && arg !== null)
@@ -39,7 +42,7 @@ module.exports = (function() {
 
         if (objKeys[key]) {
           o[key] = this.__filter__(fromObject[key], objKeys[key], except);
-        } else if (!!except ^ !!keys[key]) {
+        } else if (!!except ^ !!key.match(keyMatch)) {
           o[key] = fromObject[key];
         }
 

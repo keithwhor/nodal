@@ -96,6 +96,46 @@ module.exports = (function(Nodal) {
 
     });
 
+    it('should permit with regex *', () => {
+
+      let param = new Nodal.StrongParam({
+        name__gte: 7,
+        name__in: [1, 2, 3],
+        name__like: 'hello',
+        age: 7,
+        hello: 'world'
+      });
+
+      let pname = param.permit('name*');
+
+      expect(pname).to.have.ownProperty('name__gte');
+      expect(pname).to.have.ownProperty('name__in');
+      expect(pname).to.have.ownProperty('name__like');
+      expect(pname).to.not.have.ownProperty('age');
+      expect(pname).to.not.have.ownProperty('hello');
+
+    });
+
+    it('should permit with regex (a,b,c)', () => {
+
+      let param = new Nodal.StrongParam({
+        name__gte: 7,
+        name__in: [1, 2, 3],
+        name__like: 'hello',
+        age: 7,
+        hello: 'world'
+      });
+
+      let pname = param.permit('name__(gte,in)', 'hello');
+
+      expect(pname).to.have.ownProperty('name__gte');
+      expect(pname).to.have.ownProperty('name__in');
+      expect(pname).to.not.have.ownProperty('name__like');
+      expect(pname).to.not.have.ownProperty('age');
+      expect(pname).to.have.ownProperty('hello');
+
+    });
+
   });
 
 });
