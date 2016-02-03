@@ -27,6 +27,16 @@ module.exports = (function() {
           message: 'Name',
         },
         {
+          name: 'overwrite',
+          type: 'confirm',
+          default: false,
+          message: 'Directory exists, overwrite?',
+          when: (answers) => {
+            let dirname = answers.name.replace(/[^A-Za-z0-9-_]/gi, '-').toLowerCase();
+            return fs.existsSync('./' + dirname);
+          }
+        },
+        {
           name: 'author',
           type: 'input',
           default: 'mysterious author',
@@ -77,10 +87,14 @@ module.exports = (function() {
         console.log('Creating directory "' + dirname + '"...');
         console.log('');
 
+        // If the target directory exists and we are not overwriting it, error
         if (fs.existsSync('./' + dirname)) {
-          callback(new Error('Directory "' + dirname + '" already exists, try a different project name'));
+            if ( !promptResult.overwrite ) {
+              callback(new Error('Directory "' + dirname + '" already exists, try a different project name'));
+            }
+        } else {
+          fs.mkdirSync('./' + dirname);
         }
-        fs.mkdirSync('./' + dirname);
 
         console.log('Copying Nodal directory structure and files...');
         console.log('');
