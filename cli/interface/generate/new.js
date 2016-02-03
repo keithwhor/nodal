@@ -13,12 +13,13 @@ module.exports = (function() {
       const rootPath = path.resolve(__dirname);
       const version = require('../../../package.json').version;
 
+      let overrideOutputPath = args.length ? args[0][0] : undefined;
+
       console.log('');
       console.log(`Welcome to ${colors.bold.green('Nodal! v' + version)}`);
       console.log('');
       console.log('Let\'s get some information about your project...');
       console.log('');
-
       var questions = [
         {
           name: 'name',
@@ -30,10 +31,13 @@ module.exports = (function() {
           name: 'overwrite',
           type: 'confirm',
           default: false,
-          message: 'Directory exists, overwrite?',
+          message: (answers) => {
+            let dirname = overrideOutputPath || `./${answers.name.replace(/[^A-Za-z0-9-_]/gi, '-').toLowerCase()}`;
+            return `Output directory '${dirname}' exists. Overwrite?`;
+          },
           when: (answers) => {
-            let dirname = answers.name.replace(/[^A-Za-z0-9-_]/gi, '-').toLowerCase();
-            return fs.existsSync('./' + dirname);
+            let dirname = overrideOutputPath || answers.name.replace(/[^A-Za-z0-9-_]/gi, '-').toLowerCase();
+            return fs.existsSync(`./${dirname}`);
           }
         },
         {
@@ -81,7 +85,8 @@ module.exports = (function() {
 
         promptResult.version = require('../../../package.json').version;
 
-        let dirname = promptResult.name.replace(/[^A-Za-z0-9-_]/gi, '-').toLowerCase();
+        let appdirname = promptResult.name.replace(/[^A-Za-z0-9-_]/gi, '-').toLowerCase();
+        let dirname = overrideOutputPath || appdirname;
 
         console.log('');
         console.log('Creating directory "' + dirname + '"...');
