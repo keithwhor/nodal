@@ -184,7 +184,7 @@ module.exports = (function() {
           subQuery,
           ' AS ',
           this.escapeField(table),
-          this.generateJoinClause(table, joinArray),
+          this.generateJoinClause(table, joinArray, paramOffset),
           this.generateWhereClause(table, multiFilter, paramOffset),
           this.generateGroupByClause(table, groupByArray),
           this.generateOrderByClause(table, orderByArray, groupByArray),
@@ -395,7 +395,19 @@ module.exports = (function() {
         return '';
       }
 
-      return (' WHERE (' + multiFilter.map(whereObj => {
+      return ` WHERE ${this.generateOrClause(table, multiFilter, paramOffset)}`;
+
+    }
+
+    generateOrClause(table, multiFilter, paramOffset) {
+
+      paramOffset = Math.max(0, parseInt(paramOffset) || 0);
+
+      if (!multiFilter || !multiFilter.length) {
+        return '';
+      }
+
+      return ('(' + multiFilter.map(whereObj => {
         return this.generateAndClause(table, whereObj);
       }).join(') OR (') + ')').replace(/__VAR__/g, () => `\$${1 + (paramOffset++)}`);
 
@@ -492,12 +504,16 @@ module.exports = (function() {
 
     }
 
-    generateJoinClause(table, joinArray) {
+    generateJoinClause(table, joinArray, paramOffset) {
+
+      paramOffset = Math.max(0, parseInt(paramOffset) || 0);
 
       return (!joinArray || !joinArray.length) ? '' :
-        joinArray.map(joinData => {
+        joinArray.map(joinInfo => {
 
-          return joinData.map(join => {
+          let joinData = joinInfo.joins;
+
+          return joinData.map((join, i) => {
 
             let joinColumns = join.joinColumn instanceof Array ? join.joinColumn : [join.joinColumn]
             let prevColumns = join.prevColumn instanceof Array ? join.prevColumn : [join.prevColumn]
@@ -513,11 +529,20 @@ module.exports = (function() {
               });
             });
 
+            let filterClause = '';
+
+            if (i === joinData.length - 1) {
+              filterClause = this.generateOrClause(join.joinAlias, joinInfo.multiFilter, paramOffset);
+              joinInfo.multiFilter.forEach(arr => paramOffset += arr.length);
+            }
+
             return [
               ` LEFT JOIN ${this.escapeField(join.joinTable)}`,
-              `AS ${this.escapeField(join.joinAlias)}`,
-              `ON (${statements.join(' OR ')})`
-            ].join(' ');
+              ` AS ${this.escapeField(join.joinAlias)}`,
+              ` ON (${statements.join(' OR ')}`,
+              filterClause ? ` AND ${filterClause}` : '',
+              ')'
+            ].join('');
 
           }).join('')
 

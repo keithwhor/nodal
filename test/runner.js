@@ -1,7 +1,16 @@
-"use strict";
+'use strict';
 
 let child_process = require('child_process');
 let os = require('os');
+
+let args = [];
+
+try {
+  args = JSON.parse(process.env.npm_config_argv);
+  args = args.original.slice(1);
+} catch (e) {
+  args = [];
+}
 
 describe('Test Suite', function() {
 
@@ -42,7 +51,9 @@ describe('Test Suite', function() {
         });
       }
     });
-  }else{
+
+  } else {
+
     before(function() {
       if (Nodal.env.name === 'development') {
         // child_process.execSync('createuser postgres -s -q');
@@ -56,24 +67,33 @@ describe('Test Suite', function() {
         child_process.execSync('psql -c \'drop database if exists nodal_test;\' -U postgres');
       }
     });
+
   }
 
-  require('./tests/nodal.js')(Nodal);
+  if (args.length && args[0].indexOf('--') === 0) {
 
-  require('./tests/database.js')(Nodal);
+    require(`./tests/${args[0].substr(2)}.js`)(Nodal);
 
-  require('./tests/api.js')(Nodal);
+  } else {
 
-  require('./tests/controller.js')(Nodal);
+    require('./tests/nodal.js')(Nodal);
 
-  require('./tests/model.js')(Nodal);
+    require('./tests/database.js')(Nodal);
 
-  require('./tests/composer.js')(Nodal);
+    require('./tests/api.js')(Nodal);
 
-  require('./tests/relationship_graph.js')(Nodal);
+    require('./tests/controller.js')(Nodal);
 
-  require('./tests/strong_param.js')(Nodal);
+    require('./tests/model.js')(Nodal);
 
-  require('./tests/utilities.js')(Nodal);
+    require('./tests/composer.js')(Nodal);
+
+    require('./tests/relationship_graph.js')(Nodal);
+
+    require('./tests/strong_param.js')(Nodal);
+
+    require('./tests/utilities.js')(Nodal);
+
+  }
 
 });

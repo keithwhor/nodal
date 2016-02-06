@@ -641,6 +641,59 @@ module.exports = (function(Nodal) {
 
           expect(err).to.equal(null);
           expect(parents.length).to.equal(2);
+          expect(parents[0].joined('children').length).to.equal(10);
+          expect(parents[1].joined('children').length).to.equal(10);
+          done();
+
+        });
+
+    });
+
+    it('Should find all parents with children id <= 15, by joining with restrictions', (done) => {
+
+      Parent.query()
+        .join('children', {id__lte: 15})
+        .where({children__id__lte: 15})
+        .end((err, parents) => {
+
+          expect(err).to.equal(null);
+          expect(parents.length).to.equal(2);
+          expect(parents[0].joined('children').length).to.equal(10);
+          expect(parents[1].joined('children').length).to.equal(5);
+          done();
+
+        });
+
+    });
+
+    it('Should find all parents with children id <= 15, by joining with more restrictions', (done) => {
+
+      Parent.query()
+        .join('children', {id__lte: 15, id__gte: 11})
+        .where({children__id__lte: 15})
+        .end((err, parents) => {
+
+          expect(err).to.equal(null);
+          expect(parents.length).to.equal(2);
+          expect(parents[0].joined('children').length).to.equal(0);
+          expect(parents[1].joined('children').length).to.equal(5);
+          done();
+
+        });
+
+    });
+
+    it('Should find all parents with children id <= 15, by joining with parent restrictions', (done) => {
+
+      Parent.query()
+        .join('children', {parent__id: 1})
+        .where({children__id__lte: 15})
+        .end((err, parents) => {
+
+          expect(err).to.equal(null);
+          expect(parents.length).to.equal(2);
+          expect(parents[0].joined('children').length).to.equal(10);
+          expect(parents[1].joined('children').length).to.equal(0);
           done();
 
         });
