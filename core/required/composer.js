@@ -653,14 +653,14 @@ module.exports = (function() {
     }
 
     /**
-    * Join in a relationship. Must have Model.joinsTo() set from a child, or set to a parent
+    * Join in a relationship.
     * @param {string} joinName The name of the joined relationship
     */
     join(joinName) {
 
       let relationship = this.Model.relationships().findExplicit(joinName);
       if (!relationship) {
-        throw new Error(`Model ${this.Model.name} does not have relationship ${joinName}`);
+        throw new Error(`Model ${this.Model.name} does not have relationship "${joinName}".`);
       }
 
       let composer = this;

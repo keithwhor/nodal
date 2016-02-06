@@ -321,6 +321,15 @@ module.exports = (function() {
     }
 
     /**
+    * Specifies joinsTo for the child model
+    */
+    static joinedBy(Model, options) {
+
+      return Model.joinsTo(this, options);
+
+    }
+
+    /**
     * Create a validator
     * @param {string} field The field you'd like to validate
     * @param {string} message The error message shown if a validation fails.
