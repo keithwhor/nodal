@@ -222,7 +222,7 @@ module.exports = (function() {
     */
     __reduceToQueryInformation__(composerArray) {
 
-      let joins = [];
+      let joins = {};
 
       let commands = composerArray.reduce((p, c) => {
 
@@ -230,11 +230,22 @@ module.exports = (function() {
 
         if (composerCommand.type === 'join') {
 
-          joins.push(
-            Object.keys(composerCommand.data).reduce((p, c) => {
-              return (p[c] = composerCommand.data[c], p);
-            }, {})
-          );
+          let curJoinName = composerCommand.data.name;
+          let curJoinData = composerCommand.data.joinData;
+          joins[curJoinName] = curJoinData;
+          Object.keys(joins)
+            .filter(joinName => joinName !== curJoinName)
+            .forEach(joinName => {
+
+              if (curJoinName.indexOf(joinName) === 0) {
+                joins[curJoinName] = joins[joinName].concat(curJoinData.slice(joins[joinName].length));
+                delete joins[joinName];
+              } else if (joinName.indexOf(curJoinName) === 0) {
+                joins[joinName][curJoinData.length - 1] = curJoinData[curJoinData.length - 1];
+                delete joins[curJoinName];
+              }
+
+            });
 
           return p;
 
@@ -410,42 +421,22 @@ module.exports = (function() {
 
       let columns = includeColumns || this.Model.columnNames();
 
-      queryInfo.joins.forEach(data => {
-        let join = data.joinData;
-        columns = columns.concat(this.__joinedColumns__(join[join.length - 1].joinAlias));
-      });
-
-      // Make sure we don't join in parts of the same dependency tree repeatedly
       let joins = queryInfo.joins;
 
-      joins.sort((joinA, joinB) => joinA.joinData.length < joinB.joinData.length ? 1 : -1);
-
-      let joinAdded = {};
-      joins.forEach(data => {
-        let join = data.joinData;
-        for (let i = 0; i < join.length; i++) {
-          if (!joinAdded[join[i].joinAlias]) {
-            joinAdded[join[i].joinAlias] = data;
-            return;
-          }
-        }
+      Object.keys(joins).forEach(joinName => {
+        joins[joinName].forEach(j => {
+          columns = columns.concat(this.__joinedColumns__(j.joinAlias));
+        });
       });
 
-      joins = Object.keys(joinAdded).map(k => joinAdded[k]);
+      joins = Object.keys(joins).map(k => joins[k]);
       let params = query.params.slice();
 
-      joins = joins.map(join => {
+      joins.forEach(join => {
 
-        let table = join.joinData[join.joinData.length - 1].joinAlias;
-
-        let multiFilter = this.db.adapter.createMultiFilter(table, join.comparisons);
-
-        params = params.concat(this.db.adapter.getParamsFromMultiFilter(multiFilter));
-
-        return {
-          multiFilter: multiFilter,
-          joins: join.joinData
-        };
+        join.forEach(j => {
+          params = params.concat(this.db.adapter.getParamsFromMultiFilter(j.multiFilter));
+        });
 
       });
 
@@ -699,24 +690,20 @@ module.exports = (function() {
 
       let joinData = relationship.joins();
       joinData[joinData.length - 1].joinAlias = joinName;
+      joinData[joinData.length - 1].multiFilter = this.db.adapter.createMultiFilter(
+        joinName,
+        comparisonsArray
+          .map(comparisons => this.__parseComparisons__(comparisons, relationship.getModel()))
+          .filter(f => f.length)
+      );
 
       this._command = {
         type: 'join',
         data: {
-          comparisons: comparisonsArray
-            .map(comparisons => this.__parseComparisons__(comparisons, relationship.getModel()))
-            .filter(f => f.length),
+          name: joinName,
           joinData: joinData
         }
       };
-
-      let joinNames = joinName.split('__');
-      joinNames.pop();
-
-      // Join in everything in the chain
-      if (joinNames.length) {
-        return new Composer(this.Model, this).join(joinNames.join('__'));
-      }
 
       return new Composer(this.Model, this);
 

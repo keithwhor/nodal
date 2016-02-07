@@ -11,8 +11,6 @@ module.exports = (() => {
 
       let parsed = this.constructor.parse(str);
 
-      console.log('parsed', parsed);
-
       this.identifier = Object.keys(parsed.structure)[0];
       this.name = inflect.singularize(this.identifier);
       this.multiple = this.identifier !== this.name;
@@ -25,8 +23,6 @@ module.exports = (() => {
     }
 
     query(callback) {
-
-      console.log('JOINS', this.joins);
 
       let query = this.Model.query().where(this.joins[this.identifier]);
 

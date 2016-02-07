@@ -509,9 +509,7 @@ module.exports = (function() {
       paramOffset = Math.max(0, parseInt(paramOffset) || 0);
 
       return (!joinArray || !joinArray.length) ? '' :
-        joinArray.map(joinInfo => {
-
-          let joinData = joinInfo.joins;
+        joinArray.map(joinData => {
 
           return joinData.map((join, i) => {
 
@@ -529,12 +527,9 @@ module.exports = (function() {
               });
             });
 
-            let filterClause = '';
 
-            if (i === joinData.length - 1) {
-              filterClause = this.generateOrClause(join.joinAlias, joinInfo.multiFilter, paramOffset);
-              joinInfo.multiFilter.forEach(arr => paramOffset += arr.length);
-            }
+            let filterClause = this.generateOrClause(join.joinAlias, join.multiFilter, paramOffset);
+            join.multiFilter && join.multiFilter.forEach(arr => paramOffset += arr.length);
 
             return [
               ` LEFT JOIN ${this.escapeField(join.joinTable)}`,

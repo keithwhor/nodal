@@ -245,7 +245,21 @@ module.exports = Nodal => {
 
     it('Should query users properly with where, join threads with where, add posts', (done) => {
 
-      new GraphQuery('users(id: 1) { id, username, threads(id: 2) { id, posts { body } }, posts { body } }', User).query((err, models, format) => {
+      new GraphQuery(`
+        users(id: 1) {
+          id,
+          username,
+          threads(id: 2) {
+            id,
+            posts {
+              body
+            }
+          },
+          posts {
+            body
+          }
+        }
+      `, User).query((err, models, format) => {
 
         let users = models.toObject(format);
 
