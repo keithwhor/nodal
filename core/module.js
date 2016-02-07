@@ -18,6 +18,7 @@ module.exports = (function() {
     Daemon: null,
     Database: null,
     DummyRouter: null,
+    GraphQuery: null,
     Initializer: null,
     ItemArray: null,
     Middleware: null,
@@ -101,6 +102,12 @@ module.exports = (function() {
     DummyRouter: {
       get: function() {
         return Nodal.DummyRouter || (Nodal.DummyRouter = require('./required/dummy_router.js'));
+      },
+      enumerable: true
+    },
+    GraphQuery: {
+      get: function() {
+        return Nodal.GraphQuery || (Nodal.GraphQuery = require('./required/graph_query.js'));
       },
       enumerable: true
     },

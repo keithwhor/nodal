@@ -94,6 +94,8 @@ describe('Test Suite', function() {
 
     require('./tests/utilities.js')(Nodal);
 
+    require('./tests/graph_query.js')(Nodal);
+
   }
 
 });
