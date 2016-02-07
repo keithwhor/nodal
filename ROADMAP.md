@@ -12,10 +12,10 @@
 * :x: Worker support broken
 
 #### Features
-* :x: GraphQL Support
 * :x: `.having()` support for `Composer#groupBy`
 * :hourglass: HTTPS support (including CLI certificate verification/generation)
 * :hourglass: Docker integration
+* :hourglass: GraphQL-like Query Support
 * :white_check_mark: Join in based on properties of joined table
 * :white_check_mark: CSP Headers
 * :white_check_mark: `.hides()` Sensitive fields support (Model output)
