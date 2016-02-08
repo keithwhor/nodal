@@ -19,11 +19,13 @@ module.exports = (function() {
       console.log('Let\'s get some information about your project...');
       console.log('');
 
+      debugger;
+
       var questions = [
         {
           name: 'name',
           type: 'input',
-          default: args[0] || 'my-nodal-project',
+          default: args[0][0] || 'my-nodal-project',
           message: 'Name',
         },
         {
