@@ -10,6 +10,7 @@
 
 #### Bugs
 * :x: Worker support broken
+* :x: Test support (endpoint hits) broken
 
 #### Features
 * :x: `.having()` support for `Composer#groupBy`

@@ -14,6 +14,7 @@ module.exports = (function() {
 
       let filepath = this.params.matches[0];
       let ext = filepath.substr(filepath.lastIndexOf('.') + 1);
+      filepath = filepath.replace(/(\.){1,2}\//gi, '');
 
       fs.readFile(`./static/${filepath}`, (err, buffer) => {
 
