@@ -522,7 +522,7 @@ module.exports = (function() {
               prevColumns.forEach(prevColumn => {
                 statements.push(
                   `${this.escapeField(join.joinAlias)}.${this.escapeField(joinColumn)} = ` +
-                  `${this.escapeField(join.prevTable || table)}.${this.escapeField(prevColumn)}`
+                  `${this.escapeField(join.prevAlias || table)}.${this.escapeField(prevColumn)}`
                 );
               });
             });

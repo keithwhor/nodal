@@ -554,7 +554,13 @@ module.exports = (function() {
           !comparators[comparator] && column.push(comparator);
           let field = column.pop();
           let relName = column.join('__');
-          relName && (cModel = cModel.relationship(relName).getModel());
+          if (relName) {
+            let rel = cModel.relationship(relName);
+            if (!rel) {
+              return;
+            }
+            cModel = rel.getModel();
+          }
 
           if (cModel.isHidden(field)) {
             delete comparisons[comparison];
@@ -603,10 +609,15 @@ module.exports = (function() {
         comparisonsArray = [].slice.call(arguments, 1);
       }
 
+      let relationship = this.Model.relationship(joinName);
+      if (!relationship) {
+        throw new Error(`Model ${this.Model.name} does not have relationship "${joinName}".`);
+      }
+
       return this.join(
         joinName,
         this.__filterHidden__(
-          this.Model.relationship(joinName).getModel(),
+          relationship.getModel(),
           comparisonsArray
         )
       );
@@ -764,6 +775,7 @@ module.exports = (function() {
 
       let joinData = relationship.joins();
       joinData[joinData.length - 1].joinAlias = joinName;
+      joinData[joinData.length - 1].prevAlias = joinName.split('__').slice(0, -1).join('__');
       joinData[joinData.length - 1].multiFilter = this.db.adapter.createMultiFilter(
         joinName,
         comparisonsArray

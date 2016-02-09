@@ -7,18 +7,39 @@ module.exports = (() => {
 
   class GraphQuery {
 
-    constructor(str, Model) {
+    constructor(str, maxDepth, Model) {
 
-      let parsed = this.constructor.parse(str);
+      let parsed = this.constructor.parse(str, maxDepth);
 
       this.identifier = Object.keys(parsed.structure)[0];
       this.name = inflect.singularize(this.identifier);
       this.multiple = this.identifier !== this.name;
 
-      this.Model = Model || require(`${process.cwd()}/app/models/${this.name}.js`);
+      try {
+        this.Model = Model || require(`${process.cwd()}/app/models/${this.name}.js`);
+      } catch(e) {
+        throw new Error(`Model ${this.name} does not exist.`);
+      }
 
       this.structure = parsed.structure;
       this.joins = parsed.joins;
+
+    }
+
+    static query(str, maxDepth, callback) {
+
+      let graphQuery;
+
+      try {
+        graphQuery = new GraphQuery(str, maxDepth);
+      } catch (err) {
+        callback(err);
+        return false;
+      }
+
+      graphQuery.query(callback);
+
+      return true;
 
     }
 
@@ -44,6 +65,8 @@ module.exports = (() => {
 
       });
 
+      return this;
+
     }
 
     /*
@@ -60,9 +83,13 @@ module.exports = (() => {
 
     */
 
-    static parse(str, parents, joins) {
+    static parse(str, max, depth, parents, joins) {
 
       let structure = {};
+
+      depth = Math.max(depth | 0, 0);
+      max = Math.max(max | 0, 0);
+
       parents = parents || [];
       joins = joins || {};
 
@@ -111,16 +138,20 @@ module.exports = (() => {
           if (count) {
             throw new Error('Invalid Graph Query (SubQuery)');
           }
-          let sub = this.parse(str.substr(0, i + 1), parents.concat(name), joins);
-          structure[name].push(sub.structure);
-          i = str.indexOf(',') > -1 ? str.indexOf(',') + 1 : i;
+
+          if (max && depth < max - 1) {
+            let sub = this.parse(str.substr(0, i + 1), max, depth + 1, parents.concat(name), joins);
+            structure[name].push(sub.structure);
+          }
+
+          i = str.indexOf(',', i) > -1 ? str.indexOf(',', i) + 1 : i;
 
         } else {
 
           i = comma === -1 ? str.length : comma;
 
           let column = str.substr(0, i).replace(/\s+/g, '');
-          structure[name].push(column);
+          column && structure[name].push(column);
 
         }
 

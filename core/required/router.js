@@ -192,6 +192,8 @@ module.exports = (() => {
 
         const DispatchController = routeData.controller;
 
+        console.log('DISPATCH', DispatchController);
+
         let controller = new DispatchController(
           routeData.path,
           routeData.method,

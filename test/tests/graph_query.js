@@ -174,7 +174,7 @@ module.exports = Nodal => {
 
     it('Should query users properly', (done) => {
 
-      new GraphQuery('users { id, username }', User).query((err, models, format) => {
+      new GraphQuery('users { id, username }', 0, User).query((err, models, format) => {
 
         let users = models.toObject(format);
 
@@ -189,7 +189,7 @@ module.exports = Nodal => {
 
     it('Should query users properly, join threads', (done) => {
 
-      new GraphQuery('users { id, username, threads { id } }', User).query((err, models, format) => {
+      new GraphQuery('users { id, username, threads { id } }', 0, User).query((err, models, format) => {
 
         let users = models.toObject(format);
 
@@ -206,7 +206,7 @@ module.exports = Nodal => {
 
     it('Should query users properly with where, join threads', (done) => {
 
-      new GraphQuery('users(id: 1) { id, username, threads { id } }', User).query((err, models, format) => {
+      new GraphQuery('users(id: 1) { id, username, threads { id } }', 0, User).query((err, models, format) => {
 
         let users = models.toObject(format);
 
@@ -225,7 +225,7 @@ module.exports = Nodal => {
 
     it('Should query users properly with where, join threads with where', (done) => {
 
-      new GraphQuery('users(id: 1) { id, username, threads(id: 2) { id } }', User).query((err, models, format) => {
+      new GraphQuery('users(id: 1) { id, username, threads(id: 2) { id } }', 0, User).query((err, models, format) => {
 
         let users = models.toObject(format);
 
@@ -259,7 +259,7 @@ module.exports = Nodal => {
             body
           }
         }
-      `, User).query((err, models, format) => {
+      `, 0, User).query((err, models, format) => {
 
         let users = models.toObject(format);
 
