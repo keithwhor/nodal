@@ -507,10 +507,10 @@ module.exports = (function(Nodal) {
 
     });
 
-    it('Should do a "like" where query properly', (done) => {
+    it('Should do a "contains" where query properly', (done) => {
 
       Parent.query()
-        .where({name__like: 'am'}) // James, Samantha, Samuel
+        .where({name__contains: 'am'}) // James, Samantha, Samuel
         .end((err, parents) => {
 
           expect(err).to.equal(null);
@@ -521,10 +521,10 @@ module.exports = (function(Nodal) {
 
     });
 
-    it('Should do an "ilike" where query properly', (done) => {
+    it('Should do an "icontains" where query properly', (done) => {
 
       Parent.query()
-        .where({name__ilike: 'z'}) // Suzy, Zoolander
+        .where({name__icontains: 'z'}) // Suzy, Zoolander
         .end((err, parents) => {
 
           expect(err).to.equal(null);
