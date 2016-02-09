@@ -819,88 +819,38 @@ module.exports = (function() {
     /**
     * Creates a plain object from the Model, with properties matching an optional interface
     * @param {Array} arrInterface Interface to use for object creation
-    * @param {Object} opts Options like whether to exclude the fields. {exclude: true}
     */
-    toObject(arrInterface, opts, list) {
-
-      list = list ? list.slice() : [];
-
-      if (list.indexOf(this) > -1) {
-        return;
-      }
-
-      list.push(this);
+    toObject(arrInterface) {
 
       let obj = {};
-      opts = opts || {};
 
-      if (opts.exclude) {
+      arrInterface = arrInterface ||
+        this.fieldList()
+        .concat(this._calculationsList)
+        .filter(key => !this._hides[key]);
 
-        let excludeObjects = [];
-        let excludeLookup = arrInterface.reduce((o, key) => {
-          if (typeof key === 'object' && key !== null) {
-            excludeObjects.push(key);
-            key = Object.keys(key)[0];
-          }
-          o[key] = true;
-          return o;
-        }, {});
+      arrInterface.forEach(key => {
 
-        arrInterface = this.fieldList()
-          .concat(this._calculationsList)
-          .concat(this._joinsList)
-          .filter(key => !excludeLookup[key])
-          .concat(excludeObjects);
+        if (this._hides[key]) {
+          return;
+        }
 
-      }
+        let joinObject;
 
-      if (arrInterface) {
-
-        arrInterface.forEach(key => {
-
-          let joinObject;
-          if (this._hides[key]) {
-            return;
-          }
-
-          if (typeof key === 'object' && key !== null) {
-            let subInterface = key;
-            key = Object.keys(key)[0];
-            joinObject = this._joinsCache[key];
-            joinObject && (obj[key] = joinObject.toObject(subInterface[key], opts, list));
-          } else if (this._data[key] !== undefined) {
-            obj[key] = this._data[key];
-          } else if (this._calculations[key] !== undefined) {
-            obj[key] = this.calculate(key);
-          } else if (joinObject = this._joinsCache[key]) {
-            obj[key] = joinObject.toObject();
-          }
-
-        });
-
-      } else {
-
-        this.fieldList().forEach(key => {
-          if (this._hides[key]) {
-            return;
-          }
+        if (typeof key === 'object' && key !== null) {
+          let subInterface = key;
+          key = Object.keys(key)[0];
+          joinObject = this._joinsCache[key];
+          joinObject && (obj[key] = joinObject.toObject(subInterface[key]));
+        } else if (this._data[key] !== undefined) {
           obj[key] = this._data[key];
-        });
-        this._calculationsList.forEach(key => {
-          if (this._hides[key]) {
-            return;
-          }
+        } else if (this._calculations[key] !== undefined) {
           obj[key] = this.calculate(key);
-        });
-        this._joinsList.forEach(key => {
-          if (this._hides[key]) {
-            return;
-          }
-          let cacheValue = this._joinsCache[key];
-          cacheValue && (obj[key] = cacheValue.toObject(null, opts, list));
-        });
+        } else if (joinObject = this._joinsCache[key]) {
+          obj[key] = joinObject.toObject();
+        }
 
-      }
+      });
 
       return obj;
 

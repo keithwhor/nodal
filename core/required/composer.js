@@ -126,7 +126,7 @@ module.exports = (function() {
           let parentModel = parentName ? joinsObject[parentName].cachedModel : model;
 
           if (join.multiple) {
-            parentModel.joined(joinName) || parentModel.setJoined(joinName, new ModelArray(join.Model));
+            parentModel && (parentModel.joined(joinName) || parentModel.setJoined(joinName, new ModelArray(join.Model)));
           }
 
           if (!id) {

@@ -171,16 +171,6 @@ module.exports = (function(Nodal) {
       expect(obj).to.not.have.ownProperty('updated_at');
       expect(obj).to.not.have.ownProperty('secret'); // hidden
 
-      obj = parent.toObject(['id', 'name'], {exclude: true});
-
-      expect(obj).to.not.have.ownProperty('id');
-      expect(obj).to.not.have.ownProperty('name');
-      expect(obj).to.have.ownProperty('age');
-      expect(obj).to.have.ownProperty('content');
-      expect(obj).to.have.ownProperty('created_at');
-      expect(obj).to.have.ownProperty('updated_at');
-      expect(obj).to.not.have.ownProperty('secret'); // hidden
-
     });
 
     it('should toObject with interface, with joined', function() {
@@ -198,6 +188,10 @@ module.exports = (function(Nodal) {
       expect(obj).to.have.ownProperty('content');
       expect(obj).to.have.ownProperty('created_at');
       expect(obj).to.have.ownProperty('updated_at');
+      expect(obj).to.not.have.ownProperty('house');
+
+      obj = parent.toObject(['house']);
+
       expect(obj).to.have.ownProperty('house');
       expect(obj.house).to.have.ownProperty('id');
       expect(obj.house).to.have.ownProperty('material');
@@ -248,48 +242,6 @@ module.exports = (function(Nodal) {
       expect(obj.house).to.not.have.ownProperty('created_at');
       expect(obj.house).to.not.have.ownProperty('updated_at');
 
-      obj = parent.toObject(['id', 'name'], {exclude: true});
-
-      expect(obj).to.not.have.ownProperty('id');
-      expect(obj).to.not.have.ownProperty('name');
-      expect(obj).to.have.ownProperty('age');
-      expect(obj).to.have.ownProperty('content');
-      expect(obj).to.have.ownProperty('created_at');
-      expect(obj).to.have.ownProperty('updated_at');
-      expect(obj).to.have.ownProperty('house');
-      expect(obj.house).to.have.ownProperty('id');
-      expect(obj.house).to.have.ownProperty('material');
-      expect(obj.house).to.have.ownProperty('color');
-      expect(obj.house).to.have.ownProperty('content');
-      expect(obj.house).to.have.ownProperty('created_at');
-      expect(obj.house).to.have.ownProperty('updated_at');
-
-      obj = parent.toObject(['id', 'name', 'house'], {exclude: true});
-
-      expect(obj).to.not.have.ownProperty('id');
-      expect(obj).to.not.have.ownProperty('name');
-      expect(obj).to.have.ownProperty('age');
-      expect(obj).to.have.ownProperty('content');
-      expect(obj).to.have.ownProperty('created_at');
-      expect(obj).to.have.ownProperty('updated_at');
-      expect(obj).to.not.have.ownProperty('house');
-
-      obj = parent.toObject(['id', 'name', {house: ['id', 'material']}], {exclude: true});
-
-      expect(obj).to.not.have.ownProperty('id');
-      expect(obj).to.not.have.ownProperty('name');
-      expect(obj).to.have.ownProperty('age');
-      expect(obj).to.have.ownProperty('content');
-      expect(obj).to.have.ownProperty('created_at');
-      expect(obj).to.have.ownProperty('updated_at');
-      expect(obj).to.have.ownProperty('house');
-      expect(obj.house).to.not.have.ownProperty('id');
-      expect(obj.house).to.not.have.ownProperty('material');
-      expect(obj.house).to.have.ownProperty('color');
-      expect(obj.house).to.have.ownProperty('content');
-      expect(obj.house).to.have.ownProperty('created_at');
-      expect(obj.house).to.have.ownProperty('updated_at');
-
     });
 
     it('should toObject with interface from ModelArray', function() {
@@ -306,14 +258,6 @@ module.exports = (function(Nodal) {
       expect(obj[0]).to.not.have.ownProperty('created_at');
       expect(obj[0]).to.not.have.ownProperty('updated_at');
 
-      obj = parents.toObject(['id', 'name'], {exclude: true});
-      expect(obj[0]).to.not.have.ownProperty('id');
-      expect(obj[0]).to.not.have.ownProperty('name');
-      expect(obj[0]).to.have.ownProperty('age');
-      expect(obj[0]).to.have.ownProperty('content');
-      expect(obj[0]).to.have.ownProperty('created_at');
-      expect(obj[0]).to.have.ownProperty('updated_at');
-
     });
 
     it('should toObject with multiply-nested ModelArray', function() {
@@ -327,8 +271,12 @@ module.exports = (function(Nodal) {
 
       let obj = users.toObject();
 
+      expect(obj[0].posts).to.not.exist;
+
+      obj = users.toObject(['id', {posts: ['comments']}]);
       expect(obj[0].posts).to.exist;
       expect(obj[0].posts[0].comments).to.exist;
+
 
     });
 

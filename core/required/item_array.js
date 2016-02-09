@@ -50,11 +50,9 @@ module.exports = (function() {
     /**
     * Creates an Array of plain objects from the ModelArray, with properties matching an optional interface
     * @param {Array} arrInterface Interface to use for object creation for each model
-    * @param {Object} opts Options for the object conversion
     */
-    toObject(arrInterface, options) {
+    toObject(arrInterface) {
 
-      options = options || {};
       let keys = [];
 
       if (this.length) {
@@ -62,7 +60,7 @@ module.exports = (function() {
         keys = Object.keys(this[0]);
 
         if (arrInterface && arrInterface.length) {
-          keys = keys.filter(k => (arrInterface.indexOf(k) === -1) === !!options.exclude);
+          keys = keys.filter(k => (arrInterface.indexOf(k) !== -1));
         }
 
       }

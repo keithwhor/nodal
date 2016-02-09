@@ -184,7 +184,7 @@ module.exports = (() => {
                 }
 
                 if (!(c & 1)) {
-                  cur.value = str.substring(1, i);
+                  cur.data.value = str.substring(1, i);
                   return str.substring(i + 1);
                 }
 
