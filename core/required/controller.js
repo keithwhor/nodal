@@ -190,6 +190,7 @@ module.exports = (() => {
         }
 
         this.getHeader('Content-Type') || this.setHeader('Content-Type', 'text/html');
+        this.setHeader('X-Powered-By', 'Nodal');
         this._responder(null, this._status, this._headers, data);
         this.after();
 

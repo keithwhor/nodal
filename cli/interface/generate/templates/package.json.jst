@@ -16,8 +16,8 @@
   },
   "scripts": {
     "test": "NODE_ENV=test mocha ./test/runner.js",
-    "start": "node cluster.js --harmony",
-    "worker": "node worker.js --harmony"
+    "start": "NODE_ENV=development node cluster.js",
+    "worker": "NODE_ENV=development node worker.js"
   },
   "private": true
 }
