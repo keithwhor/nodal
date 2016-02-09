@@ -16,6 +16,7 @@ module.exports = (function(Nodal) {
         {name: 'id', type: 'serial'},
         {name: 'name', type: 'string'},
         {name: 'shirt', type: 'string'},
+        {name: 'hidden', type: 'string'},
         {name: 'pantaloons', type: 'string'},
         {name: 'created_at', type: 'datetime'},
         {name: 'updated_at', type: 'datetime'}
@@ -74,6 +75,7 @@ module.exports = (function(Nodal) {
 
     Parent.setDatabase(db);
     Parent.setSchema(schemaParent);
+    Parent.hides('hidden');
 
     class Friendship extends Nodal.Model {}
 
@@ -129,7 +131,8 @@ module.exports = (function(Nodal) {
           ].map((name, i) => new Parent({
             name: name,
             shirt: ['red', 'green', 'blue'][i % 3],
-            pantaloons: ['jeans', 'shorts'][i % 2]
+            pantaloons: ['jeans', 'shorts'][i % 2],
+            hidden: 'abcdef'.split('')[i % 6]
           }));
 
           parents = Nodal.ModelArray.from(parents);
@@ -582,6 +585,45 @@ module.exports = (function(Nodal) {
 
           expect(err).to.equal(null);
           expect(parents.length).to.equal(2);
+          done();
+
+        });
+
+    });
+
+    it('Should where by "hidden" field', (done) => {
+
+      Parent.query()
+        .where({hidden: 'a'})
+        .end((err, parents) => {
+
+          expect(parents.length).to.be.lessThan(10);
+          done();
+
+        });
+
+    });
+
+    it('Should safeWhere and ignore "hidden" field', (done) => {
+
+      Parent.query()
+        .safeWhere({hidden: 'a'})
+        .end((err, parents) => {
+
+          expect(parents.length).to.equal(10);
+          done();
+
+        });
+
+    });
+
+    it('Should safeWhere and ignore "hidden" field with modifier', (done) => {
+
+      Parent.query()
+        .safeWhere({hidden__not: 'a'})
+        .end((err, parents) => {
+
+          expect(parents.length).to.equal(10);
           done();
 
         });

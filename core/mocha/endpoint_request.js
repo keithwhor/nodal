@@ -38,7 +38,7 @@ module.exports = (() => {
           } else {
 
             try {
-              json = JSON.parse(response._body);
+              json = JSON.parse(body.toString());
             } catch (e) {
               json = null;
             }

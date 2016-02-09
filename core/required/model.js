@@ -403,6 +403,16 @@ module.exports = (function() {
     }
 
     /**
+    * Tells us if a field is hidden (i.e. from API queries)
+    * @param {String} field
+    */
+    static isHidden(field) {
+
+      return this.prototype._hides[field] || false;
+
+    }
+
+    /**
     * Prepare model for use
     * @private
     */

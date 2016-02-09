@@ -9,7 +9,7 @@
 ### 0.7, Target: 02/08/2016
 
 #### Bugs
-* :x: Worker support broken
+* :white_check_mark: Worker support broken
 * :white_check_mark: Test support (endpoint hits) broken
 
 #### Features

@@ -539,6 +539,80 @@ module.exports = (function() {
 
     }
 
+    __filterHidden__(Model, comparisonsArray) {
+
+      let comparators = this.db.adapter.comparators;
+
+      return comparisonsArray.map(comparisons => {
+
+        Object.keys(comparisons).forEach(comparison => {
+
+          let cModel = Model;
+
+          let column = comparison.split('__');
+          let comparator = column.pop();
+          !comparators[comparator] && column.push(comparator);
+          let field = column.pop();
+          let relName = column.join('__');
+          relName && (cModel = cModel.relationship(relName).getModel());
+
+          if (cModel.isHidden(field)) {
+            delete comparisons[comparison];
+          }
+
+        });
+
+        if (Object.keys(comparisons).length === 0) {
+          return null;
+        }
+
+        return comparisons;
+
+      }).filter(comparisons => comparisons);
+
+    }
+
+    /**
+    * Add comparisons to SQL WHERE clause. Does not allow filtering if Model.hides() has been called.
+    * @param {Object} comparisons Comparisons object. {age__lte: 27}, for example.
+    * @return {Nodal.Composer} new Composer instance
+    */
+    safeWhere(comparisonsArray) {
+
+      if (!(comparisonsArray instanceof Array)) {
+        comparisonsArray = [].slice.call(arguments);
+      }
+
+      return this.where(
+        this.__filterHidden__(
+          this.Model,
+          comparisonsArray
+        )
+      );
+
+    }
+
+    /**
+    * Join in a relationship. Filters out hidden fields from comparisons.
+    * @param {string} joinName The name of the joined relationship
+    * @param {array} comparisonsArray comparisons to perform on this join (can be overloaded)
+    */
+    safeJoin(joinName, comparisonsArray) {
+
+      if (!(comparisonsArray instanceof Array)) {
+        comparisonsArray = [].slice.call(arguments, 1);
+      }
+
+      return this.join(
+        joinName,
+        this.__filterHidden__(
+          this.Model.relationship(joinName).getModel(),
+          comparisonsArray
+        )
+      );
+
+    }
+
     /**
     * Add comparisons to SQL WHERE clause.
     * @param {Object} comparisons Comparisons object. {age__lte: 27}, for example.

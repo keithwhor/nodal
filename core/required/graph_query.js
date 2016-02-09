@@ -24,7 +24,7 @@ module.exports = (() => {
 
     query(callback) {
 
-      let query = this.Model.query().where(this.joins[this.identifier]);
+      let query = this.Model.query().safeWhere(this.joins[this.identifier]);
 
       Object.keys(this.joins).forEach(joinName => {
 
@@ -34,7 +34,7 @@ module.exports = (() => {
           return;
         }
 
-        query = query.join(joinNames.join('__'), this.joins[joinName]);
+        query = query.safeJoin(joinNames.join('__'), this.joins[joinName]);
 
       });
 
