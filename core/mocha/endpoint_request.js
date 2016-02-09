@@ -21,14 +21,12 @@ module.exports = (() => {
     mock(method, body, callback) {
 
       return this.router.dispatch(
-        this.router.parse(
-          this.router.composeArguments(
-            '::1',
-            this.url,
-            method,
-            {},
-            body
-          )
+        this.router.prepare(
+          '::1',
+          this.url,
+          method,
+          {},
+          body
         ),
         (err, status, headers, body) => {
 

@@ -17,7 +17,7 @@ module.exports = (() => {
       this.path = path;
       this.regex = regex;
       this.names = names;
-      this.controller = '';
+      this.controller = null;
 
     }
 
@@ -152,64 +152,21 @@ module.exports = (() => {
 
     }
 
-    composeArguments(ip, url, method, headers, body) {
+    prepare(ip, url, method, headers, body) {
 
       let route = this.find(url);
-
-      let headerArray = Object.keys(headers).reduce((arr, h) => {
-        arr.push(h);
-        arr.push(headers[h]);
-        return arr;
-      }, []);
-
-      let rparams = route.params(url);
-      let routeParams = Object.keys(rparams).reduce((arr, p) => {
-        arr.push(p);
-        arr.push(rparams[p]);
-        return arr;
-      }, []);
-
-      return [].concat.apply(
-        [],
-        [
-          ip,
-          url,
-          method,
-          route.parsePath(url),
-          route.controller,
-          '--headers',
-          headerArray,
-          '--matches',
-          route.match(url),
-          '--route',
-          routeParams,
-          '--body',
-          body instanceof Buffer ? body.toString('binary') : ((body || '') + '')
-        ]
-      );
-
-    }
-
-    parse(args) {
+      body = body instanceof Buffer ? body : new Buffer(body + '');
 
       return {
-        remoteAddress: args[0],
-        url: args[1],
-        method: args[2],
-        path: args[3],
-        controller: args[4],
-        headers: args.slice(args.indexOf('--headers') + 1, args.indexOf('--matches'))
-          .reduce((obj, v, i, arr) => {
-            (i & 1) && (obj[arr[i - 1]] = v);
-            return obj;
-          }, {}),
-        matches: args.slice(args.indexOf('--matches') + 1, args.indexOf('--route')),
-        route: args.slice(args.indexOf('--route') + 1, args.indexOf('--body'))
-          .reduce((obj, v, i, arr) => {
-            (i & 1) && (obj[arr[i - 1]] = v);
-            return obj;
-          }, {}),
-        body: args[args.indexOf('--body') + 1]
+        remoteAddress: ip,
+        url: url,
+        method: method,
+        path: route.parsePath(url),
+        controller: route.controller,
+        headers: headers,
+        matches: route.match(url),
+        route: route.params(url),
+        body: body
       };
 
     }
@@ -233,7 +190,7 @@ module.exports = (() => {
 
       d.run(() => {
 
-        const DispatchController = require(`${process.cwd()}/${routeData.controller}`);
+        const DispatchController = routeData.controller;
 
         let controller = new DispatchController(
           routeData.path,

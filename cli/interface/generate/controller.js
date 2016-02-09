@@ -35,17 +35,46 @@ module.exports = (function() {
 
   function generateRoute(controllerName, controllerPath, controllerRoute) {
 
+    let importStatement = [
+      'const ',
+        controllerName,
+      ' = ',
+      'Nodal.require(\'app/controllers/',
+        controllerPath.join('/'),
+      '\');'
+    ].join('')
+
     let routeStatement = [
       `router.route('/`,
       controllerPath.slice(0, -1).concat([controllerRoute]).join('/'),
-      `/{id}').use('`,
-      controllerPath.join('/'),
-      `');`
+      `/\{id\}', `,
+      controllerName,
+      ');'
     ].join('');
 
     let routes = fs.readFileSync('./app/router.js').toString();
 
     routes = routes.split('\n');
+
+    let importIndex = routes.map(function(v, i) {
+      return {
+        spaces: v.indexOf('/* generator: end imports */'),
+        index: i
+      }
+    }).filter(function(v) {
+      return v.spaces > -1;
+    }).pop();
+
+    if (importIndex !== undefined) {
+
+      routes = routes.slice(0, importIndex.index - 1).concat(
+        [
+          Array(importIndex.spaces + 1).join(' ') + importStatement,
+        ],
+        routes.slice(importIndex.index - 1)
+      );
+
+    }
 
     let routeIndex = routes.map(function(v, i) {
       return {
@@ -70,7 +99,6 @@ module.exports = (function() {
     fs.writeFileSync('./app/router.js', routes.join('\n'));
 
     console.log(colors.green.bold('Modify: ') + './app/router.js');
-
 
   }
 

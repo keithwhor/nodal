@@ -98,14 +98,12 @@ module.exports = (() => {
       req.on('end', () => {
 
         return this.router.dispatch(
-          this.router.parse(
-            this.router.composeArguments(
-              req.connection.remoteAddress,
-              req.url,
-              req.method,
-              req.headers,
-              body
-            )
+          this.router.prepare(
+            req.connection.remoteAddress,
+            req.url,
+            req.method,
+            req.headers,
+            body
           ),
           (err, status, headers, data) => {
 
