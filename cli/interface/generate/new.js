@@ -120,7 +120,7 @@ module.exports = (function() {
           let dbjson = JSON.parse(fs.readFileSync(rootPath + '/templates/db.json'));
           dbjson.development.main.database = promptResult.databaseName + '_development';
           dbjson.test.main.database = promptResult.databaseName + '_test';
-          fs.writeFileSync('./' + dirname + '/config/db.json', JSON.stringify(dbjson, null, 4));
+          fs.writeFileSync('./' + dirname + '/config/db.json', JSON.stringify(dbjson, null, 2));
 
           let spawn = require('cross-spawn-async');
 
