@@ -6,14 +6,15 @@ module.exports = (() => {
   const os = require('os');
   const http = require('http');
   const fs = require('fs');
+  const ExecutionQueue = require('./execution_queue');
 
   class Daemon {
 
-    constructor(port) {
+    constructor() {
 
       this._error = null;
       this._server = null;
-      this._port = port;
+      this._port = null;
 
       this.cpus = os.cpus().length;
       this.children = [];
@@ -24,33 +25,51 @@ module.exports = (() => {
 
       });
 
-      this.watch('', (changes) => {
-        changes.forEach(change => {
-          console.log(`[Nodal.Daemon] ${change.event[0].toUpperCase()}${change.event.substr(1)}: ${change.path}`);
-        });
-        this.children.forEach(child => child.send({invalidate: true}));
-      });
+      if (process.env.NODE_ENV === 'development') {
 
-      this.start();
+        this.watch('', (changes) => {
+          changes.forEach(change => {
+            console.log(`[Nodal.Daemon] ${change.event[0].toUpperCase()}${change.event.substr(1)}: ${change.path}`);
+          });
+          this.children.forEach(child => child.send({invalidate: true}));
+          !this.children.length && this.start();
+        });
+        
+      }
+
+      this.initializers = new ExecutionQueue();
 
     }
 
-    start() {
+    start(port) {
 
-      this._server && this._server.close();
-      this._server = null;
+      this._port = port || 3000;
 
-      for (var i = 0; i < this.cpus; i++) {
+      console.log('[Nodal.Daemon] Startup: Initializing');
 
-        let child = cluster.fork();
-        this.children.push(child);
+      this.initializers.exec((err) => {
 
-        child.on('message', this.message.bind(this));
-        child.on('exit', this.exit.bind(this, child));
+        if (err) {
+          this.error(err);
+          return this.idle();
+        }
 
-      }
+        this._server && this._server.close();
+        this._server = null;
 
-      console.log('[Nodal.Daemon] Startup: Spawning HTTP Workers');
+        for (var i = 0; i < this.cpus; i++) {
+
+          let child = cluster.fork();
+          this.children.push(child);
+
+          child.on('message', this.message.bind(this));
+          child.on('exit', this.exit.bind(this, child));
+
+        }
+
+        console.log('[Nodal.Daemon] Startup: Spawning HTTP Workers');
+
+      });
 
     }
 

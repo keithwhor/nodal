@@ -2,17 +2,17 @@ module.exports = (() => {
 
   'use strict';
 
-  const cluster = require('cluster');
-
   const Nodal = require('nodal');
+  const cluster = require('cluster');
 
   if (cluster.isMaster) {
 
-    new Nodal.Daemon(process.env.PORT);
+    const daemon = Nodal.require('app/daemon.js');
+    daemon.start(Nodal.my.Config.secrets.PORT);
 
   } else {
 
-    new Nodal.Application(process.env.PORT);
+    new Nodal.Application(Nodal.my.Config.secrets.PORT);
 
   }
 

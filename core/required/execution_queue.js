@@ -82,10 +82,10 @@ module.exports = (function() {
       let args = [].slice.call(arguments);
 
       let fnComplete = args.pop();
-      let steady = args.shift();
+      let steady = args.splice(0, 1);
 
-      if (typeof steady !== 'object' || steady === null) {
-        steady = {};
+      if (steady.length && typeof steady[0] !== 'object' || steady[0] === null) {
+        steady[0] = {};
       }
 
       if (typeof fnComplete !== 'function') {
@@ -100,7 +100,7 @@ module.exports = (function() {
       ].concat(
         this._queue.map(item => {
           return function() {
-            item.exec.apply(item, [steady].concat([].slice.call(arguments)));
+            item.exec.apply(item, steady.concat([].slice.call(arguments)));
           };
         })
       );

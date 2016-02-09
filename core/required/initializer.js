@@ -12,10 +12,9 @@ module.exports = (function() {
 
     /**
     * Execute the initializer.
-    * @param {Nodal.Application} app the Application Instance
     * @param {function({Error} err)} callback the callback to be run upon completion
     */
-    exec(app, callback) {
+    exec(callback) {
 
       let err = null;
       return callback(err);
