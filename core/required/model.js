@@ -325,7 +325,7 @@ module.exports = (function() {
     */
     static joinedBy(Model, options) {
 
-      return Model.joinsTo(this, options);
+      return Model.joinsTo && Model.joinsTo(this, options);
 
     }
 
