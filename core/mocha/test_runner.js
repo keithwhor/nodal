@@ -15,19 +15,14 @@ module.exports = (() => {
 
         return filename => {
 
-          if (!path.extname(filename)) {
+          if (!path.extname(filename) && filename[0] !== '.') {
 
-            if (filename !== '.' && filename !== '..') {
-              let nextDir = path.resolve(dir, filename);
-              return fs.readdirSync(nextDir).forEach(addCommand(nextDir));
-            }
-
-            return;
+            let nextDir = path.resolve(dir, filename);
+            return fs.readdirSync(nextDir).forEach(addCommand(nextDir));
 
           }
 
           let Test = require(path.resolve(dir, filename));
-
           tests.push(new Test(this));
 
         }

@@ -233,7 +233,7 @@ module.exports = (() => {
 
       d.run(() => {
 
-        const DispatchController = require(`${process.cwd()}/app/controllers/${routeData.controller}`);
+        const DispatchController = require(`${process.cwd()}/${routeData.controller}`);
 
         let controller = new DispatchController(
           routeData.path,
