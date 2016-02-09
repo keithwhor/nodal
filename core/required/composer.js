@@ -613,7 +613,7 @@ module.exports = (function() {
 
       let relationship = this.Model.relationship(joinName);
       if (!relationship) {
-        throw new Error(`Model ${this.Model.name} does not have relationship "${joinName}".`);
+        return this;
       }
 
       return this.join(

@@ -11,9 +11,10 @@ module.exports = (() => {
 
       let parsed = this.constructor.parse(str, maxDepth);
 
-      this.identifier = Object.keys(parsed.structure)[0];
+      this.identifier = typeof parsed.structure === 'string' ?
+        parsed.structure :
+        Object.keys(parsed.structure)[0];
       this.name = inflect.singularize(this.identifier);
-      this.multiple = this.identifier !== this.name;
 
       try {
         this.Model = Model || require(`${process.cwd()}/app/models/${this.name}.js`);
@@ -59,7 +60,7 @@ module.exports = (() => {
 
       });
 
-      query[['first', 'end'][this.multiple | 0]]((err, models) => {
+      query.end((err, models) => {
 
         callback(err, models, this.structure[this.identifier]);
 
@@ -338,7 +339,7 @@ module.exports = (() => {
         joins
       );
 
-      if (!tree.length || typeof tree === 'string') {
+      if (!tree.length) {
         throw new Error('Invalid query: List an object to query');
       }
 
@@ -359,14 +360,6 @@ module.exports = (() => {
 
       return tree.map(item => {
 
-        if (!item.data.properties && !item.data.children) {
-          return item.data.name;
-        }
-
-        if (max && (depth > max)) {
-          return null;
-        }
-
         joins[parents.concat(item.data.name).join('__')] = (item.data.properties || [])
           .filter(p => p.type === 'property')
           .reduce((obj, p) => {
@@ -374,15 +367,29 @@ module.exports = (() => {
             return obj;
           }, {});
 
-        let nameObj = {};
-        nameObj[item.data.name] = this.formatTree(
-          item.data.children || [],
-          max,
-          joins,
-          parents.concat(item.data.name)
-        );
+        if (!item.data.children) {
 
-        return nameObj;
+          return item.data.name;
+
+        }
+
+        if (!max || depth < max) {
+
+          let nameObj = {};
+          nameObj[item.data.name] = this.formatTree(
+            item.data.children || [],
+            max,
+            joins,
+            parents.concat(item.data.name)
+          );
+
+          return nameObj;
+
+        } else {
+
+          return null;
+
+        }
 
       }).filter(item => item);
 
