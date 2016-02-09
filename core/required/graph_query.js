@@ -69,100 +69,322 @@ module.exports = (() => {
 
     }
 
-    /*
+    static parseSyntaxTree(str, state, arr) {
 
-      Example:
+      arr = arr || [];
+      state = state || 'NAME';
 
-      parent {
-        id
-        children(id: 5) {
-          name,
-          age
+      let punc = '():{},';
+      let nameRE = /[_A-Za-z][_0-9A-Za-z]*/;
+
+      const STATES = {
+        'NAME': {
+          skip: false,
+          terminate: true,
+          next: 'PROPERTYLIST',
+          func: (str, arr) => {
+
+            let match = str.match(nameRE);
+            let name = match ? match[0] : null;
+
+            arr.push({
+              type: 'field',
+              data: {
+                name: name
+              }
+            });
+
+            let len = name ? name.length : 0;
+            return str.substr(len);
+
+          }
+        },
+        'PROPERTYNAME': {
+          skip: false,
+          terminate: true,
+          next: 'PROPERTYVALUESTART',
+          func: (str, arr) => {
+
+            let match = str.match(nameRE);
+            let name = match ? match[0] : null;
+
+            arr.push({
+              type: 'property',
+              data: {
+                name: name
+              }
+            });
+
+            let len = name ? name.length : 0;
+            return str.substr(len);
+
+          }
+        },
+        'PROPERTYVALUESTART': {
+          skip: false,
+          terminate: false,
+          next: 'PROPERTYVALUE',
+          func: (str, arr) => {
+
+            if (str[0] !== ':') {
+              return str;
+            }
+
+            return str.substr(1);
+
+          }
+        },
+        'PROPERTYVALUE': {
+          skip: false,
+          terminate: false,
+          next: 'PROPERTYVALUEEND',
+          func: (str, arr) => {
+
+            let cur = arr[arr.length - 1];
+
+            if (str[0] !== '"') {
+
+              let items = [
+                {str: 'null', val: null},
+                {str: 'true', val: true},
+                {str: 'false', val: false}
+              ];
+
+              for (let i = 0; i < items.length; i++) {
+                let item = items[i];
+                if (str.substr(0, item.str.length) === item.str) {
+                  cur.data.value = item.val;
+                  return str.substr(item.str.length);
+                }
+              }
+
+              let value = str.match(/^[\-\+]?\d+(\.\d+|e[\-\+]?\d+)?/i);
+
+              if (!value) {
+                return str;
+              }
+
+              value = value[0];
+              cur.data.value = parseFloat(value);
+              return str.substr(value.length);
+
+            }
+
+            let i = 1;
+            while (str[i]) {
+
+              if (str[i] === '"') {
+
+                let n = 1;
+                let c = 0;
+
+                while (str[i - n] === '\\') {
+                  c++;
+                  n++;
+                }
+
+                if (!(c & 1)) {
+                  cur.value = str.substring(1, i);
+                  return str.substring(i + 1);
+                }
+
+              }
+
+              i++;
+
+            }
+
+            return str;
+
+          }
+        },
+        'PROPERTYVALUEEND': {
+          skip: false,
+          terminate: true,
+          next: 'PROPERTYNAME',
+          func: (str, arr) => {
+
+            if (str[0] !== ',') {
+              return str;
+            }
+
+            return str.substr(1);
+
+          }
+        },
+        'PROPERTYLIST': {
+          skip: true,
+          terminate: true,
+          func: (str, arr) => {
+
+            if (str[0] !== '(') {
+              return str;
+            }
+
+            let cur = arr[arr.length - 1];
+
+            let count = 0;
+            let i = 0;
+
+            while (str[i]) {
+              if (str[i] === '(') {
+                count++;
+              } else if (str[i] === ')') {
+                count--;
+              }
+              if (!count) {
+                break;
+              }
+              i++;
+            }
+
+            if (count) {
+              return str;
+            }
+
+            cur.data.properties = this.parseSyntaxTree(str.substring(1, i), 'PROPERTYNAME');
+
+            return str.substring(i + 1);
+
+          },
+          next: 'LIST'
+        },
+        'LIST': {
+          skip: true,
+          terminate: true,
+          next: 'NAMEEND',
+          func: (str, arr) => {
+
+            if (str[0] !== '{') {
+              return str;
+            }
+
+            let cur = arr[arr.length - 1];
+
+            let count = 0;
+            let i = 0;
+
+            while (str[i]) {
+              if (str[i] === '{') {
+                count++;
+              } else if (str[i] === '}') {
+                count--;
+              }
+              if (!count) {
+                break;
+              }
+              i++;
+            }
+
+            if (count) {
+              return str;
+            }
+
+            cur.data.children = this.parseSyntaxTree(str.substring(1, i), 'NAME');
+
+            return str.substring(i + 1);
+
+          }
+        },
+        'NAMEEND': {
+          skip: false,
+          terminate: true,
+          next: 'NAME',
+          func: (str, arr) => {
+
+            if (str[0] !== ',') {
+              return str;
+            }
+
+            return str.substr(1);
+
+          }
         }
-      }
+      };
 
-    */
+      /* State machine... */
 
-    static parse(str, max, depth, parents, joins) {
+      str = str.replace(/^\s*(.*)$/m, '$1');
 
-      let structure = {};
-
-      depth = Math.max(depth | 0, 0);
-      max = Math.max(max | 0, 0);
-
-      parents = parents || [];
-      joins = joins || {};
-
-      let open = str.indexOf('{');
-      if (open === -1) {
-        throw new Error('Invalid Graph Query (Not Initialized)');
-      }
-
-      let title = str.substr(0, open);
-      str = str.substring(open + 1, str.lastIndexOf('}'));
-
-      let match = title.match(/^\s*(\w+)\s*(?:\((.*?)\))?\s*$/);
-
-      if (!match) {
-        throw new Error('Invalid Graph Query (No Model)');
-      }
-
-      let name = match[1];
-      let query = match[2] || '';
-
-      query = query.split(/\s*,\s*/).reduce((query, item) => {
-        let vals = item.split(':').map(v => v.replace(/^\s*(.*)\s*$/g, '$1'));
-        let key = vals[0];
-        let val = vals.slice(1).join(':');
-        key && (query[key] = val);
-        return query;
-      }, {});
-
-      joins[parents.concat(name).join('__')] = query;
-
-      structure[name] = [];
-
-      while (str.length) {
-
-        let brace = str.indexOf('{');
-        let comma = str.indexOf(',');
-        let i;
-
-        if (brace !== -1 && (comma === -1 || brace < comma)) {
-
-          i = brace;
-          let count = 1;
-          while (count && str[i++]) {
-            count += str[i] === '{' ? 1 : str[i] === '}' ? -1 : 0;
-          }
-          if (count) {
-            throw new Error('Invalid Graph Query (SubQuery)');
-          }
-
-          if (max && depth < max - 1) {
-            let sub = this.parse(str.substr(0, i + 1), max, depth + 1, parents.concat(name), joins);
-            structure[name].push(sub.structure);
-          }
-
-          i = str.indexOf(',', i) > -1 ? str.indexOf(',', i) + 1 : i;
-
+      if (!str) {
+        if (STATES[state].terminate) {
+          return arr;
         } else {
-
-          i = comma === -1 ? str.length : comma;
-
-          let column = str.substr(0, i).replace(/\s+/g, '');
-          column && structure[name].push(column);
-
+          throw new Error('Unexpected termination');
         }
+      }
 
-        str = str.substr(i + 1);
+      // Execute next step...
+      let next = STATES[state].func(str, arr);
 
+      if (!STATES[state].skip && (next === str)) {
+        throw new Error(`Syntax Error at or near "${str.substr(0, 20)}"`);
+      }
+
+      if (!STATES[state].next) {
+        return arr;
+      }
+
+      return this.parseSyntaxTree(next, STATES[state].next, arr);
+
+    }
+
+    static parse(str, max) {
+
+      let joins = {};
+      let tree = this.formatTree(
+        this.parseSyntaxTree(str),
+        max,
+        joins
+      );
+
+      if (!tree.length || typeof tree === 'string') {
+        throw new Error('Invalid query: List an object to query');
       }
 
       return {
-        structure: structure,
+        structure: tree[0],
         joins: joins
       };
+
+    }
+
+    static formatTree(tree, max, joins, parents) {
+
+      max = Math.max(max | 0, 0);
+      joins = joins || {};
+      parents = parents || [];
+
+      let depth = parents.length;
+
+      return tree.map(item => {
+
+        if (!item.data.properties && !item.data.children) {
+          return item.data.name;
+        }
+
+        if (max && (depth > max)) {
+          return null;
+        }
+
+        joins[parents.concat(item.data.name).join('__')] = (item.data.properties || [])
+          .filter(p => p.type === 'property')
+          .reduce((obj, p) => {
+            obj[p.data.name] = p.data.value;
+            return obj;
+          }, {});
+
+        let nameObj = {};
+        nameObj[item.data.name] = this.formatTree(
+          item.data.children || [],
+          max,
+          joins,
+          parents.concat(item.data.name)
+        );
+
+        return nameObj;
+
+      }).filter(item => item);
 
     }
 

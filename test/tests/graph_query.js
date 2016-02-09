@@ -151,11 +151,11 @@ module.exports = Nodal => {
         'parent { id, name, age, children { id, name }, shirt }',
         'parent{id,name,age,children{id,name},shirt}',
         ' parent  { id , name , age , children { id , name } , shirt }',
-        'parent(id: 20, name: 30) { id, name, age, children(name: Suzanne) { id , name }, shirt }',
+        'parent(id: 20, name: 30) { id, name, age, children(name: "Suzanne") { id , name }, shirt }',
         'parent { id, name, age, shirt, children { id, name } }',
         'parent{id,name,age,shirt,children{id,name}}',
         ' parent  { id , name , age , shirt , children { id , name } }',
-        'parent(id: 20, name: 30) { id, name, age, shirt, children(name: Suzanne) { id , name } }'
+        'parent(id: 20, name: 30) { id, name, age, shirt, children(name: "Suzanne") { id , name } }'
       ];
 
       queries.forEach(query => {

@@ -541,6 +541,8 @@ module.exports = (function() {
 
     __filterHidden__(Model, comparisonsArray) {
 
+      comparisonsArray = (comparisonsArray || []).filter(c => c);
+
       let comparators = this.db.adapter.comparators;
 
       return comparisonsArray.map(comparisons => {
