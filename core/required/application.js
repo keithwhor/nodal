@@ -78,15 +78,9 @@ module.exports = (() => {
       let body = new Buffer(0);
       let start = this.getTime();
 
-      let urlData = url.parse(req.url, true);
-      let path = urlData.pathname;
-      if (path[path.length - 1] === '/') {
-        path = path.substr(path, path.length - 1);
-      }
-
       console.log(`[Nodal.${process.pid}] Incoming Request: ${req.url} from ${req.connection.remoteAddress}`);
 
-      let route = this.router.find(path);
+      let route = this.router.find(req.url);
 
       if (!route) {
         res.writeHead(404, {});
@@ -103,41 +97,16 @@ module.exports = (() => {
 
       req.on('end', () => {
 
-        let headers = Object.keys(req.headers).reduce((arr, h) => {
-          arr.push(h);
-          arr.push(req.headers[h]);
-          return arr;
-        }, []);
-
-        let urlMatch = path.match(route.regex);
-        let matches = urlMatch.slice(1).map(v => v || '');
-        let routeParams = route.names.reduce((arr, name, i) => {
-          arr.push(name);
-          arr.push(matches[i]);
-          return arr;
-        }, []);
-
-        let args = [].concat.apply(
-          [],
-          [
-            req.connection.remoteAddress,
-            req.url,
-            req.method,
-            path,
-            route.controller,
-            '--headers',
-            headers,
-            '--matches',
-            matches,
-            '--route',
-            routeParams,
-            '--body',
-            body.toString('binary')
-          ]
-        );
-
         return this.router.dispatch(
-          this.router.parse(args),
+          this.router.parse(
+            this.router.composeArguments(
+              req.connection.remoteAddress,
+              req.url,
+              req.method,
+              req.headers,
+              body
+            )
+          ),
           (err, status, headers, data) => {
 
             let t = this.getTime() - start;

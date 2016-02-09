@@ -2,60 +2,55 @@ module.exports = (() => {
 
   'use strict';
 
-  const mocks = require('mocks');
   const qs = require('querystring');
-  const path = require('path');
 
   class EndpointRequest {
 
-    constructor(app, path, params) {
+    constructor(router, path, params) {
 
-      this.app = app;
-      this._path = path + (params ? `?${qs.stringify(params)}` : '');
+      this.router = router;
+      this.url = path + (params ? `?${qs.stringify(params)}` : '');
+      this.route = this.router.find(this.url);
+
+      if (!this.route) {
+        throw new Error(`Route for ${this._path} does not exist`);
+      }
 
     }
 
     mock(method, body, callback) {
 
-      let request = new mocks.http.ServerRequest();
-      let response = new mocks.http.ServerResponse();
+      return this.router.dispatch(
+        this.router.parse(
+          this.router.composeArguments(
+            '::1',
+            this.url,
+            method,
+            {},
+            body
+          )
+        ),
+        (err, status, headers, body) => {
 
-      request.setHeader = (header, value) => request.headers[header.toLowerCase()] = value;
-      request.getHeader = (header) => request.headers[header.toLowerCase()];
-      request.url = path.resolve('localhost', this._path);
-      request.method = method;
-      request.connection = {
-        destroy: () => {},
-        remoteAddress: '::1'
-      };
+          let json = null;
 
-      if (typeof body === 'object' && body !== null) {
-        request.setHeader('Content-Type', request.getHeader('Content-Type') || 'application/json; charset=utf-8');
-        body = new Buffer(JSON.stringify(body));
-      } else if (body instanceof Buffer) {
-        request.setHeader('Content-Type', request.getHeader('Content-Type') || 'application/octet-steam');
-      } else if (body) {
-        request.setHeader('Content-Type', 'x-www-form-urlencoded');
-        body = new Buffer(body);
-      }
+          if (err) {
+            status = 500;
+            body = new Buffer(0);
+          } else {
 
-      this.app.router.delegate(this.app, request, response);
+            try {
+              json = JSON.parse(response._body);
+            } catch (e) {
+              json = null;
+            }
 
-      body && request.emit('data', body);
-      response.on('end', () => {
+          }
 
-        let json = null;
-        try {
-          json = JSON.parse(response._body);
-        } catch (e) {
-          json = null;
+          callback(status, headers, body, json);
+
         }
-
-        callback(response._status, response._headers, response._body, json);
-
-      });
-
-      setTimeout(() => request.emit('end'), 1);
+      );
 
     }
 

@@ -21,6 +21,35 @@ module.exports = (() => {
 
     }
 
+    parsePath(requrl) {
+
+      let urlData = url.parse(requrl, true);
+      let path = urlData.pathname;
+      if (path[path.length - 1] === '/') {
+        path = path.substr(path, path.length - 1);
+      }
+
+      return path;
+
+    }
+
+    match(requrl) {
+
+      let match = this.parsePath(requrl).match(this.regex);
+      return match ? [].slice.call(match, 1) : null;
+
+    }
+
+    params(requrl) {
+
+      let matches = this.match(requrl).slice(1).map(v => v || '');
+      return this.names.reduce((obj, name, i) => {
+        obj[name] = matches[i];
+        return obj;
+      }, {});
+
+    }
+
     use(controller) {
 
       this.controller = controller;
@@ -49,13 +78,13 @@ module.exports = (() => {
 
     }
 
-    find(path) {
+    find(url) {
 
       let routes = this._routes;
 
       for (let i = 0, len = routes.length; i < len; i++) {
         let route = routes[i];
-        if (path.match(route.regex)) {
+        if (route.match(url)) {
           return route;
         }
       }
@@ -120,6 +149,44 @@ module.exports = (() => {
       });
 
       return obj;
+
+    }
+
+    composeArguments(ip, url, method, headers, body) {
+
+      let route = this.find(url);
+
+      let headerArray = Object.keys(headers).reduce((arr, h) => {
+        arr.push(h);
+        arr.push(headers[h]);
+        return arr;
+      }, []);
+
+      let rparams = route.params(url);
+      let routeParams = Object.keys(rparams).reduce((arr, p) => {
+        arr.push(p);
+        arr.push(rparams[p]);
+        return arr;
+      }, []);
+
+      return [].concat.apply(
+        [],
+        [
+          ip,
+          url,
+          method,
+          route.parsePath(url),
+          route.controller,
+          '--headers',
+          headerArray,
+          '--matches',
+          route.match(url),
+          '--route',
+          routeParams,
+          '--body',
+          body instanceof Buffer ? body.toString('binary') : ((body || '') + '')
+        ]
+      );
 
     }
 

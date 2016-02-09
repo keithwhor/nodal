@@ -4,11 +4,10 @@ module.exports = (() => {
 
   const fs = require('fs');
   const path = require('path');
-  const seedCommand = require('../../cli/commands/db/seed.js');
 
   class TestRunner {
 
-    constructor(dir) {
+    constructor(dir, router) {
 
       let tests = [];
 
@@ -39,12 +38,7 @@ module.exports = (() => {
       fs.readdirSync(testDir).forEach(addTest(testDir));
 
       this._tests = tests;
-
-    }
-
-    ready(app) {
-
-      this.app = app;
+      this.router = router;
 
     }
 
