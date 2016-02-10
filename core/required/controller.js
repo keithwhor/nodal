@@ -25,8 +25,6 @@ module.exports = (() => {
       this.middleware = new ExecutionQueue();
       this.renderware = new ExecutionQueue();
 
-      this.before();
-
     }
 
     run(method, id) {
@@ -49,7 +47,7 @@ module.exports = (() => {
       this.middleware.exec(this, (err) => {
 
         if (err) {
-          return this.error(err);
+          return this.error(err.message);
         }
 
         this[method]();
