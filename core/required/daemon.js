@@ -8,6 +8,10 @@ module.exports = (() => {
   const fs = require('fs');
   const ExecutionQueue = require('./execution_queue');
 
+  /**
+  * Multi-process HTTP Daemon that resets when files changed (in development)
+  * @class
+  */
   class Daemon {
 
     constructor() {
@@ -34,13 +38,18 @@ module.exports = (() => {
           this.children.forEach(child => child.send({invalidate: true}));
           !this.children.length && this.start();
         });
-        
+
       }
 
       this.initializers = new ExecutionQueue();
 
     }
 
+    /**
+    * Starts the Daemon. If all application services fail, will launch a
+    *   dummy error app on the port provided.
+    * @param {Number} port
+    */
     start(port) {
 
       this._port = port || 3000;
@@ -73,6 +82,9 @@ module.exports = (() => {
 
     }
 
+    /**
+    * Daemon failed to load, set it in idle state (accept connections, give dummy response)
+    */
     idle() {
 
       let port = this._port || 3000;
@@ -92,6 +104,11 @@ module.exports = (() => {
 
     }
 
+    /**
+    * Shut down a child process given a specific exit code. (Reboot if clean shutdown.)
+    * @param {child_process} child
+    * @param {Number} code Exit status codes
+    */
     exit(child, code) {
 
       this.children.splice(this.children.indexOf(child), 1);
@@ -109,6 +126,10 @@ module.exports = (() => {
 
     }
 
+    /**
+    * Log an error on the Daemon
+    * @param {Error} error
+    */
     error(error) {
 
       this._error = error;

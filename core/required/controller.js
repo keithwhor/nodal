@@ -58,7 +58,15 @@ module.exports = (() => {
 
     }
 
+    /**
+    * Intended to be overwritten when inherited. Run before middleware.
+    *   Controller-specific middleware and renderware here
+    */
     before() {}
+
+    /**
+    * Intended to be overwritten when inherited. Run after renderware.
+    */
     after() {}
 
     /**
@@ -126,6 +134,11 @@ module.exports = (() => {
       }, {}));
     }
 
+    /**
+    * Set a specific response header
+    * @param {String} key
+    * @param {String} value
+    */
     setHeader(key, value) {
 
       key = key.split('-').map(function(v) {
@@ -144,6 +157,11 @@ module.exports = (() => {
 
     }
 
+    /**
+    * Get the value of a specific response header
+    * @param {String} key
+    * @param {String} value Default value returned if not found
+    */
     getHeader(key, value) {
       key = key.split('-').map(function(v) {
         return v[0].toUpperCase() + v.substr(1).toLowerCase();
@@ -151,6 +169,10 @@ module.exports = (() => {
       return this._headers.hasOwnProperty(key) ? this._headers[key] : value;
     }
 
+    /**
+    * Set HTTP status code for this response
+    * @param {Number} code
+    */
     status(code) {
       return this._status = code;
     }
@@ -163,6 +185,10 @@ module.exports = (() => {
       return this._status;
     }
 
+    /**
+    * Render an HTTP response (end ServerResponse) based on provided data
+    * @param {Object} data Can be Buffer, String, or Plain Object
+    */
     render(data) {
 
       if (data instanceof Buffer) {

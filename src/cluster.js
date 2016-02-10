@@ -12,7 +12,9 @@ module.exports = (() => {
 
   } else {
 
-    new Nodal.Application(Nodal.my.Config.secrets.PORT);
+    const app = new Nodal.Application();
+    app.listen(Nodal.my.Config.secrets.PORT);
+
 
   }
 

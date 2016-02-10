@@ -5,8 +5,18 @@ module.exports = (() => {
   const inflect = require('i')();
   const API = require('./api.js');
 
+  /**
+  * GraphQuery class that translates GraphQL to something digestible by the Composer
+  * @class
+  */
   class GraphQuery {
 
+    /**
+    * Create a GraphQuery object
+    * @param {String} str The query to execute
+    * @param {Number} maxDepth The maximum depth of graph to traverse
+    * @param {Nodal.Model} [Model=null] The Model to base your query around (used for testing)
+    */
     constructor(str, maxDepth, Model) {
 
       let parsed = this.constructor.parse(str, maxDepth);
@@ -27,6 +37,12 @@ module.exports = (() => {
 
     }
 
+    /**
+    * Create and execute a GraphQuery object
+    * @param {String} str The query to execute
+    * @param {Number} maxDepth The maximum depth of graph to traverse
+    * @param {Function} callback The function to execute upon completion
+    */
     static query(str, maxDepth, callback) {
 
       let graphQuery;
@@ -44,32 +60,9 @@ module.exports = (() => {
 
     }
 
-    query(callback) {
-
-      let query = this.Model.query().safeWhere(this.joins[this.identifier]);
-
-      Object.keys(this.joins).forEach(joinName => {
-
-        let joinNames = joinName.split('__');
-        joinNames.shift();
-        if (!joinNames.length) {
-          return;
-        }
-
-        query = query.safeJoin(joinNames.join('__'), this.joins[joinName]);
-
-      });
-
-      query.end((err, models) => {
-
-        callback(err, models, this.structure[this.identifier]);
-
-      });
-
-      return this;
-
-    }
-
+    /**
+    * Parse syntax tree of a GraphQL query
+    */
     static parseSyntaxTree(str, state, arr) {
 
       arr = arr || [];
@@ -330,6 +323,9 @@ module.exports = (() => {
 
     }
 
+    /**
+    * Fully parse a GraphQL query, get necessary joins to make in SQL
+    */
     static parse(str, max) {
 
       let joins = {};
@@ -350,6 +346,9 @@ module.exports = (() => {
 
     }
 
+    /**
+    * Format a parsed syntax tree in a way that the Composer expects
+    */
     static formatTree(tree, max, joins, parents) {
 
       max = Math.max(max | 0, 0);
@@ -392,6 +391,36 @@ module.exports = (() => {
         }
 
       }).filter(item => item);
+
+    }
+
+    /**
+    * Query the GraphQuery object from the database
+    * @param {Function} callback The function to execute upon completion
+    */
+    query(callback) {
+
+      let query = this.Model.query().safeWhere(this.joins[this.identifier]);
+
+      Object.keys(this.joins).forEach(joinName => {
+
+        let joinNames = joinName.split('__');
+        joinNames.shift();
+        if (!joinNames.length) {
+          return;
+        }
+
+        query = query.safeJoin(joinNames.join('__'), this.joins[joinName]);
+
+      });
+
+      query.end((err, models) => {
+
+        callback(err, models, this.structure[this.identifier]);
+
+      });
+
+      return this;
 
     }
 

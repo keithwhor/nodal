@@ -77,7 +77,9 @@ module.exports = (() => {
 
   } else {
 
-    new Nodal.Application(Nodal.my.Config.secrets.PORT);
+    const app = new Nodal.Application();
+    app.listen(Nodal.my.Config.secrets.PORT);
+
 
   }
 
@@ -158,13 +160,13 @@ flow looks like this...
 
 ```
 Client Request ->
-Router Middleware ->
 Controller#before ->
+Router Middleware ->
 Controller Middleware ->
 Controller#get, put, post, del ->
 Controller Renderware ->
-Controller#after ->
 Router Renderware ->
+Controller#after ->
 Server Response
 ```
 

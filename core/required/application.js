@@ -7,7 +7,7 @@ module.exports = (() => {
 
   class Application {
 
-    constructor(port) {
+    constructor() {
 
       process.on('uncaughtException', e => {
         process.send({
@@ -33,10 +33,12 @@ module.exports = (() => {
         console.log(`[Nodal.${process.pid}] Shutdown: Exited with code ${code}`);
       });
 
-      this.listen(port);
-
     }
 
+    /**
+    * Listens for incoming connections on a provided port
+    * @param {Number} port
+    */
     listen(port) {
 
       port = port || 3000;
@@ -53,6 +55,12 @@ module.exports = (() => {
 
     }
 
+    /**
+    * Logs a server response in the console
+    * @param {Number} statusCode HTTP Status Code
+    * @param {String} url The url that was hit
+    * @param {String} t The time to execute the request
+    */
     logResponse(statusCode, url, t) {
 
       let num = Math.floor(statusCode / 100);
@@ -73,6 +81,11 @@ module.exports = (() => {
 
     }
 
+    /**
+    * HTTP Request Handler
+    * @param {http.ClientRequest} req
+    * @param {http.ServerResponse} res
+    */
     handler(req, res) {
 
       let body = new Buffer(0);
