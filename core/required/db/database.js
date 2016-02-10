@@ -24,11 +24,11 @@ module.exports = (() => {
       let connection;
 
       if (cfg.connectionString && cfg.connectionString.length) {
-        connection = anyDB.createPool(cfg.connectionString, {min: 2, max: 20});
+        connection = anyDB.createPool(cfg.connectionString, {min: 2, max: 2});
       } else {
         connection = anyDB.createPool(
           this.adapter.generateConnectionString(cfg.host, cfg.port, cfg.database, cfg.user, cfg.password),
-          {min: 2, max: 20}
+          {min: 2, max: 2}
         );
       }
 
