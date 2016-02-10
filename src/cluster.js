@@ -8,12 +8,12 @@ module.exports = (() => {
   if (cluster.isMaster) {
 
     const daemon = Nodal.require('app/daemon.js');
-    daemon.start(Nodal.my.Config.secrets.PORT);
+    daemon.start(Nodal.my.Config.secrets.port);
 
   } else {
 
     const app = new Nodal.Application();
-    app.listen(Nodal.my.Config.secrets.PORT);
+    app.listen(Nodal.my.Config.secrets.port);
 
 
   }
