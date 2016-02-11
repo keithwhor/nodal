@@ -17,11 +17,12 @@ module.exports = (function() {
     Controller: null,
     Daemon: null,
     Database: null,
-    DummyRouter: null,
+    GraphQuery: null,
     Initializer: null,
     ItemArray: null,
     Middleware: null,
     Migration: null,
+    Mime: null,
     Model: null,
     ModelArray: null,
     ModelFactory: null,
@@ -31,6 +32,9 @@ module.exports = (function() {
     Scheduler: null,
     SchedulerTask: null,
     SchemaGenerator: null,
+    StrongParam: null,
+    Task: null,
+    Template: null,
     my: {
       Config: null,
       Schema: null,
@@ -94,9 +98,9 @@ module.exports = (function() {
       },
       enumerable: true
     },
-    DummyRouter: {
+    GraphQuery: {
       get: function() {
-        return Nodal.DummyRouter || (Nodal.DummyRouter = require('./required/dummy_router.js'));
+        return Nodal.GraphQuery || (Nodal.GraphQuery = require('./required/graph_query.js'));
       },
       enumerable: true
     },
@@ -121,6 +125,12 @@ module.exports = (function() {
     Migration: {
       get: function() {
         return Nodal.Migration || (Nodal.Migration = require('./required/db/migration.js'));
+      },
+      enumerable: true
+    },
+    Mime: {
+      get: function() {
+        return Nodal.Mime || (Nodal.Mime = require('./required/mime.js'));
       },
       enumerable: true
     },
@@ -178,9 +188,21 @@ module.exports = (function() {
       },
       enumerable: true
     },
+   StrongParam: {
+      get: function() {
+        return Nodal.StrongParam || (Nodal.StrongParam = require('./required/strong_param.js'));
+      },
+      enumerable: true
+    },
     Task: {
       get: function() {
         return Nodal.Task || (Nodal.Task = require('./required/task.js'));
+      },
+      enumerable: true
+    },
+    Template: {
+      get: function() {
+        return Nodal.Template || (Nodal.Template = require('./required/template.js'));
       },
       enumerable: true
     },

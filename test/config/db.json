@@ -1,6 +1,6 @@
 {
 
-  "development": {
+  "production": {
     "main": {
       "adapter": "postgres",
       "host": "localhost",

@@ -104,26 +104,6 @@ module.exports = (function(Nodal) {
 
     });
 
-    it('should format ItemArrays properly with exclude', () => {
-
-      let groups = Nodal.ItemArray.from([
-        {count: 5, color: 'red'},
-        {count: 6, color: 'green'},
-        {count: 7, color: 'blue'}
-      ]);
-
-      groups.setMeta({offset: 1, total: 10});
-
-      let output = Nodal.API.format(groups, ['color'], {exclude: true});
-
-      expect(output).to.have.ownProperty('meta');
-      expect(output).to.have.ownProperty('data');
-      expect(output.data.length).to.equal(3);
-      expect(output.data[0]).to.not.haveOwnProperty('color');
-      expect(output.data[0]).to.haveOwnProperty('count');
-
-    });
-
   });
 
 });

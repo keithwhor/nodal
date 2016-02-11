@@ -118,6 +118,21 @@ module.exports = (function() {
 
           let id = row[`\$${join.name}\$id`];
 
+          let name = join.name;
+          let names = name.split('__');
+          let joinName = names.pop();
+          let parentName = names.join('__');
+
+          let parentModel = parentName ? joinsObject[parentName].cachedModel : model;
+
+          if (join.multiple) {
+            parentModel && (parentModel.joined(joinName) || parentModel.setJoined(joinName, new ModelArray(join.Model)));
+          }
+
+          if (!id) {
+            return;
+          }
+
           let joinCache = cache[join.Model.name];
           let joinModel = join.cachedModel = joinCache[id];
 
@@ -128,18 +143,10 @@ module.exports = (function() {
             }, join.columnsObject), true)
           }
 
-          let name = join.name;
-          let names = name.split('__');
-          let joinName = names.pop();
-          let parentName = names.join('__');
-
-          let parentModel = parentName ? joinsObject[parentName].cachedModel : model;
 
           if (join.multiple) {
-            let modelArray = parentModel.joined(joinName) ||
-              parentModel.setJoined(joinName, new ModelArray(join.Model));
-            // null sanity check
-            joinModel.get('id') && !modelArray.has(joinModel) && modelArray.push(joinModel);
+            let modelArray = parentModel.joined(joinName);
+            !modelArray.has(joinModel) && modelArray.push(joinModel);
           } else {
             parentModel.joined(joinName) || parentModel.setJoined(joinName, joinModel);
           }
@@ -215,7 +222,7 @@ module.exports = (function() {
     */
     __reduceToQueryInformation__(composerArray) {
 
-      let joins = [];
+      let joins = {};
 
       let commands = composerArray.reduce((p, c) => {
 
@@ -223,13 +230,22 @@ module.exports = (function() {
 
         if (composerCommand.type === 'join') {
 
-          joins.push(
-            composerCommand.data.map(joinData => {
-              return Object.keys(joinData).reduce((p, c) => {
-                return (p[c] = joinData[c], p);
-              }, {});
-            })
-          );
+          let curJoinName = composerCommand.data.name;
+          let curJoinData = composerCommand.data.joinData;
+          joins[curJoinName] = curJoinData;
+          Object.keys(joins)
+            .filter(joinName => joinName !== curJoinName)
+            .forEach(joinName => {
+
+              if (curJoinName.indexOf(joinName) === 0) {
+                joins[curJoinName] = joins[joinName].concat(curJoinData.slice(joins[joinName].length));
+                delete joins[joinName];
+              } else if (joinName.indexOf(curJoinName) === 0) {
+                joins[joinName][curJoinData.length - 1] = curJoinData[curJoinData.length - 1];
+                delete joins[curJoinName];
+              }
+
+            });
 
           return p;
 
@@ -405,33 +421,33 @@ module.exports = (function() {
 
       let columns = includeColumns || this.Model.columnNames();
 
-      queryInfo.joins.forEach(j => {
-        columns = columns.concat(this.__joinedColumns__(j[j.length - 1].joinAlias));
-      });
-
-
-      // Make sure we don't join in parts of the same dependency tree repeatedly
       let joins = queryInfo.joins;
 
-      joins.sort((a, b) => a.length < b.length ? 1 : -1);
-
-      let joinAdded = {};
-      joins.forEach(join => {
-        for (let i = 0; i < join.length; i++) {
-          if (!joinAdded[join[i].joinAlias]) {
-            joinAdded[join[i].joinAlias] = join;
-            return;
-          }
-        }
+      Object.keys(joins).forEach(joinName => {
+        joins[joinName].forEach(j => {
+          columns = columns.concat(this.__joinedColumns__(j.joinAlias));
+        });
       });
 
-      joins = Object.keys(joinAdded).map(k => joinAdded[k]);
+      joins = Object.keys(joins).map(k => joins[k]);
+      let params = query.params.slice();
+
+      joins.forEach(join => {
+
+        join.forEach(j => {
+          params = params.concat(this.db.adapter.getParamsFromMultiFilter(j.multiFilter));
+        });
+
+      });
 
       // Order by the orders... in reverse order
       let orderBy = queryInfo.commands.reduce((arr, command) => {
         command.orderBy && (arr = command.orderBy.concat(arr));
         return arr;
       }, []);
+
+      // When doing joins, we count paramOffset as the last where parameter length
+      // Because we add in a bunch of parameters at the end.
 
       return {
         sql: this.db.adapter.generateSelectQuery(
@@ -445,7 +461,7 @@ module.exports = (function() {
           null,
           query.params.length
         ),
-        params: query.params
+        params: params
       };
 
     }
@@ -453,13 +469,16 @@ module.exports = (function() {
     /**
     * When using Composer#where, format all provided comparisons
     * @param {Object} comparisons Comparisons object. {age__lte: 27}, for example.
+    * @param {Nodal.Model} Model the model to use as the basis for comparison. Default to current model.
     * @return {Array}
     * @private
     */
-    __parseComparisons__(comparisons) {
+    __parseComparisons__(comparisons, Model) {
+
+      Model = Model || this.Model;
 
       let comparators = this.db.adapter.comparators;
-      let columnLookup = this.Model.columnLookup();
+      let columnLookup = Model.columnLookup();
 
       return Object.keys(comparisons)
         .map(comparison => {
@@ -476,7 +495,7 @@ module.exports = (function() {
 
           if (column.length > 1) {
             joinName = column.slice(0, column.length - 1).join('__');
-            rel = this.Model.relationship(joinName);
+            rel = Model.relationship(joinName);
             column = column.slice(column.length - 1);
           }
 
@@ -500,7 +519,7 @@ module.exports = (function() {
           let columnName = column[0];
 
           // block out bad column names
-          if (!rel && !this.Model.hasColumn(columnName)) {
+          if (!rel && !Model.hasColumn(columnName)) {
             return null;
           }
 
@@ -517,6 +536,93 @@ module.exports = (function() {
         .filter(v => {
           return !!v;
         });
+
+    }
+
+    __filterHidden__(Model, comparisonsArray) {
+
+      comparisonsArray = (comparisonsArray || []).filter(c => c);
+
+      let comparators = this.db.adapter.comparators;
+
+      return comparisonsArray.map(comparisons => {
+
+        Object.keys(comparisons).forEach(comparison => {
+
+          let cModel = Model;
+
+          let column = comparison.split('__');
+          let comparator = column.pop();
+          !comparators[comparator] && column.push(comparator);
+          let field = column.pop();
+          let relName = column.join('__');
+          if (relName) {
+            let rel = cModel.relationship(relName);
+            if (!rel) {
+              return;
+            }
+            cModel = rel.getModel();
+          }
+
+          if (cModel.isHidden(field)) {
+            delete comparisons[comparison];
+          }
+
+        });
+
+        if (Object.keys(comparisons).length === 0) {
+          return null;
+        }
+
+        return comparisons;
+
+      }).filter(comparisons => comparisons);
+
+    }
+
+    /**
+    * Add comparisons to SQL WHERE clause. Does not allow filtering if Model.hides() has been called.
+    * @param {Object} comparisons Comparisons object. {age__lte: 27}, for example.
+    * @return {Nodal.Composer} new Composer instance
+    */
+    safeWhere(comparisonsArray) {
+
+      if (!(comparisonsArray instanceof Array)) {
+        comparisonsArray = [].slice.call(arguments);
+      }
+
+      return this.where(
+        this.__filterHidden__(
+          this.Model,
+          comparisonsArray
+        )
+      );
+
+    }
+
+    /**
+    * Join in a relationship. Filters out hidden fields from comparisons.
+    * @param {string} joinName The name of the joined relationship
+    * @param {array} comparisonsArray comparisons to perform on this join (can be overloaded)
+    */
+    safeJoin(joinName, comparisonsArray) {
+
+      if (!(comparisonsArray instanceof Array)) {
+        comparisonsArray = [].slice.call(arguments, 1);
+      }
+
+      let relationship = this.Model.relationship(joinName);
+      if (!relationship) {
+        return this;
+      }
+
+      return this.join(
+        joinName,
+        this.__filterHidden__(
+          relationship.getModel(),
+          comparisonsArray
+        )
+      );
 
     }
 
@@ -558,7 +664,7 @@ module.exports = (function() {
       if (order || offset || count) {
         let composer = this;
         order && (composer = composer.orderBy(order[0], order[1]));
-        count && (composer = composer.limit(offset || 0, count || 0));
+        (offset || count) && (composer = composer.limit(offset || 0, count || 0));
         return composer.where(comparisonsArray);
       }
 
@@ -566,7 +672,7 @@ module.exports = (function() {
         type: 'where',
         data: {
           comparisons: comparisonsArray
-          .map(this.__parseComparisons__.bind(this))
+          .map(comparisons => this.__parseComparisons__(comparisons))
           .filter(f => f.length)
         }
       };
@@ -646,14 +752,19 @@ module.exports = (function() {
     }
 
     /**
-    * Join in a relationship. Must have Model.joinsTo() set from a child, or set to a parent
+    * Join in a relationship.
     * @param {string} joinName The name of the joined relationship
+    * @param {array} comparisonsArray comparisons to perform on this join (can be overloaded)
     */
-    join(joinName) {
+    join(joinName, comparisonsArray) {
+
+      if (!(comparisonsArray instanceof Array)) {
+        comparisonsArray = [].slice.call(arguments, 1);
+      }
 
       let relationship = this.Model.relationships().findExplicit(joinName);
       if (!relationship) {
-        throw new Error(`Model ${this.Model.name} does not have relationship ${joinName}`);
+        throw new Error(`Model ${this.Model.name} does not have relationship "${joinName}".`);
       }
 
       let composer = this;
@@ -666,19 +777,21 @@ module.exports = (function() {
 
       let joinData = relationship.joins();
       joinData[joinData.length - 1].joinAlias = joinName;
+      joinData[joinData.length - 1].prevAlias = joinName.split('__').slice(0, -1).join('__');
+      joinData[joinData.length - 1].multiFilter = this.db.adapter.createMultiFilter(
+        joinName,
+        comparisonsArray
+          .map(comparisons => this.__parseComparisons__(comparisons, relationship.getModel()))
+          .filter(f => f.length)
+      );
 
       this._command = {
         type: 'join',
-        data: joinData
+        data: {
+          name: joinName,
+          joinData: joinData
+        }
       };
-
-      let joinNames = joinName.split('__');
-      joinNames.pop();
-
-      // Join in everything in the chain
-      if (joinNames.length) {
-        return new Composer(this.Model, this).join(joinNames.join('__'));
-      }
 
       return new Composer(this.Model, this);
 

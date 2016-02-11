@@ -16,6 +16,7 @@ module.exports = (function(Nodal) {
         {name: 'id', type: 'serial'},
         {name: 'name', type: 'string'},
         {name: 'shirt', type: 'string'},
+        {name: 'hidden', type: 'string'},
         {name: 'pantaloons', type: 'string'},
         {name: 'created_at', type: 'datetime'},
         {name: 'updated_at', type: 'datetime'}
@@ -74,6 +75,7 @@ module.exports = (function(Nodal) {
 
     Parent.setDatabase(db);
     Parent.setSchema(schemaParent);
+    Parent.hides('hidden');
 
     class Friendship extends Nodal.Model {}
 
@@ -129,7 +131,8 @@ module.exports = (function(Nodal) {
           ].map((name, i) => new Parent({
             name: name,
             shirt: ['red', 'green', 'blue'][i % 3],
-            pantaloons: ['jeans', 'shorts'][i % 2]
+            pantaloons: ['jeans', 'shorts'][i % 2],
+            hidden: 'abcdef'.split('')[i % 6]
           }));
 
           parents = Nodal.ModelArray.from(parents);
@@ -322,6 +325,57 @@ module.exports = (function(Nodal) {
 
     });
 
+    it('Should limit properly (query params, offset)', (done) => {
+
+      Child.query()
+        .where({__offset: 5})
+        .end((err, children) => {
+
+          expect(err).to.equal(null);
+          expect(children).to.be.an.instanceOf(Nodal.ModelArray);
+          expect(children.length).to.equal(95);
+          expect(children._meta.total).to.equal(100);
+          expect(children._meta.offset).to.equal(5);
+          done();
+
+        });
+
+    });
+
+    it('Should limit properly (query params, count)', (done) => {
+
+      Child.query()
+        .where({__count: 10})
+        .end((err, children) => {
+
+          expect(err).to.equal(null);
+          expect(children).to.be.an.instanceOf(Nodal.ModelArray);
+          expect(children.length).to.equal(10);
+          expect(children._meta.total).to.equal(100);
+          expect(children._meta.offset).to.equal(0);
+          done();
+
+        });
+
+    });
+
+    it('Should limit properly (query params, count + offset)', (done) => {
+
+      Child.query()
+        .where({__offset: 5, __count: 10})
+        .end((err, children) => {
+
+          expect(err).to.equal(null);
+          expect(children).to.be.an.instanceOf(Nodal.ModelArray);
+          expect(children.length).to.equal(10);
+          expect(children._meta.total).to.equal(100);
+          expect(children._meta.offset).to.equal(5);
+          done();
+
+        });
+
+    });
+
     it('Should limit and orderBy properly (ASC)', function(done) {
 
       Child.query()
@@ -453,10 +507,10 @@ module.exports = (function(Nodal) {
 
     });
 
-    it('Should do a "like" where query properly', (done) => {
+    it('Should do a "contains" where query properly', (done) => {
 
       Parent.query()
-        .where({name__like: 'am'}) // James, Samantha, Samuel
+        .where({name__contains: 'am'}) // James, Samantha, Samuel
         .end((err, parents) => {
 
           expect(err).to.equal(null);
@@ -467,10 +521,10 @@ module.exports = (function(Nodal) {
 
     });
 
-    it('Should do an "ilike" where query properly', (done) => {
+    it('Should do an "icontains" where query properly', (done) => {
 
       Parent.query()
-        .where({name__ilike: 'z'}) // Suzy, Zoolander
+        .where({name__icontains: 'z'}) // Suzy, Zoolander
         .end((err, parents) => {
 
           expect(err).to.equal(null);
@@ -537,6 +591,45 @@ module.exports = (function(Nodal) {
 
     });
 
+    it('Should where by "hidden" field', (done) => {
+
+      Parent.query()
+        .where({hidden: 'a'})
+        .end((err, parents) => {
+
+          expect(parents.length).to.be.lessThan(10);
+          done();
+
+        });
+
+    });
+
+    it('Should safeWhere and ignore "hidden" field', (done) => {
+
+      Parent.query()
+        .safeWhere({hidden: 'a'})
+        .end((err, parents) => {
+
+          expect(parents.length).to.equal(10);
+          done();
+
+        });
+
+    });
+
+    it('Should safeWhere and ignore "hidden" field with modifier', (done) => {
+
+      Parent.query()
+        .safeWhere({hidden__not: 'a'})
+        .end((err, parents) => {
+
+          expect(parents.length).to.equal(10);
+          done();
+
+        });
+
+    });
+
     it('Should find all children with parent id = "1", by id', (done) => {
 
       Child.query()
@@ -590,6 +683,59 @@ module.exports = (function(Nodal) {
 
           expect(err).to.equal(null);
           expect(parents.length).to.equal(2);
+          expect(parents[0].joined('children').length).to.equal(10);
+          expect(parents[1].joined('children').length).to.equal(10);
+          done();
+
+        });
+
+    });
+
+    it('Should find all parents with children id <= 15, by joining with restrictions', (done) => {
+
+      Parent.query()
+        .join('children', {id__lte: 15})
+        .where({children__id__lte: 15})
+        .end((err, parents) => {
+
+          expect(err).to.equal(null);
+          expect(parents.length).to.equal(2);
+          expect(parents[0].joined('children').length).to.equal(10);
+          expect(parents[1].joined('children').length).to.equal(5);
+          done();
+
+        });
+
+    });
+
+    it('Should find all parents with children id <= 15, by joining with more restrictions', (done) => {
+
+      Parent.query()
+        .join('children', {id__lte: 15, id__gte: 11})
+        .where({children__id__lte: 15})
+        .end((err, parents) => {
+
+          expect(err).to.equal(null);
+          expect(parents.length).to.equal(2);
+          expect(parents[0].joined('children').length).to.equal(0);
+          expect(parents[1].joined('children').length).to.equal(5);
+          done();
+
+        });
+
+    });
+
+    it('Should find all parents with children id <= 15, by joining with parent restrictions', (done) => {
+
+      Parent.query()
+        .join('children', {parent__id: 1})
+        .where({children__id__lte: 15})
+        .end((err, parents) => {
+
+          expect(err).to.equal(null);
+          expect(parents.length).to.equal(2);
+          expect(parents[0].joined('children').length).to.equal(10);
+          expect(parents[1].joined('children').length).to.equal(0);
           done();
 
         });
@@ -1053,6 +1199,26 @@ module.exports = (function(Nodal) {
 
     });
 
+    it('Should not fetch parents if they don\'t exist', done => {
+
+      Child.create({name: 'Ada'}, (err, child) => {
+
+        Child.query()
+          .join('parent')
+          .where({name: 'Ada'})
+          .first((err, child) => {
+
+            expect(err).to.not.exist;
+            expect(child).to.exist;
+            expect(child.joined('parent')).to.not.exist;
+            done();
+
+          });
+
+      });
+
+    });
+
     // IMPORTANT: Do npt place any tests after the `Should do a destroy cascade`
     // test since all models will be gone
 
@@ -1071,6 +1237,7 @@ module.exports = (function(Nodal) {
         })
 
     });
+
 
   });
 

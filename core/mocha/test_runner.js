@@ -4,11 +4,10 @@ module.exports = (() => {
 
   const fs = require('fs');
   const path = require('path');
-  const seedCommand = require('../../cli/commands/db/seed.js');
 
   class TestRunner {
 
-    constructor(dir) {
+    constructor(dir, router) {
 
       let tests = [];
 
@@ -16,19 +15,14 @@ module.exports = (() => {
 
         return filename => {
 
-          if (!path.extname(filename)) {
+          if (!path.extname(filename) && filename[0] !== '.') {
 
-            if (filename !== '.' && filename !== '..') {
-              let nextDir = path.resolve(dir, filename);
-              return fs.readdirSync(nextDir).forEach(addCommand(nextDir));
-            }
-
-            return;
+            let nextDir = path.resolve(dir, filename);
+            return fs.readdirSync(nextDir).forEach(addCommand(nextDir));
 
           }
 
           let Test = require(path.resolve(dir, filename));
-
           tests.push(new Test(this));
 
         }
@@ -39,12 +33,7 @@ module.exports = (() => {
       fs.readdirSync(testDir).forEach(addTest(testDir));
 
       this._tests = tests;
-
-    }
-
-    ready(app) {
-
-      this.app = app;
+      this.router = router;
 
     }
 

@@ -38,7 +38,7 @@ module.exports = Nodal => {
 
     it('should parse regex from string with id named group', () => {
 
-      let parsed = utilities.parseRegexFromString('/api/v1/:id');
+      let parsed = utilities.parseRegexFromString('/api/v1/{id}');
 
       expect(parsed.names.length).to.equal(1);
       expect(parsed.names[0]).to.equal('id');
@@ -56,7 +56,7 @@ module.exports = Nodal => {
 
     it('should parse regex from string with two named groups', () => {
 
-      let parsed = utilities.parseRegexFromString('/api/v1/:endpoint/:id');
+      let parsed = utilities.parseRegexFromString('/api/v1/{endpoint}/{id}');
 
       expect(parsed.names.length).to.equal(2);
       expect(parsed.names[0]).to.equal('endpoint');

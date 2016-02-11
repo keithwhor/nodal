@@ -9,7 +9,7 @@ module.exports = (() => {
     constructor(testRunner) {
 
       this.testRunner = testRunner;
-      Object.defineProperty(this, 'app', {get: () => this.testRunner.app});
+      Object.defineProperty(this, 'router', {get: () => this.testRunner.router});
 
     }
 
@@ -37,7 +37,7 @@ module.exports = (() => {
     */
     endpoint(path, query) {
 
-      return new EndpointRequest(this.app, path, query);
+      return new EndpointRequest(this.router, path, query);
 
     }
 

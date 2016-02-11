@@ -184,7 +184,7 @@ module.exports = (function() {
           subQuery,
           ' AS ',
           this.escapeField(table),
-          this.generateJoinClause(table, joinArray),
+          this.generateJoinClause(table, joinArray, paramOffset),
           this.generateWhereClause(table, multiFilter, paramOffset),
           this.generateGroupByClause(table, groupByArray),
           this.generateOrderByClause(table, orderByArray, groupByArray),
@@ -395,7 +395,19 @@ module.exports = (function() {
         return '';
       }
 
-      return (' WHERE (' + multiFilter.map(whereObj => {
+      return ` WHERE ${this.generateOrClause(table, multiFilter, paramOffset)}`;
+
+    }
+
+    generateOrClause(table, multiFilter, paramOffset) {
+
+      paramOffset = Math.max(0, parseInt(paramOffset) || 0);
+
+      if (!multiFilter || !multiFilter.length) {
+        return '';
+      }
+
+      return ('(' + multiFilter.map(whereObj => {
         return this.generateAndClause(table, whereObj);
       }).join(') OR (') + ')').replace(/__VAR__/g, () => `\$${1 + (paramOffset++)}`);
 
@@ -492,12 +504,14 @@ module.exports = (function() {
 
     }
 
-    generateJoinClause(table, joinArray) {
+    generateJoinClause(table, joinArray, paramOffset) {
+
+      paramOffset = Math.max(0, parseInt(paramOffset) || 0);
 
       return (!joinArray || !joinArray.length) ? '' :
         joinArray.map(joinData => {
 
-          return joinData.map(join => {
+          return joinData.map((join, i) => {
 
             let joinColumns = join.joinColumn instanceof Array ? join.joinColumn : [join.joinColumn]
             let prevColumns = join.prevColumn instanceof Array ? join.prevColumn : [join.prevColumn]
@@ -508,16 +522,22 @@ module.exports = (function() {
               prevColumns.forEach(prevColumn => {
                 statements.push(
                   `${this.escapeField(join.joinAlias)}.${this.escapeField(joinColumn)} = ` +
-                  `${this.escapeField(join.prevTable || table)}.${this.escapeField(prevColumn)}`
+                  `${this.escapeField(join.prevAlias || table)}.${this.escapeField(prevColumn)}`
                 );
               });
             });
 
+
+            let filterClause = this.generateOrClause(join.joinAlias, join.multiFilter, paramOffset);
+            join.multiFilter && join.multiFilter.forEach(arr => paramOffset += arr.length);
+
             return [
               ` LEFT JOIN ${this.escapeField(join.joinTable)}`,
-              `AS ${this.escapeField(join.joinAlias)}`,
-              `ON (${statements.join(' OR ')})`
-            ].join(' ');
+              ` AS ${this.escapeField(join.joinAlias)}`,
+              ` ON (${statements.join(' OR ')}`,
+              filterClause ? ` AND ${filterClause}` : '',
+              ')'
+            ].join('');
 
           }).join('')
 
@@ -586,12 +606,14 @@ module.exports = (function() {
     lte: field => `${field} <= __VAR__`,
     gt: field => `${field} > __VAR__`,
     gte: field => `${field} >= __VAR__`,
-    like: field => `${field} LIKE '%' || __VAR__ || '%'`,
-    ilike: field => `${field} ILIKE '%' || __VAR__ || '%'`,
+    contains: field => `${field} LIKE '%' || __VAR__ || '%'`,
+    icontains: field => `${field} ILIKE '%' || __VAR__ || '%'`,
     startswith: field => `${field} LIKE __VAR__ || '%'`,
     istartswith: field => `${field} ILIKE __VAR__ || '%'`,
     endswith: field => `${field} LIKE '%' || __VAR__`,
     iendswith: field => `${field} ILIKE '%' || __VAR__`,
+    like: field => `${field} LIKE __VAR__`,
+    ilike: field => `${field} ILIKE __VAR__`,
     is_null: field => `${field} IS NULL`,
     not_null: field => `${field} IS NOT NULL`,
     in: field => `ARRAY[${field}] <@ __VAR__`,

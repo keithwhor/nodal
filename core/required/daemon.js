@@ -1,146 +1,141 @@
-module.exports = (function() {
+module.exports = (() => {
 
   'use strict';
 
-  const Application = require('./application.js');
-  const dummyRouter = require('./dummy_router.js');
-
+  const cluster = require('cluster');
+  const os = require('os');
+  const http = require('http');
   const fs = require('fs');
+  const ExecutionQueue = require('./execution_queue');
 
   /**
-  * Daemon for running servers. Restarts when changes are made to the underlying file structure.
+  * Multi-process HTTP Daemon that resets when files changed (in development)
   * @class
   */
   class Daemon {
 
-    /**
-    * @param {string} path Path to your app.js file which exports your Application
-    */
-    constructor(path) {
+    constructor() {
 
-      this._path = path;
-      this._watchers = null;
+      this._error = null;
+      this._server = null;
+      this._port = null;
 
-      this._onStart = function() {};
+      this.cpus = os.cpus().length;
+      this.children = [];
 
-    }
+      process.on('exit', (code) => {
 
-    /**
-    * Begins the Daemon, instantiates your app. Initializers called first. Will only watch for changes when NODE_ENV is empty or set to "development"
-    * @param {function} callback Method to execute when Application is finished initializing.
-    */
-    start(callback) {
+        console.log(`[Nodal.Daemon] Shutdown: Exited with code ${code}`);
 
-      callback = typeof callback === 'function' ? callback : this._onStart;
-      this._onStart = callback;
-
-      let self = this;
-      let init = function() {
-
-        if ((process.env.NODE_ENV || 'development') === 'development') {
-          self.watch('', self.restart.bind(self));
-        }
-
-        callback.call(self, this);
-
-      };
-
-      try {
-
-        let App = require(process.cwd() + '/' + this._path);
-
-        if (!(Application.prototype.isPrototypeOf(App.prototype))) {
-          throw new Error('Daemon requires valid Nodal.Application');
-        }
-
-        App.prototype.__initialize__ = init;
-        this._app = new App();
-
-        let listener = (function(err) {
-
-          if (!(err instanceof Error)) {
-            err = new Error(err);
-          }
-
-          console.error('Caught exception: ' + err.message);
-          console.error(err.stack);
-
-          process.removeListener('uncaughtException', listener);
-          this.restart(err);
-
-        }).bind(this);
-
-        process.on('uncaughtException', listener);
-
-      } catch(err) {
-
-        this.startError(err, init);
-
-      }
-
-    }
-
-    /**
-    * Begins the Daemon in error mode (will show the startup error).
-    * @param {Error} error The error the application encountered when it tried to start.
-    * @param {function} init The initialization function from Daemon#start
-    */
-    startError(error, init) {
-
-      class DummyApp extends Application {
-
-        __setup__() {
-
-          this.useRouter(dummyRouter(error));
-
-        }
-
-      }
-
-      DummyApp.prototype.__initialize__ = init;
-      this._app = new DummyApp();
-
-    }
-
-    /**
-    * Restarts the Daemon
-    */
-    restart(err) {
-
-      this.stop(err, this.start);
-
-    }
-
-    /**
-    * Stops the Daemon
-    * @param {function} onStop Method to execute when Daemon has stopped successfully
-    */
-    stop(err, onStop) {
-
-      this.unwatch();
-
-      err = err || new Error('Application Stopped');
-
-      let cwd = process.cwd();
-
-      Object.keys(require.cache).filter(function(v) {
-        return v.indexOf(cwd) === 0 &&
-          v.substr(cwd.length).indexOf('/node_modules/') !== 0;
-      }).forEach(function(key) {
-        delete require.cache[key];
       });
 
-      this._app.__destroy__(err, onStop.bind(this));
+      if (process.env.NODE_ENV === 'development') {
+
+        this.watch('', (changes) => {
+          changes.forEach(change => {
+            console.log(`[Nodal.Daemon] ${change.event[0].toUpperCase()}${change.event.substr(1)}: ${change.path}`);
+          });
+          this.children.forEach(child => child.send({invalidate: true}));
+          !this.children.length && this.start();
+        });
+
+      }
+
+      this.initializers = new ExecutionQueue();
 
     }
 
     /**
-    * Stops watching directory tree for changes to files
+    * Starts the Daemon. If all application services fail, will launch a
+    *   dummy error app on the port provided.
+    * @param {Number} port
     */
-    unwatch() {
+    start(port) {
 
-      this._watchers && clearInterval(this._watchers.interval);
-      this._watchers = null;
+      this._port = port || 3000;
+
+      console.log('[Nodal.Daemon] Startup: Initializing');
+
+      this.initializers.exec((err) => {
+
+        if (err) {
+          this.error(err);
+          return this.idle();
+        }
+
+        this._server && this._server.close();
+        this._server = null;
+
+        for (var i = 0; i < this.cpus; i++) {
+
+          let child = cluster.fork();
+          this.children.push(child);
+
+          child.on('message', this.message.bind(this));
+          child.on('exit', this.exit.bind(this, child));
+
+        }
+
+        console.log('[Nodal.Daemon] Startup: Spawning HTTP Workers');
+
+      });
+
+    }
+
+    /**
+    * Daemon failed to load, set it in idle state (accept connections, give dummy response)
+    */
+    idle() {
+
+      let port = this._port || 3000;
+
+      this._server = http.createServer((req, res) => {
+        res.end(`Application Error\n\n${this._error.stack}`);
+        req.connection.destroy();
+      }).listen(port);
+
+      console.log(`[Nodal.Daemon] Idle: Unable to spawn HTTP Workers, listening on port ${port}`);
+
+    }
+
+    message(data) {
+
+      data.error && this.error(data.error);
+
+    }
+
+    /**
+    * Shut down a child process given a specific exit code. (Reboot if clean shutdown.)
+    * @param {child_process} child
+    * @param {Number} code Exit status codes
+    */
+    exit(child, code) {
+
+      this.children.splice(this.children.indexOf(child), 1);
+
+      if (code === 0) {
+        child = cluster.fork();
+        this.children.push(child);
+        child.on('message', this.message.bind(this));
+        child.on('exit', this.exit.bind(this, child));
+      }
+
+      if (this.children.length === 0) {
+        this.idle();
+      }
+
+    }
+
+    /**
+    * Log an error on the Daemon
+    * @param {Error} error
+    */
+    error(error) {
+
+      this._error = error;
+      this._server = null;
+      console.log(`[Nodal.Daemon] ${error.name}: ${error.message}`);
+      console.log(error.stack);
 
     }
 
@@ -168,7 +163,7 @@ module.exports = (function() {
 
         files.forEach(function(v) {
 
-          if (v === 'node_modules' || v.indexOf('.git') === 0) {
+          if (v === 'node_modules' || v.indexOf('.') === 0) {
             return;
           }
 
@@ -195,22 +190,13 @@ module.exports = (function() {
 
       watchers.iterate = function(changes) {
 
-        changes.forEach(function(v) {
-          console.log(v.event[0].toUpperCase() + v.event.substr(1) + ': ' + v.path);
-        });
-
         if (changes.length) {
-          watchers.interval && clearInterval(watchers.interval);
-          onChange.call(self);
+          onChange.call(self, changes);
         }
 
       };
 
       watchers.interval = setInterval(function() {
-
-        /* let t = new Date().valueOf();
-
-        console.log('Checking project tree...'); */
 
         let changes = [];
 
@@ -224,7 +210,7 @@ module.exports = (function() {
 
           files.forEach(function(v) {
 
-            if (v === 'node_modules' || v.indexOf('.git') === 0) {
+            if (v === 'node_modules' || v.indexOf('.') === 0) {
               return;
             }
 
@@ -268,10 +254,6 @@ module.exports = (function() {
         });
 
         watchers.iterate(changes);
-
-        /* t = (new Date).valueOf() - t;
-
-        console.log('Project tree walked. Took ' + t + 'ms'); */
 
       }, 1000);
 

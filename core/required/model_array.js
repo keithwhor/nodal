@@ -43,19 +43,10 @@ module.exports = (function() {
     /**
     * Creates an Array of plain objects from the ModelArray, with properties matching an optional interface
     * @param {Array} arrInterface Interface to use for object creation for each model
-    * @param {Object} opts Options for the object conversion
     */
-    toObject(arrInterface, opts, list) {
+    toObject(arrInterface) {
 
-      list = list ? list.slice() : [];
-
-      if (list.indexOf(this) > -1) {
-        return;
-      }
-
-      list.push(this);
-
-      return this.map(m => m.toObject(arrInterface, opts, list));
+      return this.map(m => m.toObject(arrInterface));
 
     }
 

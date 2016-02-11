@@ -1,15 +1,11 @@
-module.exports = (function() {
+module.exports = (() => {
 
   'use strict';
 
   const Nodal = require('nodal');
 
-  let daemon = new Nodal.Daemon('./app/worker.js');
+  const SchedulerMain = Nodal.require('schedulers/main.js');
 
-  daemon.start(function(app) {
-
-    console.log('Worker ready');
-
-  });
+  SchedulerMain.start();
 
 })();

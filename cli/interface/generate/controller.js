@@ -35,8 +35,6 @@ module.exports = (function() {
 
   function generateRoute(controllerName, controllerPath, controllerRoute) {
 
-    /* generator: end imports */
-
     let importStatement = [
       'const ',
         controllerName,
@@ -49,7 +47,7 @@ module.exports = (function() {
     let routeStatement = [
       `router.route('/`,
       controllerPath.slice(0, -1).concat([controllerRoute]).join('/'),
-      `/:id', `,
+      `/\{id\}').use(`,
       controllerName,
       ');'
     ].join('');
@@ -101,7 +99,6 @@ module.exports = (function() {
     fs.writeFileSync('./app/router.js', routes.join('\n'));
 
     console.log(colors.green.bold('Modify: ') + './app/router.js');
-
 
   }
 

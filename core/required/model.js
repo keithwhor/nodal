@@ -321,6 +321,15 @@ module.exports = (function() {
     }
 
     /**
+    * Specifies joinsTo for the child model
+    */
+    static joinedBy(Model, options) {
+
+      return Model.joinsTo && Model.joinsTo(this, options);
+
+    }
+
+    /**
     * Create a validator
     * @param {string} field The field you'd like to validate
     * @param {string} message The error message shown if a validation fails.
@@ -379,6 +388,27 @@ module.exports = (function() {
       };
 
       this.prototype._calculationsList.push(calcField);
+
+    }
+
+    /**
+    * Hides fields from being output in .toObject() (i.e. API responses), even if asked for
+    * @param {String} field
+    */
+    static hides(field) {
+
+      this.prototype._hides[field] = true;
+      return true;
+
+    }
+
+    /**
+    * Tells us if a field is hidden (i.e. from API queries)
+    * @param {String} field
+    */
+    static isHidden(field) {
+
+      return this.prototype._hides[field] || false;
 
     }
 
@@ -789,72 +819,38 @@ module.exports = (function() {
     /**
     * Creates a plain object from the Model, with properties matching an optional interface
     * @param {Array} arrInterface Interface to use for object creation
-    * @param {Object} opts Options like whether to exclude the fields. {exclude: true}
     */
-    toObject(arrInterface, opts, list) {
-
-      list = list ? list.slice() : [];
-
-      if (list.indexOf(this) > -1) {
-        return;
-      }
-
-      list.push(this);
+    toObject(arrInterface) {
 
       let obj = {};
-      opts = opts || {};
 
-      if (opts.exclude) {
+      arrInterface = arrInterface ||
+        this.fieldList()
+        .concat(this._calculationsList)
+        .filter(key => !this._hides[key]);
 
-        let excludeObjects = [];
-        let excludeLookup = arrInterface.reduce((o, key) => {
-          if (typeof key === 'object' && key !== null) {
-            excludeObjects.push(key);
-            key = Object.keys(key)[0];
-          }
-          o[key] = true;
-          return o;
-        }, {});
+      arrInterface.forEach(key => {
 
-        arrInterface = this.fieldList()
-          .concat(this._calculationsList)
-          .concat(this._joinsList)
-          .filter(key => !excludeLookup[key])
-          .concat(excludeObjects);
+        if (this._hides[key]) {
+          return;
+        }
 
-      }
+        let joinObject;
 
-      if (arrInterface) {
+        if (typeof key === 'object' && key !== null) {
+          let subInterface = key;
+          key = Object.keys(key)[0];
+          joinObject = this._joinsCache[key];
+          joinObject && (obj[key] = joinObject.toObject(subInterface[key]));
+        } else if (this._data[key] !== undefined) {
+          obj[key] = this._data[key];
+        } else if (this._calculations[key] !== undefined) {
+          obj[key] = this.calculate(key);
+        } else if (joinObject = this._joinsCache[key]) {
+          obj[key] = joinObject.toObject();
+        }
 
-        arrInterface.forEach(key => {
-
-          let joinObject;
-
-          if (typeof key === 'object' && key !== null) {
-            let subInterface = key;
-            key = Object.keys(key)[0];
-            joinObject = this._joinsCache[key];
-            joinObject && (obj[key] = joinObject.toObject(subInterface[key], opts, list));
-          } else if (this._data[key] !== undefined) {
-            obj[key] = this._data[key];
-          } else if (this._calculations[key] !== undefined) {
-            obj[key] = this.calculate(key);
-          } else if (joinObject = this._joinsCache[key]) {
-            obj[key] = joinObject.toObject();
-          }
-
-        });
-
-      } else {
-
-        this.fieldList().forEach(key => obj[key] = this._data[key]);
-        this._calculationsList.forEach(key => obj[key] = this.calculate(key));
-        this._joinsList.forEach(key => {
-          let cacheValue = this._joinsCache[key];
-          cacheValue && (obj[key] = cacheValue.toObject(null, opts, list));
-        });
-
-      }
+      });
 
       return obj;
 
@@ -1151,6 +1147,8 @@ module.exports = (function() {
 
   Model.prototype._calculations = {};
   Model.prototype._calculationsList = [];
+
+  Model.prototype._hides = {};
 
   Model.prototype.formatters = {};
 

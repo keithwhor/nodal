@@ -2,7 +2,7 @@
 
 Nodal follows MVC patterns you're probably familiar with from the simplicity
 of Django and Rails. If you need more in-depth help,
-[full API documentation is available here](./docs/index.html). Otherwise,
+[full API documentation is available here](http://www.nodaljs.com/static/docs/index.html). Otherwise,
 let's get started!
 
 # Starting Your Project
@@ -14,7 +14,7 @@ terminal and run:
 ```
 npm install nodal -g
 ```
-(If you get an error, run `sudo npm install nodal -g` or fix permissions permanently by <a href="https://docs.npmjs.com/getting-started/fixing-npm-permissions" target="_blank">following these directions</a>)
+(If you get an error, run `sudo npm install nodal -g` or fix permissions permanently by [following these directions](https://docs.npmjs.com/getting-started/fixing-npm-permissions).
 It will take a few seconds to finish. At this point, you have the Nodal
 command line tools available and you can really get started!
 
@@ -43,16 +43,10 @@ change that, go to `config/secrets.json`:
 
   "development": {
     "port": 3000,
-    "auth": {
-      "key": ""
-    }
   },
 
   "production": {
     "port": "{{= env.PORT }}",
-    "auth": {
-      "key": ""
-    }
   }
 
 }
@@ -66,29 +60,34 @@ Remember this! This is very important for setting environment variables. The
 values that are loaded are based on your environment, set by your `NODE_ENV` environment
 variable (defaults to development).
 
-Let's see why the server is running on port 3000 by looking in `./server.js`...
+Let's see why the server is running on port 3000 by looking in `./cluster.js`...
 
 ```javascript
-module.exports = (function() {
+module.exports = (() => {
 
   'use strict';
 
   const Nodal = require('nodal');
+  const cluster = require('cluster');
 
-  let daemon = new Nodal.Daemon('./app/app.js');
+  if (cluster.isMaster) {
 
-  daemon.start(function(app) {
+    const daemon = Nodal.require('app/daemon.js');
+    daemon.start(Nodal.my.Config.secrets.PORT);
 
-    app.listen(Nodal.my.Config.secrets.port);
+  } else {
 
-  });
+    const app = new Nodal.Application();
+    app.listen(Nodal.my.Config.secrets.PORT);
+
+
+  }
 
 })();
 ```
 
 Not so magic after all. We're telling the server daemon to start, and once it's running,
-to tell your app to listen on the provided port. You'll notice the `Nodal.Daemon` takes
-one argument. That's your application that it's going to load and instantiate.
+to telling any application processes that spawn to listen on the provided port.
 
 # Routing
 
@@ -103,6 +102,26 @@ module.exports = (function() {
   const Nodal = require('nodal');
   const router = new Nodal.Router();
 
+  /* Middleware */
+  /* executed *before* Controller-specific middleware */
+
+  const CORSMiddleware = Nodal.require('middleware/cors_middleware.js');
+  // const ForceWWWMiddleware = Nodal.require('middleware/force_www_middleware.js');
+  // const ForceHTTPSMiddleware = Nodal.require('middleware/force_https_middleware.js');
+
+  router.middleware.use(CORSMiddleware);
+  // router.middleware.use(ForceWWWMiddleware);
+  // router.middleware.use(ForceHTTPSMiddleware);
+
+  /* Renderware */
+  /* executed *after* Controller-specific renderware */
+
+  const GzipRenderware = Nodal.require('renderware/gzip_renderware.js')
+
+  router.renderware.use(GzipRenderware);
+
+  /* Routes */
+
   const IndexController = Nodal.require('app/controllers/index_controller.js');
   const StaticController = Nodal.require('app/controllers/static_controller.js');
   const Error404Controller = Nodal.require('app/controllers/error/404_controller.js');
@@ -112,15 +131,15 @@ module.exports = (function() {
 
   /* generator: end imports */
 
-  router.route('/', IndexController);
-  router.route('/static/*', StaticController);
+  router.route('/').use(IndexController);
+  router.route('/static/*').use(StaticController);
 
   /* generator: begin routes */
 
 
   /* generator: end routes */
 
-  router.route(/.*/, Error404Controller);
+  router.route('/*').use(Error404Controller);
 
   return router;
 
@@ -132,6 +151,24 @@ where you export an IIFE is the standard in Nodal. The reason we do this is to e
 consistency in understanding what's getting exported. A developer looking to quickly debug
 can jump to the bottom of a file and look for the return statement to see what was
 actually exported.
+
+First we see Middleware and Renderware being added to the Controller. Middleware
+set on the router is executed *for every endpoint*, and happens *before*
+Controller-specific middleware. Renderware is similarly executed on every
+endpoint, but happens *after* Controller-specific renderware. The execution
+flow looks like this...
+
+```
+Client Request ->
+Controller#before ->
+Router Middleware ->
+Controller Middleware ->
+Controller#get, put, post, del ->
+Controller Renderware ->
+Router Renderware ->
+Controller#after ->
+Server Response
+```
 
 Next, **Controllers are all loaded very explicitly**. This follows Django's routing
 style. The router itself takes regex and will compare an incoming request to its
@@ -162,7 +199,7 @@ module.exports = (function() {
     get() {
 
       this.render(
-        this.app.template('index.html').generate(
+        Nodal.Template.generate('index.html').render(
           this.params,
           {
             name: 'My Nodal Application'
@@ -211,7 +248,7 @@ destroy() // DELETE
 To render a string from within a controller, use `this.render()`. It can also
 render JSON automatically if you provide a serializable object. **For API-formatted
 responses use:** `this.respond()`. Other ways to respond to requests are
-available [in the API documentation](./docs/index.html).
+available [in the API documentation](http://www.nodaljs.com/static/docs/index.html).
 
 ## Using 'this' in Controllers
 

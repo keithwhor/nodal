@@ -117,6 +117,11 @@ module.exports = (() => {
 
     joinsTo(Model, options) {
 
+      if (!Model.name) {
+        // Sanity check for circular dependency resolution
+        return null;
+      }
+
       options = options || {};
 
       options.multiple = !!options.multiple;

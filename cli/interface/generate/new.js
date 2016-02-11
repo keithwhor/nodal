@@ -120,28 +120,7 @@ module.exports = (function() {
           let dbjson = JSON.parse(fs.readFileSync(rootPath + '/templates/db.json'));
           dbjson.development.main.database = promptResult.databaseName + '_development';
           dbjson.test.main.database = promptResult.databaseName + '_test';
-          fs.writeFileSync('./' + dirname + '/config/db.json', JSON.stringify(dbjson, null, 4));
-
-          // Lets enable database support by default if the user said yes to the prompt
-          // NOTE: I didnt see the need to templatize this since it was quicker to re-write
-          //       the copied in file
-          if (promptResult.database || promptResult.scheduler) {
-            const appFile = './' + dirname + '/app/app.js';
-            let contents = fs.readFileSync(appFile).toString()
-
-            // Uncomment DB in app/app,.js
-            if (promptResult.database) {
-              contents = contents.replace(/\/\/ const db/g, 'const db')
-              contents = contents.replace(/\/\/ this.useDat/g, 'this.useDat')
-            }
-
-            // Uncomment Scheduler in app/app,.js
-            if (promptResult.scheduler) {
-              contents = contents.replace(/\/\/ const sch/g, 'const sch')
-              contents = contents.replace(/\/\/ this.useSch/g, 'this.useSch')
-            }
-            fs.writeFileSync(appFile, contents);
-          }
+          fs.writeFileSync('./' + dirname + '/config/db.json', JSON.stringify(dbjson, null, 2));
 
           let spawn = require('cross-spawn-async');
 
