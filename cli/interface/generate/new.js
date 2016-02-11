@@ -23,7 +23,7 @@ module.exports = (function() {
         {
           name: 'name',
           type: 'input',
-          default: 'my-nodal-project',
+          default: args[0] ? args[0][0] : 'my-nodal-project',
           message: 'Name',
         },
         {
