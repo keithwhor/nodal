@@ -29,7 +29,7 @@ module.exports = (() => {
 
       });
 
-      if (process.env.NODE_ENV === 'development') {
+      if ((process.env.NODE_ENV || 'development') === 'development') {
 
         this.watch('', (changes) => {
           changes.forEach(change => {
@@ -90,7 +90,11 @@ module.exports = (() => {
       let port = this._port || 3000;
 
       this._server = http.createServer((req, res) => {
-        res.end(`Application Error\n\n${this._error.stack}`);
+        if (process.env.NODE_ENV !== 'production') {
+          res.end(`Application Error\n\n${this._error.stack}`);
+        } else {
+          res.end(`Application Error`);
+        }
         req.connection.destroy();
       }).listen(port);
 

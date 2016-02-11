@@ -50,9 +50,6 @@ Getting started with Nodal is easy.
 3. Using your terminal, visit your projects folder. Perhaps with `cd ~`.
 4. Run `nodal new`.
 5. Follow the on screen instructions, enter your new project directory and type `nodal s`.
-6. For running database commands, you'll want to make sure you `NODE_ENV` variable is set
-to `development` --- the default is production. Type `export NODE_ENV=development` before
-running database commands and you should be good!
 
 That's it! Your Nodal webserver is up and running.
 

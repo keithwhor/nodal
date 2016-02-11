@@ -124,7 +124,7 @@ module.exports = (() => {
 
             if (err) {
               res.writeHead(500, {});
-              if (process.env.NODE_ENV === 'development') {
+              if (process.env.NODE_ENV !== 'production') {
                 res.write(err.stack);
               } else {
                 res.write('500 - Internal Server Error');
