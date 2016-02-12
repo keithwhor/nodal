@@ -156,9 +156,15 @@
   commandManager.map.get(command).exec(args, flags, (error) => {
 
     if (error) {
-      console.error(colors.red.bold('Error: ') + error.message);
-      error.details && console.error(error.details);
-      error.stack && console.error(error.stack);
+
+      if (typeof error === 'string') {
+        console.error(colors.red.bold('Error: ') + error);
+      } else {
+        console.error(colors.red.bold('Error: ') + error.message);
+        error.details && console.error(error.details);
+        error.stack && console.error(error.stack);
+      }
+      
       // Append help to all errors
       console.log(colors.green('Help: ') + 'Type `nodal help` to get more information about what Nodal can do for you.');
     }
