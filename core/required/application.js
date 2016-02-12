@@ -51,7 +51,8 @@ module.exports = (() => {
 
     getTime() {
 
-      return new Date().valueOf();
+      let hrTime = process.hrtime()
+      return (hrTime[0] * 1000 + hrTime[1] / 1000000);
 
     }
 
@@ -88,7 +89,8 @@ module.exports = (() => {
     */
     handler(req, res) {
 
-      let body = new Buffer(0);
+      let body = [];
+      let bodyLength = 0;
       let start = this.getTime();
 
       console.log(`[Nodal.${process.pid}] Incoming Request: ${req.url} from ${req.connection.remoteAddress}`);
@@ -104,11 +106,14 @@ module.exports = (() => {
       }
 
       req.on('data', data => {
-        body = Buffer.concat([body, data]);
-        (body.length > 1E6) && (res.end(), req.connection.destroy());
+        body.push(data);
+        bodyLength += data.length;
+        (bodyLength > 1E6) && (res.end(), req.connection.destroy());
       });
 
       req.on('end', () => {
+
+        body = Buffer.concat(body);
 
         return this.router.dispatch(
           this.router.prepare(
@@ -135,7 +140,7 @@ module.exports = (() => {
               res.write(data);
             }
 
-            this.logResponse(res.statusCode, req.url, t);
+            this.logResponse(res.statusCode, req.url, t.toFixed(3));
             res.end();
 
           }

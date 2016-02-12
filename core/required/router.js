@@ -21,28 +21,16 @@ module.exports = (() => {
 
     }
 
-    parsePath(requrl) {
+    match(path) {
 
-      let urlData = url.parse(requrl, true);
-      let path = urlData.pathname;
-      if (path[path.length - 1] === '/') {
-        path = path.substr(path, path.length - 1);
-      }
-
-      return path;
-
-    }
-
-    match(requrl) {
-
-      let match = this.parsePath(requrl).match(this.regex);
+      let match = path.match(this.regex);
       return match ? [].slice.call(match, 1) : null;
 
     }
 
-    params(requrl) {
+    params(path) {
 
-      let matches = this.match(requrl).slice(1).map(v => v || '');
+      let matches = this.match(path).slice(1).map(v => v || '');
       return this.names.reduce((obj, name, i) => {
         obj[name] = matches[i];
         return obj;
@@ -64,8 +52,21 @@ module.exports = (() => {
     constructor() {
 
       this._routes = [];
+      this._routeCache = {};
       this.middleware = new ExecutionQueue();
       this.renderware = new ExecutionQueue();
+
+    }
+
+    parsePath(requrl) {
+
+      let urlData = url.parse(requrl, true);
+      let path = urlData.pathname;
+      if (path[path.length - 1] === '/') {
+        path = path.substr(path, path.length - 1);
+      }
+
+      return path;
 
     }
 
@@ -80,12 +81,17 @@ module.exports = (() => {
 
     find(url) {
 
+      let path = this.parsePath(url);
+      if (this._routeCache[path]) {
+        return this._routeCache[path];
+      }
+
       let routes = this._routes;
 
       for (let i = 0, len = routes.length; i < len; i++) {
         let route = routes[i];
-        if (route.match(url)) {
-          return route;
+        if (route.match(path)) {
+          return (this._routeCache[path] = route);
         }
       }
 
@@ -154,6 +160,7 @@ module.exports = (() => {
 
     prepare(ip, url, method, headers, body) {
 
+      let path = this.parsePath(url);
       let route = this.find(url);
       body = body instanceof Buffer ? body : new Buffer(body + '');
 
@@ -161,11 +168,11 @@ module.exports = (() => {
         remoteAddress: ip,
         url: url,
         method: method,
-        path: route.parsePath(url),
+        path: path,
         controller: route.controller,
         headers: headers,
-        matches: route.match(url),
-        route: route.params(url),
+        matches: route.match(path),
+        route: route.params(path),
         body: body
       };
 

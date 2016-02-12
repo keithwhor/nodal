@@ -1,6 +1,6 @@
 {
   "name": "nodal",
-  "version": "0.7.4",
+  "version": "0.7.5-rc1",
   "description": "An API Server and Framework for node.js",
   "keywords": [
     "framework",
