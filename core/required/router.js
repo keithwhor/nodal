@@ -52,7 +52,6 @@ module.exports = (() => {
     constructor() {
 
       this._routes = [];
-      this._routeCache = {};
       this.middleware = new ExecutionQueue();
       this.renderware = new ExecutionQueue();
 
@@ -82,16 +81,12 @@ module.exports = (() => {
     find(url) {
 
       let path = this.parsePath(url);
-      if (this._routeCache[path]) {
-        return this._routeCache[path];
-      }
-
       let routes = this._routes;
 
       for (let i = 0, len = routes.length; i < len; i++) {
         let route = routes[i];
         if (route.match(path)) {
-          return (this._routeCache[path] = route);
+          return route;
         }
       }
 
