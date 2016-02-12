@@ -20,12 +20,12 @@ module.exports = (function() {
 
     static login(params, callback) {
 
-      if (params.body.data.grant_type !== 'password') {
+      if (params.body.grant_type !== 'password') {
         return callback(new Error('Must supply grant_type'));
       }
 
       User.query()
-        .where({username: params.body.data.username})
+        .where({username: params.body.username})
         .end((err, users) => {
 
           if (err || !users || !users.length) {
@@ -36,7 +36,7 @@ module.exports = (function() {
 
           let user = users[0];
 
-          user.verifyPassword(params.body.data.password, (err, result) => {
+          user.verifyPassword(params.body.password, (err, result) => {
 
             if (err || !result) {
 

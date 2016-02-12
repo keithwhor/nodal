@@ -31,7 +31,7 @@ module.exports = (function() {
 
     create() {
 
-      {{= data.for.name }}.create(this.params.body.data, (err, model) => {
+      {{= data.for.name }}.create(this.params.body, (err, model) => {
 
         this.respond(err || model);
 
@@ -41,7 +41,7 @@ module.exports = (function() {
 
     update() {
 
-      {{= data.for.name }}.update(this.params.route.id, this.params.body.data, (err, model) => {
+      {{= data.for.name }}.update(this.params.route.id, this.params.body, (err, model) => {
 
         this.respond(err || model);
 

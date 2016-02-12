@@ -167,13 +167,13 @@ class BlogPostsController extends Nodal.Controller {
 
   create() {
 
-    BlogPost.create(params.body.data, (err, blogPost) => this.respond(err || blogPost));
+    BlogPost.create(params.body, (err, blogPost) => this.respond(err || blogPost));
 
   }
 
   update() {
 
-    BlogPost.update(this.params.route.id, params.body.data, (err, blogPost) => this.respond(err || blogPost));
+    BlogPost.update(this.params.route.id, params.body, (err, blogPost) => this.respond(err || blogPost));
 
   }
 

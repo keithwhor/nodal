@@ -20,7 +20,8 @@ module.exports = (function() {
       let data = {
         name: args[0] ? (args[0][0] || '').replace(/_/g, ' ') : '',
         author: (flags.author || '').replace(/_/g, ' ') || '',
-        heroku: flags.hasOwnProperty('heroku')
+        heroku: flags.hasOwnProperty('heroku'),
+        ignoreOutput: flags.hasOwnProperty('ignore-output')
       };
 
       let questions = [];
@@ -122,17 +123,19 @@ module.exports = (function() {
                 callback(err);
               }
 
-              console.log('');
-              console.log(colors.bold.green('All done!'));
-              console.log('');
-              console.log('Your new Nodal project, ' + colors.bold(promptResult.name) + ', is ready to go! :)');
-              console.log('');
-              console.log('Have fun ' + promptResult.author + ', and check out https://github.com/keithwhor/nodal for the most up-to-date Nodal information')
-              console.log('');
-              console.log(colors.bold('Pro tip: ') + 'You can try running your server right away with:');
-              console.log('');
-              console.log('  cd ' + dirname + ' && nodal s');
-              console.log('');
+              if (!data.ignoreOutput) {
+                console.log('');
+                console.log(colors.bold.green('All done!'));
+                console.log('');
+                console.log('Your new Nodal project, ' + colors.bold(promptResult.name) + ', is ready to go! :)');
+                console.log('');
+                console.log('Have fun ' + promptResult.author + ', and check out https://github.com/keithwhor/nodal for the most up-to-date Nodal information')
+                console.log('');
+                console.log(colors.bold('Pro tip: ') + 'You can try running your server right away with:');
+                console.log('');
+                console.log('  cd ' + dirname + ' && nodal s');
+                console.log('');
+              }
 
               callback(null);
 
