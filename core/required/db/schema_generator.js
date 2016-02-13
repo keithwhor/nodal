@@ -385,7 +385,7 @@ module.exports = (function() {
                   ].filter(function(v) { return !!v; }).join(', '),
                 '}',
               ].join('');
-            }).join('\n'),
+            }).join(',\n'),
           '  ]' + (hasModels ? ',' : ''),
         ]);
 
