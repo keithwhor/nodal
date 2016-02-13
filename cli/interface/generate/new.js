@@ -115,7 +115,7 @@ module.exports = (function() {
                 console.log(`Copying ${m}...`);
                 fs.copy(
                       path.join(rootPath, '..','..','..', m),
-                      path.join('.', 'dirname', 'node_modules', 'nodal', m),
+                      path.join(process.cwd(), dirname, 'node_modules', 'nodal', m),
                       callback);
 
               };
