@@ -113,7 +113,10 @@ module.exports = (function() {
               return (callback) => {
 
                 console.log(`Copying ${m}...`);
-                fs.copy(`${rootPath}/../../../${m}`, `./${dirname}/node_modules/nodal/${m}`, callback);
+                fs.copy(
+                      path.join(rootPath, '..','..','..', m),
+                      path.join(process.cwd(), dirname, 'node_modules', 'nodal', m),
+                      callback);
 
               };
             }),
