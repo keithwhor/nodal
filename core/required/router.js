@@ -30,7 +30,7 @@ module.exports = (() => {
 
     params(path) {
 
-      let matches = this.match(path).slice(1).map(v => v || '');
+      let matches = this.match(path).map(v => v || '');
       return this.names.reduce((obj, name, i) => {
         obj[name] = matches[i];
         return obj;
@@ -101,12 +101,13 @@ module.exports = (() => {
 
       let fn = {
         'application/x-www-form-urlencoded': (body) => {
-          return this.parseQueryParameters(querystring.parse(body));
+          return this.parseQueryParameters(querystring.parse(body.toString()));
         },
         'application/json': body => {
           try {
-            return JSON.parse(body);
+            return JSON.parse(body.toString());
           } catch(e) {
+            console.log('Failed to parse JSON Body');
             return {};
           }
         }
@@ -158,6 +159,8 @@ module.exports = (() => {
       let path = this.parsePath(url);
       let route = this.find(url);
       body = body instanceof Buffer ? body : new Buffer(body + '');
+
+      console.log('PATH', path);
 
       return {
         remoteAddress: ip,

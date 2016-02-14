@@ -27,7 +27,7 @@ describe('Test Suite', function() {
 
     before(function(done) {
       this.timeout(30000); // Set timeout to 30 seconds
-      if (Nodal.env.name === 'production') {
+      if (Nodal.env.name === 'development') {
         // Using async exec here to easily handler stderr
         // Errors are not thrown and instead are treated as warnings
         child_process.exec('psql -q -c "drop database if exists nodal_test;" -U postgres', processOptions, function(error, stdout, stderr) {
@@ -43,7 +43,7 @@ describe('Test Suite', function() {
 
     after(function(done) {
       this.timeout(30000); // Set timeout to 30 seconds
-      if (Nodal.env.name === 'production') {
+      if (Nodal.env.name === 'development') {
         // Don't remove the -q option, it will break the db connection pool
         child_process.exec('psql -q -c "drop database if exists nodal_test;" -U postgres', processOptions, function(error, stdout, stderr) {
           if(error) console.warn("Warning:", stderr, "\nErrors ignored.");
@@ -55,7 +55,7 @@ describe('Test Suite', function() {
   } else {
 
     before(function() {
-      if (Nodal.env.name === 'production') {
+      if (Nodal.env.name === 'development') {
         // child_process.execSync('createuser postgres -s -q');
         child_process.execSync('psql -c \'drop database if exists nodal_test;\' -U postgres');
         child_process.execSync('psql -c \'create database nodal_test;\' -U postgres');
@@ -63,7 +63,7 @@ describe('Test Suite', function() {
     });
 
     after(function() {
-      if (Nodal.env.name === 'production') {
+      if (Nodal.env.name === 'development') {
         child_process.execSync('psql -c \'drop database if exists nodal_test;\' -U postgres');
       }
     });
@@ -77,6 +77,8 @@ describe('Test Suite', function() {
   } else {
 
     require('./tests/nodal.js')(Nodal);
+
+    require('./tests/router.js')(Nodal);
 
     require('./tests/database.js')(Nodal);
 
