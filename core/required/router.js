@@ -107,6 +107,7 @@ module.exports = (() => {
           try {
             return JSON.parse(body);
           } catch(e) {
+            console.log("Failed to parse JSON Body", e);
             return {};
           }
         }
