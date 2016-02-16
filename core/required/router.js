@@ -160,8 +160,6 @@ module.exports = (() => {
       let route = this.find(url);
       body = body instanceof Buffer ? body : new Buffer(body + '');
 
-      console.log('PATH', path);
-
       return {
         remoteAddress: ip,
         url: url,

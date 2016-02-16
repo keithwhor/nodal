@@ -451,6 +451,8 @@ module.exports = (function() {
               clauses: currentJoinedClauses
             });
 
+            clauses.push(null);
+
           }
 
           currentJoinedClauses.push(comparators[whereObj.comparator](whereObj.refName, whereObj.value));
@@ -485,7 +487,14 @@ module.exports = (function() {
 
       });
 
-      return clauses.concat(joinedClauses).join(' AND ');
+      clauses = clauses.map(c => {
+        if (!c) {
+          return joinedClauses.shift();
+        }
+        return c;
+      });
+
+      return clauses.join(' AND ');
 
     }
 

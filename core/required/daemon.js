@@ -16,6 +16,8 @@ module.exports = (() => {
 
     constructor() {
 
+      this._watchers = null;
+
       this._error = null;
       this._server = null;
       this._port = null;
@@ -28,18 +30,6 @@ module.exports = (() => {
         console.log(`[Nodal.Daemon] Shutdown: Exited with code ${code}`);
 
       });
-
-      if ((process.env.NODE_ENV || 'development') === 'development') {
-
-        this.watch('', (changes) => {
-          changes.forEach(change => {
-            console.log(`[Nodal.Daemon] ${change.event[0].toUpperCase()}${change.event.substr(1)}: ${change.path}`);
-          });
-          this.children.forEach(child => child.send({invalidate: true}));
-          !this.children.length && this.start();
-        });
-
-      }
 
       this.initializers = new ExecutionQueue();
 
@@ -57,6 +47,19 @@ module.exports = (() => {
       console.log('[Nodal.Daemon] Startup: Initializing');
 
       this.initializers.exec((err) => {
+
+        if ((process.env.NODE_ENV || 'development') === 'development') {
+
+          this.watch('', (changes) => {
+            changes.forEach(change => {
+              console.log(`[Nodal.Daemon] ${change.event[0].toUpperCase()}${change.event.substr(1)}: ${change.path}`);
+            });
+            this.children.forEach(child => child.send({invalidate: true}));
+            this.children = [];
+            !this.children.length && this.unwatch() && this.start();
+          });
+
+        }
 
         if (err) {
           this.error(err);
@@ -115,7 +118,13 @@ module.exports = (() => {
     */
     exit(child, code) {
 
-      this.children.splice(this.children.indexOf(child), 1);
+      let index = this.children.indexOf(child);
+
+      if (index === -1) {
+        return;
+      }
+
+      this.children.splice(index, 1);
 
       if (code === 0) {
         child = cluster.fork();
@@ -140,6 +149,17 @@ module.exports = (() => {
       this._server = null;
       console.log(`[Nodal.Daemon] ${error.name}: ${error.message}`);
       console.log(error.stack);
+
+    }
+
+    /**
+    * Stops watching a directory tree for changes
+    */
+    unwatch() {
+
+      clearInterval(this._watchers.interval);
+      this._watchers = null;
+      return true;
 
     }
 

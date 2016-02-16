@@ -1068,6 +1068,21 @@ module.exports = (function(Nodal) {
 
     });
 
+    it('Should query pet by parent and by pet value', done => {
+
+      Pet.query()
+        .where({parent__id__gt: 1, created_at__lte: new Date()})
+        .end((err, pets) => {
+
+          expect(err).to.not.exist;
+          expect(pets).to.exist;
+          expect(pets.length).to.equal(27);
+          done();
+
+        });
+
+    });
+
     it('Should query a pet based on json key existance', (done) => {
       Pet.query()
         .where({details__jsoncontains: 'language'})
