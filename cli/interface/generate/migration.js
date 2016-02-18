@@ -17,22 +17,16 @@ module.exports = (function() {
 
   function composeMigration(up, down) {
 
-    let hasInstructions = false;
-
-    if (up || down) {
-      hasInstructions = true;
-    }
-
     up =  up || [];
     down = down || [];
 
     return function(migrationName, id) {
 
       let migration = {
-          up: up,
-          down: down,
-          name: migrationName,
-          id: parseInt(id) || 0
+        up: up,
+        down: down,
+        name: migrationName,
+        id: parseInt(id) || 0
       };
 
       return dot.template(
@@ -95,7 +89,18 @@ module.exports = (function() {
         throw new Error('Migration name not specified');
       }
 
-      generateMigration(migrationName);
+      let up = [];
+      let down = [];
+
+      if (flags.for) {
+        let table = inflect.tableize(flags.for);
+        args.slice(1).forEach(field => {
+          up.push(`this.addColumn('${table}', '${field[0]}', '${field[1]}')`);
+          down.unshift(`this.dropColumn('${table}', '${field[0]}')`);
+        });
+      }
+
+      generateMigration(migrationName, up, down);
 
       process.exit(0);
 

@@ -13,16 +13,16 @@ module.exports = (function() {
 
     up() {
 
-      return [{{? data.up.length}}
-{{~ data.up :value:index}}        {{= value }}{{? data.up.length - 1 !== index }},{{?}}{{~}}
+      return [{{? data.up.length}}{{~ data.up :value:index}}
+        {{= value }}{{? data.up.length - 1 !== index }},{{?}}{{~}}
       {{?}}];
 
     }
 
     down() {
 
-      return [{{? data.down.length}}
-{{~ data.down :value:index}}        {{= value }}{{? data.down.length - 1 !== index }},{{?}}{{~}}
+      return [{{? data.down.length}}{{~ data.down :value:index}}
+        {{= value }}{{? data.down.length - 1 !== index }},{{?}}{{~}}
       {{?}}];
 
     }
