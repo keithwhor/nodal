@@ -154,6 +154,26 @@ module.exports = (() => {
 
     }
 
+    parseAuth(params, headers) {
+
+      let auth = {};
+
+      if (params.access_token) {
+        auth.token_type = 'bearer';
+        auth.access_token = params.access_token || '';
+      }
+
+      if (headers['authorization']) {
+        let parts = headers['authorization'].split(' ');
+        if (parts.length === 2 && /^Bearer$/i.test(parts[0])) {
+            auth.token_type = 'bearer';
+            auth.access_token = parts[1];
+        }
+      }
+
+      return auth;
+    }
+
     prepare(ip, url, method, headers, body) {
 
       let path = this.parsePath(url);
@@ -181,6 +201,7 @@ module.exports = (() => {
         query: new StrongParam(this.parseQueryParameters(url.parse(routeData.url, true).query)),
         body: new StrongParam(this.parseBody(routeData.body, routeData.headers)),
         path: routeData.path,
+        auth: this.parseAuth(url.parse(routeData.url, true).query, routeData.headers),
         matches: routeData.matches,
         route: routeData.route,
         remoteAddress: routeData.headers['x-forwarded-for'] || routeData.remoteAddress,
