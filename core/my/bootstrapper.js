@@ -259,7 +259,7 @@ module.exports = (() => {
       let seed = Config.seed;
 
       if (!seed) {
-        return callback(new Error('Could not seed, no seed found in "./config/seed.json"'));
+        return callback(new Error('Could not seed, no seed found in "./config/seed.json". Please make sure JSON is correct.'));
       }
 
       return ModelFactory.populate(seed, callback);

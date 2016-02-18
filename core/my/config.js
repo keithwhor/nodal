@@ -30,7 +30,7 @@ module.exports = (() => {
       configData = dot.template(configData)(process.env);
       configData = JSON.parse(configData);
     } catch(e) {
-      configData = {};
+      throw new Error(`Could not parse "config/${filename}": Invalid JSON`);
     }
 
     config[filename.substr(0, filename.length - ext.length)] = configData[env.name];
