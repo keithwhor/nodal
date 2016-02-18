@@ -206,7 +206,7 @@ module.exports = (() => {
         controller.middleware.prepend(this.middleware);
         controller.renderware.append(this.renderware);
 
-        controller.run(routeData.method, params.id);
+        controller.run();
 
         return controller;
 

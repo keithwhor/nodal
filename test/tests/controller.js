@@ -7,6 +7,7 @@ module.exports = Nodal => {
   describe('Nodal.Controller', () => {
 
     const c = new Nodal.Controller('/abc/def', 'GET');
+    const d = new Nodal.Controller('')
 
     it('Should set security policy properly', () => {
 
@@ -36,6 +37,22 @@ module.exports = Nodal => {
       val = getDirective('connect-src');
 
       expect(val).to.contain('https://nodaljs.com');
+
+    });
+
+    it('should convert methods properly', () => {
+
+      expect(c.convertMethod('GET')).to.equal('index');
+      expect(c.convertMethod('PUT')).to.equal('put');
+      expect(c.convertMethod('POST')).to.equal('create');
+      expect(c.convertMethod('DELETE')).to.equal('del');
+      expect(c.convertMethod('OPTIONS')).to.equal('options');
+
+      expect(c.convertMethod('GET', '1')).to.equal('show');
+      expect(c.convertMethod('PUT', '1')).to.equal('update');
+      expect(c.convertMethod('POST', '1')).to.equal('post');
+      expect(c.convertMethod('DELETE', '1')).to.equal('destroy');
+      expect(c.convertMethod('OPTIONS', '1')).to.equal('options');
 
     });
 

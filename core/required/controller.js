@@ -27,9 +27,7 @@ module.exports = (() => {
 
     }
 
-    run(method, id) {
-
-      this.before();
+    convertMethod(method, id) {
 
       let acceptMethods = {
         'GET': ['index', 'show'],
@@ -39,10 +37,18 @@ module.exports = (() => {
         'OPTIONS': ['options', 'options']
       };
 
-      id = !!(id | 0);
+      let hasId = !!(id | 0);
 
       method = method in acceptMethods ? method : 'GET';
-      method = acceptMethods[method][id | 0];
+      method = acceptMethods[method][hasId | 0];
+
+      return method;
+
+    }
+
+    run() {
+
+      this.before();
 
       this.middleware.exec(this, (err) => {
 
@@ -50,7 +56,7 @@ module.exports = (() => {
           return this.error(err.message);
         }
 
-        this[method]();
+        this[this.convertMethod(this._method, this.params.id)]();
 
       });
 

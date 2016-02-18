@@ -35,19 +35,15 @@ module.exports = (function() {
 
   function generateUserDefinition() {
     return dot.template(
-      fs.readFileSync(__dirname + '/templates/models/user.jst', {
-        varname: 'data',
-        strip: false
-      }).toString()
+      fs.readFileSync(__dirname + '/templates/models/user.jst').toString(),
+      templateSettings
     )();
   };
 
   function generateAccessTokenDefinition() {
     return dot.template(
-      fs.readFileSync(__dirname + '/templates/models/access_token.jst', {
-        varname: 'data',
-        strip: false
-      }).toString()
+      fs.readFileSync(__dirname + '/templates/models/access_token.jst').toString(),
+      templateSettings
     )();
   };
 
