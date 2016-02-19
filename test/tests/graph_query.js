@@ -43,6 +43,18 @@ module.exports = Nodal => {
       ]
     };
 
+    let schemaVote = {
+      table: 'votes',
+      columns: [
+        {name: 'id', type: 'serial'},
+        {name: 'user_id', type: 'int'},
+        {name: 'thread_id', type: 'int'},
+        {name: 'weight', type: 'int'},
+        {name: 'created_at', type: 'datetime'},
+        {name: 'updated_at', type: 'datetime'}
+      ]
+    };
+
     class User extends Nodal.Model {}
 
     User.setDatabase(db);
@@ -61,12 +73,19 @@ module.exports = Nodal => {
     Post.joinsTo(User, {multiple: true});
     Post.joinsTo(Thread, {multiple: true});
 
+    class Vote extends Nodal.Model {};
+
+    Vote.setDatabase(db);
+    Vote.setSchema(schemaVote);
+    Vote.joinsTo(User, {multiple: true});
+    Vote.joinsTo(Thread, {multiple: true});
+
     before(function(done) {
 
       db.connect(Nodal.my.Config.db.main);
 
       db.transaction(
-        [schemaUser, schemaThread, schemaPost].map(schema => {
+        [schemaUser, schemaThread, schemaPost, schemaVote].map(schema => {
           return [
             db.adapter.generateDropTableQuery(schema.table, true),
             db.adapter.generateCreateTableQuery(schema.table, schema.columns)
@@ -100,14 +119,18 @@ module.exports = Nodal => {
             user.setJoined('threads', Nodal.ModelArray.from(threads));
 
             let posts = [];
+            let votes = [];
             let n = 27;
             while (n--) {
               posts.push({user_id: uid, thread_id: n % 9, body: 'Random Post ' + String.fromCharCode(65 + n)});
+              votes.push({user_id: uid, thread_id: n % 9, weight: [1, -1][n & 1]});
             }
 
             posts = posts.map(post => new Post(post));
+            votes = votes.map(vote => new Vote(vote));
 
             user.setJoined('posts', Nodal.ModelArray.from(posts));
+            user.setJoined('votes', Nodal.ModelArray.from(votes));
 
 
           });
@@ -119,7 +142,8 @@ module.exports = Nodal => {
             async.series(
               [].concat(
                 users.map(u => u.joined('threads').saveAll.bind(u.joined('threads'))),
-                users.map(u => u.joined('posts').saveAll.bind(u.joined('posts')))
+                users.map(u => u.joined('posts').saveAll.bind(u.joined('posts'))),
+                users.map(u => u.joined('votes').saveAll.bind(u.joined('votes')))
               ), (err) => {
 
                 expect(err).to.not.exist;
@@ -277,6 +301,40 @@ module.exports = Nodal => {
         expect(users[0].threads[0].posts[0]).to.have.ownProperty('body');
         expect(users[0].posts.length).to.equal(27);
         expect(users[0].posts[0]).to.have.ownProperty('body');
+        done();
+
+      });
+
+    });
+
+    it('Should join in mutiple tables on joined table', (done) => {
+
+      new GraphQuery(`
+        users {
+          id,
+          username,
+          threads {
+            id,
+            posts,
+            votes
+          }
+        }
+      `, 0, User).query((err, models, format) => {
+
+        let users = models.toObject(format);
+
+        expect(err).to.not.exist;
+
+        expect(users.length).to.equal(3);
+        expect(users[0]).to.have.ownProperty('id');
+        expect(users[0]).to.have.ownProperty('username');
+        expect(users[0]).to.have.ownProperty('threads');
+        expect(users[0].threads.length).to.equal(3);
+        expect(users[0].threads[0]).to.have.ownProperty('id');
+        expect(users[0].threads[0]).to.have.ownProperty('posts');
+        expect(users[0].threads[0]).to.have.ownProperty('votes');
+        expect(users[0].threads[0].posts.length).to.equal(9);
+        expect(users[0].threads[0].votes.length).to.equal(9);
         done();
 
       });

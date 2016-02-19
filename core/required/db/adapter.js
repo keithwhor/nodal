@@ -516,11 +516,16 @@ module.exports = (function() {
     generateJoinClause(table, joinArray, paramOffset) {
 
       paramOffset = Math.max(0, parseInt(paramOffset) || 0);
+      let joinedAlready = {};
 
       return (!joinArray || !joinArray.length) ? '' :
         joinArray.map(joinData => {
 
+          joinData = joinData.filter(join => !joinedAlready[join.joinAlias]);
+
           return joinData.map((join, i) => {
+
+            joinedAlready[join.joinAlias] = true;
 
             let joinColumns = join.joinColumn instanceof Array ? join.joinColumn : [join.joinColumn]
             let prevColumns = join.prevColumn instanceof Array ? join.prevColumn : [join.prevColumn]
