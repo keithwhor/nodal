@@ -440,7 +440,7 @@ module.exports = (function() {
 
       });
 
-      // Order by the orders... in reverse order
+      // Set join OrderBys... in reverse order
       let orderBy = queryInfo.commands.reduce((arr, command) => {
         command.orderBy && (arr = command.orderBy.concat(arr));
         return arr;
