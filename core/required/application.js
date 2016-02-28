@@ -62,20 +62,20 @@ module.exports = (() => {
     * @param {String} url The url that was hit
     * @param {String} t The time to execute the request
     */
-    logResponse(statusCode, url, t) {
+    logResponse(statusCode, url, t, str) {
 
       let num = Math.floor(statusCode / 100);
-      let str = '';
+      str = str || '';
       if (num === 2) {
-        str = 'Request OK';
+        str = str || 'Request OK';
       } else if (num === 3) {
-        str = 'Request Redirect';
+        str = str || 'Request Redirect';
       } else if (num === 4) {
-        str = 'Request Error';
+        str = str || 'Request Error';
       } else if (num === 5) {
-        str = 'Server Error';
+        str = str || 'Server Error';
       } else {
-        str = 'Unknown';
+        str = str || 'Unknown';
       }
 
       console.log(`[Nodal.${process.pid}] ${str} [${statusCode | 0}]: ${url} loaded in ${t} ms`);
@@ -108,7 +108,11 @@ module.exports = (() => {
       req.on('data', data => {
         body.push(data);
         bodyLength += data.length;
-        (bodyLength > 1E6) && (res.end(), req.connection.destroy());
+        if (bodyLength > 1E11) {
+          res.end();
+          req.connection.destroy();
+          this.logResponse(res.statusCode, req.url, t, 'Size overflow');
+        }
       });
 
       req.on('end', () => {
