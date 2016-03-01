@@ -4,6 +4,7 @@ module.exports = (() => {
 
   const http = require('http');
   const url = require('url');
+  const utilities = require('./utilities.js');
 
   class Application {
 
@@ -99,7 +100,7 @@ module.exports = (() => {
 
       if (!route) {
         res.writeHead(404, {});
-        res.end('404 - Not found');
+        res.end('404 - Not Found');
         let t = this.getTime() - start;
         this.logResponse(res.statusCode, req.url, t);
         return;
@@ -108,10 +109,17 @@ module.exports = (() => {
       req.on('data', data => {
         body.push(data);
         bodyLength += data.length;
-        if (bodyLength > 1E11) {
-          res.end();
+        if (bodyLength > (utilities.parseSize(process.env.MAX_UPLOAD_SIZE) || utilities.parseSize('20MB'))) {
+          res.writeHead(413, {});
+          res.end('413 - Request Too Large');
           req.connection.destroy();
-          this.logResponse(res.statusCode, req.url, t, 'Size overflow');
+          let t = this.getTime() - start;
+          this.logResponse(
+            res.statusCode,
+            req.url,
+            t,
+            `Request too large. (${bodyLength}, Max: ${process.env.MAX_UPLOAD_SIZE || '20MB'})`
+          );
         }
       });
 

@@ -49,6 +49,25 @@ module.exports = (function() {
     isObject(value) {
       return typeof value === 'object' &&
         {}.toString.call(value) === '[object Object]';
+    },
+
+    parseSize(size) {
+
+      size = (size || '') + '';
+
+      let match = size.match(/^(\d+(?:\.\d+)?)([kMG]?)B?$/);
+
+      if (!match) {
+        return 0;
+      }
+
+      let num = parseFloat(match[1]);
+      let mag = match[2];
+
+      num = num * {'': 1, 'k': 1024, 'M': 1024 * 1024, 'G': 1024 * 1024 * 1024}[mag];
+
+      return Math.ceil(num) || 0;
+
     }
 
   };

@@ -2,9 +2,11 @@ module.exports = (() => {
 
   'use strict';
 
+  process.env.NODE_ENV = 'test';
+
   const Nodal = require('nodal');
   const TestRunner = Nodal.mocha.TestRunner;
-  
+
   const router = Nodal.require('app/router.js');
 
   const tests = new TestRunner('./test/tests', router);
