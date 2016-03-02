@@ -18,7 +18,6 @@ module.exports = (function() {
     Daemon: null,
     Database: null,
     GraphQuery: null,
-    Initializer: null,
     ItemArray: null,
     Middleware: null,
     Migration: null,
@@ -34,7 +33,6 @@ module.exports = (function() {
     SchemaGenerator: null,
     StrongParam: null,
     Task: null,
-    Template: null,
     my: {
       Config: null,
       Schema: null,
@@ -101,12 +99,6 @@ module.exports = (function() {
     GraphQuery: {
       get: function() {
         return Nodal.GraphQuery || (Nodal.GraphQuery = require('./required/graph_query.js'));
-      },
-      enumerable: true
-    },
-    Initializer: {
-      get: function() {
-        return Nodal.Initializer || (Nodal.Initializer = require('./required/initializer.js'));
       },
       enumerable: true
     },
@@ -199,13 +191,7 @@ module.exports = (function() {
         return Nodal.Task || (Nodal.Task = require('./required/task.js'));
       },
       enumerable: true
-    },
-    Template: {
-      get: function() {
-        return Nodal.Template || (Nodal.Template = require('./required/template.js'));
-      },
-      enumerable: true
-    },
+    }
   });
 
   Object.defineProperties(LazyNodal.my, {

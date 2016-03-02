@@ -5,7 +5,7 @@ module.exports = (function() {
   const async = require('async');
 
   /**
-  * Queues initializers, middleware, etc (make sure they fire in order).
+  * Queues middleware, renderware, etc (make sure they fire in order).
   * @class
   */
   class ExecutionQueue {

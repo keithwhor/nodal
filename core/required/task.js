@@ -11,7 +11,7 @@ module.exports = (function() {
     constructor() {}
 
     /**
-    * Execute the initializer.
+    * Execute the task
     * @param {Nodal.Application} app the Application Instance
     * @param {object} arguments passed to the task on the command line
     * @param {function({Error} err)} callback The callback to be run upon completion

@@ -77,36 +77,28 @@ module.exports = (() => {
     * Method called when a route is hit with a GET request, if not first intercepted by custom Controller#index or Controller#show methods. Intended to be overwritten when inherited.
     */
     get() {
-      this.status(501);
-      this.setHeader('Content-Type', 'text/plain');
-      this.render('501 - Not Implemented');
+      this.notImplemented();
     }
 
     /**
     * Method called when a route is hit with a PUT request, if not first intercepted by custom Controller#update method. Intended to be overwritten when inherited.
     */
     put() {
-      this.status(501);
-      this.setHeader('Content-Type', 'text/plain');
-      this.render('501 - Not Implemented');
+      this.notImplemented();
     }
 
     /**
     * Method called when a route is hit with a POST request, if not first intercepted by custom Controller#create method. Intended to be overwritten when inherited.
     */
     post() {
-      this.status(501);
-      this.setHeader('Content-Type', 'text/plain');
-      this.render('501 - Not Implemented');
+      this.notImplemented();
     }
 
     /**
     * Method called when a route is hit with a DELETE request, if not first intercepted by custom Controller#destroy method. Intended to be overwritten when inherited.
     */
     del() {
-      this.status(501);
-      this.setHeader('Content-Type', 'text/plain');
-      this.render('501 - Not Implemented');
+      this.notImplemented();
     }
 
     /**
@@ -317,6 +309,18 @@ module.exports = (() => {
     notFound(msg, details) {
       this.status(404);
       this.render(API.error(msg || 'Not Found', details));
+      return true;
+    }
+
+    /**
+    * Endpoint not implemented
+    * @param {string} msg Error message to send
+    * @param {Object} details Any additional details for the error (must be serializable)
+    * @return {boolean}
+    */
+    notImplemented(msg, details) {
+      this.status(501);
+      this.render(API.error(msg  || 'Not Implemented', details));
       return true;
     }
 

@@ -5,6 +5,7 @@ module.exports = (() => {
   const http = require('http');
   const url = require('url');
   const utilities = require('./utilities.js');
+  const API = require('./api.js');
 
   class Application {
 
@@ -92,6 +93,7 @@ module.exports = (() => {
 
       let body = [];
       let bodyLength = 0;
+      let maxSize = utilities.parseSize(process.env.MAX_UPLOAD_SIZE) || utilities.parseSize('20MB');
       let start = this.getTime();
 
       console.log(`[Nodal.${process.pid}] Incoming Request: ${req.url} from ${req.connection.remoteAddress}`);
@@ -99,8 +101,8 @@ module.exports = (() => {
       let route = this.router.find(req.url);
 
       if (!route) {
-        res.writeHead(404, {});
-        res.end('404 - Not Found');
+        res.writeHead(404, {'Content-Type': 'application/json'});
+        res.end(JSON.stringify(API.error('Not Found'), null, 2));
         let t = this.getTime() - start;
         this.logResponse(res.statusCode, req.url, t);
         return;
@@ -109,9 +111,9 @@ module.exports = (() => {
       req.on('data', data => {
         body.push(data);
         bodyLength += data.length;
-        if (bodyLength > (utilities.parseSize(process.env.MAX_UPLOAD_SIZE) || utilities.parseSize('20MB'))) {
-          res.writeHead(413, {});
-          res.end('413 - Request Too Large');
+        if (bodyLength > maxSize) {
+          res.writeHead(413, {'Content-Type': 'application/json'});
+          res.end(JSON.stringify(API.error('Request Too Large'), null, 2));
           req.connection.destroy();
           let t = this.getTime() - start;
           this.logResponse(
@@ -124,6 +126,10 @@ module.exports = (() => {
       });
 
       req.on('end', () => {
+
+        if (req.connection.destroyed) {
+          return;
+        }
 
         body = Buffer.concat(body);
 
@@ -140,11 +146,11 @@ module.exports = (() => {
             let t = this.getTime() - start;
 
             if (err) {
-              res.writeHead(500, {});
+              res.writeHead(500, {'Content-Type': 'application/json'});
               if (process.env.NODE_ENV !== 'production') {
-                res.write(err.stack);
+                res.write(JSON.stringify(API.error('Internal Server Error', err.stack.split('\n')), null, 2));
               } else {
-                res.write('500 - Internal Server Error');
+                res.write(JSON.stringify(API.error('Internal Server Error'), null, 2));
               }
               console.log(err.stack);
             } else {

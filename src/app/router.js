@@ -26,8 +26,6 @@ module.exports = (function() {
   /* Routes */
 
   const IndexController = Nodal.require('app/controllers/index_controller.js');
-  const StaticController = Nodal.require('app/controllers/static_controller.js');
-  const Error404Controller = Nodal.require('app/controllers/error/404_controller.js');
 
   /* generator: begin imports */
 
@@ -35,14 +33,11 @@ module.exports = (function() {
   /* generator: end imports */
 
   router.route('/').use(IndexController);
-  router.route('/static/*').use(StaticController);
 
   /* generator: begin routes */
 
 
   /* generator: end routes */
-
-  router.route('/*').use(Error404Controller);
 
   return router;
 

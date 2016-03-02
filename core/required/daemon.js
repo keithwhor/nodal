@@ -6,7 +6,7 @@ module.exports = (() => {
   const os = require('os');
   const http = require('http');
   const fs = require('fs');
-  const ExecutionQueue = require('./execution_queue');
+  const API = require('./api.js');
 
   /**
   * Multi-process HTTP Daemon that resets when files changed (in development)
@@ -31,8 +31,6 @@ module.exports = (() => {
 
       });
 
-      this.initializers = new ExecutionQueue();
-
     }
 
     /**
@@ -46,42 +44,33 @@ module.exports = (() => {
 
       console.log('[Nodal.Daemon] Startup: Initializing');
 
-      this.initializers.exec((err) => {
+      if ((process.env.NODE_ENV || 'development') === 'development') {
 
-        if ((process.env.NODE_ENV || 'development') === 'development') {
-
-          this.watch('', (changes) => {
-            changes.forEach(change => {
-              console.log(`[Nodal.Daemon] ${change.event[0].toUpperCase()}${change.event.substr(1)}: ${change.path}`);
-            });
-            this.children.forEach(child => child.send({invalidate: true}));
-            this.children = [];
-            !this.children.length && this.unwatch() && this.start();
+        this.watch('', (changes) => {
+          changes.forEach(change => {
+            console.log(`[Nodal.Daemon] ${change.event[0].toUpperCase()}${change.event.substr(1)}: ${change.path}`);
           });
+          this.children.forEach(child => child.send({invalidate: true}));
+          this.children = [];
+          !this.children.length && this.unwatch() && this.start();
+        });
 
-        }
+      }
 
-        if (err) {
-          this.error(err);
-          return this.idle();
-        }
+      this._server && this._server.close();
+      this._server = null;
 
-        this._server && this._server.close();
-        this._server = null;
+      for (var i = 0; i < this.cpus; i++) {
 
-        for (var i = 0; i < this.cpus; i++) {
+        let child = cluster.fork();
+        this.children.push(child);
 
-          let child = cluster.fork();
-          this.children.push(child);
+        child.on('message', this.message.bind(this));
+        child.on('exit', this.exit.bind(this, child));
 
-          child.on('message', this.message.bind(this));
-          child.on('exit', this.exit.bind(this, child));
+      }
 
-        }
-
-        console.log('[Nodal.Daemon] Startup: Spawning HTTP Workers');
-
-      });
+      console.log('[Nodal.Daemon] Startup: Spawning HTTP Workers');
 
     }
 
@@ -93,10 +82,11 @@ module.exports = (() => {
       let port = this._port || 3000;
 
       this._server = http.createServer((req, res) => {
+        res.writeHead(500, {'Content-Type': 'application/json'});
         if (process.env.NODE_ENV !== 'production') {
-          res.end(`Application Error\n\n${this._error.stack}`);
+          res.end(JSON.stringify(API.error('Application Error', this._error.stack.split('\n')), null, 2));
         } else {
-          res.end(`Application Error`);
+          res.end(JSON.stringify(API.error('Application Error'), null, 2));
         }
         req.connection.destroy();
       }).listen(port);

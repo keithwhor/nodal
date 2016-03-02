@@ -85,10 +85,6 @@ module.exports = (function() {
             )(promptResult));
           }
 
-          fs.writeFileSync('./' + dirname + '/app/controllers/index_controller.js', dot.template(
-            fs.readFileSync(rootPath + '/templates/index_controller.jst').toString()
-          )(promptResult));
-
           fs.writeFileSync('./' + dirname + '/README.md', dot.template(
             fs.readFileSync(rootPath + '/templates/README.md.jst').toString()
           )(promptResult));
