@@ -139,15 +139,26 @@ module.exports = (() => {
     }
 
     /**
+    * Uppercase all words in header key.
+    * @param {String} key
+    * @return {String}
+    */
+    updateHeaderKey(key){
+      key = key.split('-').map(function(v) {
+        return v[0].toUpperCase() + v.substr(1).toLowerCase();
+      }).join('-');
+
+      return key;
+    }
+
+    /**
     * Set a specific response header
     * @param {String} key
     * @param {String} value
     */
     setHeader(key, value) {
 
-      key = key.split('-').map(function(v) {
-        return v[0].toUpperCase() + v.substr(1).toLowerCase();
-      }).join('-');
+      key = this.updateHeaderKey(key);
 
       if (key === 'Content-Type' && value.indexOf(';') === -1 && (
         value === 'application/javascript' ||
@@ -162,14 +173,24 @@ module.exports = (() => {
     }
 
     /**
+     * Add a value to a existing specific response header. If header not exists create it.
+     * @param {String} key
+     * @param {String} value
+     */
+    appendToHeader(key, value){
+      key = this.updateHeaderKey(key);
+
+      return this._headers[key] ? this._headers[key] += ', ' + value :  this.setHeader(key, value);
+    }
+
+    /**
     * Get the value of a specific response header
     * @param {String} key
     * @param {String} value Default value returned if not found
     */
     getHeader(key, value) {
-      key = key.split('-').map(function(v) {
-        return v[0].toUpperCase() + v.substr(1).toLowerCase();
-      }).join('-');
+      key = this.updateHeaderKey(key);
+        
       return this._headers.hasOwnProperty(key) ? this._headers[key] : value;
     }
 

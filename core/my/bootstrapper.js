@@ -279,6 +279,7 @@ module.exports = (() => {
     bootstrap(callback) {
 
       async.series([
+        (cb) => this.create(cb),
         (cb) => this.prepare(cb),
         (cb) => this.migrate(0, cb),
         (cb) => this.seed(cb)
