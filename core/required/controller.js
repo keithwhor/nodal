@@ -143,7 +143,7 @@ module.exports = (() => {
     * @param {String} key
     * @return {String}
     */
-    updateHeaderKey(key){
+    _parseHeaderKey(key){
       key = key.split('-').map(function(v) {
         return v[0].toUpperCase() + v.substr(1).toLowerCase();
       }).join('-');
@@ -158,7 +158,7 @@ module.exports = (() => {
     */
     setHeader(key, value) {
 
-      key = this.updateHeaderKey(key);
+      key = this._parseHeaderKey(key);
 
       if (key === 'Content-Type' && value.indexOf(';') === -1 && (
         value === 'application/javascript' ||
@@ -177,10 +177,14 @@ module.exports = (() => {
      * @param {String} key
      * @param {String} value
      */
-    appendToHeader(key, value){
-      key = this.updateHeaderKey(key);
-
-      return this._headers[key] ? this._headers[key] += ', ' + value :  this.setHeader(key, value);
+    appendHeader(key, value) {
+      key = this._parseHeaderKey(key);
+      let removeWhitespace = v => v.replace(/^\s*(.*)\s*$/, '$1');
+      let values = (this._headers[key] || '').split(';').map(removeWhitespace);
+      values[0] = values[0].split(',').map(removeWhitespace);
+      values[0].indexOf(value) === -1 && values[0].push(value);
+      values[0] = values[0].join(', ');
+      return (this._headers[key] = values.join('; '));
     }
 
     /**
@@ -189,7 +193,7 @@ module.exports = (() => {
     * @param {String} value Default value returned if not found
     */
     getHeader(key, value) {
-      key = this.updateHeaderKey(key);
+      key = this._parseHeaderKey(key);
         
       return this._headers.hasOwnProperty(key) ? this._headers[key] : value;
     }
