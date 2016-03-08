@@ -466,7 +466,7 @@ Recipe.query()
 
 ## What Now?
 
-There's still a bunch more to cover! Information on in-depth Migrations, Initializers,
+There's still a bunch more to cover! Information on in-depth Migrations,
 Middleware, Schedulers, Tasks and Workers is coming soon.
 
 Please [watch the repository, keithwhor/nodal](http://github.com/keithwhor/nodal)

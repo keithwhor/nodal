@@ -1,5 +1,5 @@
 # Nodal
-## Web Servers Made Easy With Node.js
+## API Services Made Easy with Node.js
 
 [![Build Status](https://travis-ci.org/keithwhor/nodal.svg?branch=master)](https://travis-ci.org/keithwhor/nodal) [![Join the chat at https://gitter.im/keithwhor/nodal](https://badges.gitter.im/keithwhor/nodal.svg)](https://gitter.im/keithwhor/nodal?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
@@ -7,13 +7,13 @@
 
 View the website at [nodaljs.com](http://nodaljs.com).
 
-Nodal is a web server for Node.js that was built with the sole purpose of making
-the developer's life easier.
+Nodal is a web server and opinionated framework for building API services in
+Node.js as part of a larger, service-oriented stack for web, mobile or IoT apps.
 
-Boasting its own opinionated, explicit, idiomatic and
-highly-extensible full-service framework, Nodal takes care of all of the hard
-decisions for you and your team. This allows you to focus on creating an effective
-product in a short timespan while minimizing technical debt.
+Boasting its own opinionated, explicit, idiomatic and highly-extensible
+full-service framework, Nodal takes care of all of the hard decisions for you
+and your team. This allows you to focus on creating an effective product in a
+short timespan while minimizing technical debt.
 
 Nodal projects are ready to deploy to [Heroku](https://heroku.com) right out of
 the box, so you can have your website live in no time.
@@ -23,21 +23,17 @@ the box, so you can have your website live in no time.
 ## Why Nodal?
 
 Nodal is built upon an ideology of a robust, scalable microservice architecture.
-It can deliver solutions for every part of your system.  From a simple HTTP service
-that provides server-generated HTML, to an API Server, to a scaffold for building
-Single Page Applications, you can spin up a Nodal server for anything.
+Specialized for building distributed, scalable APIs, use Nodal to interface
+with your database effortlessly.
 
-Nodal servers are not meant to be monoliths. They're meant to be modular and
-distinct. Ideally, you should only use a subset of Nodal's features per project,
-and have multiple Nodal projects that are loosely-coupled and interface with
-one another (branding webserver, API server, application server). You can
-[read more about specific types of servers](#server-types) and where you'd use
-them, if you're interested.
+Nodal servers are not meant to be monoliths. They're meant to service your needs
+of interfacing with your data layer effortlessly. While you can output any
+data format with Nodal, it's recommended you offload things like static
+page rendering to other optimized services like CDNs.
 
-Due to this modularity, Nodal should never feel restrictive. It is not a silver
-bullet. It is meant as an entry point into distributed, modern web architectures.
-Once you're familiar with building these sorts of systems, swap in or swap out Nodal
-wherever you please.
+Within the context of building APIs, Nodal should never feel restrictive.
+But Nodal is not a silver bullet. It is meant as an entry point into distributed,
+modern web architectures.
 
 ## Getting Started
 
@@ -91,43 +87,13 @@ will roll back migrations, one at a time by default.
 ## Server Types
 
 Nodal works best when you follow its ideology, and that means creating a new
-Nodal server to solve specific *Problem Domains* of your application and business.
+service to solve specific *Problem Domains* of your application and business.
 
 The main three suggestions are **Branding Server**, **API Server** and **Application Server**.
 
-This ideology is focused around a distributed, fault-tolerant, loosely-coupled
-systems designed where no single service is dependent upon any other one. If a
-junior developer accidentally brings down your Branding Server, for example, your
-API and Application still work perfectly.
-
-### Branding Server
-
-This is your Google-able, SEO-indexed server for your product or service,
-containing your branding pages. Use Nodal's Templates and partials (using doT.js)
-to show your users server-generated HTML pages that serve as a great introduction
-to what you're showing off. If you need to grab live data from an API, send
-asynchronous non-blocking requests to your API Server.
-
-Here's the controller for a sample index page:
-
-```javascript
-class IndexController extends Nodal.Controller {
-
-  get() {
-
-    this.render(
-      Nodal.Template.generate('index.html').render(
-        this.params,
-        {
-          name: 'My Nodal Application'
-        }
-      )
-    );
-
-  }
-
-}
-```
+Nodal's core competency is building API servers. Though we do have
+[dotcom](http://github.com/keithwhor/dotcom) for building Branding Servers
+(search engine optimized server-generated pages).
 
 ### API Server
 
@@ -185,13 +151,6 @@ class BlogPostsController extends Nodal.Controller {
 
 }
 ```
-
-### Application Server
-
-Use Nodal's Initializers to specify asset compilation for your single page
-web applications. Use modules like [nodal-angular](https://github.com/keithwhor/nodal-angular)
-or roll your own. Interface with your Nodal API server dynamically to provide a
-great user experience.
 
 ## Beginner's Guide
 
