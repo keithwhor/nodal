@@ -9,6 +9,7 @@ module.exports = (function() {
     exec(controller, callback) {
 
       controller.allowOrigin('*');
+      controller.appendHeader('Access-Control-Allow-Headers', 'Authorization');
       callback(null);
 
     }
