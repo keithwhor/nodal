@@ -131,15 +131,26 @@ module.exports = (() => {
     }
 
     /**
+    * Uppercase all words in header key.
+    * @param {String} key
+    * @return {String}
+    */
+    _parseHeaderKey(key){
+      key = key.split('-').map(function(v) {
+        return v[0].toUpperCase() + v.substr(1).toLowerCase();
+      }).join('-');
+
+      return key;
+    }
+
+    /**
     * Set a specific response header
     * @param {String} key
     * @param {String} value
     */
     setHeader(key, value) {
 
-      key = key.split('-').map(function(v) {
-        return v[0].toUpperCase() + v.substr(1).toLowerCase();
-      }).join('-');
+      key = this._parseHeaderKey(key);
 
       if (key === 'Content-Type' && value.indexOf(';') === -1 && (
         value === 'application/javascript' ||
@@ -154,14 +165,28 @@ module.exports = (() => {
     }
 
     /**
+     * Add a value to a existing specific response header. If header not exists create it.
+     * @param {String} key
+     * @param {String} value
+     */
+    appendHeader(key, value) {
+      key = this._parseHeaderKey(key);
+      let removeWhitespace = v => v.replace(/^\s*(.*)\s*$/, '$1');
+      let values = (this._headers[key] || '').split(';').map(removeWhitespace);
+      values[0] = values[0].split(',').map(removeWhitespace);
+      values[0].indexOf(value) === -1 && values[0].push(value);
+      values[0] = values[0].join(', ');
+      return (this._headers[key] = values.join('; '));
+    }
+
+    /**
     * Get the value of a specific response header
     * @param {String} key
     * @param {String} value Default value returned if not found
     */
     getHeader(key, value) {
-      key = key.split('-').map(function(v) {
-        return v[0].toUpperCase() + v.substr(1).toLowerCase();
-      }).join('-');
+      key = this._parseHeaderKey(key);
+        
       return this._headers.hasOwnProperty(key) ? this._headers[key] : value;
     }
 
