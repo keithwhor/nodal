@@ -45,6 +45,7 @@ describe('Test Suite', function() {
   }else{
     before(function() {
       if (Nodal.env.name === 'development') {
+        this.timeout(30000);
         // child_process.execSync('createuser postgres -s -q');
         child_process.execSync('psql -c \'drop database if exists nodal_test;\' -U postgres');
         child_process.execSync('psql -c \'create database nodal_test;\' -U postgres');
@@ -52,6 +53,7 @@ describe('Test Suite', function() {
     });
 
     after(function() {
+      this.timeout(30000);
       if (Nodal.env.name === 'development') {
         child_process.execSync('psql -c \'drop database if exists nodal_test;\' -U postgres');
       }
