@@ -7,6 +7,7 @@ module.exports = (function() {
   const inflect = require('i')();
   const colors = require('colors/safe');
   const async = require('async');
+  const http = require('http');
 
   return {
     new: function(args, flags, callback) {
@@ -39,6 +40,11 @@ module.exports = (function() {
         default: 'mysterious author',
         message: 'Author',
       });
+
+      // Count new nodal projects being made. :)
+      let req = http.request({host: 'api.polybit.com', port: 80, path: `/v1/nodal_initializations?version=${version}`, method: 'POST'});
+      req.on('error', () => {});
+      req.end();
 
       inquirer.prompt(questions, (promptResult) => {
 
