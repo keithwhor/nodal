@@ -6,7 +6,7 @@ module.exports = (function() {
 
   class DummyTask extends Nodal.Task {
 
-    exec(app, args, callback) {
+    exec(args, callback) {
 
       console.log('Dummy task executed');
       callback();

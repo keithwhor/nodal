@@ -6,7 +6,7 @@ module.exports = (function() {
 
   class {{= data.name }}Task extends Nodal.Task {
 
-    exec(app, args, callback) {
+    exec(args, callback) {
 
       console.log('{{= data.name}} task executed');
       callback();

@@ -2,6 +2,9 @@ module.exports = (function() {
 
   'use strict';
 
+  // Load .env
+  require('dotenv').config();
+
   let types = require('pg').types;
   types.setTypeParser(20, function(val) {
     return val === null ? null : parseInt(val);

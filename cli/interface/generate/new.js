@@ -81,6 +81,8 @@ module.exports = (function() {
           dot.templateSettings.strip = false;
           dot.templateSettings.varname = 'data';
 
+          fs.writeFileSync('./' + dirname + '/.env', 'EXAMPLE_ENV_VAR=hello');
+
           fs.writeFileSync('./' + dirname + '/package.json', dot.template(
             fs.readFileSync(rootPath + '/templates/package.json.jst').toString()
           )(promptResult));

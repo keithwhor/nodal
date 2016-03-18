@@ -19,24 +19,18 @@ module.exports = (() => {
 
       if (!fs.existsSync(taskPath)) callback(new Error('Task "' + taskName + '" does not exist'));
 
-      let daemon = new Daemon('./app/app.js');
+      const Task = require(taskPath);
+      let task = new Task();
 
-      daemon.start(function(app) {
+      task.exec(args.slice(1), (err) => {
 
-        const Task = require(taskPath);
-        let task = new Task();
+        if (err) {
+          console.log(`${colors.red.bold('Task Error:')} ${err.message}`);
+        } else {
+          console.log('Task complete!');
+        }
 
-        task.exec(app, args, (err) => {
-
-          if (err) {
-            console.log(`${colors.red.bold('Task Error:')} ${err.message}`);
-          } else {
-            console.log('Task complete!');
-          }
-
-          callback();
-
-        });
+        callback();
 
       });
 
