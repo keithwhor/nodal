@@ -19,6 +19,7 @@
     "any-db-postgres": "~2.1.4",
     "any-db-transaction": "~2.2.2",
     "async": "~1.5.2",
+    "browserify": "^13.0.0",
     "colors": "~1.1.0",
     "cross-spawn-async": "~2.1.6",
     "deep-equal": "~1.0.1",
