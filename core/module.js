@@ -1,7 +1,7 @@
 module.exports = (function() {
 
   'use strict';
-
+  let path = require('path')
   // Load .env
   require('dotenv').config();
 
@@ -53,7 +53,7 @@ module.exports = (function() {
     my: {},
     mocha: {},
     require: function(filename) {
-      return require(process.cwd() + '/' + filename);
+      return require(path.join(process.cwd(), filename));
     },
     include: {
       mime: require('mime-types'),
@@ -183,7 +183,7 @@ module.exports = (function() {
       },
       enumerable: true
     },
-   StrongParam: {
+    StrongParam: {
       get: function() {
         return Nodal.StrongParam || (Nodal.StrongParam = require('./required/strong_param.js'));
       },

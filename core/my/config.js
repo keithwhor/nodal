@@ -1,44 +1,44 @@
 module.exports = (() => {
 
-  'use strict';
+    'use strict';
 
-  const env = require('./../env.js');
+const env = require('./../env.js');
 
-  const fs = require('fs');
-  const dot = require('dot');
+const fs = require('fs');
+const path = require('path');
+const dot = require('dot');
 
-  let config = {};
+let config = {};
 
-  let varname = dot.templateSettings.varname;
+let varname = dot.templateSettings.varname;
 
-  dot.templateSettings.varname = 'env';
+dot.templateSettings.varname = 'env';
 
-  let dir = env.rootDirectory + '/config';
-  let configFiles = fs.readdirSync(dir);
+let dir = path.join(env.rootDirectory, 'config');
+let configFiles = fs.readdirSync(dir);
 
-  let ext = '.json';
+const ext = '.json';
 
-  configFiles.filter(function(filename) {
-    let name = filename.substr(0, filename.length - ext.length);
-    return !config[name] && filename.substr(filename.length - ext.length) === ext;
-  }).forEach(function(filename) {
+configFiles.filter(function(filename) {
+  let extension = path.extname(filename)
+    , name = path.basename(filename, extension);
+  return !config[name] && extension === ext;
+}).forEach(function(filename) {  // todo: this code may be async
 
-    let configData;
+  let configData;
 
-    try {
-      configData = fs.readFileSync([dir, filename].join('/'));
-      configData = dot.template(configData)(process.env);
-      configData = JSON.parse(configData);
-    } catch(e) {
-      throw new Error(`Could not parse "config/${filename}": Invalid JSON`);
-    }
+  try {
+    configData = fs.readFileSync(path.join(dir, filename));
+    configData = dot.template(configData)(process.env);
+    configData = JSON.parse(configData);
+  } catch(e) {
+    throw new Error(`Could not parse "config/${filename}": Invalid JSON`);
+  }
+  config[path.basename(filename, ext)] = configData;
+});
 
-    config[filename.substr(0, filename.length - ext.length)] = configData[env.name];
+dot.templateSettings.varname = varname;
 
-  });
-
-  dot.templateSettings.varname = varname;
-
-  return config;
+return config;
 
 })();
