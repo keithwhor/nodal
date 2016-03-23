@@ -3,7 +3,7 @@ module.exports = (function() {
   'use strict';
 
   // Load .env
-  require('dotenv').config();
+  require('dotenv').config({silent: true});
 
   let types = require('pg').types;
   types.setTypeParser(20, function(val) {
