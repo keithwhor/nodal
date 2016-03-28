@@ -136,8 +136,11 @@ module.exports = (() => {
     help() {
 
       return {
-        description: 'Generate a new, empty migration',
-        args: ['migration name']
+        description: 'Generate a new, empty migration. Optionally to add / remove columns.',
+        args: ['migration name'],
+        vflags: {
+          add: '[table] [field_1:type_1] [...] [field_n:type_n]'
+        }
       };
 
     }
@@ -165,7 +168,9 @@ module.exports = (() => {
 
       if (vflags.add) {
 
-        vflags.add.forEach(field => {
+        let table = vflags.add[0];
+
+        vflags.add.slice(1).forEach(field => {
           field = field.split(':');
           up.push(`this.addColumn('${table}', '${field[0]}', '${field[1]}')`);
           down.unshift(`this.dropColumn('${table}', '${field[0]}')`);

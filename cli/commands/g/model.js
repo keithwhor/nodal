@@ -102,7 +102,7 @@ module.exports = (() => {
 
       return {
         description: 'Generate a new model and associated migration',
-        args: ['field_1:type_1', '...', 'field_n:type_n'],
+        args: ['ModelName', 'field_1:type_1', '...', 'field_n:type_n'],
         vflags: {
           user: 'Use a prebuilt User model',
           access_token: 'Use a prebuilt AccessToken model'
