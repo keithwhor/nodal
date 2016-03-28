@@ -2,13 +2,92 @@ module.exports = (() => {
 
   'use strict';
 
-  const GenerateCommand = require('../../generate_command.js');
-  const interfaceGenerateCommands = require('../../interface/generate/commands.js');
+  const Command = require('cmnd').Command;
 
-  return new GenerateCommand(
-    'task <task name>',
-    {definition: 'Add a new task'},
-    (args, flags, callback) => interfaceGenerateCommands.task(args, flags, callback)
-  );
+  const fs = require('fs');
+
+  const colors = require('colors/safe');
+  const inflect = require('i')();
+
+  const dot = require('dot');
+
+  let templateSettings = Object.keys(dot.templateSettings).reduce((o, k) => {
+    o[k] = dot.templateSettings[k];
+    return o;
+  }, {})
+  templateSettings.strip = false;
+  templateSettings.varname = 'data';
+
+  let taskDir = './tasks';
+
+  function generateTask(taskName) {
+
+    let task = {
+      name: taskName,
+    };
+
+    var fn = dot.template(
+      fs.readFileSync(__dirname + '/../../templates/task.jst').toString(),
+      templateSettings
+    );
+
+    return fn(task);
+
+  }
+
+  class GenerateTaskCommand extends Command {
+
+    constructor() {
+
+      super('g', 'task');
+
+    }
+
+    help() {
+
+      return {
+        description: 'Generates a new task',
+        args: ['task name']
+      };
+
+    }
+
+    run(args, flags, vflags, callback) {
+
+      if (!args.length) {
+        return callback(new Error('No task path specified.'));
+      }
+
+      let taskPath = args[0].split('/');
+      let cd = taskPath
+
+      let taskName = inflect.classify(taskPath.pop());
+
+      taskPath = taskPath.map(function(v) {
+        return inflect.underscore(v);
+      });
+
+      let createPath = [taskDir].concat(taskPath).join('/') + '/' + inflect.underscore(taskName) + '.js';
+
+      if (fs.existsSync(createPath)) {
+        return callback(new Error('task already exists'));
+      }
+
+      while (taskPath.length && (cd += '/' + taskPath.shift()) && !fs.existsSync(cd)) {
+        fs.mkdirSync(cd);
+        cd += '/' + taskPath.shift();
+      }
+
+      fs.writeFileSync(createPath, generateTask(taskName));
+
+      console.log(colors.green.bold('Create: ') + createPath);
+
+      callback(null);
+
+    }
+
+  }
+
+  return GenerateTaskCommand;
 
 })();

@@ -2,17 +2,33 @@ module.exports = (() => {
 
   'use strict';
 
-  const DatabaseCommand = require('../../database_command.js');
+  const Command = require('cmnd').Command;
 
-  return new DatabaseCommand(
-    'drop',
-    {hidden: true},
-    (args, flags, callback) => {
+  class DBDropCommand extends Command {
+
+    constructor() {
+
+      super('db', 'drop');
+
+    }
+
+    help() {
+
+      return {
+        description: 'drops the currently active database'
+      };
+
+    }
+
+    run(args, flags, vflags, callback) {
 
       const bootstrapper = require('../../../core/my/bootstrapper.js');
       bootstrapper.drop(callback);
 
     }
-  );
+
+  }
+
+  return DBDropCommand;
 
 })();

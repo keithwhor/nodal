@@ -2,17 +2,33 @@ module.exports = (() => {
 
   'use strict';
 
-  const DatabaseCommand = require('../../database_command.js');
+  const Command = require('cmnd').Command;
 
-  return new DatabaseCommand(
-    'bootstrap',
-    {definition: 'Runs db:create, db:prepare, db:migrate, db:seed'},
-    (args, flags, callback) => {
+  class DBBootstrapCommand extends Command {
+
+    constructor() {
+
+      super('db', 'bootstrap');
+
+    }
+
+    help() {
+
+      return {
+        description: 'Runs db:prepare, db:migrate, db:seed',
+      };
+
+    }
+
+    run(args, flags, vflags, callback) {
 
       const bootstrapper = require('../../../core/my/bootstrapper.js');
       bootstrapper.bootstrap(callback);
 
     }
-  );
+
+  }
+
+  return DBBootstrapCommand;
 
 })();

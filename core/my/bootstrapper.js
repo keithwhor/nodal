@@ -80,8 +80,8 @@ module.exports = (() => {
 
       // Query schema by the Id column, descending
       let orderClause = [{
-        columnName: 'id',
-        direction: 'desc'
+        columnNames: ['id'],
+        direction: 'DESC'
       }];
 
       // Only fetch one row
@@ -95,6 +95,7 @@ module.exports = (() => {
           null,
           'schema_migrations',
           ['id'],
+          null,
           null,
           null,
           orderClause,

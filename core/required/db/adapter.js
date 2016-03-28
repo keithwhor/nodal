@@ -508,7 +508,7 @@ module.exports = (function() {
 
       return !orderByArray.length ? '' : ' ORDER BY ' + orderByArray.map(v => {
         let columns = v.columnNames.map(columnName => `${this.escapeField(table)}.${this.escapeField(columnName)}`);
-        return `${v.transformation.apply(null, columns)} ${v.direction}`;
+        return `${(v.transformation || (v => v)).apply(null, columns)} ${v.direction}`;
       }).join(', ');
 
     }

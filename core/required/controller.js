@@ -37,7 +37,7 @@ module.exports = (() => {
         'OPTIONS': ['options', 'options']
       };
 
-      let hasId = !!(id | 0);
+      let hasId = !!id;
 
       method = method in acceptMethods ? method : 'GET';
       method = acceptMethods[method][hasId | 0];
@@ -186,7 +186,7 @@ module.exports = (() => {
     */
     getHeader(key, value) {
       key = this._parseHeaderKey(key);
-        
+
       return this._headers.hasOwnProperty(key) ? this._headers[key] : value;
     }
 

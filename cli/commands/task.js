@@ -2,18 +2,31 @@ module.exports = (() => {
 
   'use strict';
 
-  const Command = require('../command.js');
+  const Command = require('cmnd').Command;
+
   const fs = require('fs');
+  const colors = require('colors/safe');
 
-  const Daemon = require('../../core/required/daemon.js');
+  class TaskCommand extends Command {
 
-  return new Command(
-    null,
-    'task <task name>',
-    {definition: 'Run the named task', hidden: false, order: 3},
-    (args, flags, callback) => {
+    constructor() {
 
-      let taskName = args[0] && args[0][0] || '';
+      super('task');
+
+    }
+
+    help() {
+
+      return {
+        description: 'Runs the named task',
+        args: ['task name']
+      };
+
+    }
+
+    run(args, flags, vflags, callback) {
+
+      let taskName = args[0] || '';
       let cwd = process.cwd();
       let taskPath = cwd + '/tasks/' + taskName + '.js';
 
@@ -30,11 +43,14 @@ module.exports = (() => {
           console.log('Task complete!');
         }
 
-        callback();
+        callback(null);
 
       });
 
     }
-  );
+
+  }
+
+  return TaskCommand;
 
 })();
