@@ -141,6 +141,13 @@ module.exports = (() => {
       let transactionError = null;
       let transactionResults = [];
 
+      transaction.on('error', (err) => {
+
+        db.info('Transaction error');
+        callback(err);
+
+      });
+
       transaction.on('rollback:start', function() {
 
         db.info('Rollback started...');
