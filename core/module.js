@@ -18,6 +18,7 @@ module.exports = (function() {
     Application: null,
     Authorizer: null,
     Controller: null,
+    CLI: null,
     Daemon: null,
     Database: null,
     GraphQuery: null,
@@ -84,6 +85,12 @@ module.exports = (function() {
     Controller: {
       get: function() {
         return Nodal.Controller || (Nodal.Controller = require('./required/controller.js'));
+      },
+      enumerable: true
+    },
+    CLI: {
+      get: function() {
+        return Nodal.CLI || (Nodal.CLI = require('../cli/cli.js'));
       },
       enumerable: true
     },
