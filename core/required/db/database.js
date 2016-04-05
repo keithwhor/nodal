@@ -23,6 +23,10 @@ module.exports = (() => {
 
       let connection;
 
+      if (typeof cfg === 'string') {
+        cfg = {connectionString: cfg};
+      }
+
       if (cfg.connectionString && cfg.connectionString.length) {
         connection = anyDB.createPool(cfg.connectionString, {min: 2, max: 2});
       } else {
@@ -41,10 +45,10 @@ module.exports = (() => {
 
     close(callback) {
 
-      this._connection && this._connection.close((function(err) {
+      this._connection && this._connection.close((err) => {
         this._connection = null;
-        callback.call(this, err);
-      }).bind(this));
+        callback && callback.call(this, err);
+      });
 
       return true;
 
@@ -144,7 +148,7 @@ module.exports = (() => {
       transaction.on('error', (err) => {
 
         db.info('Transaction error');
-        callback(err);
+        transactionError = err;
 
       });
 

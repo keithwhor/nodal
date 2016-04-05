@@ -397,6 +397,10 @@ module.exports = (function() {
     */
     static hides(field) {
 
+      if (!this.prototype.hasOwnProperty('_hides')) {
+        this.prototype._hides = {};
+      }
+
       this.prototype._hides[field] = true;
       return true;
 
@@ -1078,11 +1082,48 @@ module.exports = (function() {
     }
 
     /**
+    * Logic to execute before a model gets destroyed. Intended to be overwritten when inherited.
+    * @param {Function} callback Invoke with first argument as an error if failure.
+    */
+    beforeDestroy(callback) {
+
+      callback(null, this);
+
+    }
+
+    /**
+    * Logic to execute after a model is destroyed. Intended to be overwritten when inherited.
+    * @param {Function} callback Invoke with first argument as an error if failure.
+    */
+    afterDestroy(callback) {
+
+      callback(null, this);
+
+    }
+
+    /**
     * Destroys model reference in database.
     * @param {function({Error} err, {Nodal.Model} model)} callback
     *   Method to execute upon completion, returns error if failed
     */
     destroy(callback) {
+
+      async.series([
+        this.beforeDestroy,
+        this.__destroy__,
+        this.afterDestroy
+      ].map(f => f.bind(this)), (err) => {
+        callback(err || null, this);
+      });
+
+    }
+
+    /**
+    * Destroys model reference in database
+    * @param {function} callback Method to execute upon completion, returns error if failed
+    * @private
+    */
+    __destroy__(callback) {
 
       let db = this.db;
 

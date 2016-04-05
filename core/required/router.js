@@ -158,17 +158,15 @@ module.exports = (() => {
 
       let auth = {};
 
-      if (params.access_token) {
-        auth.token_type = 'bearer';
-        auth.access_token = params.access_token || '';
-      }
-
       if (headers['authorization']) {
         let parts = headers['authorization'].split(' ');
         if (parts.length === 2 && /^Bearer$/i.test(parts[0])) {
             auth.token_type = 'bearer';
             auth.access_token = parts[1];
         }
+      } else if (params.access_token) {
+        auth.token_type = 'bearer';
+        auth.access_token = params.access_token || '';
       }
 
       return auth;

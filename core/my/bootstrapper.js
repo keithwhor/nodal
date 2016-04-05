@@ -85,10 +85,9 @@ module.exports = (() => {
               return callback(err);
             }
 
-            db.info(`Prepared database "${db._config.database}" for migrations`);
             schema.save();
 
-            callback(null);
+            callback(null, `Prepared database "${db._config.database}" for migrations`);
 
           }
         );
@@ -138,12 +137,10 @@ module.exports = (() => {
             }
 
             if (result.rows && result.rows.length) {
-              console.log(colors.green.bold('Current Schema Version: ') + result.rows[0].id);
+              return callback(null, `Schema version: ${result.rows[0].id}`);
             } else {
               return callback(new Error('No Migrations have been run'));
             }
-
-            callback(null);
 
           }
         );
@@ -213,8 +210,7 @@ module.exports = (() => {
                   return callback(err);
                 }
 
-                console.log('Migration complete!');
-                callback(null);
+                callback(null, 'Migration completed successfully');
 
               }
             );
@@ -282,8 +278,7 @@ module.exports = (() => {
                 return callback(new Error('Migration rollback could not be completed'));
               }
 
-              console.log('Migration rollback complete!');
-              callback(null);
+              callback(null, 'Migration rollback complete!');
 
             }
           );
