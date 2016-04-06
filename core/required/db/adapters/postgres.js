@@ -15,6 +15,10 @@ module.exports = (function() {
 
     generateConnectionString(host, port, database, user, password) {
 
+      if (!host || !port || !database) {
+        return '';
+      }
+
       return 'postgres://' + user + ':' + password + '@' + host + ':' + port + '/' + database;
 
     }

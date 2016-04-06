@@ -22,18 +22,22 @@ module.exports = (() => {
     connect(cfg) {
 
       let connection;
+      let connectionString = '';
 
       if (typeof cfg === 'string') {
         cfg = {connectionString: cfg};
       }
 
-      if (cfg.connectionString && cfg.connectionString.length) {
-        connection = anyDB.createPool(cfg.connectionString, {min: 2, max: 2});
+      if (cfg.connectionString) {
+        connectionString = cfg.connectionString;
       } else {
-        connection = anyDB.createPool(
-          this.adapter.generateConnectionString(cfg.host, cfg.port, cfg.database, cfg.user, cfg.password),
-          {min: 2, max: 2}
-        );
+        connectionString = this.adapter.generateConnectionString(cfg.host, cfg.port, cfg.database, cfg.user, cfg.password);
+      }
+
+      try {
+        connection = anyDB.createPool(connectionString, {min: 2, max: 2});
+      } catch (e) {
+        throw new Error('Error Connecting to Database, Malformed Credentials');
       }
 
       this._connection = connection;

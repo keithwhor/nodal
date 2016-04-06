@@ -1,6 +1,6 @@
 {
   "name": "nodal",
-  "version": "0.9.0-rc4",
+  "version": "0.9.0-rc5",
   "description": "An API Server and Framework for node.js",
   "keywords": [
     "framework",
@@ -18,9 +18,10 @@
     "any-db-pool": "~2.1.0",
     "any-db-postgres": "~2.1.4",
     "any-db-transaction": "~2.2.2",
+    "api-res": "~0.0.1",
     "async": "~1.5.2",
     "colors": "~1.1.0",
-    "cmnd": "~0.0.4",
+    "cmnd": "~0.0.6",
     "cross-spawn-async": "~2.1.6",
     "deep-equal": "~1.0.1",
     "dot": "~1.0.3",

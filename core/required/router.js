@@ -192,6 +192,13 @@ module.exports = (() => {
 
     }
 
+    parseRemoteAddress(remoteAddress, list) {
+
+      let remoteAddressList = remoteAddress.split(',').map(v => v.replace(/^\s*(.*?)\s*$/, '$1')).filter(v => v);
+      return list ? remoteAddressList : remoteAddressList[0];
+
+    }
+
     dispatch(routeData, responder) {
 
       let params = {
@@ -202,7 +209,8 @@ module.exports = (() => {
         auth: this.parseAuth(url.parse(routeData.url, true).query, routeData.headers),
         matches: routeData.matches,
         route: routeData.route,
-        remoteAddress: routeData.headers['x-forwarded-for'] || routeData.remoteAddress,
+        remoteAddress: this.parseRemoteAddress(routeData.headers['x-forwarded-for'] || routeData.remoteAddress),
+        remoteAddressList: this.parseRemoteAddress(routeData.headers['x-forwarded-for'] || routeData.remoteAddress, true),
         id: routeData.route.id
       };
 
