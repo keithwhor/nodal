@@ -19,7 +19,7 @@ module.exports = (() => {
     help() {
 
       return {
-        description: 'Logs in to Polybit API server'
+        description: 'Logs out of Polybit API server'
       };
 
     }
