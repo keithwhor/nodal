@@ -5,6 +5,7 @@ module.exports = (() => {
   const env = require('./../env.js');
 
   const fs = require('fs');
+  const path = require('path');
   const dot = require('dot');
 
   let config = {};
@@ -13,27 +14,27 @@ module.exports = (() => {
 
   dot.templateSettings.varname = 'env';
 
-  let dir = env.rootDirectory + '/config';
+  let dir = path.join(env.rootDirectory, 'config');
   let configFiles = fs.readdirSync(dir);
 
-  let ext = '.json';
+  const ext = '.json';
 
   configFiles.filter(function(filename) {
-    let name = filename.substr(0, filename.length - ext.length);
-    return !config[name] && filename.substr(filename.length - ext.length) === ext;
+    let name = path.basename(filename, ext);
+    return !config[name] && path.extname(filename) === ext;
   }).forEach(function(filename) {
 
     let configData;
 
     try {
-      configData = fs.readFileSync([dir, filename].join('/'));
+      configData = fs.readFileSync(path.join(dir, filename));
       configData = dot.template(configData)(process.env);
       configData = JSON.parse(configData);
     } catch(e) {
       throw new Error(`Could not parse "config/${filename}": Invalid JSON`);
     }
 
-    config[filename.substr(0, filename.length - ext.length)] = configData[env.name];
+    config[path.basename(filename, ext)] = configData[env.name];
 
   });
 
