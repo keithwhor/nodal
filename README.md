@@ -7,33 +7,37 @@
 
 View the website at [nodaljs.com](http://nodaljs.com).
 
-Nodal is a web server and opinionated framework for building API services in
-Node.js as part of a larger, service-oriented stack for web, mobile or IoT apps.
+Nodal is a web server and opinionated framework for building 
+data storage and accession-centric API services in Node.js for 
+web, mobile or IoT apps.
 
-Boasting its own opinionated, explicit, idiomatic and highly-extensible
-full-service framework, Nodal takes care of all of the hard decisions for you
-and your team. This allows you to focus on creating an effective product in a
+## Why Nodal?
+
+[Hello, Nodal — Building Node.js Servers for Everybody](https://medium.com/@keithwhor/hello-nodal-why-we-re-building-node-js-servers-for-everybody-dce14b27a233)
+is our first blog post that helps you get acquainted with the reasons behind
+the creation of the framework. :)
+
+[Post Parse Prototyping](https://thoughts.ishuman.co/post-parse-prototyping-72b8570af416) is also a fantastic
+read explaining the benefits of Nodal for quick and easy mobile / IoT backend development.
+
+## Overview
+
+Nodal is built upon an ideology of a robust, scalable architecture for
+data storage and retrieval APIs.
+It is an opinionated, explicit, idiomatic and highly-extensible full-service
+framework that takes care of all of the hard decisions for you and your team.
+This allows you to focus on creating an effective product in a
 short timespan while minimizing technical debt.
+
+Nodal servers are not meant to be monoliths. They're *stateless* and *distributed*,
+meant to service your needs of interfacing with your data layer effortlessly.
+While you can output any data format with Nodal, it's recommended you offload
+things like static page rendering to other optimized services like CDNs.
 
 Nodal projects are ready to deploy to [Polybit](https://polybit.com) right out of
 the box, so you can have your website live in no time with `nodal poly:deploy`.
 
 [Check out the first Nodal Screencast here.](https://www.youtube.com/embed/IxBXkFbUqtk)
-
-## Why Nodal?
-
-Nodal is built upon an ideology of a robust, scalable microservice architecture.
-Specialized for building distributed, scalable APIs, use Nodal to interface
-with your database effortlessly.
-
-Nodal servers are not meant to be monoliths. They're meant to service your needs
-of interfacing with your data layer effortlessly. While you can output any
-data format with Nodal, it's recommended you offload things like static
-page rendering to other optimized services like CDNs.
-
-Within the context of building APIs, Nodal should never feel restrictive.
-But Nodal is not a silver bullet. It is meant as an entry point into distributed,
-modern web architectures.
 
 ## Getting Started
 
