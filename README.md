@@ -8,7 +8,7 @@
 View the website at [nodaljs.com](http://nodaljs.com).
 
 Nodal is a web server and opinionated framework for building 
-data storage and accession-centric API services in Node.js for 
+data manipulation-centric (Create Read Update Destroy) API services in Node.js for 
 web, mobile or IoT apps.
 
 ## Why Nodal?
