@@ -5,6 +5,42 @@ module.exports = (() => {
   const API = require('./api.js');
   const ExecutionQueue = require('./execution_queue.js');
 
+  /**
+  *  Basic Controller implementation
+  *
+  *  For example, this controller implements the `index()` method to handle a `GET` request, and respond with data resulting from a query to the *Tweet* model.
+  *
+  *```javascript
+  * module.exports = (function() {
+  *
+  *   'use strict';
+  *
+  *   const Nodal = require('nodal');
+  *   const Tweet = Nodal.require('app/models/tweet.js');
+  *   class V1TweetsController extends Nodal.Controller {
+  *
+  *     index() {
+  *
+  *       Tweet.query()
+  *         .where(this.params.query)
+  *         .end((err, models) => {
+  *
+  *           this.respond(err || models);
+  *
+  *         });
+  *
+  *       }
+  *
+  *     }
+  *
+  *   return V1TweetsController;
+  *
+  * })();
+  *```
+  * @class
+  *
+  */
+
   class Controller {
 
     constructor(path, method, requestHeaders, params, responder) {
