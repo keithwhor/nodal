@@ -36,12 +36,6 @@ module.exports = (function(Nodal) {
 
     });
 
-    it('should have Middleware constructor', function() {
-
-      expect(Nodal.Middleware).to.be.a('function');
-
-    });
-
     it('should have Migration constructor', function() {
 
       expect(Nodal.Migration).to.be.a('function');

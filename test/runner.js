@@ -78,27 +78,15 @@ describe('Test Suite', function() {
 
   } else {
 
-    require('./tests/nodal.js')(Nodal);
-
-    require('./tests/router.js')(Nodal);
-
-    require('./tests/database.js')(Nodal);
-
-    require('./tests/api.js')(Nodal);
-
-    require('./tests/controller.js')(Nodal);
-
-    require('./tests/model.js')(Nodal);
-
-    require('./tests/composer.js')(Nodal);
-
-    require('./tests/relationship_graph.js')(Nodal);
-
-    require('./tests/strong_param.js')(Nodal);
-
-    require('./tests/utilities.js')(Nodal);
-
-    require('./tests/graph_query.js')(Nodal);
+    [
+      'nodal',
+      'database',
+      'api',
+      'model',
+      'composer',
+      'relationship_graph',
+      'graph_query'
+    ].forEach(filename => require(`./tests/${filename}.js`)(Nodal));
 
   }
 

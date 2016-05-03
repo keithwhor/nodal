@@ -1013,7 +1013,7 @@ module.exports = (function() {
     */
     save(callback) {
 
-      callback = callback || () => {};
+      callback = callback || (() => {});
 
       async.series([
         this.beforeSave,
@@ -1110,7 +1110,7 @@ module.exports = (function() {
     */
     destroy(callback) {
 
-      callback = callback || () => {};
+      callback = callback || (() => {});
 
       async.series([
         this.beforeDestroy,
