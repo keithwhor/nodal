@@ -90,7 +90,7 @@ module.exports = (function() {
 
       if (typeof fnComplete !== 'function') {
         args.push(fnComplete);
-        fnComplete = () => {};
+        fnComplete = (() => {});
       }
 
       let execArray = [

@@ -16,7 +16,7 @@ module.exports = (() => {
       this._headers = {};
       this._status = 200;
 
-      this._responder = responder || () => {};
+      this._responder = responder || (() => {});
 
       this._securityPolicies = {};
 

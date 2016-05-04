@@ -66,7 +66,7 @@ module.exports = (() => {
 
       // Count new nodal projects being made. :)
       let req = http.request({host: 'api.polybit.com', port: 80, path: `/v1/nodal_initializations?version=${version}`, method: 'POST'});
-      req.on('error', () => {});
+      req.on('error', (() => {}));
       req.end();
 
       inquirer.prompt(questions, (promptResult) => {
