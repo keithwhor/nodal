@@ -7,6 +7,15 @@ module.exports = (() => {
   const utilities = require('./utilities.js');
   const API = require('./api.js');
 
+  /**
+  * Singleton Parent Application class
+  *
+  * Handles server process exceptions, sets process message event listeners, creates server, sets router and handles server process shutdown.
+  *
+  * @class
+  *
+  */
+
   class Application {
 
     constructor() {
@@ -50,6 +59,10 @@ module.exports = (() => {
       process.send({message: 'ready'});
 
     }
+
+    /**
+    * Gets current server process time
+    */
 
     getTime() {
 

@@ -4,6 +4,14 @@ module.exports = (() => {
 
   const EndpointRequest = require('./endpoint_request.js');
 
+  /**
+  *  Parent class for mocah test integration
+  *
+  *
+  * @class
+  *
+  */
+
   class Test {
 
     constructor(testRunner) {
@@ -12,6 +20,11 @@ module.exports = (() => {
       Object.defineProperty(this, 'router', {get: () => this.testRunner.router});
 
     }
+
+    /**
+    * Wrapper for testing
+    * @param {function} verb The testing method that should be used in the test block.
+    */
 
     __test__(verb) {
 
@@ -26,6 +39,11 @@ module.exports = (() => {
       });
 
     }
+
+    /**
+    * Intended to be overwritten when inherited.
+    * @param {function} verb Expects a testing verb i.e. `expect` to user in the defined test
+    */
 
     test() {}
 
