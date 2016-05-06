@@ -6,7 +6,7 @@ module.exports = (() => {
   const ExecutionQueue = require('./execution_queue.js');
 
   /**
-  *  Basic Controller implementation
+  *  Basic Controller Implementation
   *
   *  For example, this controller implements the `index()` method to handle a `GET` request, and respond with data resulting from a query to the *Tweet* model.
   *
