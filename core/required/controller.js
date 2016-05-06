@@ -11,31 +11,31 @@ module.exports = (() => {
   *  For example, this controller implements the `index()` method to handle a `GET` request, and respond with data resulting from a query to the *Tweet* model.
   *
   *```javascript
-  * module.exports = (function() {
+  *  module.exports = (function() {
   *
-  *   'use strict';
+  *    'use strict';
   *
-  *   const Nodal = require('nodal');
-  *   const Tweet = Nodal.require('app/models/tweet.js');
-  *   class V1TweetsController extends Nodal.Controller {
+  *    const Nodal = require('nodal');
+  *    const Tweet = Nodal.require('app/models/tweet.js');
+  *    class V1TweetsController extends Nodal.Controller {
   *
-  *     index() {
+  *      index() {
   *
-  *       Tweet.query()
-  *         .where(this.params.query)
-  *         .end((err, models) => {
+  *        Tweet.query()
+  *          .where(this.params.query)
+  *          .end((err, models) => {
   *
-  *           this.respond(err || models);
+  *            this.respond(err || models);
   *
-  *         });
+  *          });
   *
-  *       }
+  *        }
   *
-  *     }
+  *      }
   *
-  *   return V1TweetsController;
+  *    return V1TweetsController;
   *
-  * })();
+  *  })();
   *```
   * @class
   *
