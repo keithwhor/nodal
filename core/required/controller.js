@@ -3,7 +3,6 @@ module.exports = (() => {
   'use strict';
 
   const fxn = require('fxn');
-
   const API = require('./api.js');
 
   class Controller extends fxn.Controller {

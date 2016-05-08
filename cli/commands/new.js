@@ -44,7 +44,6 @@ module.exports = (() => {
       let data = {
         name: args[0] ? (args[0] + '').replace(/_/g, ' ') : '',
         author: (vflags.author || '').replace(/_/g, ' ') || '',
-        heroku: vflags.hasOwnProperty('heroku'),
         ignoreOutput: vflags.hasOwnProperty('ignore-output')
       };
 
@@ -66,14 +65,13 @@ module.exports = (() => {
 
       // Count new nodal projects being made. :)
       let req = http.request({host: 'api.polybit.com', port: 80, path: `/v1/nodal_initializations?version=${version}`, method: 'POST'});
-      req.on('error', () => {});
+      req.on('error', (() => {}));
       req.end();
 
       inquirer.prompt(questions, (promptResult) => {
 
         promptResult.name = promptResult.name || data.name;
         promptResult.author = promptResult.author || data.author;
-        promptResult.heroku = promptResult.heroku || data.heroku;
 
         promptResult.simpleName = promptResult.name.replace(/\s/gi, '-');
 
@@ -109,12 +107,6 @@ module.exports = (() => {
           fs.writeFileSync('./' + dirname + '/package.json', dot.template(
             fs.readFileSync(rootPath + '/../templates/package.json.jst').toString()
           )(promptResult));
-
-          if (promptResult.heroku) {
-            fs.writeFileSync('./' + dirname + '/app.json', dot.template(
-              fs.readFileSync(rootPath + '/../templates/app.json.jst').toString()
-            )(promptResult));
-          }
 
           fs.writeFileSync('./' + dirname + '/README.md', dot.template(
             fs.readFileSync(rootPath + '/../templates/README.md.jst').toString()
