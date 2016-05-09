@@ -16,27 +16,21 @@ module.exports = (function() {
   let Nodal = {
     API: null,
     Application: null,
-    Authorizer: null,
     Controller: null,
     CLI: null,
     Daemon: null,
     Database: null,
     GraphQuery: null,
     ItemArray: null,
-    Middleware: null,
     Migration: null,
     Mime: null,
     Model: null,
     ModelArray: null,
     ModelFactory: null,
     RelationshipGraph: null,
-    Renderware: null,
     Router: null,
     Scheduler: null,
-    SchedulerTask: null,
     SchemaGenerator: null,
-    StrongParam: null,
-    Task: null,
     my: {
       Config: null,
       Schema: null,
@@ -76,12 +70,6 @@ module.exports = (function() {
       },
       enumerable: true
     },
-    Authorizer: {
-      get: function() {
-        return Nodal.Authorizer || (Nodal.Authorizer = require('./required/authorizer.js'));
-      },
-      enumerable: true
-    },
     Controller: {
       get: function() {
         return Nodal.Controller || (Nodal.Controller = require('./required/controller.js'));
@@ -115,12 +103,6 @@ module.exports = (function() {
     ItemArray: {
       get: function() {
         return Nodal.ItemArray || (Nodal.ItemArray = require('./required/item_array.js'));
-      },
-      enumerable: true
-    },
-    Middleware: {
-      get: function() {
-        return Nodal.Middleware || (Nodal.Middleware = require('./required/middleware.js'));
       },
       enumerable: true
     },
@@ -160,12 +142,6 @@ module.exports = (function() {
       },
       enumerable: true
     },
-    Renderware: {
-      get: function() {
-        return Nodal.Renderware || (Nodal.Renderware = require('./required/renderware.js'));
-      },
-      enumerable: true
-    },
     Router: {
       get: function() {
         return Nodal.Router || (Nodal.Router = require('./required/router.js'));
@@ -178,27 +154,9 @@ module.exports = (function() {
       },
       enumerable: true
     },
-    SchedulerTask: {
-      get: function() {
-        return Nodal.Task || (Nodal.Task = require('./required/task.js'));
-      },
-      enumerable: true
-    },
     SchemaGenerator: {
       get: function() {
         return Nodal.SchemaGenerator || (Nodal.SchemaGenerator = require('./required/db/schema_generator.js'));
-      },
-      enumerable: true
-    },
-   StrongParam: {
-      get: function() {
-        return Nodal.StrongParam || (Nodal.StrongParam = require('./required/strong_param.js'));
-      },
-      enumerable: true
-    },
-    Task: {
-      get: function() {
-        return Nodal.Task || (Nodal.Task = require('./required/task.js'));
       },
       enumerable: true
     }
