@@ -1,6 +1,6 @@
 language: node_js
 node_js:
-  - "4.2.4"
+  - "6.0.0"
 addons:
   postgresql: "9.4"
 before_script:
