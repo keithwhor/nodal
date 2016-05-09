@@ -7,8 +7,8 @@
 
 View the website at [nodaljs.com](http://nodaljs.com).
 
-Nodal is a web server and opinionated framework for building 
-data manipulation-centric (Create Read Update Destroy) API services in Node.js for 
+Nodal is a web server and opinionated framework for building
+data manipulation-centric (Create Read Update Destroy) API services in Node.js for
 web, mobile or IoT apps.
 
 ## Why Nodal?
@@ -38,6 +38,27 @@ Nodal projects are ready to deploy to [Polybit](https://polybit.com) right out o
 the box, so you can have your website live in no time with `nodal poly:deploy`.
 
 [Check out the first Nodal Screencast here.](https://www.youtube.com/embed/IxBXkFbUqtk)
+
+## Stateless Dogma
+
+It's important to note that Nodal is meant for **stateless** API services. This
+means you should not rely on on memory within a specific process to serve multiple
+requests, and Nodal will use process clustering (even in development) to actively
+discourage this practice. If you need to work with unstructured data for rapid
+prototyping, *connect Nodal to a PostgreSQL database* and use the "JSON" field
+type. You'll find yourself encountering a lot of trouble if you start trying to
+use in-process memory across different requests.
+
+Remember: **one input, one output**. Side effects dealing with model state
+should be managed via your Database. Nodal should not be used for streaming
+(long poll) requests and the HTTP request and response objects are intentionally
+obfuscated.
+
+This also means you *can not rely on socket connections*. If you need to
+incorporate realtime functionality in your application, there should be a
+separate server responsible for this. It can interface with your Nodal API
+server and even receive events from it, but your API server should never have
+a stateful (prolonged) connection with any client.
 
 ## Getting Started
 
@@ -95,9 +116,10 @@ service to solve specific *Problem Domains* of your application and business.
 
 The main three suggestions are **Branding Server**, **API Server** and **Application Server**.
 
-Nodal's core competency is building API servers. Though we do have
+Nodal's core competency is building API servers. We do, however, also have a
+project called
 [dotcom](http://github.com/keithwhor/dotcom) for building Branding Servers
-(search engine optimized server-generated pages).
+(search engine optimized server-generated pages). More on this soon.
 
 ### API Server
 

@@ -11,7 +11,7 @@ module.exports = (function(Nodal) {
     let schemaParent = {
       table: 'parents',
       columns: [
-        {name: 'id', type: 'serial'},
+        {name: 'id', type: 'serial', properties: {primary_key: true}},
         {name: 'name', type: 'string'},
         {name: 'age', type: 'int'},
         {name: 'secret', type: 'string'},
@@ -335,6 +335,106 @@ module.exports = (function(Nodal) {
             expect(err).to.equal(null);
             done();
           });
+        });
+
+      });
+
+      it('should create Parent via Parent.create', done => {
+
+        Parent.create({name: 'parent', age: 30}, (err, parent) => {
+
+          expect(err).to.not.exist;
+          expect(parent).to.exist;
+          done();
+
+        });
+
+      });
+
+      it('should create Parent via Parent.create, destroy via Parent.destroy', done => {
+
+        Parent.create({name: 'parent', age: 30}, (err, parent) => {
+
+          expect(err).to.not.exist;
+          expect(parent).to.exist;
+
+          Parent.destroy(parent.get('id'), (err, parent) => {
+
+            expect(err).to.not.exist;
+            expect(parent.inStorage()).to.equal(false);
+            done();
+
+          });
+
+        });
+
+      });
+
+      it('should create Parent via Parent.create, find by Parent.find', done => {
+
+        Parent.create({name: 'parent', age: 30}, (err, parent) => {
+
+          expect(err).to.not.exist;
+          expect(parent).to.exist;
+
+          Parent.find(parent.get('id'), (err, parent) => {
+
+            expect(err).to.not.exist;
+            expect(parent.inStorage()).to.equal(true);
+            done();
+
+          });
+
+        });
+
+      });
+
+      it('should create Parent via Parent.create, find by Parent.findBy', done => {
+
+        Parent.create({name: 'parent_findby', age: 30}, (err, parent) => {
+
+          expect(err).to.not.exist;
+          expect(parent).to.exist;
+
+          Parent.findBy('name', 'parent_findby', (err, parent) => {
+
+            expect(err).to.not.exist;
+            expect(parent.inStorage()).to.equal(true);
+            done();
+
+          });
+
+        });
+
+      });
+
+      it('Should create via findOrCreateBy', done => {
+
+        Parent.findOrCreateBy('name', {name: 'parent_unique', age: 30}, (err, parent) => {
+
+          expect(err).to.not.exist;
+          expect(parent).to.exist;
+          done();
+
+        });
+
+      });
+
+      it('Should find via findOrCreateBy', done => {
+
+        Parent.create({name: 'parent_unique_2', age: 30}, (err, parent) => {
+
+          expect(err).to.not.exist;
+          expect(parent).to.exist;
+
+          Parent.findOrCreateBy('name', {name: 'parent_unique_2', age: 30}, (err, parent) => {
+
+            expect(err).to.not.exist;
+            expect(parent).to.exist;
+            done();
+
+          });
+
         });
 
       });

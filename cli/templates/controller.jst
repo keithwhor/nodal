@@ -59,25 +59,25 @@ module.exports = (function() {
 
     }{{??}}get() {
 
-      this.render();
+      this.respond({message: `GET request to ${this.constructor.name}`);
 
     }
 
     post() {
 
-      this.render();
+      this.badRequest();
 
     }
 
     put() {
 
-      this.render();
+      this.badRequest();
 
     }
 
     del() {
 
-      this.render();
+      this.badRequest();
 
     }{{?}}
 
