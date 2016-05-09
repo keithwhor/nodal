@@ -168,6 +168,10 @@ module.exports = (function() {
 
           this.__saveAll__(err => {
 
+            if (err) {
+              return callback(err, this);
+            }
+
             async.series(
               this.map(m => m.afterSave.bind(m)),
               err => callback(err || null, this)
@@ -193,27 +197,38 @@ module.exports = (function() {
         return callback.call(this, firstErrorModel.errorObject());
       }
 
-      let db = this.Model.prototype.db;
-
-      db.transaction(
-        this.map(m => {
-          let query = m.__generateSaveQuery__();
-          return [query.sql, query.params];
-        }),
-        (err, result) => {
+      async.series(
+        this.map(m => m.__verify__.bind(m)),
+        (err) => {
 
           if (err) {
-            return callback.call(this, new Error(err.message));
+            return callback.call(this, err);
           }
 
-          this.forEach((m, i) => {
-            m.__load__(result[i].rows[0], true);
-          });
+          let db = this.Model.prototype.db;
 
-          callback.call(this, null);
+          db.transaction(
+            this.map(m => {
+              let query = m.__generateSaveQuery__();
+              return [query.sql, query.params];
+            }),
+            (err, result) => {
+
+              if (err) {
+                return callback.call(this, new Error(err.message));
+              }
+
+              this.forEach((m, i) => {
+                m.__load__(result[i].rows[0], true);
+              });
+
+              callback.call(this, null);
+
+            }
+          );
 
         }
-      )
+      );
 
     }
 

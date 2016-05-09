@@ -330,7 +330,7 @@ module.exports = (function() {
     }
 
     /**
-    * Create a validator
+    * Create a validator. These run synchronously and check every time a field is set / cleared.
     * @param {string} field The field you'd like to validate
     * @param {string} message The error message shown if a validation fails.
     * @param {function({any} value)} fnAction the validation to run - first parameter is the value you're testing.
@@ -348,6 +348,25 @@ module.exports = (function() {
 
       this.prototype._validations[field] = this.prototype._validations[field] || [];
       this.prototype._validations[field].push({message: message, action: fnAction});
+
+    }
+
+    /**
+    * Creates a verifier. These run asynchronously, support multiple fields, and check every time you try to save a Model.
+    * @param {string} message The error message shown if a validation fails.
+    * @param {function} fnAction The asynchronous verification method. The last argument passed is always a callback, and field names are determined by the argument names.
+    */
+    static verifies(message, fnAction) {
+
+      if (!this.prototype.hasOwnProperty('_verificationsList')) {
+        this.prototype._verificationsList = [];
+      };
+
+      this.prototype._verificationsList.push({
+        message: message,
+        action: fnAction,
+        fields: utilities.getFunctionParameters(fnAction).slice(0, -1)
+      });
 
     }
 
@@ -1026,6 +1045,42 @@ module.exports = (function() {
     }
 
     /**
+    * Runs all verifications before saving
+    * @param {function} callback Method to execute upon completion. Returns true if OK, false if failed
+    * @private
+    */
+    __verify__(callback) {
+
+      if (this.hasErrors()) {
+        return callback.call(this, this.errorObject());
+      }
+
+      // Run through verifications in order they were added
+      async.series(
+        this._verificationsList.map(verification => {
+          return callback => {
+            verification.action.apply(
+              this,
+              verification.fields
+                .map(field => this.get(field))
+                .concat(bool => callback(bool ? null : new Error(verification.message)))
+            )
+          };
+        }),
+        (err) => {
+
+          if (err) {
+            return callback.call(this, err);
+          }
+
+          callback(null);
+
+        }
+      );
+
+    }
+
+    /**
     * Saves model to database
     * @param {function} callback Method to execute upon completion, returns error if failed (including validations didn't pass)
     * @private
@@ -1034,7 +1089,7 @@ module.exports = (function() {
 
       let db = this.db;
 
-      // Legacy
+      // Legacy --- FIXME: Deprecated. Can remove for 1.0
       if (arguments.length === 2) {
         db = arguments[0];
         callback = arguments[1];
@@ -1044,32 +1099,36 @@ module.exports = (function() {
         callback = function() {};
       }
 
-      if (this.hasErrors()) {
-        callback.call(this, this.errorObject());
-        return;
-      }
+      this.__verify__(err => {
 
-      if (this.fieldList().indexOf('updated_at') !== -1) {
-        this.set('updated_at', new Date());
-      }
-
-      let query = this.__generateSaveQuery__();
-
-      db.query(
-        query.sql,
-        query.params,
-        (err, result) => {
-
-          if (err) {
-            this.setError('_query', err.message);
-          } else {
-            result.rows.length && this.__load__(result.rows[0], true);
-          }
-
-          callback.call(this, this.errorObject());
-
+        if (err) {
+          callback.call(this, err);
+          return;
         }
-      );
+
+        if (this.fieldList().indexOf('updated_at') !== -1) {
+          this.set('updated_at', new Date());
+        }
+
+        let query = this.__generateSaveQuery__();
+
+        db.query(
+          query.sql,
+          query.params,
+          (err, result) => {
+
+            if (err) {
+              this.setError('_query', err.message);
+            } else {
+              result.rows.length && this.__load__(result.rows[0], true);
+            }
+
+            callback.call(this, this.errorObject());
+
+          }
+        );
+
+      });
 
     }
 
@@ -1192,6 +1251,8 @@ module.exports = (function() {
 
   Model.prototype._calculations = {};
   Model.prototype._calculationsList = [];
+
+  Model.prototype._verificationsList = [];
 
   Model.prototype._hides = {};
 
