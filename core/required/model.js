@@ -316,6 +316,13 @@ module.exports = (function() {
     */
     static setSchema(schema) {
 
+      if (!schema) {
+        throw new Error([
+          `Could not set Schema for ${this.name}.`,
+          `Please make sure to run any outstanding migrations.`
+        ].join('\n'));
+      }
+
       this.prototype.schema = schema;
 
       this.prototype._table = this.table();

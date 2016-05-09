@@ -83,6 +83,11 @@ module.exports = (() => {
 
   function generateModelSchemaObject(modelName, propertyList) {
 
+    let tableName = inflect.tableize(modelName);
+    if (propertyList.filter(c => c.name === tableName).length) {
+      throw new Error(`Can not create a table with an identical field name. (${tableName}.${tableName})`);
+    }
+
     return {
       table: inflect.tableize(modelName),
       columns: propertyList
@@ -136,8 +141,13 @@ module.exports = (() => {
       }
 
       let modelName = inflect.classify(args[0]);
+      let schemaObject;
 
-      let schemaObject = generateModelSchemaObject(modelName, convertArgListToPropertyList(args));
+      try {
+        schemaObject = generateModelSchemaObject(modelName, convertArgListToPropertyList(args));
+      } catch(e) {
+        return callback(e);
+      }
 
       !fs.existsSync(modelDir) && fs.mkdirSync(modelDir);
 

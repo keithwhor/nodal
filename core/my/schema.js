@@ -5,10 +5,17 @@ module.exports = (() => {
   const env = require('./../env.js');
   const fs = require('fs');
 
+  let schema = {};
+
   try {
-    return JSON.parse(fs.readFileSync(env.rootDirectory + '/db/schema.json'));
+    schema = JSON.parse(fs.readFileSync(env.rootDirectory + '/db/schema.json'));
   } catch(e) {
-    return {migration_id: null};
+    schema = {migration_id: null};
   }
+
+  // If we don't have models (no migrations), set to empty object
+  schema.models = schema.models || {};
+
+  return schema;
 
 })();
