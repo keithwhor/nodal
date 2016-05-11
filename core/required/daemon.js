@@ -18,6 +18,14 @@ module.exports = (() => {
 
     }
 
+    /**
+    * Error method for handling Daemon errors
+    *
+    * @param {object} request Request to which to respond with an error
+    * @param {object} response Response object to which the error message will be attached
+    * @param {object} error Error object to add to the response
+    */
+
     error(req, res, error) {
 
       res.writeHead(500, {'Content-Type': 'text/plain'});

@@ -9,7 +9,41 @@ module.exports = (function() {
 
   /**
   * The query composer (ORM)
+  *
+  *  The query composer provides the interface for translating the parameters of a request into the desired response.
+  *
+  *  A new **Composer(ORM)** instance is created with the `.query()` method on an instance of a **Model**.
+  *  For example, this is how we would create a **Composer** instance from our Tweet model, which then uses the query parameters to select data using an SQL WHERE clause, and once completed sends the result of the WHERE clause, back to the client in a response.
+  *
+  *```javascript
+  * module.exports = (function() {
+  *
+  *   'use strict';
+  *
+  *   const Nodal = require('nodal');
+  *   const Tweet = Nodal.require('app/models/tweet.js');
+  *   class V1TweetsController extends Nodal.Controller {
+  *
+  *     index() {
+  *
+  *       Tweet.query()
+  *         .where(this.params.query)
+  *         .end((err, models) => {
+  *
+  *           this.respond(err || models);
+  *
+  *         });
+  *
+  *       }
+  *
+  *     }
+  *
+  *   return V1TweetsController;
+  *
+  * })();
+  *```
   * @class
+  *
   */
   class Composer {
 

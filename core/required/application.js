@@ -5,6 +5,15 @@ module.exports = (() => {
   const fxn = require('fxn');
   const API = require('./api.js');
 
+  /**
+  * Singleton Parent Application class
+  *
+  * Handles server process exceptions, sets process message event listeners, creates server, sets router and handles server process shutdown.
+  *
+  * @class
+  *
+  */
+
   class Application extends fxn.Application {
 
     constructor() {
@@ -14,7 +23,13 @@ module.exports = (() => {
     }
 
     /**
-    * HTTP Error
+    * HTTP Error Handler
+    * @param {http.ClientRequest} req Client request object
+    * @param {http.ServerResponse} res Server response object
+    * @param {integer} start ?
+    * @param {integer} status Status code for response
+    * @param {string} message Error message to be logged
+    * @param {object} err Error object used to generate error stack
     */
     error(req, res, start, status, message, err) {
 
