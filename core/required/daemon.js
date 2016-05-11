@@ -18,7 +18,7 @@ module.exports = (() => {
 
     }
 
-    error(req, res, error) {
+    error(req, res, err) {
 
       res.writeHead(500, {'Content-Type': 'text/plain'});
 
