@@ -12,7 +12,7 @@ module.exports = (function(Nodal) {
       table: 'parents',
       columns: [
         {name: 'id', type: 'serial', properties: {primary_key: true}},
-        {name: 'name', type: 'string'},
+        {name: 'name', type: 'string', properties: { defaultValue: 'Keith'}},
         {name: 'age', type: 'int'},
         {name: 'secret', type: 'string'},
         {name: 'content', type: 'json'},
@@ -152,6 +152,14 @@ module.exports = (function(Nodal) {
       parent.set('name', 'abcdef');
       expect(parent.hasErrors()).to.equal(false);
 
+    });
+    
+    it('should return default value', function() {
+
+      let parent = new Parent();
+      expect(parent.fieldDefaultValue('name')).to.equal('Keith');
+      expect(parent.fieldDefaultValue('secret')).to.equal(null);
+      
     });
 
     it('should toObject with interface', function() {

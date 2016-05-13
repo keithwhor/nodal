@@ -1000,7 +1000,7 @@ module.exports = (function() {
     */
     fieldDefaultValue(field) {
       let fieldData = this._columnLookup[field];
-      return !!(fieldData && fieldData.properties && fieldData.properties.array);
+      return fieldData && fieldData.properties ? fieldData.properties.defaultValue : null;
     }
 
     /**
