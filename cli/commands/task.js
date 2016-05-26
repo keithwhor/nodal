@@ -35,7 +35,7 @@ module.exports = (() => {
       const Task = require(taskPath);
       let task = new Task();
 
-      task.exec(args.slice(1), (err) => {
+      task.exec(null, args.slice(1), (err) => {
 
         if (err) {
           console.log(`${colors.red.bold('Task Error:')} ${err.message}`);
