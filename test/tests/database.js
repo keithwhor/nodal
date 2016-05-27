@@ -43,9 +43,7 @@ module.exports = (function(Nodal) {
 
     after(function(done) {
 
-      db.close(function() {
-        done();
-      });
+      db.close(() => done());
 
     });
 
@@ -127,7 +125,6 @@ module.exports = (function(Nodal) {
             db.adapter.generateCreateTableQuery(myTable.table, myTable.columns),
             db.adapter.generateCreateTableQuery(myReferenceTable.table, myReferenceTable.columns),
             db.adapter.generateCreateTableQuery(myTableWithJson.table, myTableWithJson.columns)
-
           ].join(';'),
           function(err, result) {
             expect(err).to.equal(null);
@@ -177,12 +174,13 @@ module.exports = (function(Nodal) {
       });
 
 
-      it('should be able to drop a tables', function(done) {
+      it('should be able to drop tables', function(done) {
 
         db.transaction(
           [
             db.adapter.generateDropTableQuery(myTable.table),
             db.adapter.generateDropTableQuery(myReferenceTable.table),
+            db.adapter.generateDropTableQuery(myTableWithJson.table)
           ].join(';'),
           function(err, result) {
             expect(err).to.equal(null);

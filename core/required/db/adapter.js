@@ -5,6 +5,7 @@ module.exports = (function() {
   class DatabaseAdapter {
 
     generateConnectionString(host, port, database, user, password) {}
+    parseConnectionString(str) {}
 
     generateClearDatabaseQuery() {}
     generateCreateDatabaseQuery() {}

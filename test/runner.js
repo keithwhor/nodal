@@ -17,7 +17,7 @@ describe('Test Suite', function() {
   let Nodal = require('../core/module.js');
   Nodal.env.rootDirectory = __dirname;
 
-  if(os.platform() === 'win32') {
+  if (os.platform() === 'win32') {
     // `psql` can take a long time to respond to a request on Windows
     // Here we pass a ~15 seconds timeout to allow for the
     // child process to exit gracefully or timeout.
@@ -25,9 +25,9 @@ describe('Test Suite', function() {
       timeout: 14900
     };
 
-    before(function(done) {
+    before((done) => {
       this.timeout(30000); // Set timeout to 30 seconds
-      if (Nodal.env.name === 'development') {
+      if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
         // Using async exec here to easily handler stderr
         // Errors are not thrown and instead are treated as warnings
         child_process.exec('psql -q -c "drop database if exists nodal_test;" -U postgres', processOptions, function(error, stdout, stderr) {
@@ -41,9 +41,9 @@ describe('Test Suite', function() {
       }
     });
 
-    after(function(done) {
+    after((done) => {
       this.timeout(30000); // Set timeout to 30 seconds
-      if (Nodal.env.name === 'development') {
+      if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
         // Don't remove the -q option, it will break the db connection pool
         child_process.exec('psql -q -c "drop database if exists nodal_test;" -U postgres', processOptions, function(error, stdout, stderr) {
           if(error) console.warn("Warning:", stderr, "\nErrors ignored.");
@@ -54,8 +54,8 @@ describe('Test Suite', function() {
 
   } else {
 
-    before(function() {
-      if (Nodal.env.name === 'development') {
+    before(() => {
+      if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
         this.timeout(30000);
         // child_process.execSync('createuser postgres -s -q');
         child_process.execSync('psql -c \'drop database if exists nodal_test;\' -U postgres');
@@ -63,9 +63,9 @@ describe('Test Suite', function() {
       }
     });
 
-    after(function() {
+    after(() => {
       this.timeout(30000);
-      if (Nodal.env.name === 'development') {
+      if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
         child_process.execSync('psql -c \'drop database if exists nodal_test;\' -U postgres');
       }
     });

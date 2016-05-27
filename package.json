@@ -14,14 +14,10 @@
   "author": "Keith Horwood",
   "main": "core/module.js",
   "dependencies": {
-    "any-db": "~2.1.0",
-    "any-db-pool": "~2.1.0",
-    "any-db-postgres": "~2.1.4",
-    "any-db-transaction": "~2.2.2",
     "api-res": "~0.0.1",
     "async": "~1.5.2",
-    "colors": "~1.1.0",
     "cmnd": "~0.0.6",
+    "colors": "~1.1.0",
     "cross-spawn-async": "~2.1.6",
     "deep-equal": "~1.0.1",
     "dot": "~1.0.3",
@@ -31,7 +27,7 @@
     "i": "~0.3.4",
     "inquirer": "~0.11.3",
     "mime-types": "~2.1.9",
-    "pg": "~4.4.3"
+    "pg": "~4.5.5"
   },
   "devDependencies": {
     "chai": "~3.5.0",

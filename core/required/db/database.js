@@ -2,10 +2,11 @@ module.exports = (() => {
 
   'use strict';
 
-  const anyDB = require('any-db');
-  const beginTransaction = require('any-db-transaction');
   const async = require('async');
   const colors = require('colors/safe');
+
+  const pg = require('pg');
+  pg.defaults.poolSize = 8;
 
   const PostgresAdapter = require('./adapters/postgres.js');
 
@@ -21,26 +22,14 @@ module.exports = (() => {
 
     connect(cfg) {
 
-      let connection;
-      let connectionString = '';
-
       if (typeof cfg === 'string') {
         cfg = {connectionString: cfg};
       }
 
       if (cfg.connectionString) {
-        connectionString = cfg.connectionString;
-      } else {
-        connectionString = this.adapter.generateConnectionString(cfg.host, cfg.port, cfg.database, cfg.user, cfg.password);
+        cfg = this.adapter.parseConnectionString(cfg.connectionString);
       }
 
-      try {
-        connection = anyDB.createPool(connectionString, {min: 2, max: 2});
-      } catch (e) {
-        throw new Error('Error Connecting to Database, Malformed Credentials');
-      }
-
-      this._connection = connection;
       this._config = cfg || {};
 
       return true;
@@ -49,10 +38,8 @@ module.exports = (() => {
 
     close(callback) {
 
-      this._connection && this._connection.close((err) => {
-        this._connection = null;
-        callback && callback.call(this, err);
-      });
+      pg.end();
+      callback.call(this);
 
       return true;
 
@@ -105,9 +92,21 @@ module.exports = (() => {
       let start = new Date().valueOf();
       let log = this.log.bind(this);
 
-      this._connection.query(query, params, function() {
-        log(query, params, new Date().valueOf() - start);
-        callback.apply(this, arguments);
+      pg.connect(this._config, (err, client, complete) => {
+
+        if (err) {
+          this.error(err.message);
+          return complete();
+        }
+
+        client.query(query, params, (function () {
+
+          log(query, params, new Date().valueOf() - start);
+          complete();
+          callback.apply(this, arguments);
+
+        }).bind(this));
+
       });
 
       return true;
@@ -132,77 +131,84 @@ module.exports = (() => {
         callback = function() {};
       }
 
-      let db = this;
-      let transaction = beginTransaction(this._connection);
+      let start = new Date().valueOf();
 
-      let queries = preparedArray.map(queryData => {
-
-        queryData[1] = queryData[1] || [];
-
-        return (next) => {
-          db.log(queryData[0], queryData[1]);
-          transaction.query(queryData[0], queryData[1], next);
-        };
-
-      });
-
-      let transactionError = null;
-      let transactionResults = [];
-
-      transaction.on('error', (err) => {
-
-        db.info('Transaction error');
-        err.message && db.error(err.message);
-
-        transactionError = err;
-        callback(transactionError, transactionResults);
-
-      });
-
-      transaction.on('rollback:start', function() {
-
-        db.info('Rollback started...');
-
-      });
-
-      transaction.on('rollback:complete', function() {
-
-        db.info('Rollback complete!');
-
-      });
-
-      transaction.on('commit:start', function() {
-
-        db.info('Commit started...');
-
-      });
-
-      transaction.on('commit:complete', function() {
-
-        db.info('Commit complete!');
-
-      });
-
-      transaction.on('close', function() {
-
-        db.info('Transaction complete!');
-        callback(transactionError, transactionResults);
-
-      });
-
-      db.info('Transaction started...');
-
-      async.series(queries, (err, results) => {
+      pg.connect(this._config, (err, client, complete) => {
 
         if (err) {
-          transactionError = err;
-          db.error(err.message);
-          transaction.rollback();
+          this.error(err.message);
+          callback(err);
+          return complete();
         }
 
-        transactionResults = results;
+        let queries = preparedArray.map(queryData => {
 
-        transaction.commit();
+          let query = queryData[0];
+          let params = queryData[1] || [];
+
+          return (callback) => {
+            this.log(query, params, new Date().valueOf() - start);
+            client.query(queryData[0], queryData[1], callback);
+          };
+
+        });
+
+        queries = [].concat(
+          (callback) => {
+            client.query('BEGIN', callback);
+          },
+          queries
+        );
+
+        this.info('Transaction started...');
+
+        async.series(queries, (txnErr, results) => {
+
+          if (txnErr) {
+
+            this.error(txnErr.message);
+            this.info('Rollback started...');
+
+            client.query('ROLLBACK', (err) => {
+
+              if (err) {
+                this.error(`Rollback failed - ${err.message}`);
+                this.info('Transaction complete!');
+                complete();
+                callback(err);
+              } else {
+                this.info('Rollback complete!')
+                this.info('Transaction complete!');
+                complete();
+                callback(txnErr);
+              };
+
+            });
+
+          } else {
+
+            this.info('Commit started...');
+
+            client.query('COMMIT', (err) => {
+
+              if (err) {
+                this.error(`Commit failed - ${err.message}`);
+                this.info('Transaction complete!');
+                complete();
+                callback(err);
+                return;
+              }
+
+              this.info('Commit complete!')
+              this.info('Transaction complete!');
+              complete();
+              callback(null, results);
+
+            });
+
+          }
+
+        });
 
       });
 

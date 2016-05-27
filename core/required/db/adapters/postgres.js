@@ -23,6 +23,31 @@ module.exports = (function() {
 
     }
 
+    parseConnectionString(str) {
+
+      let cfg = {
+        host: '',
+        database: '',
+        user: '',
+        password: '',
+        port: 5432,
+        ssl: false
+      };
+
+      let match = str.match(/^postgres:\/\/([A-Za-z0-9_]+)(?:\:([A-Za-z0-9_]+))?@([A-Za-z0-9_\.\-]+):(\d+)\/([A-Za-z0-9_]+)$/);
+
+      if (match) {
+        cfg.user = match[1];
+        cfg.password = match[2];
+        cfg.host = match[3];
+        cfg.port = match[4];
+        cfg.database = match[5];
+      }
+
+      return cfg;
+
+    }
+
     generateClearDatabaseQuery() {
 
       return [

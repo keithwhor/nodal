@@ -521,6 +521,8 @@ module.exports = (function() {
     */
     __load__(data, fromStorage) {
 
+      data = data || {};
+
       this._inStorage = !!fromStorage;
 
       if (!fromStorage) {
