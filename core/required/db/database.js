@@ -34,11 +34,6 @@ module.exports = (() => {
         connectionString = this.adapter.generateConnectionString(cfg.host, cfg.port, cfg.database, cfg.user, cfg.password);
       }
 
-      // force SSL -- hacky for now.
-      if (connectionString.indexOf('?ssl=true') === -1) {
-        connectionString += '?ssl=true';
-      }
-
       try {
         connection = anyDB.createPool(connectionString, {min: 2, max: 2});
       } catch (e) {
