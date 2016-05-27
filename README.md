@@ -64,7 +64,7 @@ a stateful (prolonged) connection with any client.
 
 Getting started with Nodal is easy.
 
-1. Download and install the newest Node 5.x version from [nodejs.org](https://nodejs.org)
+1. Download and install the newest Node 6.x version from [nodejs.org](https://nodejs.org)
 2. Open terminal, and type `npm install nodal -g`.
 (If you get an error, run `sudo npm install nodal -g` or fix permissions permanently by
   [following these directions](https://docs.npmjs.com/getting-started/fixing-npm-permissions)
