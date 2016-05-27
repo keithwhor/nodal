@@ -152,7 +152,7 @@ module.exports = (() => {
       transaction.on('error', (err) => {
 
         db.info('Transaction error');
-        transactionError = err;
+        callback(transactionError, transactionResults);
 
       });
 
