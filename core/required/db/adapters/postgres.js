@@ -19,7 +19,7 @@ module.exports = (function() {
         return '';
       }
 
-      return 'postgres://' + user + ':' + password + '@' + host + ':' + port + '/' + database + '?ssl=true';
+      return 'postgres://' + user + ':' + password + '@' + host + ':' + port + '/' + database;
 
     }
 
