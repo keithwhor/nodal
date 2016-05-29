@@ -1,6 +1,10 @@
 # Nodal Roadmap
 
 ### Legend:
+ 
+* :x: Not Started
+* :hourglass: WIP
+* :white_check_mark: Complete
 
 ### 0.9, Target: Q2 2016
 
