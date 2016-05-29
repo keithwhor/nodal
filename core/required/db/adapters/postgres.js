@@ -2,10 +2,205 @@ module.exports = (function() {
   'use strict';
 
   const inflect = require('i')();
-  const DatabaseAdapter = require('../adapter.js');
+  const SQLAdapter = require('../sql_adapter.js');
   const utilities = require('../../utilities.js');
 
-  class PostgresAdapter extends DatabaseAdapter {
+  const async = require('async');
+
+  const pg = require('pg');
+  pg.defaults.poolSize = 8;
+
+  class PostgresAdapter extends SQLAdapter {
+
+    constructor(db, cfg) {
+
+      super();
+
+      cfg = cfg.connectionString ? this.parseConnectionString(cfg.connectionString) : cfg;
+
+      this.db = db;
+      this._config = cfg;
+
+    }
+
+    close() {
+
+      pg.end();
+
+    }
+
+    query(query, params, callback) {
+
+      if (arguments.length < 3) {
+        throw new Error('.query requires 3 arguments');
+      }
+
+      if (!(params instanceof Array)) {
+        throw new Error('params must be a valid array');
+      }
+
+      if(typeof callback !== 'function') {
+        throw new Error('Callback must be a function');
+      }
+
+      let start = new Date().valueOf();
+      let log = this.db.log.bind(this.db);
+
+      pg.connect(this._config, (err, client, complete) => {
+
+        if (err) {
+          this.db.error(err.message);
+          return complete();
+        }
+
+        client.query(query, params, (function () {
+
+          log(query, params, new Date().valueOf() - start);
+          complete();
+          callback.apply(this, arguments);
+
+        }).bind(this));
+
+      });
+
+      return true;
+
+    }
+
+    transaction(preparedArray, callback) {
+
+      if (!preparedArray.length) {
+        throw new Error('Must give valid array of statements (with or without parameters)');
+      }
+
+      if (typeof preparedArray === 'string') {
+        preparedArray = preparedArray.split(';').filter(function(v) {
+          return !!v;
+        }).map(function(v) {
+          return [v];
+        });
+      }
+
+      if(typeof callback !== 'function') {
+        callback = function() {};
+      }
+
+      let start = new Date().valueOf();
+
+      pg.connect(this._config, (err, client, complete) => {
+
+        if (err) {
+          this.db.error(err.message);
+          callback(err);
+          return complete();
+        }
+
+        let queries = preparedArray.map(queryData => {
+
+          let query = queryData[0];
+          let params = queryData[1] || [];
+
+          return (callback) => {
+            this.db.log(query, params, new Date().valueOf() - start);
+            client.query(queryData[0], queryData[1], callback);
+          };
+
+        });
+
+        queries = [].concat(
+          (callback) => {
+            client.query('BEGIN', callback);
+          },
+          queries
+        );
+
+        this.db.info('Transaction started...');
+
+        async.series(queries, (txnErr, results) => {
+
+          if (txnErr) {
+
+            this.db.error(txnErr.message);
+            this.db.info('Rollback started...');
+
+            client.query('ROLLBACK', (err) => {
+
+              if (err) {
+                this.db.error(`Rollback failed - ${err.message}`);
+                this.db.info('Transaction complete!');
+                complete();
+                callback(err);
+              } else {
+                this.db.info('Rollback complete!')
+                this.db.info('Transaction complete!');
+                complete();
+                callback(txnErr);
+              };
+
+            });
+
+          } else {
+
+            this.db.info('Commit started...');
+
+            client.query('COMMIT', (err) => {
+
+              if (err) {
+                this.db.error(`Commit failed - ${err.message}`);
+                this.db.info('Transaction complete!');
+                complete();
+                callback(err);
+                return;
+              }
+
+              this.db.info('Commit complete!')
+              this.db.info('Transaction complete!');
+              complete();
+              callback(null, results);
+
+            });
+
+          }
+
+        });
+
+      });
+
+    }
+
+    /* Command functions... */
+
+    drop(databaseName, callback) {
+
+      this.query(this.generateDropDatabaseQuery(databaseName), [], (err, result) => {
+
+        if (err) {
+          return callback(err);
+        }
+
+        this.db.info(`Dropped database "${databaseName}"`);
+        callback(null);
+
+      });
+
+    }
+
+    create(databaseName, callback) {
+
+      this.query(this.generateCreateDatabaseQuery(databaseName), [], (err, result) => {
+
+        if (err) {
+          return callback(err);
+        }
+
+        this.db.info(`Created empty database "${databaseName}"`);
+        callback(null);
+
+      });
+
+    }
+
+    /* generate functions */
 
     generateArray(arr) {
 

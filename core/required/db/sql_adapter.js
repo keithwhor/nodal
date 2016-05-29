@@ -2,7 +2,7 @@ module.exports = (function() {
 
   'use strict';
 
-  class DatabaseAdapter {
+  class SQLAdapter {
 
     generateConnectionString(host, port, database, user, password) {}
     parseConnectionString(str) {}
@@ -592,7 +592,7 @@ module.exports = (function() {
 
   }
 
-  DatabaseAdapter.prototype.typeProperties = [
+  SQLAdapter.prototype.typeProperties = [
     'length',
     'nullable',
     'unique',
@@ -602,7 +602,7 @@ module.exports = (function() {
     'defaultValue'
   ];
 
-  DatabaseAdapter.prototype.typePropertyDefaults = {
+  SQLAdapter.prototype.typePropertyDefaults = {
     length: null,
     nullable: true,
     unique: false,
@@ -612,9 +612,9 @@ module.exports = (function() {
     defaultValue: null
   };
 
-  DatabaseAdapter.prototype.indexTypes = [];
+  SQLAdapter.prototype.indexTypes = [];
 
-  DatabaseAdapter.prototype.comparators = {
+  SQLAdapter.prototype.comparators = {
     is: field => `${field} = __VAR__`,
     not: field => `${field} <> __VAR__`,
     lt: field => `${field} < __VAR__`,
@@ -635,14 +635,14 @@ module.exports = (function() {
     not_in: field => `NOT (ARRAY[${field}] <@ __VAR__)`
   };
 
-  DatabaseAdapter.prototype.comparatorIgnoresValue = {
+  SQLAdapter.prototype.comparatorIgnoresValue = {
     is_null: true,
     not_null: true
   };
 
-  DatabaseAdapter.prototype.documentTypes = [];
+  SQLAdapter.prototype.documentTypes = [];
 
-  DatabaseAdapter.prototype.aggregates = {
+  SQLAdapter.prototype.aggregates = {
     'sum': field => `SUM(${field})`,
     'avg': field => `AVG(${field})`,
     'min': field => `MIN(${field})`,
@@ -655,16 +655,16 @@ module.exports = (function() {
     'count_true': field => `COUNT(CASE WHEN ${field} THEN 1 ELSE NULL END)`
   };
 
-  DatabaseAdapter.prototype.defaultAggregate = 'none';
+  SQLAdapter.prototype.defaultAggregate = 'none';
 
-  DatabaseAdapter.prototype.types = {};
-  DatabaseAdapter.prototype.sanitizeType = {};
-  DatabaseAdapter.prototype.escapeFieldCharacter = '';
-  DatabaseAdapter.prototype.columnDepthDelimiter = '';
-  DatabaseAdapter.prototype.whereDepthDelimiter = '';
+  SQLAdapter.prototype.types = {};
+  SQLAdapter.prototype.sanitizeType = {};
+  SQLAdapter.prototype.escapeFieldCharacter = '';
+  SQLAdapter.prototype.columnDepthDelimiter = '';
+  SQLAdapter.prototype.whereDepthDelimiter = '';
 
-  DatabaseAdapter.prototype.supportsForeignKey = false;
+  SQLAdapter.prototype.supportsForeignKey = false;
 
-  return DatabaseAdapter;
+  return SQLAdapter;
 
 })();
