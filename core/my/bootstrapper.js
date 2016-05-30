@@ -87,7 +87,7 @@ module.exports = (() => {
 
             schema.save();
 
-            callback(null, `Prepared database "${db._config.database}" for migrations`);
+            callback(null, `Prepared database "${db.adapter._config.database}" for migrations`);
 
           }
         );

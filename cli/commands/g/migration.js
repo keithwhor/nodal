@@ -89,6 +89,7 @@ module.exports = (() => {
 
     // Instantiate Database so we can get access to the Adapater types
     let db = new Database();
+    db.connect(require(`${process.cwd()}/config/db.json`)[process.env.NODE_ENV || 'development']);
 
     return argList.slice(1).map(function(v) {
 

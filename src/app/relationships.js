@@ -2,6 +2,8 @@ module.exports = (function() {
 
   'use strict';
 
+  const Nodal = require('nodal');
+
   /* Include this file to enable Model relationships */
 
   /* For example...

@@ -50,7 +50,7 @@ module.exports = (() => {
       let questions = [];
 
       !data.name && questions.push({
-        name: 'name',
+        name: 'project-name',
         type: 'input',
         default: 'my-nodal-project',
         message: 'Name',
@@ -70,7 +70,7 @@ module.exports = (() => {
 
       inquirer.prompt(questions, (promptResult) => {
 
-        promptResult.name = promptResult.name || data.name;
+        promptResult.name = promptResult['project-name'] || data.name;
         promptResult.author = promptResult.author || data.author;
 
         promptResult.simpleName = promptResult.name.replace(/\s/gi, '-');

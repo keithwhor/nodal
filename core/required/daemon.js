@@ -25,7 +25,7 @@ module.exports = (() => {
       res.end(
         JSON.stringify(
           API.error(
-            message,
+            'Application Error',
             (process.env.NODE_ENV !== 'production' && err) ?
               err.stack.split('\n') : null
             ),
