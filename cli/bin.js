@@ -3,4 +3,8 @@
 'use strict';
 
 const CLI = require('./cli.js');
-CLI.run(process.argv.slice(2));
+if (process.argv.length > 2) {
+  CLI.run(process.argv.slice(2));
+} else {
+  CLI.run(['help']);
+}
