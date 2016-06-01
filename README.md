@@ -42,7 +42,7 @@ the box, so you can have your website live in no time with `nodal poly:deploy`.
 ## Stateless Dogma
 
 It's important to note that Nodal is meant for **stateless** API services. This
-means you should not rely on on memory within a specific process to serve multiple
+means you should not rely on memory within a specific process to serve multiple
 requests, and Nodal will use process clustering (even in development) to actively
 discourage this practice. If you need to work with unstructured data for rapid
 prototyping, *connect Nodal to a PostgreSQL database* and use the "JSON" field
