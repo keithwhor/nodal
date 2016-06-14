@@ -19,8 +19,11 @@ module.exports = (() => {
 
     constructor() {
 
-      this.cfg = Config.db.main;
-      this.rootCfg = Object.create(this.cfg);
+      this.cfg = Config.db;
+      this.cfg.test = this.cfg.test.main;
+      this.cfg.development = this.cfg.development.main;
+      this.cfg.production = this.cfg.production.main;
+      this.rootCfg = Object.create(this.cfg.development);
       this.rootCfg.database = 'postgres';
 
     }
@@ -38,7 +41,7 @@ module.exports = (() => {
       let db = new Database();
 
       try {
-        db.connect(this.cfg);
+        db.connect(this.cfg.development);
       } catch (e) {
         return callback(e);
       }
@@ -47,15 +50,23 @@ module.exports = (() => {
 
     }
 
-    create(callback) {
+    create(callback, flags) {
 
-      this.rootDb().create(this.cfg.database, callback);
+      if (flags.test) {
+        this.rootDb().create(this.cfg.test.database, callback);
+      } else {
+        this.rootDb().create(this.cfg.development.database, callback);
+      }
 
     }
 
-    drop(callback) {
+    drop(callback, flags) {
 
-      this.rootDb().drop(this.cfg.database, callback);
+      if (flags.test) {
+        this.rootDb().drop(this.cfg.test.database, callback);
+      } else {
+        this.rootDb().drop(this.cfg.development.database, callback);
+      }
 
     }
 

@@ -33,8 +33,8 @@ module.exports = (() => {
     } catch(e) {
       throw new Error(`Could not parse "config/${filename}": Invalid JSON`);
     }
-
-    config[path.basename(filename, ext)] = configData[env.name];
+    
+    config[path.basename(filename, ext)] = configData;
 
   });
 

@@ -85,7 +85,7 @@ module.exports = (function(Nodal) {
 
     before(function(done) {
 
-      db.connect(Nodal.my.Config.db.main);
+      db.connect(Nodal.my.Config.db.development.main);
 
       db.transaction(
         [schemaParent, schemaHouse].map(schema => {
