@@ -51,7 +51,7 @@ module.exports = (function(Nodal) {
 
       it('should connect to my.Config database "main"', function() {
 
-        expect(db.connect(Nodal.my.Config.db.main)).to.equal(true);
+        expect(db.connect(Nodal.my.Config.db.development.main)).to.equal(true);
 
       });
 
