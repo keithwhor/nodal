@@ -82,7 +82,7 @@ module.exports = Nodal => {
 
     before(function(done) {
 
-      db.connect(Nodal.my.Config.db.main);
+      db.connect(Nodal.my.Config.db.development.main);
 
       db.transaction(
         [schemaUser, schemaThread, schemaPost, schemaVote].map(schema => {
