@@ -27,7 +27,7 @@ module.exports = (() => {
       }
 
       const bootstrapper = require('../../../core/my/bootstrapper.js');
-      bootstrapper.drop(callback);
+      bootstrapper.drop(callback, vflags);
 
     }
 
