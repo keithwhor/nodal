@@ -280,7 +280,7 @@ in router.js.**
 You can create a controller for a specific model (auto include CRUD features) with:
 
 ```
-nodal g:controller --for:ModelName
+nodal g:controller --for ModelName
 ```
 
 # Models
