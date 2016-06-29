@@ -15,7 +15,7 @@ module.exports = (() => {
     help() {
 
       return {
-        description: 'Runs db:prepare, db:migrate, db:seed',
+        description: 'Runs db:drop, db:create, db:prepare, db:migrate, db:seed',
       };
 
     }

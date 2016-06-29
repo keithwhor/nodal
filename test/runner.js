@@ -14,8 +14,8 @@ try {
 
 describe('Test Suite', function() {
 
+  process.env.ROOT_DIRECTORY = __dirname;
   let Nodal = require('../core/module.js');
-  Nodal.env.rootDirectory = __dirname;
 
   if (os.platform() === 'win32') {
     // `psql` can take a long time to respond to a request on Windows

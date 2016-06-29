@@ -4,35 +4,31 @@ module.exports = (() => {
 
   const Command = require('cmnd').Command;
 
-  class DBCreateCommand extends Command {
+  class DBBootstrapCommand extends Command {
 
     constructor() {
 
-      super('db', 'create');
+      super('db', 'compose');
 
     }
 
     help() {
 
       return {
-        description: 'Create a new PostgreSQL database for the current project'
+        description: 'Runs db:prepare, db:migrate, db:seed',
       };
 
     }
 
     run(args, flags, vflags, callback) {
 
-      if (vflags.env) {
-        process.env.NODE_ENV = vflags.env[0];
-      }
-
       const bootstrapper = require('../../../core/my/bootstrapper.js');
-      bootstrapper.create(callback);
+      bootstrapper.compose(callback);
 
     }
 
   }
 
-  return DBCreateCommand;
+  return DBBootstrapCommand;
 
 })();

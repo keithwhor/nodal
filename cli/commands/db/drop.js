@@ -22,6 +22,10 @@ module.exports = (() => {
 
     run(args, flags, vflags, callback) {
 
+      if (vflags.env) {
+        process.env.NODE_ENV = vflags.env[0];
+      }
+
       const bootstrapper = require('../../../core/my/bootstrapper.js');
       bootstrapper.drop(callback);
 

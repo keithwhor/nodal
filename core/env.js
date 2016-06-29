@@ -1,8 +1,8 @@
-module.exports = (() => {
+module.exports = () => {
 
   return {
     name: process.env.NODE_ENV || 'development',
-    rootDirectory: process.cwd()
+    rootDirectory: process.env.ROOT_DIRECTORY || process.cwd()
   };
 
-})();
+};

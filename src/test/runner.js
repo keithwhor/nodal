@@ -16,7 +16,7 @@ module.exports = (() => {
     /* Uncomment for database support */
     // before((done) => {
     //
-    //   Nodal.my.bootstrapper.bootstrap((err) => {
+    //   Nodal.my.bootstrapper.compose((err) => {
     //
     //     if (err) {
     //       console.error(err);

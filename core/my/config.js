@@ -1,8 +1,9 @@
 module.exports = (() => {
 
   'use strict';
-
-  const env = require('./../env.js');
+  
+  // Load env anew every time config is loaded
+  const env = require('./../env.js')();
 
   const fs = require('fs');
   const path = require('path');
