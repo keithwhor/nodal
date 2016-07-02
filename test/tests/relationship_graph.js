@@ -155,4 +155,4 @@ module.exports = Nodal => {
 
   });
 
-});
+};
