@@ -1,52 +1,48 @@
-module.exports = (() => {
+'use strict';
 
-  'use strict';
+const Command = require('cmnd').Command;
+const APIResource = require('api-res');
+const Credentials = require('../../credentials.js');
 
-  const Command = require('cmnd').Command;
-  const APIResource = require('api-res');
-  const Credentials = require('../../credentials.js');
+const async = require('async');
 
-  const async = require('async');
+class PolyLogoutCommand extends Command {
 
-  class PolyLogoutCommand extends Command {
+  constructor() {
 
-    constructor() {
-
-      super('poly', 'logout');
-
-    }
-
-    help() {
-
-      return {
-        description: 'Logs out of Polybit API server'
-      };
-
-    }
-
-    run(args, flags, vflags, callback) {
-
-      let host = flags.h ? flags.h[0] : 'https://api.polybit.com';
-      let port = flags.p && flags.p[0];
-
-      let resource = new APIResource(host, port);
-      resource.authorize(Credentials.read('ACCESS_TOKEN'));
-
-      resource.request('v1/access_tokens').destroy(null, {}, (err, response) => {
-
-        if (err) {
-          return callback(err);
-        }
-
-        Credentials.write('ACCESS_TOKEN', '');
-        return callback(null, 'Logged out successfully');
-
-      });
-
-    }
+    super('poly', 'logout');
 
   }
 
-  return PolyLogoutCommand;
+  help() {
 
-})();
+    return {
+      description: 'Logs out of Polybit API server'
+    };
+
+  }
+
+  run(args, flags, vflags, callback) {
+
+    let host = flags.h ? flags.h[0] : 'https://api.polybit.com';
+    let port = flags.p && flags.p[0];
+
+    let resource = new APIResource(host, port);
+    resource.authorize(Credentials.read('ACCESS_TOKEN'));
+
+    resource.request('v1/access_tokens').destroy(null, {}, (err, response) => {
+
+      if (err) {
+        return callback(err);
+      }
+
+      Credentials.write('ACCESS_TOKEN', '');
+      return callback(null, 'Logged out successfully');
+
+    });
+
+  }
+
+}
+
+module.exports = PolyLogoutCommand;

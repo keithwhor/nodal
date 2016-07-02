@@ -1,20 +1,16 @@
-module.exports = (function() {
+'use strict';
 
-  "use strict";
+const Nodal = require('nodal');
 
-  const Nodal = require('nodal');
+class {{= data.name }}Middleware {
 
-  class {{= data.name }}Middleware {
+  exec(controller, callback) {
 
-    exec(controller, callback) {
-
-      callback(null);
-      return false;
-
-    }
+    callback(null);
+    return false;
 
   }
 
-  return {{= data.name }}Middleware;
+}
 
-})();
+module.exports = {{= data.name }}Middleware;

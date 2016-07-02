@@ -1,20 +1,16 @@
-module.exports = (function() {
+'use strict';
 
-  "use strict";
+const Nodal = require('nodal');
 
-  const Nodal = require('nodal');
+class {{= data.name }}Task {
 
-  class {{= data.name }}Task {
+  exec(args, callback) {
 
-    exec(args, callback) {
-
-      console.log('{{= data.name}} task executed');
-      callback();
-
-    }
+    console.log('{{= data.name}} task executed');
+    callback();
 
   }
 
-  return {{= data.name }}Task;
+}
 
-})();
+module.exports = {{= data.name }}Task;

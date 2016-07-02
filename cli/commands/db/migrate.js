@@ -1,37 +1,33 @@
-module.exports = (() => {
+'use strict';
 
-  'use strict';
+const Command = require('cmnd').Command;
 
-  const Command = require('cmnd').Command;
+class DBMigrateCommand extends Command {
 
-  class DBMigrateCommand extends Command {
+  constructor() {
 
-    constructor() {
-
-      super('db', 'migrate');
-
-    }
-
-    help() {
-
-      return {
-        description: 'An example command',
-        vflags: {
-          step: 'The number of steps to migrate (default: all)'
-        }
-      };
-
-    }
-
-    run(args, flags, vflags, callback) {
-
-      const bootstrapper = require('../../../core/my/bootstrapper.js');
-      bootstrapper.migrate(vflags.step, callback);
-
-    }
+    super('db', 'migrate');
 
   }
 
-  return DBMigrateCommand;
+  help() {
 
-})();
+    return {
+      description: 'An example command',
+      vflags: {
+        step: 'The number of steps to migrate (default: all)'
+      }
+    };
+
+  }
+
+  run(args, flags, vflags, callback) {
+
+    const bootstrapper = require('../../../core/my/bootstrapper.js');
+    bootstrapper.migrate(vflags.step, callback);
+
+  }
+
+}
+
+module.exports = DBMigrateCommand;

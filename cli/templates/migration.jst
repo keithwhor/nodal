@@ -1,34 +1,30 @@
-module.exports = (function() {
+'use strict';
 
-  "use strict";
+const Nodal = require('nodal');
 
-  const Nodal = require('nodal');
+class {{= data.name }} extends Nodal.Migration {
 
-  class {{= data.name }} extends Nodal.Migration {
+  constructor(db) {
+    super(db);
+    this.id = {{= data.id }};
+  }
 
-    constructor(db) {
-      super(db);
-      this.id = {{= data.id }};
-    }
+  up() {
 
-    up() {
-
-      return [{{? data.up.length}}{{~ data.up :value:index}}
-        {{= value }}{{? data.up.length - 1 !== index }},{{?}}{{~}}
-      {{?}}];
-
-    }
-
-    down() {
-
-      return [{{? data.down.length}}{{~ data.down :value:index}}
-        {{= value }}{{? data.down.length - 1 !== index }},{{?}}{{~}}
-      {{?}}];
-
-    }
+    return [{{? data.up.length}}{{~ data.up :value:index}}
+      {{= value }}{{? data.up.length - 1 !== index }},{{?}}{{~}}
+    {{?}}];
 
   }
 
-  return {{= data.name }};
+  down() {
 
-})();
+    return [{{? data.down.length}}{{~ data.down :value:index}}
+      {{= value }}{{? data.down.length - 1 !== index }},{{?}}{{~}}
+    {{?}}];
+
+  }
+
+}
+
+module.exports = {{= data.name }};

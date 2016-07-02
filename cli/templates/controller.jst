@@ -1,88 +1,84 @@
-module.exports = (function() {
+'use strict';
 
-  'use strict';
+const Nodal = require('nodal');{{? data.for }}
+const {{= data.for.name }} = Nodal.require('{{= data.for.path }}');{{?}}
 
-  const Nodal = require('nodal');{{? data.for }}
-  const {{= data.for.name }} = Nodal.require('{{= data.for.path }}');{{?}}
+class {{= data.name }} extends Nodal.Controller {
 
-  class {{= data.name }} extends Nodal.Controller {
+  {{? data.for }}index() {
 
-    {{? data.for }}index() {
+    {{= data.for.name }}.query()
+      .where(this.params.query)
+      .end((err, models) => {
 
-      {{= data.for.name }}.query()
-        .where(this.params.query)
-        .end((err, models) => {
-
-          this.respond(err || models);
-
-        });
-
-    }
-
-    show() {
-
-      {{= data.for.name }}.find(this.params.route.id, (err, model) => {
-
-        this.respond(err || model);
+        this.respond(err || models);
 
       });
-
-    }
-
-    create() {
-
-      {{= data.for.name }}.create(this.params.body, (err, model) => {
-
-        this.respond(err || model);
-
-      });
-
-    }
-
-    update() {
-
-      {{= data.for.name }}.update(this.params.route.id, this.params.body, (err, model) => {
-
-        this.respond(err || model);
-
-      });
-
-    }
-
-    destroy() {
-
-      {{= data.for.name }}.destroy(this.params.route.id, (err, model) => {
-
-        this.respond(err || model);
-
-      });
-
-    }{{??}}get() {
-
-      this.respond({message: `GET request to ${this.constructor.name}`});
-
-    }
-
-    post() {
-
-      this.badRequest();
-
-    }
-
-    put() {
-
-      this.badRequest();
-
-    }
-
-    del() {
-
-      this.badRequest();
-
-    }{{?}}
 
   }
 
-  return {{= data.name }};
+  show() {
 
-})();
+    {{= data.for.name }}.find(this.params.route.id, (err, model) => {
+
+      this.respond(err || model);
+
+    });
+
+  }
+
+  create() {
+
+    {{= data.for.name }}.create(this.params.body, (err, model) => {
+
+      this.respond(err || model);
+
+    });
+
+  }
+
+  update() {
+
+    {{= data.for.name }}.update(this.params.route.id, this.params.body, (err, model) => {
+
+      this.respond(err || model);
+
+    });
+
+  }
+
+  destroy() {
+
+    {{= data.for.name }}.destroy(this.params.route.id, (err, model) => {
+
+      this.respond(err || model);
+
+    });
+
+  }{{??}}get() {
+
+    this.respond({message: `GET request to ${this.constructor.name}`});
+
+  }
+
+  post() {
+
+    this.badRequest();
+
+  }
+
+  put() {
+
+    this.badRequest();
+
+  }
+
+  del() {
+
+    this.badRequest();
+
+  }{{?}}
+
+}
+
+module.exports = {{= data.name }};

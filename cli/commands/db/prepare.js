@@ -1,34 +1,30 @@
-module.exports = (() => {
+'use strict';
 
-  'use strict';
+const Command = require('cmnd').Command;
 
-  const Command = require('cmnd').Command;
+class DBPrepareCommand extends Command {
 
-  class DBPrepareCommand extends Command {
+  constructor() {
 
-    constructor() {
-
-      super('db', 'prepare');
-
-    }
-
-    help() {
-
-      return {
-        description: 'Prepares your database for migrations (resets all data)'
-      };
-
-    }
-
-    run(args, flags, vflags, callback) {
-
-      const bootstrapper = require('../../../core/my/bootstrapper.js');
-      bootstrapper.prepare(callback);
-
-    }
+    super('db', 'prepare');
 
   }
 
-  return DBPrepareCommand;
+  help() {
 
-})();
+    return {
+      description: 'Prepares your database for migrations (resets all data)'
+    };
+
+  }
+
+  run(args, flags, vflags, callback) {
+
+    const bootstrapper = require('../../../core/my/bootstrapper.js');
+    bootstrapper.prepare(callback);
+
+  }
+
+}
+
+module.exports = DBPrepareCommand;

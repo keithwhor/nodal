@@ -1,37 +1,33 @@
-module.exports = (() => {
+'use strict';
 
-  'use strict';
+const Command = require('cmnd').Command;
+const colors = require('colors/safe');
 
-  const Command = require('cmnd').Command;
-  const colors = require('colors/safe');
+class VersionCommand extends Command {
 
-  class VersionCommand extends Command {
+  constructor() {
 
-    constructor() {
-
-      super('version');
-
-    }
-
-    help() {
-
-      return {
-        description: 'Shows your currently globally installed Nodal version'
-      };
-
-    }
-
-    run(args, flags, vflags, callback) {
-
-      let version = require('../../package.json').version;
-      console.log(colors.green.bold('Nodal Version: ') + version);
-
-      callback(null);
-
-    }
+    super('version');
 
   }
 
-  return VersionCommand;
+  help() {
 
-})();
+    return {
+      description: 'Shows your currently globally installed Nodal version'
+    };
+
+  }
+
+  run(args, flags, vflags, callback) {
+
+    let version = require('../../package.json').version;
+    console.log(colors.green.bold('Nodal Version: ') + version);
+
+    callback(null);
+
+  }
+
+}
+
+module.exports = VersionCommand;
