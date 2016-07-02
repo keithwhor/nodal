@@ -1,7 +1,1 @@
-module.exports = (function() {
-
-  'use strict';
-
-  return require('fxn').utilities;
-
-})();
+module.exports = require('fxn').utilities;

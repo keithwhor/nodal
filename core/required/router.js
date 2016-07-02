@@ -1,11 +1,7 @@
-module.exports = (() => {
+'use strict';
 
-  'use strict';
+const fxn = require('fxn');
 
-  const fxn = require('fxn');
+class Router extends fxn.Router {}
 
-  class Router extends fxn.Router {}
-
-  return Router;
-
-})();
+module.exports = Router;
