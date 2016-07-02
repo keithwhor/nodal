@@ -1,6 +1,6 @@
-module.exports = (function(Nodal) {
+'use strict';
 
-  "use strict";
+module.exports = Nodal => {
 
   let expect = require('chai').expect;
 
@@ -153,13 +153,13 @@ module.exports = (function(Nodal) {
       expect(parent.hasErrors()).to.equal(false);
 
     });
-    
+
     it('should return default value', function() {
 
       let parent = new Parent();
       expect(parent.fieldDefaultValue('name')).to.equal('Keith');
       expect(parent.fieldDefaultValue('secret')).to.equal(null);
-      
+
     });
 
     it('should toObject with interface', function() {
@@ -587,4 +587,4 @@ module.exports = (function(Nodal) {
 
   });
 
-});
+};

@@ -1,21 +1,17 @@
-module.exports = (function() {
+'use strict';
 
-  'use strict';
+const Nodal = require('nodal');
 
-  const Nodal = require('nodal');
+class CORSMiddleware {
 
-  class CORSMiddleware {
+  exec(controller, callback) {
 
-    exec(controller, callback) {
-
-      controller.allowOrigin('*');
-      controller.appendHeader('Access-Control-Allow-Headers', 'Authorization');
-      callback(null);
-
-    }
+    controller.allowOrigin('*');
+    controller.appendHeader('Access-Control-Allow-Headers', 'Authorization');
+    callback(null);
 
   }
 
-  return CORSMiddleware;
+}
 
-})();
+module.exports = CORSMiddleware;

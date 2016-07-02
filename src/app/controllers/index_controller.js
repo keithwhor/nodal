@@ -1,19 +1,15 @@
-module.exports = (function() {
+'use strict';
 
-  'use strict';
+const Nodal = require('nodal');
 
-  const Nodal = require('nodal');
+class IndexController extends Nodal.Controller {
 
-  class IndexController extends Nodal.Controller {
+  get() {
 
-    get() {
-
-      this.respond({message: 'Welcome to your Nodal Project'});
-
-    }
+    this.respond({message: 'Welcome to your Nodal Project'});
 
   }
 
-  return IndexController;
+}
 
-})();
+module.exports = IndexController;

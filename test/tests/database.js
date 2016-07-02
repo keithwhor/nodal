@@ -1,6 +1,6 @@
-module.exports = (function(Nodal) {
+'use strict';
 
-  "use strict";
+module.exports = Nodal => {
 
   let expect = require('chai').expect;
 
@@ -194,4 +194,4 @@ module.exports = (function(Nodal) {
 
   });
 
-});
+};

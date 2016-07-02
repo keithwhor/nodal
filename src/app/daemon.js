@@ -1,10 +1,5 @@
-module.exports = (() => {
+'use strict';
 
-  'use strict';
+const Nodal = require('nodal');
 
-  const Nodal = require('nodal');
-  const daemon = new Nodal.Daemon();
-
-  return daemon;
-
-})();
+module.exports = new Nodal.Daemon();

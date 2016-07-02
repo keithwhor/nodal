@@ -1,11 +1,7 @@
-module.exports = (() => {
+'use strict';
 
-  'use strict';
+const Nodal = require('nodal');
 
-  const Nodal = require('nodal');
+const SchedulerMain = Nodal.require('schedulers/main.js');
 
-  const SchedulerMain = Nodal.require('schedulers/main.js');
-
-  SchedulerMain.start();
-
-})();
+SchedulerMain.start();

@@ -1,28 +1,24 @@
-module.exports = (function() {
+'use strict';
 
-  'use strict';
+const Nodal = require('nodal');
 
-  const Nodal = require('nodal');
+/* Forces www. on naked domain */
 
-  /* Forces www. on naked domain */
+class ForceWWWMiddleware {
 
-  class ForceWWWMiddleware {
+  exec(controller, callback) {
 
-    exec(controller, callback) {
+    let host = controller._requestHeaders.host || '';
 
-      let host = controller._requestHeaders.host || '';
-
-      if (host.split('.').length === 2) {
-        controller.redirect(`www.${host}${request.url}`);
-        return;
-      }
-
-      callback(null);
-
+    if (host.split('.').length === 2) {
+      controller.redirect(`www.${host}${request.url}`);
+      return;
     }
+
+    callback(null);
 
   }
 
-  return ForceWWWMiddleware;
+}
 
-})();
+module.exports = ForceWWWMiddleware;

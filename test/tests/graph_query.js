@@ -1,6 +1,6 @@
-module.exports = Nodal => {
+'use strict';
 
-  'use strict';
+module.exports = Nodal => {
 
   const expect = require('chai').expect;
   const async = require('async');

@@ -1,20 +1,16 @@
-module.exports = (function() {
+'use strict';
 
-  'use strict';
+const Nodal = require('nodal');
 
-  const Nodal = require('nodal');
+/* Include this file to enable Model relationships */
 
-  /* Include this file to enable Model relationships */
+/* For example...
 
-  /* For example...
+  const Post = Nodal.require('app/models/post.js');
+  const Comment = Nodal.require('app/models/comment.js');
 
-    const Post = Nodal.require('app/models/post.js');
-    const Comment = Nodal.require('app/models/comment.js');
+  Comment.joinsTo(Post, {multiple: true});
 
-    Comment.joinsTo(Post, {multiple: true});
+*/
 
-  */
-
-  return true;
-
-})();
+module.exports = {}; // Don't need to export anything
