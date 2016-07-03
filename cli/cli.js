@@ -5,4 +5,4 @@ const CLI = new CommandLineInterface();
 
 CLI.load(__dirname, './commands');
 
-return CLI;
+module.exports = CLI;
