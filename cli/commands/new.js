@@ -43,7 +43,7 @@ module.exports = (() => {
 
       let data = {
         name: args[0] ? (args[0] + '').replace(/_/g, ' ') : '',
-        author: vflags.author[0] ? (vflags.author[0] || '').replace(/_/g, ' ') || '' : '',
+        author: (vflags.author && v.flags.author[0] || '').replace(/_/g, ' ') || '',
         ignoreOutput: vflags.hasOwnProperty('ignore-output')
       };
 
