@@ -1106,6 +1106,21 @@ class Model {
   }
 
   /**
+  * Runs an update query for this specific model instance
+  * @param {Object} fields Key-value pairs of fields to update
+  * @param {Function} callback Callback to execute upon completion
+  */
+  update(fields, callback) {
+
+    callback = callback || (() => {});
+
+    this.constructor.query()
+      .where({id: this.get('id')})
+      .update(fields, (err, models) => callback(err, models && models[0]));
+
+  }
+
+  /**
   * Runs all verifications before saving
   * @param {function} callback Method to execute upon completion. Returns true if OK, false if failed
   * @private

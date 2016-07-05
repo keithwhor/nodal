@@ -3,6 +3,10 @@
 const Command = require('cmnd').Command;
 const APIResource = require('api-res');
 const Credentials = require('../../../credentials.js');
+const PolyCreditsCommand = require('../credits.js');
+
+const path = require('path');
+const fs = require('fs');
 
 const async = require('async');
 
@@ -18,7 +22,11 @@ class PolyDBCreateCommand extends Command {
 
     return {
       description: 'Creates a new database',
-      args: ['name']
+      args: ['name'],
+      vflags: {
+        development: 'Sets your development environment database to this db',
+        test: 'Sets your test environment database to this db',
+      }
     };
 
   }
@@ -43,7 +51,27 @@ class PolyDBCreateCommand extends Command {
       }
 
       console.log('Database created successfully!');
-      return callback(null, response.data[0]);
+
+      PolyCreditsCommand.prototype.run([], flags, vflags, () => {
+
+        let cfgPath = path.join(process.cwd(), 'config', 'db.json');
+        let db = require(cfgPath);
+
+        if (vflags.development) {
+
+          db.development.main = {connectionString: response.data[0].url};
+          fs.writeFileSync(cfgPath, JSON.stringify(db, null, 2));
+
+        } else if (vflags.test) {
+
+          db.test.main = {connectionString: response.data[0].url};
+          fs.writeFileSync(cfgPath, JSON.stringify(db, null, 2));
+
+        }
+
+        return callback(null, response.data[0]);
+
+      });
 
     });
 

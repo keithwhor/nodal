@@ -3,6 +3,7 @@
 const Command = require('cmnd').Command;
 const APIResource = require('api-res');
 const Credentials = require('../../credentials.js');
+const PolyCreditsCommand = require('./credits.js');
 
 const fs = require('fs');
 const zlib = require('zlib');
@@ -124,7 +125,12 @@ class PolyDeployCommand extends Command {
             }
 
             console.log('Deployment complete!');
-            return callback(null, response.data[0]);
+
+            PolyCreditsCommand.prototype.run([], flags, vflags, () => {
+
+              return callback(null, response.data[0]);
+
+            });
 
           });
 

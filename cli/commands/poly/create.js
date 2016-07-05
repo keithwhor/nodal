@@ -3,6 +3,7 @@
 const Command = require('cmnd').Command;
 const APIResource = require('api-res');
 const Credentials = require('../../credentials.js');
+const PolyCreditsCommand = require('./credits.js');
 
 const async = require('async');
 
@@ -43,7 +44,12 @@ class PolyCreateCommand extends Command {
       }
 
       console.log('Project created successfully!');
-      return callback(null, response.data[0]);
+
+      PolyCreditsCommand.prototype.run([], flags, vflags, () => {
+
+        return callback(null, response.data[0]);
+
+      });
 
     });
 
