@@ -71,7 +71,7 @@ class PolyRunCommand extends Command {
         }
 
         console.log(`Ran "${command}" successfully!`);
-        callback(null, response.result);
+        callback(null, response.data[0]);
 
       });
 

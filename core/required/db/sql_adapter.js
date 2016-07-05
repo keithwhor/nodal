@@ -205,15 +205,23 @@ class SQLAdapter {
 
   generateUpdateQuery(table, columnNames) {
 
-    return this.generateUpdateAllQuery(table, columnNames[0], columnNames.slice(1), 1);
+    return this.generateUpdateAllQuery(table, columnNames[0], columnNames.slice(1), [], 1);
 
   }
 
-  generateUpdateAllQuery(table, pkColumn, columnNames, offset, subQuery) {
+  generateUpdateAllQuery(table, pkColumn, columnNames, columnFunctions, offset, subQuery) {
+
+    let fields = columnNames
+      .map(this.escapeField.bind(this))
+      .concat(columnFunctions.map(f => this.escapeField(f[0])));
+
+    let params = columnNames
+      .map((v, i) => '$' + (i + offset + 1))
+      .concat(columnFunctions.map(f => f[1](this.escapeField(f[0]))));
 
     return [
       `UPDATE ${this.escapeField(table)}`,
-      ` SET (${columnNames.map(this.escapeField.bind(this)).join(',')}) = (${columnNames.map((v, i) => '$' + (i + offset + 1)).join(',')})`,
+      ` SET (${fields.join(',')}) = (${params.join(',')})`,
       ` WHERE (`,
         this.escapeField(pkColumn),
         subQuery ? ` IN (${subQuery})` : ` = $1`,

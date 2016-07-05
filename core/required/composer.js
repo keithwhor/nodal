@@ -393,14 +393,15 @@ class Composer {
 
   /**
   * Generate a SQL count query
-  * @param {Array} [includeColumns=*] Which columns to include, includes all by default
-  * @param {boolean} [disableJoins=false] Disable joins if you just want a subset of data
+  * @param {boolean} [useLimit=false] Generates COUNT using limit command as well
   * @return {Object} Has "params" and "sql" properties.
   * @private
   */
-  __generateCountQuery__() {
+  __generateCountQuery__(useLimit) {
 
-    let queryInfo = this.__reduceToQueryInformation__(this.__removeLastLimitCommand__(this.__collapse__()));
+    let collapsed = this.__collapse__();
+    collapsed = useLimit ? collapsed : this.__removeLastLimitCommand__(collapsed);
+    let queryInfo = this.__reduceToQueryInformation__(collapsed);
     let query = this.__reduceCommandsToQuery__(queryInfo.commands);
     query.sql = this.db.adapter.generateCountQuery(query.sql, 'c');
     return query;
@@ -854,6 +855,22 @@ class Composer {
   }
 
   /**
+  * Counts the results in the query
+  * @param {function} callback Supplied with an error and the integer value of the count
+  */
+  count(callback) {
+
+    let countQuery = this.__generateCountQuery__(true);
+
+    this.db.query(countQuery.sql, countQuery.params, (err, result) => {
+
+      callback(err, (((result && result.rows) || [])[0] || {}).__total__ || 0);
+
+    });
+
+  }
+
+  /**
   * Execute the query you've been composing.
   * @param {function({Error}, {Nodal.ModelArray})} callback The method to execute when the query is complete
   */
@@ -924,10 +941,18 @@ class Composer {
     let columns = Object.keys(fields);
     let params = columns.map(c => fields[c]);
 
+    let columnNames = columns.filter((v, i) => typeof params[i] !== 'function');
+    let columnFunctions = columns
+      .map((v, i) => [v, params[i]])
+      .filter((v, i) => typeof params[i] === 'function');
+
+    params = params.filter(v => typeof v !== 'function');
+
     query.sql = this.db.adapter.generateUpdateAllQuery(
       this.Model.table(),
       'id',
-      columns,
+      columnNames,
+      columnFunctions,
       query.params.length,
       query.sql
     );

@@ -70,8 +70,10 @@ class ModelFactory {
   */
   create(arrModelData, callback) {
 
+    // new this.Model(data, false, true) is telling the Model that this is from a seed
+
     ModelArray
-      .from(arrModelData.map(data => new this.Model(data)))
+      .from(arrModelData.map(data => new this.Model(data, false, true)))
       .saveAll(callback);
 
   }

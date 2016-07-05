@@ -32,7 +32,7 @@ class Database {
   close(callback) {
 
     this.adapter.close.apply(this, arguments);
-    callback.call(this);
+    callback && callback.call(this);
     return true;
 
   }

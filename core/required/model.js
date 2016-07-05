@@ -23,13 +23,14 @@ class Model {
   /**
   * @param {Object} modelData Data to load into the object
   * @param {optional boolean} fromStorage Is this model being loaded from storage? Defaults to false.
+  * @param {option boolean} fromSeed Is this model being seeded?
   */
-  constructor(modelData, fromStorage) {
+  constructor(modelData, fromStorage, fromSeed) {
 
     modelData = modelData || {};
 
     this.__initialize__();
-    this.__load__(modelData, fromStorage);
+    this.__load__(modelData, fromStorage, fromSeed);
 
   }
 
@@ -507,12 +508,14 @@ class Model {
   * @private
   * @param {Object} data Data to load into the model
   * @param {optional boolean} fromStorage Specify if the model was loaded from storage. Defaults to false.
+  * @param {optional boolean} fromSeed Specify if the model was generated from a seed. Defaults to false.
   */
-  __load__(data, fromStorage) {
+  __load__(data, fromStorage, fromSeed) {
 
     data = data || {};
 
     this._inStorage = !!fromStorage;
+    this._isSeeding = !!fromSeed;
 
     if (!fromStorage) {
       data.created_at = new Date();
@@ -593,6 +596,14 @@ class Model {
   */
   inStorage() {
     return this._inStorage;
+  }
+
+  /**
+  * Indicates whethere or not the model is being generated from a seed.
+  * @return {boolean}
+  */
+  isSeeding() {
+    return this._isSeeding;
   }
 
   /**

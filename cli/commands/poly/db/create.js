@@ -26,9 +26,9 @@ class PolyDBCreateCommand extends Command {
   run(args, flags, vflags, callback) {
 
     let data = {};
-    data.name = args[0];
+    data.alias = args[0];
 
-    console.log(`Creating new database with name "${data.name}"...`);
+    console.log(`Creating new database with alias "${data.alias}"...`);
 
     let host = flags.h ? flags.h[0] : 'https://api.polybit.com';
     let port = flags.p && flags.p[0];

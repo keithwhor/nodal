@@ -26,10 +26,10 @@ class PolyDBAssignCommand extends Command {
   run(args, flags, vflags, callback) {
 
     let data = {};
-    data.name = args[0] || '';
+    data.alias = args[0] || '';
     data.project = args[1] || '';
 
-    console.log(`Assigning database "${data.name}" to "${data.project}"...`);
+    console.log(`Assigning database "${data.alias}" to "${data.project}"...`);
 
     let host = flags.h ? flags.h[0] : 'https://api.polybit.com';
     let port = flags.p && flags.p[0];
@@ -40,14 +40,14 @@ class PolyDBAssignCommand extends Command {
     async.parallel([
       (cb) => {
 
-        resource.request('v1/databases').index({name: data.name}, (err, response) => {
+        resource.request('v1/databases').index({alias: data.alias}, (err, response) => {
 
           if (err) {
             return cb(err);
           }
 
           if (response.data.length < 1) {
-            return cb(new Error(`Could not assign database: Database with name "${data.name}" does not exist.`));
+            return cb(new Error(`Could not assign database: Database with alias "${data.alias}" does not exist.`));
           }
 
           let userDb = response.data[0];
@@ -93,8 +93,8 @@ class PolyDBAssignCommand extends Command {
           return callback(new Error('Could not assign database: Error setting environment vars'));
         }
 
-        console.log(`Environment variable DATABASE_URL set for project "${project.name}" to database "${db.name}"`);
-        return callback(null);
+        console.log(`Environment variable DATABASE_URL set for project "${project.name}" to database "${db.alias}"`);
+        return callback(null, response.data[0]);
 
       });
 

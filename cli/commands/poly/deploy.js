@@ -90,21 +90,41 @@ class PolyDeployCommand extends Command {
 
           if (err) {
             console.error(`Could not deploy: ${err.message}`);
-            console.error(err.stack);
-            return;
+            return callback(err);
           }
 
           console.log(`Package size: ${compressed.length} (${(compressed.length / (1024 * 1024)).toFixed(2)} MB)`);
           console.log('Deploying...');
 
+          let finish = (() => {
+            let t = new Date().valueOf();
+            let length = 50;
+            let barSize = 10;
+            let emptyChar = '-';
+            let barChar = '=';
+            let i = 0;
+            let progress = setInterval(() => {
+              process.stdout.write(`\r[${emptyChar.repeat(i % length)}${barChar.repeat(barSize)}${emptyChar.repeat(length - (i % length) - 1)}]`);
+              i++;
+            }, 50);
+            return () => {
+              clearInterval(progress);
+              process.stdout.write(`\rDeployed in ${((new Date().valueOf() - t) / 1000) | 0} seconds!${' '.repeat(length)}\n`);
+            };
+          })();
+
+
           resource.request('v1/projects').update(project.id, {action: 'deploy'}, compressed, (err, response) => {
 
+            finish();
+
             if (err) {
-              return console.error(`Could not deploy: ${err.message}`);
+              console.error(`Could not deploy: ${err.message}`);
+              return callback(err);
             }
 
             console.log('Deployment complete!');
-            console.log(response.data[0]);
+            return callback(null, response.data[0]);
 
           });
 
