@@ -1096,6 +1096,7 @@ class Model {
     callback = callback || (() => {});
 
     async.series([
+      this.__verify__,
       this.beforeSave,
       this.__save__,
       this.afterSave
@@ -1175,36 +1176,27 @@ class Model {
       callback = function() {};
     }
 
-    this.__verify__(err => {
+    if (this.fieldList().indexOf('updated_at') !== -1) {
+      this.set('updated_at', new Date());
+    }
 
-      if (err) {
-        callback.call(this, err);
-        return;
-      }
+    let query = this.__generateSaveQuery__();
 
-      if (this.fieldList().indexOf('updated_at') !== -1) {
-        this.set('updated_at', new Date());
-      }
+    db.query(
+      query.sql,
+      query.params,
+      (err, result) => {
 
-      let query = this.__generateSaveQuery__();
-
-      db.query(
-        query.sql,
-        query.params,
-        (err, result) => {
-
-          if (err) {
-            this.setError('_query', err.message);
-          } else {
-            result.rows.length && this.__load__(result.rows[0], true);
-          }
-
-          callback.call(this, this.errorObject());
-
+        if (err) {
+          this.setError('_query', err.message);
+        } else {
+          result.rows.length && this.__load__(result.rows[0], true);
         }
-      );
 
-    });
+        callback.call(this, this.errorObject());
+
+      }
+    );
 
   }
 
