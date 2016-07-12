@@ -13,6 +13,7 @@ types.setTypeParser(1700, function(val) {
 
 let Nodal = {
   API: null,
+  APIResource: null,
   Application: null,
   Controller: null,
   CLI: null,
@@ -61,6 +62,11 @@ Object.defineProperties(LazyNodal, {
       return Nodal.API || (Nodal.API = require('./required/api.js'));
     },
     enumerable: true
+  },
+  APIResource: {
+    get: function() {
+      return Nodal.APIResource || (Nodal.APIResource = require('api-res'));
+    }
   },
   Application: {
     get: function() {

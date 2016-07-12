@@ -8,6 +8,7 @@ const PolyCreditsCommand = require('./credits.js');
 const fs = require('fs');
 const zlib = require('zlib');
 const async = require('async');
+const path = require('path');
 
 class PolyDeployCommand extends Command {
 
@@ -27,6 +28,10 @@ class PolyDeployCommand extends Command {
   }
 
   run(args, flags, vflags, callback) {
+
+    if (!fs.existsSync(path.join(process.cwd(), '.nodal'))) {
+      return callback(new Error('Must run `nodal poly:deploy` or `nodal poly:compile` from a valid Nodal project.'));
+    }
 
     let name = args[0];
 

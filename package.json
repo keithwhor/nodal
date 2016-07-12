@@ -1,6 +1,6 @@
 {
   "name": "nodal",
-  "version": "0.12.2",
+  "version": "0.12.3",
   "description": "An API Server and Framework for node.js",
   "keywords": [
     "framework",
@@ -14,7 +14,7 @@
   "author": "Keith Horwood",
   "main": "core/module.js",
   "dependencies": {
-    "api-res": "~0.0.1",
+    "api-res": "~0.0.3",
     "async": "~1.5.2",
     "cmnd": "~0.0.6",
     "colors": "~1.1.0",

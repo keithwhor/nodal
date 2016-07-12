@@ -2,6 +2,8 @@
 
 const Command = require('cmnd').Command;
 const async = require('async');
+const fs = require('fs');
+const path = require('path');
 
 const PolyCreateCommand = require('./create.js');
 const PolyDBCreateCommand = require('./db/create.js');
@@ -31,6 +33,10 @@ class PolyNewCommand extends Command {
 
     // for PolyCompileCommand
     vflags.prepare = true;
+
+    if (!fs.existsSync(path.join(process.cwd(), '.nodal'))) {
+      return callback(new Error('Must run `nodal poly:new` from a valid Nodal project. Please try `nodal new` first.'));
+    }
 
     async.series([
       cb => PolyCreateCommand.prototype.run([name], flags, vflags, cb),
