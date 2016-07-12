@@ -6,6 +6,15 @@ const API = require('./api.js');
 class Controller extends fxn.Controller {
 
   /**
+  * Set HTTP status code for this response. If OPTIONS mode, default to 200.
+  * @param {Number} code
+  */
+  status(value) {
+    super.status(this._method === 'OPTIONS' ? 200 : value);
+    return true;
+  }
+
+  /**
   * Using API formatting, send an http.ServerResponse indicating there was a Bad Request (400)
   * @param {string} msg Error message to send
   * @param {Object} details Any additional details for the error (must be serializable)
