@@ -833,8 +833,12 @@ class Composer {
   aggregate(alias, transformation) {
 
     let columns;
-
-    if (typeof transformation === 'function') {
+    
+    if (typeof alias === 'function') {
+      columns = utilities.getFunctionParameters(alias);
+      transformation = alias;
+      alias = columns.join('___');
+    } else if (typeof transformation === 'function') {
       columns = utilities.getFunctionParameters(transformation);
     } else {
       columns = [alias]
