@@ -120,13 +120,13 @@ class GenerateControllerCommand extends Command {
 
   }
 
-  run(args, flags, vflags, callback) {
+  run(params, callback) {
 
-    if (!args.length && !vflags.for) {
+    if (!params.args.length && !params.vflags.for) {
       return callback(new Error('No controller path specified.'));
     }
 
-    let controllerPath = args[0] ? args[0].split('/') : [];
+    let controllerPath = params.args[0] ? params.args[0].split('/') : [];
     let cd = controllerDir;
 
     let forModel = null;
@@ -135,11 +135,11 @@ class GenerateControllerCommand extends Command {
       return callback(new Error('Syntax `--for:ModelName` removed. Use `--for ModelName` instead.'));
     }
 
-    if (vflags.for) {
+    if (params.vflags.for) {
 
       forModel = {
-        name: inflect.classify(vflags.for[0]),
-        path: 'app/models/' + inflect.underscore(inflect.classify(vflags.for[0])) + '.js'
+        name: inflect.classify(params.vflags.for[0]),
+        path: 'app/models/' + inflect.underscore(inflect.classify(params.vflags.for[0])) + '.js'
       };
 
       controllerPath.push(inflect.tableize(forModel.name));

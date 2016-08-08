@@ -24,15 +24,15 @@ class PolyCreateCommand extends Command {
 
   }
 
-  run(args, flags, vflags, callback) {
+  run(params, callback) {
 
     let data = {};
-    data.name = args[0];
+    data.name = params.args[0];
 
     console.log(`Creating project "${data.name}"...`);
 
-    let host = flags.h ? flags.h[0] : 'https://api.polybit.com';
-    let port = flags.p && flags.p[0];
+    let host = params.flags.h ? params.flags.h[0] : 'https://api.polybit.com';
+    let port = params.flags.p && params.flags.p[0];
 
     let resource = new APIResource(host, port);
     resource.authorize(Credentials.read('ACCESS_TOKEN'));
@@ -45,7 +45,7 @@ class PolyCreateCommand extends Command {
 
       console.log('Project created successfully!');
 
-      PolyCreditsCommand.prototype.run([], flags, vflags, () => {
+      PolyCreditsCommand.prototype.run({args: [], flags: params.flags, vflags: params.vflags}, () => {
 
         return callback(null, response.data[0]);
 

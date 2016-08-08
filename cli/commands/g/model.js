@@ -115,17 +115,17 @@ class GenerateModelCommand extends Command {
 
   }
 
-  run(args, flags, vflags, callback) {
+  run(params, callback) {
 
-    if (vflags.hasOwnProperty('user')) {
-      args = [
+    if (params.vflags.hasOwnProperty('user')) {
+      params.args = [
         'User',
         'email:string:unique',
         'password:string',
         'username:string'
       ];
-    } else if (vflags.hasOwnProperty('access_token')) {
-      args = [
+    } else if (params.vflags.hasOwnProperty('access_token')) {
+      params.args = [
         'AccessToken',
         'user_id:int',
         'access_token:string',
@@ -135,15 +135,15 @@ class GenerateModelCommand extends Command {
       ];
     }
 
-    if (!args.length) {
+    if (!params.args.length) {
       return callback(new Error('No model name specified.'));
     }
 
-    let modelName = inflect.classify(args[0]);
+    let modelName = inflect.classify(params.args[0]);
     let schemaObject;
 
     try {
-      schemaObject = generateModelSchemaObject(modelName, convertArgListToPropertyList(args));
+      schemaObject = generateModelSchemaObject(modelName, convertArgListToPropertyList(params.args));
     } catch(e) {
       return callback(e);
     }
@@ -156,11 +156,11 @@ class GenerateModelCommand extends Command {
       return callback(new Error('Model already exists'));
     }
 
-    if (vflags.hasOwnProperty('user')) {
+    if (params.vflags.hasOwnProperty('user')) {
 
       fs.writeFileSync(createPath, generateUserDefinition());
 
-    } else if (vflags.hasOwnProperty('access_token')) {
+    } else if (params.vflags.hasOwnProperty('access_token')) {
 
       fs.writeFileSync(createPath, generateAccessTokenDefinition());
 
@@ -171,13 +171,17 @@ class GenerateModelCommand extends Command {
 
     console.log(colors.green.bold('Create: ') + createPath);
 
-    generateMigration.run([`create_${schemaObject.table}`], {}, {for: args}, (err, result) => {
+    generateMigration.run({
+      args: [`create_${schemaObject.table}`],
+      flags: [],
+      vflags: {for: params.args}
+    }, (err, result) => {
 
       if (err) {
         return callback(err);
       }
 
-      if (vflags.hasOwnProperty('user')) {
+      if (params.vflags.hasOwnProperty('user')) {
 
         console.log('Installing additional packages in this directory...');
         console.log('');

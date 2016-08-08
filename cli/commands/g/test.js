@@ -48,13 +48,13 @@ class GenerateTestCommand extends Command {
 
   }
 
-  run(args, flags, vflags, callback) {
+  run(params, callback) {
 
-    if (!args.length) {
+    if (!params.args.length) {
       return callback(new Error('No test path specified.'));
     }
 
-    let testPath = args[0].split('/');
+    let testPath = params.args[0].split('/');
     let cd = testPath;
 
     let testName = inflect.classify(testPath.pop()) + 'Test';

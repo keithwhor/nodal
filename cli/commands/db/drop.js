@@ -18,10 +18,10 @@ class DBDropCommand extends Command {
 
   }
 
-  run(args, flags, vflags, callback) {
+  run(params, callback) {
 
-    if (vflags.env) {
-      process.env.NODE_ENV = vflags.env[0];
+    if (params.vflags.env) {
+      process.env.NODE_ENV = params.vflags.env[0];
     }
 
     const bootstrapper = require('../../../core/my/bootstrapper.js');

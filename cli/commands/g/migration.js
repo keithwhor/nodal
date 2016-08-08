@@ -144,9 +144,9 @@ class GenerateMigrationCommand extends Command {
 
   }
 
-  run(args, flags, vflags, callback) {
+  run(params, callback) {
 
-    let migrationName = inflect.camelize(args[0]);
+    let migrationName = inflect.camelize(params.args[0]);
 
     if (!migrationName) {
       throw new Error('Migration name not specified');
@@ -155,9 +155,9 @@ class GenerateMigrationCommand extends Command {
     let up = [];
     let down = [];
 
-    if (vflags.for) {
+    if (params.vflags.for) {
 
-      let forArgs = vflags.for;
+      let forArgs = params.vflags.for;
       let schemaObject = generateModelSchemaObject(forArgs[0], convertArgListToPropertyList(forArgs));
 
       up.push('this.createTable(\"' + schemaObject.table + '\", ' + JSON.stringify(schemaObject.columns) + ')');
@@ -165,11 +165,11 @@ class GenerateMigrationCommand extends Command {
 
     }
 
-    if (vflags.add) {
+    if (params.vflags.add) {
 
-      let table = vflags.add[0];
+      let table = params.vflags.add[0];
 
-      vflags.add.slice(1).forEach(field => {
+      params.vflags.add.slice(1).forEach(field => {
         field = field.split(':');
         up.push(`this.addColumn('${table}', '${field[0]}', '${field[1]}')`);
         down.unshift(`this.dropColumn('${table}', '${field[0]}')`);

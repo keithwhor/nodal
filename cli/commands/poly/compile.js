@@ -28,16 +28,16 @@ class PolyCompileCommand extends Command {
 
   }
 
-  run(args, flags, vflags, callback) {
+  run(params, callback) {
 
-    let name = args[0];
+    let name = params.args[0];
 
     let commands = [
-      cb => PolyDeployCommand.prototype.run([name], flags, vflags, cb)
+      cb => PolyDeployCommand.prototype.run({args: [name], flags: params.flags, vflags: params.vflags}, cb)
     ];
 
-    vflags.prepare && commands.push(cb => PolyRunCommand.prototype.run([name, 'db:prepare'], flags, vflags, cb));
-    vflags['no-migrate'] || commands.push(cb => PolyRunCommand.prototype.run([name, 'db:migrate'], flags, vflags, cb));
+    params.vflags.prepare && commands.push(cb => PolyRunCommand.prototype.run({args: [name, 'db:prepare'], flags: params.flags, vflags: params.vflags}, cb));
+    vflags['no-migrate'] || commands.push(cb => PolyRunCommand.prototype.run({args: [name, 'db:migrate'], flags: params.flags, vflags: params.vflags}, cb));
 
     async.series(commands, (err, results) => {
 

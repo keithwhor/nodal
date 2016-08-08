@@ -23,13 +23,13 @@ class PolyLoginCommand extends Command {
 
   }
 
-  run(args, flags, vflags, callback) {
+  run(params, callback) {
 
-    let host = flags.h ? flags.h[0] : 'https://api.polybit.com';
-    let port = flags.p && flags.p[0];
+    let host = params.flags.h ? params.flags.h[0] : 'https://api.polybit.com';
+    let port = params.flags.p && params.flags.p[0];
 
-    let email = vflags.email && vflags.email[0];
-    let password = vflags.password && vflags.password[0];
+    let email = params.vflags.email && params.vflags.email[0];
+    let password = params.vflags.password && params.vflags.password[0];
 
     let questions = [];
 

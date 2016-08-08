@@ -37,7 +37,7 @@ module.exports = (function() {
 ```
 
 #### Describing Extensions
-A CLI command could have multiple arguments and flags. Extensions `ext` are a part of the options in `Command` and are parsed with their definition after a hashtag `#`.
+A CLI command could have multiple arguments and params.flags. Extensions `ext` are a part of the options in `Command` and are parsed with their definition after a hashtag `#`.
 ```javascript
 new Command(null, "model <path_to_model>", {
     definition: "Add a new model",

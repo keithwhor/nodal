@@ -19,7 +19,7 @@ class VersionCommand extends Command {
 
   }
 
-  run(args, flags, vflags, callback) {
+  run(params, callback) {
 
     let version = require('../../package.json').version;
     console.log(colors.green.bold('Nodal Version: ') + version);

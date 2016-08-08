@@ -26,7 +26,7 @@ class NewCommand extends Command {
 
   }
 
-  run(args, flags, vflags, callback) {
+  run(params, callback) {
 
     if (fs.existsSync('./.nodal')) {
       return callback(new Error('Nodal project already exists in this directory'));
@@ -40,9 +40,9 @@ class NewCommand extends Command {
     console.log('');
 
     let data = {
-      name: args[0] ? (args[0] + '').replace(/_/g, ' ') : '',
-      author: (vflags.author || '').replace(/_/g, ' ') || '',
-      ignoreOutput: vflags.hasOwnProperty('ignore-output')
+      name: params.args[0] ? (params.args[0] + '').replace(/_/g, ' ') : '',
+      author: (params.vflags.author || '').replace(/_/g, ' ') || '',
+      ignoreOutput: params.vflags.hasOwnProperty('ignore-output')
     };
 
     let questions = [];

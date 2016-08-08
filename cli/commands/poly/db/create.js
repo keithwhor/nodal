@@ -31,15 +31,15 @@ class PolyDBCreateCommand extends Command {
 
   }
 
-  run(args, flags, vflags, callback) {
+  run(params, callback) {
 
     let data = {};
-    data.alias = args[0];
+    data.alias = params.args[0];
 
     console.log(`Creating new database with alias "${data.alias}"...`);
 
-    let host = flags.h ? flags.h[0] : 'https://api.polybit.com';
-    let port = flags.p && flags.p[0];
+    let host = params.flags.h ? params.flags.h[0] : 'https://api.polybit.com';
+    let port = params.flags.p && params.flags.p[0];
 
     let resource = new APIResource(host, port);
     resource.authorize(Credentials.read('ACCESS_TOKEN'));
@@ -52,17 +52,17 @@ class PolyDBCreateCommand extends Command {
 
       console.log('Database created successfully!');
 
-      PolyCreditsCommand.prototype.run([], flags, vflags, () => {
+      PolyCreditsCommand.prototype.run({args: [], flags: params.flags, vflags: params.vflags}, () => {
 
         let cfgPath = path.join(process.cwd(), 'config', 'db.json');
         let db = require(cfgPath);
 
-        if (vflags.development) {
+        if (params.vflags.development) {
 
           db.development.main = {connectionString: response.data[0].url};
           fs.writeFileSync(cfgPath, JSON.stringify(db, null, 2));
 
-        } else if (vflags.test) {
+        } else if (params.vflags.test) {
 
           db.test.main = {connectionString: response.data[0].url};
           fs.writeFileSync(cfgPath, JSON.stringify(db, null, 2));

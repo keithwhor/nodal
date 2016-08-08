@@ -24,10 +24,10 @@ class PolyRegisterCommand extends Command {
 
   }
 
-  run(args, flags, vflags, callback) {
+  run(params, callback) {
 
-    let host = flags.h ? flags.h[0] : 'https://api.polybit.com';
-    let port = flags.p && flags.p[0];
+    let host = params.flags.h ? params.flags.h[0] : 'https://api.polybit.com';
+    let port = params.flags.p && params.flags.p[0];
 
     let questions = [];
 
@@ -75,7 +75,11 @@ class PolyRegisterCommand extends Command {
           return callback(err);
         }
 
-        require('./login.js').prototype.run(args, flags, {email: [email], password: [password]}, callback);
+        require('./login.js').prototype.run({
+          args: params.args,
+          flags: params.flags,
+          vflags: {email: [email], password: [password]}
+        }, callback);
 
       });
 

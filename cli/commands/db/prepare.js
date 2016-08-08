@@ -18,7 +18,7 @@ class DBPrepareCommand extends Command {
 
   }
 
-  run(args, flags, vflags, callback) {
+  run(params, callback) {
 
     const bootstrapper = require('../../../core/my/bootstrapper.js');
     bootstrapper.prepare(callback);

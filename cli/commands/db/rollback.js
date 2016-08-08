@@ -21,10 +21,10 @@ class DBRollbackCommand extends Command {
 
   }
 
-  run(args, flags, vflags, callback) {
+  run(params, callback) {
 
     const bootstrapper = require('../../../core/my/bootstrapper.js');
-    bootstrapper.rollback(vflags.step, callback);
+    bootstrapper.rollback(params.vflags.step, callback);
 
   }
 

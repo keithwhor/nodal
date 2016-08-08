@@ -27,22 +27,22 @@ class PolyNewCommand extends Command {
 
   }
 
-  run(args, flags, vflags, callback) {
+  run(params, callback) {
 
-    let name = args[0];
+    let name = params.args[0];
 
     // for PolyCompileCommand
-    vflags.prepare = true;
+    params.vflags.prepare = true;
 
     if (!fs.existsSync(path.join(process.cwd(), '.nodal'))) {
       return callback(new Error('Must run `nodal poly:new` from a valid Nodal project. Please try `nodal new` first.'));
     }
 
     async.series([
-      cb => PolyCreateCommand.prototype.run([name], flags, vflags, cb),
-      cb => PolyDBCreateCommand.prototype.run([name], flags, vflags, cb),
-      cb => PolyDBAssignCommand.prototype.run([name, name], flags, vflags, cb),
-      cb => PolyCompileCommand.prototype.run([name], flags, vflags, cb)
+      cb => PolyCreateCommand.prototype.run({args: [name], flags: params.flags, vflags: params.vflags}, cb),
+      cb => PolyDBCreateCommand.prototype.run({args: [name], flags: params.flags, vflags: params.vflags}, cb),
+      cb => PolyDBAssignCommand.prototype.run({args: [name, name], flags: params.flags, vflags: params.vflags}, cb),
+      cb => PolyCompileCommand.prototype.run({args: [name], flags: params.flags, vflags: params.vflags}, cb)
     ], (err) => {
 
       if (err) {

@@ -21,10 +21,10 @@ class DBMigrateCommand extends Command {
 
   }
 
-  run(args, flags, vflags, callback) {
+  run(params, callback) {
 
     const bootstrapper = require('../../../core/my/bootstrapper.js');
-    bootstrapper.migrate(vflags.step, callback);
+    bootstrapper.migrate(params.vflags.step, callback);
 
   }
 

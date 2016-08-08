@@ -31,14 +31,14 @@ class PolyEnvCommand extends Command {
 
   }
 
-  run(args, flags, vflags, callback) {
+  run(params, callback) {
 
-    let name = args[0];
-    let set = flags.s || vflags.set;
-    let remove = flags.r || vflags.remove;
+    let name = params.args[0];
+    let set = params.flags.s || params.vflags.set;
+    let remove = params.flags.r || params.vflags.remove;
 
-    let host = flags.h ? flags.h[0] : 'https://api.polybit.com';
-    let port = flags.p && flags.p[0];
+    let host = params.flags.h ? params.flags.h[0] : 'https://api.polybit.com';
+    let port = params.flags.p && params.flags.p[0];
 
     let resource = new APIResource(host, port);
     resource.authorize(Credentials.read('ACCESS_TOKEN'));

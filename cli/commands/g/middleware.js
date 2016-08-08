@@ -50,13 +50,13 @@ class GenerateMiddlewareCommand extends Command {
 
   }
 
-  run(args, flags, vflags, callback) {
+  run(params, callback) {
 
-    if (!args.length) {
+    if (!params.args.length) {
       return callback(new Error('No middleware path specified.'));
     }
 
-    let middlewarePath = args[0].split('/');
+    let middlewarePath = params.args[0].split('/');
     let cd = middlewareDir;
 
     let middlewareName = inflect.classify(middlewarePath.pop());

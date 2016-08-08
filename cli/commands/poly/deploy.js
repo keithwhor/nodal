@@ -27,16 +27,16 @@ class PolyDeployCommand extends Command {
 
   }
 
-  run(args, flags, vflags, callback) {
+  run(params, callback) {
 
     if (!fs.existsSync(path.join(process.cwd(), '.nodal'))) {
       return callback(new Error('Must run `nodal poly:deploy` or `nodal poly:compile` from a valid Nodal project.'));
     }
 
-    let name = args[0];
+    let name = params.args[0];
 
-    let host = flags.h ? flags.h[0] : 'https://api.polybit.com';
-    let port = flags.p && flags.p[0];
+    let host = params.flags.h ? params.flags.h[0] : 'https://api.polybit.com';
+    let port = params.flags.p && params.flags.p[0];
 
     let resource = new APIResource(host, port);
     resource.authorize(Credentials.read('ACCESS_TOKEN'));
@@ -131,7 +131,7 @@ class PolyDeployCommand extends Command {
 
             console.log('Deployment complete!');
 
-            PolyCreditsCommand.prototype.run([], flags, vflags, () => {
+            PolyCreditsCommand.prototype.run({args: [], flags: params.flags, vflags: params.vflags}, () => {
 
               return callback(null, response.data[0]);
 

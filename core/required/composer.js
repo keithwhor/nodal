@@ -755,7 +755,12 @@ class Composer {
   * @param {string} joinName The name of the joined relationship
   * @param {array} comparisonsArray comparisons to perform on this join (can be overloaded)
   */
-  join(joinName, comparisonsArray) {
+  join(joinName, comparisonsArray, orderBy, count, offset) {
+
+    // FIXME: validate orderBy
+    orderBy = orderBy || '';
+    count = Math.max(0, count | 0);
+    offset = Math.max(0, offset | 0);
 
     if (!(comparisonsArray instanceof Array)) {
       comparisonsArray = [].slice.call(arguments, 1);
@@ -784,6 +789,11 @@ class Composer {
         .filter(f => f.length)
     );
 
+    // FIXME: implement properly
+    joinData[joinData.length - 1].orderBy = orderBy;
+    joinData[joinData.length - 1].offset = offset;
+    joinData[joinData.length - 1].count = count;
+
     this._command = {
       type: 'join',
       data: {
@@ -809,7 +819,7 @@ class Composer {
       columns = utilities.getFunctionParameters(column);
       transformation = column;
     } else {
-      columns = [column]
+      columns = [column];
       transformation = v => `${v}`;
     }
 
@@ -833,7 +843,7 @@ class Composer {
   aggregate(alias, transformation) {
 
     let columns;
-    
+
     if (typeof alias === 'function') {
       columns = utilities.getFunctionParameters(alias);
       transformation = alias;

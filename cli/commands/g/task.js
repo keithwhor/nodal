@@ -50,13 +50,13 @@ class GenerateTaskCommand extends Command {
 
   }
 
-  run(args, flags, vflags, callback) {
+  run(params, callback) {
 
-    if (!args.length) {
+    if (!params.args.length) {
       return callback(new Error('No task path specified.'));
     }
 
-    let taskPath = args[0].split('/');
+    let taskPath = params.args[0].split('/');
     let cd = taskPath
 
     let taskName = inflect.classify(taskPath.pop());

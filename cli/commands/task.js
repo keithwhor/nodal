@@ -22,9 +22,9 @@ class TaskCommand extends Command {
 
   }
 
-  run(args, flags, vflags, callback) {
+  run(params, callback) {
 
-    let taskName = args[0] || '';
+    let taskName = params.args[0] || '';
     let cwd = process.cwd();
     let taskPath = cwd + '/tasks/' + taskName + '.js';
 
@@ -33,7 +33,7 @@ class TaskCommand extends Command {
     const Task = require(taskPath);
     let task = new Task();
 
-    task.exec(args.slice(1), (err) => {
+    task.exec(params.args.slice(1), (err) => {
 
       if (err) {
         console.log(`${colors.red.bold('Task Error:')} ${err.message}`);

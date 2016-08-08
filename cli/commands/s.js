@@ -18,7 +18,7 @@ class ServerCommand extends Command {
 
   }
 
-  run(args, flags, vflags, callback) {
+  run(params, callback) {
 
     let spawn = require('cross-spawn-async');
     let child = spawn('npm',  ['start'], {stdio: 'inherit'});

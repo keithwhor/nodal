@@ -50,13 +50,13 @@ class GenerateRenderwareCommand extends Command {
 
   }
 
-  run(args, flags, vflags, callback) {
+  run(params, callback) {
 
-    if (!args.length) {
+    if (!params.args.length) {
       return callback(new Error('No renderware path specified.'));
     }
 
-    let renderwarePath = args[0].split('/');
+    let renderwarePath = params.args[0].split('/');
     let cd = renderwareDir;
 
     let renderwareName = inflect.classify(renderwarePath.pop());

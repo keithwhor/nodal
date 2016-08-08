@@ -45,6 +45,19 @@ class ModelFactory {
   */
   static createFromModels(Models, objModelData, callback) {
 
+    if (objModelData instanceof Array) {
+      async.series(
+        objModelData.map(objModelData => callback => this.createFromModels(Models, objModelData, callback)),
+        (err, results) => {
+          results = (results || []).reduce((results, res) => {
+            return results.concat(res);
+          }, []);
+          callback(err || null, results);
+        }
+      );
+      return;
+    }
+
     async.parallel(
       Models
         .filter(Model => objModelData[Model.name] && objModelData[Model.name].length)

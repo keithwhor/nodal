@@ -23,16 +23,16 @@ class PolyDBAssignCommand extends Command {
 
   }
 
-  run(args, flags, vflags, callback) {
+  run(params, callback) {
 
     let data = {};
-    data.alias = args[0] || '';
-    data.project = args[1] || '';
+    data.alias = params.args[0] || '';
+    data.project = params.args[1] || '';
 
     console.log(`Assigning database "${data.alias}" to "${data.project}"...`);
 
-    let host = flags.h ? flags.h[0] : 'https://api.polybit.com';
-    let port = flags.p && flags.p[0];
+    let host = params.flags.h ? params.flags.h[0] : 'https://api.polybit.com';
+    let port = params.flags.p && params.flags.p[0];
 
     let resource = new APIResource(host, port);
     resource.authorize(Credentials.read('ACCESS_TOKEN'));
