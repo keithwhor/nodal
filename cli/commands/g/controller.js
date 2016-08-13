@@ -131,7 +131,7 @@ class GenerateControllerCommand extends Command {
 
     let forModel = null;
 
-    if (Object.keys(vflags).filter(key => key.substr(0, 4) === 'for:').length) {
+    if (Object.keys(params.vflags).filter(key => key.substr(0, 4) === 'for:').length) {
       return callback(new Error('Syntax `--for:ModelName` removed. Use `--for ModelName` instead.'));
     }
 
