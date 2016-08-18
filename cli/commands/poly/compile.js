@@ -37,7 +37,7 @@ class PolyCompileCommand extends Command {
     ];
 
     params.vflags.prepare && commands.push(cb => PolyRunCommand.prototype.run({args: [name, 'db:prepare'], flags: params.flags, vflags: params.vflags}, cb));
-    vflags['no-migrate'] || commands.push(cb => PolyRunCommand.prototype.run({args: [name, 'db:migrate'], flags: params.flags, vflags: params.vflags}, cb));
+    params.vflags['no-migrate'] || commands.push(cb => PolyRunCommand.prototype.run({args: [name, 'db:migrate'], flags: params.flags, vflags: params.vflags}, cb));
 
     async.series(commands, (err, results) => {
 
