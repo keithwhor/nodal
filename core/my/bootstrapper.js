@@ -287,7 +287,7 @@ class Bootstrapper {
 
   }
 
-  seed(callback) {
+  seed(modelList,callback) {
 
     this.connect((err, db) => {
 
@@ -297,10 +297,20 @@ class Bootstrapper {
 
       callback = this.wrapCallback(db, callback);
 
-      let seed = Config.seed;
-
-      if (!seed) {
+      if (!Config.seed) {
         return callback(new Error('Could not seed, no seed found in "./config/seed.json". Please make sure JSON is correct.'));
+      }
+
+      let seed = {};
+
+      // determine seed from matching values in modelList and Config.seed
+      if (modelList && modelList.length) modelList.forEach((model) => {
+        if(Config.seed[model]) seed[model] = Config.seed[model];
+      });
+      else seed = Config.seed;
+
+      if (!Object.keys(seed).length) {
+        return callback(new Error('No seed data available'));
       }
 
       return ModelFactory.populate(seed, callback);

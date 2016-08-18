@@ -21,7 +21,7 @@ class DBSeedCommand extends Command {
   run(params, callback) {
 
     const bootstrapper = require('../../../core/my/bootstrapper.js');
-    bootstrapper.seed(callback);
+    bootstrapper.seed(params.args, callback);
 
   }
 
