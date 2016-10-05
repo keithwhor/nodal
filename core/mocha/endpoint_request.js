@@ -16,14 +16,14 @@ class EndpointRequest {
 
   }
 
-  mock(method, body, callback) {
+  mock(method, body, headers, callback) {
 
     return this.router.dispatch(
       this.router.prepare(
         '::1',
         this.url,
         method,
-        {},
+        headers,
         body
       ),
       (err, status, headers, body) => {
@@ -50,27 +50,27 @@ class EndpointRequest {
 
   }
 
-  get(callback) {
+  get(headers, callback) {
 
-    this.mock('GET', null, callback);
-
-  }
-
-  del(callback) {
-
-    this.mock('DELETE', null, callback);
+    this.mock('GET', null, headers, callback);
 
   }
 
-  post(body, callback) {
+  del(headers, callback) {
 
-    this.mock('POST', body, callback);
+    this.mock('DELETE', null, headers, callback);
 
   }
 
-  put(body, callback) {
+  post(body, headers, callback) {
 
-    this.mock('PUT', body, callback);
+    this.mock('POST', body, headers, callback);
+
+  }
+
+  put(body, headers, callback) {
+
+    this.mock('PUT', body, headers, callback);
 
   }
 
