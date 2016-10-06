@@ -23,7 +23,7 @@ class EndpointRequest {
         '::1',
         this.url,
         method,
-        headers,
+        Object.keys(headers || {}).reduce(function(accum, curr){ headers[curr.toLowerCase()] = headers[curr]; return headers;},{}),
         body
       ),
       (err, status, headers, body) => {
@@ -50,25 +50,25 @@ class EndpointRequest {
 
   }
 
-  get(headers, callback) {
+  get(callback, headers) {
 
     this.mock('GET', null, headers, callback);
 
   }
 
-  del(headers, callback) {
+  del(callback, headers) {
 
     this.mock('DELETE', null, headers, callback);
 
   }
 
-  post(body, headers, callback) {
+  post(body, callback, headers) {
 
     this.mock('POST', body, headers, callback);
 
   }
 
-  put(body, headers, callback) {
+  put(body, callback, headers) {
 
     this.mock('PUT', body, headers, callback);
 
