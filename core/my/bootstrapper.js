@@ -172,14 +172,13 @@ class Bootstrapper {
           let schema_ids = result.rows.map((v) => { return v.id; });
 
           let migrations = fs.readdirSync(MIGRATION_PATH).map((v) => {
+            if(v.indexOf('.') === 0) return {};
             return {
               id: parseInt(v.substr(0, v.indexOf('__'))),
               migration: new (require(process.cwd() + '/' + MIGRATION_PATH + '/' + v))(db)
             };
-          });
-
-          migrations = migrations.filter((v) => {
-            return schema_ids.indexOf(v.id) === -1;
+          }).filter((v) => {
+            return v.id && schema_ids.indexOf(v.id) === -1;
           });
 
           if (migrations.length === 0) {
@@ -245,12 +244,13 @@ class Bootstrapper {
         let schema_ids = result.rows.map((v) => { return v.id; });
 
         let migrations = fs.readdirSync(MIGRATION_PATH).map((v) => {
+          if(v.indexOf('.') === 0) return {};
           return {
             id: parseInt(v.substr(0, v.indexOf('__'))),
             migration: new (require(process.cwd() + '/' + MIGRATION_PATH + '/' + v))(db)
           };
         }).filter((v) => {
-          return schema_ids.indexOf(v.id) !== -1;
+          return v.id && schema_ids.indexOf(v.id) !== -1;
         }).reverse();
 
         if (migrations.length === 0) {
