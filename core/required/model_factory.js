@@ -33,6 +33,7 @@ class ModelFactory {
 
     return fs
       .readdirSync(dir)
+      .filter(filename => filename.indexOf('.') !== 0)
       .map(filename => require(`${process.cwd()}/app/models/${filename}`))
 
   }
