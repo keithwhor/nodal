@@ -48,5 +48,6 @@
   "homepage": "https://github.com/keithwhor/nodal",
   "bin": {
     "nodal": "cli/bin.js"
-  }
+  },
+  "types": "definitions/index.d.ts"
 }
