@@ -49,5 +49,5 @@
   "bin": {
     "nodal": "cli/bin.js"
   },
-  "types": "definitions/index.d.ts"
+  "types": "./index.d.ts"
 }
