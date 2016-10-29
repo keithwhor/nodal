@@ -1,6 +1,7 @@
-// Type definitions for nodal .12.8
-// Project: Nodal
-// Definitions by: Adam Charron @charrondev
+// Type definitions for nodal 0.12.8
+// Project: https://github.com/keithwhor/nodal
+// Definitions by: Adam Charron <https://github.com/charrondev>
+// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 
 import * as fxn from 'fxn';
 
@@ -130,7 +131,7 @@ export class Controller extends fxn.Controller {
    * @param {optional Array} The interface to use for the data being returned, if not an error.
    * @return {boolean}
    */
-  respond(data: Error | Object | any[] | Model | ModelArray, arrInterface?: string[]): boolean;
+  respond(data: Error | Object | any[] | Model | ModelArray<Model>, arrInterface?: string[]): boolean;
 }
 
 export interface IComparison {
@@ -140,9 +141,9 @@ export interface IComparison {
   __count?: number;
 }
 
-export class Composer {
+export class Composer<T extends Model> {
   db: Database;
-  Model: typeof Model;
+  Model: T;
   private _parent;
   private _command;
   /**
@@ -150,7 +151,7 @@ export class Composer {
    * @param {Nodal.Model} Model The model class the composer is querying from
    * @param {Nodal.Composer} [parent=null] The composer's parent (another composer instance)
    */
-  constructor(modelConstructor: typeof Model, parent?: Composer);
+  constructor(modelConstructor: typeof Model, parent?: Composer<any>);
   /**
    * Given rows with repeated data (due to joining in multiple children),
    * return only parent models (but include references to their children)
@@ -245,50 +246,50 @@ export class Composer {
    * @param {Object} comparisons Comparisons object. {age__lte: 27}, for example.
    * @return {Nodal.Composer} new Composer instance
    */
-  safeWhere(...comparisonsArray: IComparison[]): Composer;
+  safeWhere(...comparisonsArray: IComparison[]): this;
   /**
    * Join in a relationship. Filters out hidden fields from comparisons.
    * @param {string} joinName The name of the joined relationship
    * @param {array} comparisonsArray comparisons to perform on this join (can be overloaded)
    */
-  safeJoin(joinName: string, ...comparisonsArray: IComparison[]): Composer;
+  safeJoin(joinName: string, ...comparisonsArray: IComparison[]): this;
   /**
    * Add comparisons to SQL WHERE clause.
    * @param {Object} comparisons Comparisons object. {age__lte: 27}, for example.
    * @return {Nodal.Composer} new Composer instance
    */
-  where(...comparisonsArray: IComparison[]): Composer;
+  where(...comparisonsArray: IComparison[]): this;
   /**
    * Order by field belonging to the current Composer instance's model.
    * @param {string} field Field to order by
    * @param {string} direction Must be 'ASC' or 'DESC'
    * @return {Nodal.Composer} new Composer instance
    */
-  orderBy(field: string, direction?: 'ASC' | 'DSC' | any): Composer;
+  orderBy(field: string, direction?: 'ASC' | 'DSC' | any): this;
   /**
    * Limit to an offset and count
    * @param {number} offset The offset at which to set the limit. If this is the only argument provided, it will be the count instead.
    * @param {number} count The number of results to be returned. Can be omitted, and if omitted, first argument is used for count.
    * @return {Nodal.Composer} new Composer instance
    */
-  limit(offset: number | string, count?: number | string): Composer;
+  limit(offset: number | string, count?: number | string): this;
   /**
    * Join in a relationship.
    * @param {string} joinName The name of the joined relationship
    * @param {array} comparisonsArray comparisons to perform on this join (can be overloaded)
    */
-  join(joinName: string, comparisonsArray?: IComparison[] | IComparison, orderBy?: 'ASC' | 'DESC', count?: number, offset?: number): Composer;
+  join(joinName: string, comparisonsArray?: IComparison[] | IComparison, orderBy?: 'ASC' | 'DESC', count?: number, offset?: number): this;
   /**
    * Groups by a specific field, or a transformation on a field
    * @param {String} column The column to group by
    */
-  groupBy(column: string): Composer;
+  groupBy(column: string): this;
   /**
    * Aggregates a field
    * @param {String} alias The alias for the new aggregate field
    * @param {Function} transformation The transformation to apply to create the aggregate
    */
-  aggregate(alias: string, transformation?: Function): Composer;
+  aggregate(alias: string, transformation?: Function): this;
   /**
    * Counts the results in the query
    * @param {function} callback Supplied with an error and the integer value of the count
@@ -298,7 +299,7 @@ export class Composer {
    * Execute the query you've been composing.
    * @param {function({Error}, {Nodal.ModelArray})} callback The method to execute when the query is complete
    */
-  end(callback: (err: Error, modelArray: ModelArray) => void): void;
+  end(callback: (err: Error, modelArray: ModelArray<T>) => void): void;
   /**
    * Shortcut for .limit(1).end(callback) that only returns a model object or error if not found
    * @param {Function} callback Callback to execute, provides an error and model parameter
@@ -309,7 +310,7 @@ export class Composer {
    * @param {Object} fields The object containing columns (keys) and associated values you'd like to update
    * @param {function({Error}, {Nodal.ModelArray})} callback The callback for the update query
    */
-  update(fields: IAnyObject, callback: (err: Error, modelArray: ModelArray) => void): void;
+  update(fields: IAnyObject, callback: (err: Error, modelArray: ModelArray<T>) => void): void;
 }
 
 export const CLI: any;
@@ -532,7 +533,7 @@ export class Model {
    * @param {string} field The field (name of the join relationship)
    * @param {Model|ModelArray} value The joined model or array of models
    */
-  setJoined(field: string, value: ModelArray | Model): Model | ModelArray;
+  setJoined(field: string, value: ModelArray<this> | Model): Model | ModelArray<this>;
   /**
    * Calculate field from calculations (assumes it exists)
    *  @param {string} field Name of the calculated field
@@ -547,14 +548,14 @@ export class Model {
    * Retrieves joined Model or ModelArray
    * @param {String} joinName the name of the join (list of connectors separated by __)
    */
-  joined(joinName: string): Model | ModelArray;
+  joined(joinName: string): Model | ModelArray<this>;
   /**
    * Retrieve associated models joined this model from the database.
    * @param {function({Error} err, {Nodal.Model|Nodal.ModelArray} model_1, ... {Nodal.Model|Nodal.ModelArray} model_n)}
    *   Pass in a function with named parameters corresponding the relationships you'd like to retrieve.
    *   The first parameter is always an error callback.
    */
-  include(callback: (err: Error, ...models: (Model | ModelArray)[]) => void): void;
+  include(callback: (err: Error, ...models: (Model | ModelArray<this>)[]) => void): void;
   /**
    * Creates a plain object from the Model, with properties matching an optional interface
    * @param {Array} arrInterface Interface to use for object creation
@@ -717,7 +718,7 @@ export class Model {
    * @param {optional Nodal.Database} db Deprecated - provide a database to query from. Set the model's db in its constructor file, instead.
    * @return {Nodal.Composer}
    */
-  static query(db?: Database): Composer;
+  static query<T extends Model>(db?: Database): Composer<T>;
   /**
    * Get the model's table name
    * @return {string}
@@ -779,10 +780,10 @@ export class Model {
    *   "multiple": Whether the child exists in multiples for the parent (defaults to false)
    */
   static joinsTo(modelClass: typeof Model, options: {
-    name: string;
-    via: string;
-    as: string;
-    multiple: boolean;
+    name?: string;
+    via?: string;
+    as?: string;
+    multiple?: boolean;
   }): RelationshipEdge | null;
   /**
    * Create a validator. These run synchronously and check every time a field is set / cleared.
@@ -832,7 +833,7 @@ export class Model {
    * @param {string} field Field to set
    * @param {any} value Value for the field
    */
-  private __safeSet__(field, value);
+  public __safeSet__(field: string, value: any): void;
   /**
    * Destroys model reference in database
    * @param {function} callback Method to execute upon completion, returns error if failed
@@ -841,10 +842,10 @@ export class Model {
   private __destroy__(callback);
 }
 
-export class ModelArray extends ItemArray<Model> {
+export class ModelArray<T> extends ItemArray<T> {
   Model: typeof Model;
   constructor(modelConstructor: typeof Model);
-  static from(arr: Model[]): ModelArray;
+  static from<T>(arr: Model[]): ModelArray<T>;
   toObject(arrInterface?: string[]): any;
   has(model: Model): boolean;
   readAll(data: Object): boolean;

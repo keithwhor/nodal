@@ -7,6 +7,7 @@ declare module "fxn" {
       }
 
       abstract class Controller {
+
         protected _method: HttpMethod;
         protected _path: string;
         protected _requestHeaders: Object;
@@ -14,7 +15,7 @@ declare module "fxn" {
         protected _status: number;
         protected _responder: Function;
         protected _securityPolicies: Object;
-        protected _params: Object;
+        protected params: any;
 
         constructor(path: string, method: string, requestHeaders: Object, params: Object, responder: Function);
         convertMethod(method: HttpMethod, id: number): string;
@@ -43,6 +44,7 @@ declare module "fxn" {
         allowOrigin(value: string): this;
         securityPolicy(directive: string, src: string): string;
         redirect(location: string): void;
+        d;
       }
 
       abstract class Daemon {
