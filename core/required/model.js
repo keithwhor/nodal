@@ -402,16 +402,25 @@ class Model {
 
   /**
   * Creates a verifier. These run asynchronously, support multiple fields, and check every time you try to save a Model.
-  * @param {string} message The error message shown if a validation fails.
+  * @param {string} field The field applied to the verification.
+  * @param {string} message The error message shown if a verification fails.
   * @param {function} fnAction The asynchronous verification method. The last argument passed is always a callback, and field names are determined by the argument names.
   */
-  static verifies(message, fnAction) {
+  static verifies(field, message, fnAction) {
+
+    // Legacy support
+    if (arguments.length === 2) {
+      fnAction = message;
+      message = field;
+      field = null;
+    }
 
     if (!this.prototype.hasOwnProperty('_verificationsList')) {
       this.prototype._verificationsList = [];
     };
 
     this.prototype._verificationsList.push({
+      field: field,
       message: message,
       action: fnAction,
       fields: utilities.getFunctionParameters(fnAction).slice(0, -1)
@@ -1128,10 +1137,6 @@ class Model {
   */
   __verify__(callback) {
 
-    if (this.hasErrors()) {
-      return callback.call(this, this.errorObject());
-    }
-
     // Run through verifications in order they were added
     async.series(
       this._verificationsList.map(verification => {
@@ -1140,13 +1145,26 @@ class Model {
             this,
             verification.fields
               .map(field => this.get(field))
-              .concat(bool => callback(bool ? null : new Error(verification.message)))
+              .concat(bool => {
+                if (bool) {
+                  callback(null);
+                } else {
+                  if (verification.field) {
+                    this.setError(verification.field, verification.message);
+                    callback(null);
+                  } else {
+                    callback(new Error(verification.message))
+                  }
+                }
+              })
           )
         };
       }),
       (err) => {
 
-        if (err) {
+        if (this.hasErrors()) {
+          return callback.call(this, this.errorObject());
+        } else if (err) {
           return callback.call(this, err);
         }
 
