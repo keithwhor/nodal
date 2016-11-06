@@ -23,7 +23,7 @@ class EndpointRequest {
         '::1',
         this.url,
         method,
-        Object.keys(headers || {}).reduce(function(accum, curr){ headers[curr.toLowerCase()] = headers[curr]; return headers;},{}),
+        Object.keys(headers || {}).reduce(function(a, c){ headers[c.toLowerCase()] = headers[c]; return headers;},{}),
         body
       ),
       (err, status, headers, body) => {
@@ -50,25 +50,37 @@ class EndpointRequest {
 
   }
 
-  get(callback, headers) {
+  get(callback) {
 
-    this.mock('GET', null, headers, callback);
-
-  }
-
-  del(callback, headers) {
-
-    this.mock('DELETE', null, headers, callback);
+    this.mock('GET', null, null, callback);
 
   }
 
-  post(body, callback, headers) {
+  del(callback) {
+
+    this.mock('DELETE', null, null, callback);
+
+  }
+
+  post(body, callback) {
+
+    this.mock('POST', body, {'Content-Type': 'application/json'}, callback);
+
+  }
+
+  postHead(body, headers, callback){
 
     this.mock('POST', body, headers, callback);
 
   }
 
-  put(body, callback, headers) {
+  put(body, callback) {
+
+    this.mock('PUT', body, {'Content-Type': 'application/json'}, callback);
+
+  }
+
+  putHead(body, headers, callback) {
 
     this.mock('PUT', body, headers, callback);
 
