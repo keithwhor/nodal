@@ -81,10 +81,10 @@ class RelationshipPath {
 
       if (edge.hasChild(node)) {
         join.prevColumn = edge.options.via;
-        join.joinColumn = 'id';
+        join.joinColumn = edge.options.using;
         join.joinAlias = edge.options.name;
       } else {
-        join.prevColumn = 'id';
+        join.prevColumn = edge.options.using;
         join.joinColumn = edge.options.via;
         join.joinAlias = edge.options.as;
       }
@@ -126,6 +126,7 @@ class RelationshipNode {
     options.as = options.as || (options.multiple ? `${inflect.pluralize(inflect.camelize(this.Model.name, false))}` : `${inflect.camelize(this.Model.name, false)}`);
     options.name = options.name || `${inflect.camelize(Model.name, false)}`;
     options.via = options.via || `${inflect.underscore(options.name)}_id`;
+    options.using = options.using || `id`;
 
     let parentNode = this.Graph.of(Model);
     let edge = this.edges.filter(e => e.parent === parentNode && e.options.name === options.name).pop();
