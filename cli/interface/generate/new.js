@@ -13,18 +13,32 @@ module.exports = (function() {
       const rootPath = path.resolve(__dirname);
       const version = require('../../../package.json').version;
 
+      let overrideOutputPath = args.length ? args[0][0] : undefined;
+
       console.log('');
       console.log(`Welcome to ${colors.bold.green('Nodal! v' + version)}`);
       console.log('');
       console.log('Let\'s get some information about your project...');
       console.log('');
-
       var questions = [
         {
           name: 'name',
           type: 'input',
           default: 'my-nodal-project',
           message: 'Name',
+        },
+        {
+          name: 'overwrite',
+          type: 'confirm',
+          default: false,
+          message: (answers) => {
+            let dirname = overrideOutputPath || `./${answers.name.replace(/[^A-Za-z0-9-_]/gi, '-').toLowerCase()}`;
+            return `Output directory '${dirname}' exists. Overwrite?`;
+          },
+          when: (answers) => {
+            let dirname = overrideOutputPath || answers.name.replace(/[^A-Za-z0-9-_]/gi, '-').toLowerCase();
+            return fs.existsSync(`./${dirname}`);
+          }
         },
         {
           name: 'author',
@@ -71,16 +85,21 @@ module.exports = (function() {
 
         promptResult.version = require('../../../package.json').version;
 
-        let dirname = promptResult.name.replace(/[^A-Za-z0-9-_]/gi, '-').toLowerCase();
+        let appdirname = promptResult.name.replace(/[^A-Za-z0-9-_]/gi, '-').toLowerCase();
+        let dirname = overrideOutputPath || appdirname;
 
         console.log('');
         console.log('Creating directory "' + dirname + '"...');
         console.log('');
 
+        // If the target directory exists and we are not overwriting it, error
         if (fs.existsSync('./' + dirname)) {
-          callback(new Error('Directory "' + dirname + '" already exists, try a different project name'));
+            if ( !promptResult.overwrite ) {
+              callback(new Error('Directory "' + dirname + '" already exists, try a different project name'));
+            }
+        } else {
+          fs.mkdirSync('./' + dirname);
         }
-        fs.mkdirSync('./' + dirname);
 
         console.log('Copying Nodal directory structure and files...');
         console.log('');
