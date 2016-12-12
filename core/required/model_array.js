@@ -67,7 +67,8 @@ class ModelArray extends ItemArray {
 
   /**
   * Calls Model#set on each Model in the ModelArray
-  * @param {Object}
+  * @param {string} field Field to set
+  * @param {any} value Value for the field
   */
   setAll(field, value) {
     this.forEach(model => model.set(field, value));
