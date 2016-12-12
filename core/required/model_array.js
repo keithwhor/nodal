@@ -66,7 +66,7 @@ class ModelArray extends ItemArray {
   }
 
   /**
-  * Calls Model#read on each Model in the ModelArray
+  * Calls Model#set on each Model in the ModelArray
   * @param {Object}
   */
   setAll(field, value) {
