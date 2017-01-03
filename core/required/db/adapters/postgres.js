@@ -727,6 +727,9 @@ PostgresAdapter.prototype.types = {
   boolean: {
     dbName: 'BOOLEAN'
   },
+  buffer: {
+    dbName: 'BYTEA'
+  },
   json: {
     dbName: 'JSONB'
   }

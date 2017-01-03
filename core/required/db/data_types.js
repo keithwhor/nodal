@@ -6,6 +6,9 @@ module.exports = {
       return Math.max(Math.min(parseInt(v) || 0, Number.MAX_SAFE_INTEGER), Number.MIN_SAFE_INTEGER);
     }
   },
+  // buffers - get marshelled as bytea by 'pg'
+  buffer: {
+  },
   int: {
     convert: function(v) {
       return Math.max(Math.min(parseInt(v) || 0, Number.MAX_SAFE_INTEGER), Number.MIN_SAFE_INTEGER);
