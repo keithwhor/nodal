@@ -7,6 +7,13 @@ class TestRunner {
 
   constructor(dir, router) {
 
+    this.dir = dir;
+    this.router = router;
+
+  }
+
+  tests() {
+
     let tests = [];
 
     let addTest = dir => {
@@ -27,17 +34,16 @@ class TestRunner {
 
     };
 
-    let testDir = path.resolve(process.cwd(), dir || '/');
+    let testDir = path.resolve(process.cwd(), this.dir || '/');
     fs.readdirSync(testDir).forEach(addTest(testDir));
 
-    this._tests = tests;
-    this.router = router;
+    return tests;
 
   }
 
   start(verb) {
 
-    this._tests.forEach(t => {
+    this.tests().forEach(t => {
 
       t.__test__(verb);
 

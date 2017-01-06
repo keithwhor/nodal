@@ -6,6 +6,7 @@ class Test {
 
   constructor(testRunner) {
 
+    this._data = {};
     this.testRunner = testRunner;
     Object.defineProperty(this, 'router', {get: () => this.testRunner.router});
 
@@ -15,14 +16,25 @@ class Test {
 
     describe(this.constructor.name, () => {
 
-      this.before && before(this.before.bind(this, verb));
+      this.before && before(done => this.before(done));
+      this.after && after(done => this.after(done));
 
       this.test(verb);
 
-      this.after && after(this.after.bind(this, verb));
-
     });
 
+  }
+
+  set(key, value) {
+    return this._data[key] = value;
+  }
+
+  unset(key) {
+    delete this._data[key];
+  }
+
+  get(key, defaultValue) {
+    return this._data.hasOwnProperty(key) ? this._data[key] : defaultValue;
   }
 
   test() {}
