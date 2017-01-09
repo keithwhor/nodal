@@ -15,6 +15,12 @@ class TestRunner {
   tests() {
 
     let tests = [];
+    let filter;
+
+    if (process.argv.length > 3) {
+      filter = process.argv[3];
+      filter = filter.endsWith('.js') ? filter : `${filter}.js`;
+    }
 
     let addTest = dir => {
 
@@ -25,6 +31,10 @@ class TestRunner {
           let nextDir = path.resolve(dir, filename);
           return fs.readdirSync(nextDir).forEach(addCommand(nextDir));
 
+        }
+
+        if (filter && filename !== filter) {
+          return;
         }
 
         let Test = require(path.resolve(dir, filename));
