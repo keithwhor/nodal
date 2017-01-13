@@ -2,6 +2,7 @@
 
 const ItemArray = require('./item_array.js');
 const ModelArray = require('./model_array.js');
+const Transaction = require('./db/transaction.js');
 
 const utilities = require('./utilities.js');
 
@@ -404,6 +405,40 @@ class Composer {
     let queryInfo = this.__reduceToQueryInformation__(collapsed);
     let query = this.__reduceCommandsToQuery__(queryInfo.commands);
     query.sql = this.db.adapter.generateCountQuery(query.sql, 'c');
+    return query;
+
+  }
+
+  /**
+  * Generate a SQL update query
+  * @param {Object} [fields] A list of field / value pairs to set
+  * @return {Object} has "params" and "sql" properties
+  * @private
+  */
+  __generateUpdateQuery__(fields) {
+
+    let query = this.__generateQuery__(['id'], true);
+    let columns = Object.keys(fields);
+    let params = columns.map(c => fields[c]);
+
+    let columnNames = columns.filter((v, i) => typeof params[i] !== 'function');
+    let columnFunctions = columns
+      .map((v, i) => [v, params[i]])
+      .filter((v, i) => typeof params[i] === 'function');
+
+    params = params.filter(v => typeof v !== 'function');
+
+    query.sql = this.db.adapter.generateUpdateAllQuery(
+      this.Model.table(),
+      'id',
+      columnNames,
+      columnFunctions,
+      query.params.length,
+      query.sql
+    );
+
+    query.params = query.params.concat(params);
+
     return query;
 
   }
@@ -884,6 +919,38 @@ class Composer {
 
   }
 
+  __endProcessor__(err, r, callback) {
+
+    if (!r || !r.countResult || !r.result) {
+      throw new Error('End Query Expects object containing "count" and "results"');
+    }
+
+    let limitCommand = this.__getLastLimitCommand__(this.__collapse__());
+    let offset = limitCommand ? limitCommand._command.data.offset : 0;
+
+    let total = (((r.countResult && r.countResult.rows) || [])[0] || {}).__total__ || 0;
+    let rows = r.result ? (r.result.rows || []).slice() : [];
+    let models = this.__parseModelsFromRows__(rows, this.__isGrouped__());
+
+    if (r.updateResult && r.updateResult.rows) {
+
+      let cache = r.updateResult.rows.reduce((cache, obj) => {
+        cache[obj.id] = obj;
+        return cache;
+      }, {});
+
+      models.forEach(m => {
+        let data = cache[m.get('id')];
+        data && m.read(data);
+      });
+
+    }
+
+    models.setMeta({offset: offset, total: total});
+    callback.call(this, err, models);
+
+  }
+
   /**
   * Execute the query you've been composing.
   * @param {function({Error}, {Nodal.ModelArray})} callback The method to execute when the query is complete
@@ -893,28 +960,18 @@ class Composer {
     let query = this.__generateQuery__();
     let countQuery = this.__generateCountQuery__();
 
-    let grouped = this.__isGrouped__();
-
-    let limitCommand = this.__getLastLimitCommand__(this.__collapse__());
-    let offset = limitCommand ? limitCommand._command.data.offset : 0;
-    let total = 0;
-
-    this.db.query(countQuery.sql, countQuery.params, (err, result) => {
-
-      let total = (((result && result.rows) || [])[0] || {}).__total__ || 0;
-
-      if (!total) {
-        let models = this.__parseModelsFromRows__([], grouped);
-        models.setMeta({offset: offset, total: total});
-        return callback.call(this, err, models);
-      }
+    this.db.query(countQuery.sql, countQuery.params, (err, countResult) => {
 
       this.db.query(query.sql, query.params, (err, result) => {
 
-        let rows = result ? (result.rows || []).slice() : [];
-        let models = this.__parseModelsFromRows__(rows, grouped);
-        models.setMeta({offset: offset, total: total});
-        callback.call(this, err, models);
+        this.__endProcessor__(
+          err,
+          {
+            countResult: countResult,
+            result: result
+          },
+          callback
+        );
 
       });
 
@@ -951,59 +1008,27 @@ class Composer {
       throw new Error('Cannot update grouped queries');
     }
 
-    let query = this.__generateQuery__(['id'], true);
-    let columns = Object.keys(fields);
-    let params = columns.map(c => fields[c]);
+    let query = this.__generateQuery__();
+    let countQuery = this.__generateCountQuery__();
+    let updateQuery = this.__generateUpdateQuery__(fields);
 
-    let columnNames = columns.filter((v, i) => typeof params[i] !== 'function');
-    let columnFunctions = columns
-      .map((v, i) => [v, params[i]])
-      .filter((v, i) => typeof params[i] === 'function');
+    this.db.query(countQuery.sql, countQuery.params, (err, countResult) => {
 
-    params = params.filter(v => typeof v !== 'function');
+      this.db.query(query.sql, query.params, (err, result) => {
 
-    query.sql = this.db.adapter.generateUpdateAllQuery(
-      this.Model.table(),
-      'id',
-      columnNames,
-      columnFunctions,
-      query.params.length,
-      query.sql
-    );
+        this.db.query(updateQuery.sql, updateQuery.params, (err, updateResult) => {
 
-    query.params = query.params.concat(params);
+          this.__endProcessor__(
+            err,
+            {
+              countResult: countResult,
+              result: result,
+              updateResult: updateResult
+            },
+            callback
+          );
 
-    return this.db.query(query.sql, query.params, (err, result) => {
-
-      let rows = result ? (result.rows || []).slice() : [];
-
-      if (err) {
-        let models = this.__parseModelsFromRows__(rows);
-        return callback.call(this, err, models);
-      }
-
-      let ids = result.rows.map(row => row.id);
-
-      /* Grab all items with ids, sorted by order */
-      /* Only need to grab joins and order */
-
-      let composerArray = this.__collapse__()
-        .filter(composer => composer._command)
-        .filter(composer => composer._command.type === 'orderBy' || composer._command.type === 'join');
-
-      // Add in id filter
-      composerArray.unshift(new Composer(this.Model).where({id__in: ids})._parent);
-
-      let queryInfo = this.__reduceToQueryInformation__(composerArray);
-      let query = this.__reduceCommandsToQuery__(queryInfo.commands);
-      query = this.__addJoinsToQuery__(query, queryInfo);
-
-      return this.db.query(query.sql, query.params, (err, result) => {
-
-        let rows = result ? (result.rows || []).slice() : [];
-        let models = this.__parseModelsFromRows__(rows);
-
-        callback.call(this, err, models);
+        });
 
       });
 
