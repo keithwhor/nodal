@@ -1077,6 +1077,16 @@ class Model {
   }
 
   /**
+  * Creates a transaction object to be passed to database methods
+  * @param {Function} callback Callback to execute upon completion
+  */
+  transact(callback) {
+
+    this.db.adapter.createTransaction(callback);
+
+  }
+
+  /**
   * Logic to execute before a model saves. Intended to be overwritten when inherited.
   * @param {Function} callback Invoke with first argument as an error if failure.
   */

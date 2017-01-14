@@ -2,6 +2,7 @@
 
 const inflect = require('i')();
 const SQLAdapter = require('../sql_adapter.js');
+const Transaction = require('../transaction.js');
 const utilities = require('../../utilities.js');
 
 const async = require('async');
@@ -28,6 +29,64 @@ class PostgresAdapter extends SQLAdapter {
 
   }
 
+  /**
+  * Transaction Functions
+  */
+
+  queryClient(client, query, params, callback) {
+
+    let start = new Date().valueOf();
+
+    client.query(query, params, (err, result) => {
+      this.db.log(query, params, new Date().valueOf() - start);
+      callback(err, result);
+    });
+
+  }
+
+  beginClient(client, callback) {
+
+    this.db.info('Transaction BEGIN');
+    client.query('BEGIN', callback);
+
+  }
+
+  rollbackClient(client, callback) {
+
+    this.db.info('Transaction ROLLBACK');
+    client.query('ROLLBACK', callback);
+
+  }
+
+  commitClient(client, callback) {
+
+    this.db.info('Transaction COMMIT');
+    client.query('COMMIT', callback);
+
+  }
+
+  createTransaction(callback) {
+
+    pg.connect(this._config, (err, client, complete) => {
+
+      if (err) {
+        return callback(err);
+      }
+
+      this.beginClient(client, (err) => {
+
+        if (err) {
+          return callback(err);
+        }
+
+        return callback(null, Transaction(this, client, complete));
+
+      });
+
+    });
+
+  }
+
   query(query, params, callback) {
 
     if (arguments.length < 3) {
@@ -49,12 +108,13 @@ class PostgresAdapter extends SQLAdapter {
 
       if (err) {
         this.db.error(err.message);
-        return complete();
+        complete();
+        callback.apply(this, [err]);
+        return;
       }
 
-      client.query(query, params, (function () {
+      this.queryClient(client, query, params, (function (err, results) {
 
-        log(query, params, new Date().valueOf() - start);
         complete();
         callback.apply(this, arguments);
 

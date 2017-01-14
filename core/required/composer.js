@@ -24,6 +24,7 @@ class Composer {
 
     this._parent = parent || null;
     this._command = null;
+    this._transaction = null;
 
   }
 
@@ -919,6 +920,10 @@ class Composer {
 
   }
 
+  /**
+  * Processes results and errors from a terminal call
+  * @private
+  */
   __endProcessor__(err, r, callback) {
 
     if (!r || !r.countResult || !r.result) {
@@ -952,6 +957,30 @@ class Composer {
   }
 
   /**
+  * Sets the top-level query as a transaction using provided txn
+  * @param {Transaction} txn The desired transaction to use
+  * @return self
+  */
+  transact(txn) {
+
+    if (!txn) {
+      return this;
+    }
+
+    if (!(txn instanceof Transaction)) {
+      throw new Error('Must provide valid transaction to Composer#transact');
+    }
+
+    if (txn.adapter.db !== this.db) {
+      throw new Error('Transaction must belong to Model Database');
+    }
+
+    this._transaction = txn;
+    return this;
+
+  }
+
+  /**
   * Execute the query you've been composing.
   * @param {function({Error}, {Nodal.ModelArray})} callback The method to execute when the query is complete
   */
@@ -960,9 +989,11 @@ class Composer {
     let query = this.__generateQuery__();
     let countQuery = this.__generateCountQuery__();
 
-    this.db.query(countQuery.sql, countQuery.params, (err, countResult) => {
+    let source = this._transaction ? this._transaction : this.db;
 
-      this.db.query(query.sql, query.params, (err, result) => {
+    source.query(countQuery.sql, countQuery.params, (err, countResult) => {
+
+      source.query(query.sql, query.params, (err, result) => {
 
         this.__endProcessor__(
           err,
@@ -1012,11 +1043,13 @@ class Composer {
     let countQuery = this.__generateCountQuery__();
     let updateQuery = this.__generateUpdateQuery__(fields);
 
-    this.db.query(countQuery.sql, countQuery.params, (err, countResult) => {
+    let source = this._transaction ? this._transaction : this.db;
 
-      this.db.query(query.sql, query.params, (err, result) => {
+    source.query(countQuery.sql, countQuery.params, (err, countResult) => {
 
-        this.db.query(updateQuery.sql, updateQuery.params, (err, updateResult) => {
+      source.query(query.sql, query.params, (err, result) => {
+
+        source.query(updateQuery.sql, updateQuery.params, (err, updateResult) => {
 
           this.__endProcessor__(
             err,
