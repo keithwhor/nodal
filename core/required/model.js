@@ -183,6 +183,16 @@ class Model {
   }
 
   /**
+  * Creates a transaction object to be passed to database methods
+  * @param {Function} callback Callback to execute upon completion
+  */
+  static transaction(callback) {
+
+    return this.prototype.db.adapter.createTransaction(callback);
+
+  }
+
+  /**
   * Get the model's table name
   * @return {string}
   */
@@ -1073,16 +1083,6 @@ class Model {
       sql: query,
       params: columns.map(v => db.adapter.sanitize(this.getFieldData(v).type, this.get(v)))
     };
-
-  }
-
-  /**
-  * Creates a transaction object to be passed to database methods
-  * @param {Function} callback Callback to execute upon completion
-  */
-  transact(callback) {
-
-    this.db.adapter.createTransaction(callback);
 
   }
 

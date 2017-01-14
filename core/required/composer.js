@@ -998,8 +998,8 @@ class Composer {
         this.__endProcessor__(
           err,
           {
-            countResult: countResult,
-            result: result
+            countResult: countResult || [],
+            result: result || []
           },
           callback
         );
@@ -1054,9 +1054,9 @@ class Composer {
           this.__endProcessor__(
             err,
             {
-              countResult: countResult,
-              result: result,
-              updateResult: updateResult
+              countResult: countResult || [],
+              result: result || [],
+              updateResult: updateResult || []
             },
             callback
           );

@@ -79,7 +79,7 @@ class PostgresAdapter extends SQLAdapter {
           return callback(err);
         }
 
-        return callback(null, Transaction(this, client, complete));
+        return callback(null, new Transaction(this, client, complete));
 
       });
 
