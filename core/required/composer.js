@@ -424,8 +424,8 @@ class Composer {
 
     let columnNames = columns.filter((v, i) => typeof params[i] !== 'function');
     let columnFunctions = columns
-      .map((v, i) => [v, params[i]])
-      .filter((v, i) => typeof params[i] === 'function');
+      .filter((v, i) => typeof params[i] === 'function')
+      .map((v, i) => [v, utilities.getFunctionParameters(params[i]), params[i]]);
 
     params = params.filter(v => typeof v !== 'function');
 

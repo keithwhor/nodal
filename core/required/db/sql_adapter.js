@@ -217,7 +217,12 @@ class SQLAdapter {
 
     let params = columnNames
       .map((v, i) => '$' + (i + offset + 1))
-      .concat(columnFunctions.map(f => f[1](this.escapeField(f[0]))));
+      .concat(columnFunctions.map(f => {
+        let fn = f[2];
+        let fields = f[1];
+        fields = fields instanceof Array ? fields : [fields];
+        return fn.apply(null, fields.map(field => this.escapeField(field)));
+      }));
 
     return [
       `UPDATE ${this.escapeField(table)}`,
