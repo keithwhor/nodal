@@ -44,7 +44,7 @@ class ModelArray extends ItemArray {
   */
   toObject(arrInterface) {
 
-    return this.map(m => m.toObject(arrInterface));
+    return Array.from( this ).map(m => m.toObject(arrInterface));
 
   }
 
