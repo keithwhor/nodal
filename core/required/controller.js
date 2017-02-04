@@ -75,13 +75,13 @@ class Controller extends fxn.Controller {
   }
 
   /**
-  * Using API formatting, send a http.ServerResponse indicating a specific HTTP response status code
+  * Using API formatting, send a http.ServerResponse error with a specific HTTP response status code
   * @param {Number} code HTTP response status code
   * @param {string} msg Response message to send
-  * @param {Object} details Any additional details for the response (must be serializable)
+  * @param {Object} details Any additional details for the error (must be serializable)
   * @return {boolean}
   */
-  statusCode(code, msg, details) {
+  statusError(code, msg, details) {
     this.status(code);
     this.render(API.error(msg || `${code} Status Code`, details));
     return true;
