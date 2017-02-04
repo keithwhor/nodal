@@ -16,14 +16,14 @@ class EndpointRequest {
 
   }
 
-  mock(method, body, callback) {
+  mock(method, body, headers, callback) {
 
     return this.router.dispatch(
       this.router.prepare(
         '::1',
         this.url,
         method,
-        {},
+        headers || {},
         body
       ),
       (err, status, headers, body) => {
@@ -52,7 +52,7 @@ class EndpointRequest {
 
   get(callback) {
 
-    this.mock('GET', null, callback);
+    this.mock('GET', null, null, callback);
 
   }
 
@@ -62,15 +62,25 @@ class EndpointRequest {
 
   }
 
-  post(body, callback) {
+  post(body, headers, callback) {
 
-    this.mock('POST', body, callback);
+    if (arguments.length === 2) {
+      // Backwards compatibility shim.
+      this.mock('POST', body, null, callback);
+    }
+
+    this.mock('POST', body, headers, callback);
 
   }
 
-  put(body, callback) {
+  put(body, headers, callback) {
 
-    this.mock('PUT', body, callback);
+    if (arguments.length === 2) {
+      // Backwards compatibility shim.
+      this.mock('PUT', body, null, callback);
+    }
+
+    this.mock('PUT', body, headers, callback);
 
   }
 
