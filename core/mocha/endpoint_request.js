@@ -9,6 +9,7 @@ class EndpointRequest {
     this.router = router;
     this.url = path + (params ? `?${qs.stringify(params)}` : '');
     this.route = this.router.find(this.url);
+    this.token = null;
 
     if (!this.route) {
       throw new Error(`Route for ${this._path} does not exist`);
@@ -16,14 +17,40 @@ class EndpointRequest {
 
   }
 
-  mock(method, body, headers, callback) {
+  auth(token) {
+
+    if (this.token) {
+      throw new Error('Authorization token already set');
+    }
+
+    this.token = token;
+    return this;
+
+  }
+
+  mock(method, headers, body, callback) {
+
+    headers = headers || {};
+
+    if (this.token) {
+      headers['authorization'] = `Bearer ${this.token}`;
+    }
+
+    if (body instanceof Buffer) {
+      // do nothing
+    } else if (body && typeof body === 'object') {
+      body = new Buffer(JSON.stringify(body));
+      headers['content-type'] = 'application/json';
+    } else {
+      body = new Buffer(body + '');
+    }
 
     return this.router.dispatch(
       this.router.prepare(
         '::1',
         this.url,
         method,
-        headers || {},
+        headers,
         body
       ),
       (err, status, headers, body) => {
@@ -52,35 +79,25 @@ class EndpointRequest {
 
   get(callback) {
 
-    this.mock('GET', null, null, callback);
+    this.mock('GET', {}, null, callback);
 
   }
 
   del(callback) {
 
-    this.mock('DELETE', null, null, callback);
+    this.mock('DELETE', {}, null, callback);
 
   }
 
-  post(body, headers, callback) {
+  post(body, callback) {
 
-    if (arguments.length === 2) {
-      // Backwards compatibility shim.
-      this.mock('POST', body, null, callback);
-    }
-
-    this.mock('POST', body, headers, callback);
+    this.mock('POST', {}, body, callback);
 
   }
 
-  put(body, headers, callback) {
+  put(body, callback) {
 
-    if (arguments.length === 2) {
-      // Backwards compatibility shim.
-      this.mock('PUT', body, null, callback);
-    }
-
-    this.mock('PUT', body, headers, callback);
+    this.mock('PUT', {}, body, callback);
 
   }
 
