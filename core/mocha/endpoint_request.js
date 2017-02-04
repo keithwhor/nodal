@@ -58,7 +58,7 @@ class EndpointRequest {
 
   del(callback) {
 
-    this.mock('DELETE', null, callback);
+    this.mock('DELETE', null, null, callback);
 
   }
 
