@@ -10,9 +10,9 @@ const API = require('./api.js');
 */
 class Daemon extends fxn.Daemon {
 
-  constructor() {
+  constructor(cpus) {
 
-    super('Nodal');
+    super('Nodal', cpus);
 
   }
 
