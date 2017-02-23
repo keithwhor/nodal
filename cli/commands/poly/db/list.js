@@ -23,7 +23,7 @@ class PolyDBListCommand extends Command {
 
   }
 
-  run(args, flags, vflags) {
+  run(params, callback) {
 
     let name = params.args[0];
 

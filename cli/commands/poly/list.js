@@ -23,7 +23,7 @@ class PolyListCommand extends Command {
 
   }
 
-  run(args, flags, vflags) {
+  run(params, callback) {
 
     let host = params.flags.h ? params.flags.h[0] : 'https://api.polybit.com';
     let port = params.flags.p && params.flags.p[0];
