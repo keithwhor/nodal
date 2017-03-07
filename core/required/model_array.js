@@ -28,7 +28,7 @@ class ModelArray extends ItemArray {
   static from(arr) {
 
     if (!arr.length) {
-      throw new Error('Cannot create ModelArray from empty Aray');
+      throw new Error('Cannot create ModelArray from empty Array');
     }
 
     let modelArray = new this(arr[0].constructor);
@@ -44,7 +44,7 @@ class ModelArray extends ItemArray {
   */
   toObject(arrInterface) {
 
-    return Array.from( this ).map(m => m.toObject(arrInterface));
+    return Array.from(this).map(m => m.toObject(arrInterface));
 
   }
 
