@@ -842,14 +842,13 @@ class Model {
   * Retrieve field data for the model.
   * @param {string} field Field for which you'd like to retrieve data.
   */
-  get(field, ignoreFormat) {
+  get(field, defaultValue) {
 
     if (this._calculations[field]) {
       return this.calculate(field);
     }
 
-    let datum = this._data[field];
-    return (!ignoreFormat && this.formatters[field]) ? this.formatters[field](datum) : datum;
+    return this._data.hasOwnProperty(field) ? this._data[field] : defaultValue;
 
   }
 
@@ -1069,7 +1068,7 @@ class Model {
 
     if (!this.inStorage()) {
 
-      columns = this.fieldList().filter(v => !this.isFieldPrimaryKey(v) && this.get(v, true) !== null);
+      columns = this.fieldList().filter(v => !this.isFieldPrimaryKey(v) && this.get(v) !== undefined);
       query = db.adapter.generateInsertQuery(this.schema.table, columns);
 
     } else {
@@ -1351,8 +1350,6 @@ Model.prototype._calculationsList = [];
 Model.prototype._verificationsList = [];
 
 Model.prototype._hides = {};
-
-Model.prototype.formatters = {};
 
 Model.prototype.data = null;
 
