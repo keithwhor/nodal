@@ -2,6 +2,7 @@
 
 const DataTypes = require('./db/data_types.js');
 const Database = require('./db/database.js');
+const Transaction = require('./db/transaction.js');
 const Composer = require('./composer.js');
 
 const ModelArray = require('./model_array.js');
@@ -98,11 +99,12 @@ class Model {
   * Creates a new model instance using the provided data.
   * @param {object} data The data to load into the object.
   * @param {function({Error} err, {Nodal.Model} model)} callback The callback to execute upon completion
+  * @param {Transaction} txn OPTIONAL: The SQL transaction to use for this method
   */
-  static create(data, callback) {
+  static create(data, callback, txn) {
 
     let model = new this(data);
-    model.save(callback);
+    return model.save(callback, txn);
 
   }
 
@@ -618,6 +620,14 @@ class Model {
   }
 
   /**
+  * Indicates whethere or not the model is currently being created, handled by the save() method.
+  * @return {boolean}
+  */
+  isCreating() {
+    return !!this._isCreating;
+  }
+
+  /**
   * Indicates whethere or not the model is being generated from a seed.
   * @return {boolean}
   */
@@ -1108,18 +1118,52 @@ class Model {
   /**
   * Save a model (execute beforeSave and afterSave)
   * @param {Function} callback Callback to execute upon completion
+  * @param {Transaction} txn The SQL transaction used to execute this save method
   */
-  save(callback) {
+  save(callback, txn) {
 
     callback = callback || (() => {});
+    let series = [];
 
-    async.series([
-      this.__verify__,
-      this.beforeSave,
-      this.__save__,
-      this.afterSave
-    ].map(f => f.bind(this)), (err) => {
-      callback(err || null, this);
+    let newTransaction = !txn;
+    if (newTransaction) {
+      series = series.concat(
+        cb => {
+          this.constructor.transaction((err, newTxn) => {
+            if (err) {
+              cb(err);
+            }
+            txn = newTxn;
+            return cb();
+          });
+        }
+      );
+    }
+
+    if (!this.inStorage()) {
+      this._isCreating = true;
+    }
+
+    series = series.concat([
+      cb => this.__verify__(cb, txn),
+      cb => this.beforeSave(cb, txn),
+      cb => this.__save__(cb, txn),
+      cb => this.afterSave(cb, txn)
+    ]);
+
+    async.series(series, (err) => {
+
+      this._isCreating = false;
+
+      if (newTransaction) {
+        if (err) {
+          return txn.rollback(txnErr => callback(err, this));
+        }
+        return txn.commit(txnErr => callback(txnErr, this));
+      }
+
+      return callback(err || null, this);
+
     });
 
   }
@@ -1187,17 +1231,12 @@ class Model {
   /**
   * Saves model to database
   * @param {function} callback Method to execute upon completion, returns error if failed (including validations didn't pass)
+  * @param {Transaction} txn OPTIONAL: SQL transaction to use for save
   * @private
   */
-  __save__(callback) {
+  __save__(callback, txn) {
 
     let db = this.db;
-
-    // Legacy --- FIXME: Deprecated. Can remove for 1.0
-    if (arguments.length === 2) {
-      db = arguments[0];
-      callback = arguments[1];
-    }
 
     if(typeof callback !== 'function') {
       callback = function() {};
@@ -1209,7 +1248,9 @@ class Model {
 
     let query = this.__generateSaveQuery__();
 
-    db.query(
+    let source = txn ? txn : this.db;
+
+    source.query(
       query.sql,
       query.params,
       (err, result) => {

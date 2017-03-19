@@ -558,11 +558,41 @@ class Composer {
           return null;
         }
 
+        let value = comparisons[comparison];
+        let valueFunction = null;
+        let valueColumns = null;
+
+        if (typeof value === 'function') {
+          valueFunction = value;
+          valueColumnNames = utilities.getFunctionParameters(valueFunction);
+          value = null;
+        }
+
+        if (comparator === 'is') {
+          if (value === null) {
+            comparator = 'is_null';
+          } else if (value === true) {
+            comparator = 'is_true';
+          } else if (value === false) {
+            comparator = 'is_false';
+          }
+        } else if (comparator === 'not') {
+          if (value === null) {
+            comparator = 'not_null';
+          } else if (value === true) {
+            comparator = 'not_true';
+          } else if (value === false) {
+            comparator = 'not_false';
+          }
+        }
+
         return {
           table: table,
           columnName: columnName,
           comparator: comparator,
-          value: comparisons[comparison],
+          value: value,
+          valueFunction: valueFunction,
+          valueColumnNames: valueColumns,
           joined: joined,
           joins: joins
         };
@@ -707,8 +737,8 @@ class Composer {
       type: 'where',
       data: {
         comparisons: comparisonsArray
-        .map(comparisons => this.__parseComparisons__(comparisons))
-        .filter(f => f.length)
+          .map(comparisons => this.__parseComparisons__(comparisons))
+          .filter(f => f.length)
       }
     };
 

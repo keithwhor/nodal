@@ -148,83 +148,44 @@ class ModelArray extends ItemArray {
   }
 
   /**
-  * Saves / updates all models in the ModelArray. Uses beforeSave / afterSave. Will return an error and rollback if *any* model errors out.
+  * Saves / updates all models in the ModelArray.
   * @param {function} callback returning the error and reference to self
   */
-  saveAll(callback) {
+  saveAll(callback, txn) {
 
     if (!this.length) {
       return callback.call(this, null, this);
     }
 
-    async.series(
-      this.map(m => m.beforeSave.bind(m)),
-      err => {
+    let series = [];
 
-        if (err) {
-          return callback(err);
+    let newTransaction = !txn;
+    if (newTransaction) {
+      series = series.concat(
+        cb => {
+          this.Model.transaction((err, newTxn) => {
+            if (err) {
+              cb(err);
+            }
+            txn = newTxn;
+            return cb();
+          });
         }
-
-        this.__saveAll__(err => {
-
-          if (err) {
-            return callback(err, this);
-          }
-
-          async.series(
-            this.map(m => m.afterSave.bind(m)),
-            err => callback(err || null, this)
-          );
-
-        });
-
-      }
-    );
-
-  }
-
-  /**
-  * save all models (outside of beforeSave / afterSave)
-  * @param {function} callback Called with error, if applicable
-  * @private
-  */
-  __saveAll__(callback) {
-
-    let firstErrorModel = this.filter(m => m.hasErrors()).shift();
-
-    if (firstErrorModel) {
-      return callback.call(this, firstErrorModel.errorObject());
+      );
     }
 
     async.series(
-      this.map(m => m.__verify__.bind(m)),
+      series.concat(this.map(m => cb => m.save(cb, txn))),
       (err) => {
 
-        if (err) {
-          return callback.call(this, err);
+        if (newTransaction) {
+          if (err) {
+            return txn.rollback(txnErr => callback(err, this));
+          }
+          return txn.commit(txnErr => callback(txnErr, this));
         }
 
-        let db = this.Model.prototype.db;
-
-        db.transaction(
-          this.map(m => {
-            let query = m.__generateSaveQuery__();
-            return [query.sql, query.params];
-          }),
-          (err, result) => {
-
-            if (err) {
-              return callback.call(this, new Error(err.message));
-            }
-
-            this.forEach((m, i) => {
-              m.__load__(result[i].rows[0], true);
-            });
-
-            callback.call(this, null);
-
-          }
-        );
+        return callback(err, this);
 
       }
     );
