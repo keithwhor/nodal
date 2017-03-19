@@ -560,7 +560,7 @@ class Composer {
 
         let value = comparisons[comparison];
         let valueFunction = null;
-        let valueColumns = null;
+        let valueColumnNames = null;
 
         if (typeof value === 'function') {
           valueFunction = value;
@@ -592,7 +592,7 @@ class Composer {
           comparator: comparator,
           value: value,
           valueFunction: valueFunction,
-          valueColumnNames: valueColumns,
+          valueColumnNames: valueColumnNames,
           joined: joined,
           joins: joins
         };
