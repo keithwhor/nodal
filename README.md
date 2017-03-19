@@ -34,9 +34,6 @@ meant to service your needs of interfacing with your data layer effortlessly.
 While you can output any data format with Nodal, it's recommended you offload
 things like static page rendering to other optimized services like CDNs.
 
-Nodal projects are ready to deploy to [Polybit](https://polybit.com) right out of
-the box, so you can have your website live in no time with `nodal poly:deploy`.
-
 [Check out the first Nodal Screencast here.](https://www.youtube.com/embed/IxBXkFbUqtk)
 
 ## Stateless Dogma
@@ -176,58 +173,6 @@ class BlogPostsController extends Nodal.Controller {
   }
 
 }
-```
-
-## Deploying to Polybit
-
-The following commands are available for [Polybit](http://polybit.com) API deployment.
-
-(You can view them any time with `nodal help poly`.)
-
-```
-poly:create [project]
-	Creates a new, empty project
-
-poly:db:assign [database] [project]
-	Assigns a database to a project
-
-poly:db:create [name]
-	Creates a new database
-
-poly:db:drop [db]
-	Destroys a database
-
-poly:db:list
-	Retrieves a list of all available Polybit databases for current user
-
-poly:deploy [project]
-	Deploys current directory as a Nodal project
-
-poly:env [project]
-	-r                   [key] Removes an environment variable
-	-s                   [key] [value] Sets an environment variable
-	--remove             [key] Removes an environment variable
-	--set                [key] [value] Sets an environment variable
-
-	Retrieves, sets or removes environment variables for a project
-
-poly:list
-	Retrieves a list of all available Polybit projects for current user
-
-poly:login
-	Logs in to Polybit API server
-
-poly:logout
-	Logs in to Polybit API server
-
-poly:register
-	Registers a new Polybit User Account (Required for Deployment)
-
-poly:remove [project]
-	Removes a project
-
-poly:run [project] [command]
-	Runs a Nodal command on your deployed project
 ```
 
 ## Beginner's Guide
