@@ -390,6 +390,7 @@ class SQLAdapter {
             ) :
             where.value
         ),
+        sanitize: !where.valueFunction,
         ignoreValue: !!this.comparatorIgnoresValue[where.comparator],
         joined: where.joined,
         joins: where.joins
@@ -454,7 +455,11 @@ class SQLAdapter {
 
       if (!joined) {
 
-        clauses.push(comparators[whereObj.comparator](whereObj.refName, whereObj.value));
+        clauses.push(
+          whereObj.sanitize ?
+            comparators[whereObj.comparator](whereObj.refName, whereObj.value) :
+            comparators[whereObj.comparator](whereObj.refName, whereObj.value).replace(/__VAR__/gi, whereObj.value)
+        );
 
       } else {
 
@@ -521,7 +526,7 @@ class SQLAdapter {
 
   getParamsFromMultiFilter(multiFilter) {
     return [].concat.apply([], multiFilter)
-      .filter(whereObj => !whereObj.ignoreValue)
+      .filter(whereObj => !whereObj.ignoreValue && whereObj.sanitize)
       .map(whereObj => whereObj.value);
   }
 
