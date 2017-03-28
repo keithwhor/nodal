@@ -1,0 +1,19 @@
+web:
+  build: .
+  ports:
+   - "3000:3000"
+  volumes:
+   - .:/usr/src/app
+  links:
+   - db
+  environment:
+   - DATABASE_HOST=db
+   - DATABASE_PORT=5432
+   - DATABASE_USER=nodal
+   - DATABASE_PASSWORD=nodal
+   - DATABASE_DB=nodal_development
+db:
+  image: postgres
+  environment:
+   - POSTGRES_USER=nodal
+   - POSTGRES_PASSWORD=nodal
