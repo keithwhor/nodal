@@ -566,9 +566,7 @@ class Composer {
           valueFunction = value;
           valueColumnNames = utilities.getFunctionParameters(valueFunction);
           value = null;
-        }
-
-        if (comparator === 'is') {
+        } else if (comparator === 'is') {
           if (value === null) {
             comparator = 'is_null';
           } else if (value === true) {
