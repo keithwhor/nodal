@@ -467,7 +467,7 @@ class Model {
 
     fields.forEach(f => {
       if (!columnLookup[f]) {
-        throw new Error(`Calculation function error: "${calcField} for "${this.name}" using field "${f}", "${f}" does not exist.`)
+        throw new Error(`Calculation function error: "${calcField}" for "${this.name}" using field "${f}", "${f}" does not exist.`)
       }
     });
 
@@ -731,9 +731,11 @@ class Model {
     if (this.isFieldArray(field)) {
       return (value instanceof Array ? value : [value]).map(v => dataType.convert(v));
     }
-
-    return dataType.convert(value);
-
+    if (dataType && dataType.convert) {
+      return dataType.convert(value);
+    } else {
+      return value;
+    }
   }
 
   /**
