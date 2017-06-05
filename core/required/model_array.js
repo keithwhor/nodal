@@ -28,7 +28,7 @@ class ModelArray extends ItemArray {
   from(arr) {
 
     if (!arr) {
-      throw new Error('Cannot create ModelArray from empty Aray');
+      throw new Error('Cannot create ModelArray from empty Array');
     }
     return arr.reduce((accum, model) =>
       accum.concat(new this.Model(model))
