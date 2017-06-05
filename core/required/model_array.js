@@ -25,18 +25,18 @@ class ModelArray extends ItemArray {
   * Convert a normal Array into a ModelArray
   * @param {Array} arr The array of child objects
   */
-  static from(arr) {
+  from(arr) {
 
-    if (!arr.length) {
-      throw new Error('Cannot create ModelArray from empty Array');
+    if (!arr) {
+      throw new Error('Cannot create ModelArray from empty Aray');
     }
-
-    let modelArray = new this(arr[0].constructor);
-    modelArray.push.apply(modelArray, arr);
-
-    return modelArray;
+    return arr.reduce((accum, model) =>
+      accum.concat(new this.Model(model))
+    , new ModelArray(this.model));
+    // return modelArray;
 
   }
+
 
   /**
   * Creates an Array of plain objects from the ModelArray, with properties matching an optional interface
