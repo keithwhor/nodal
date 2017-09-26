@@ -413,6 +413,17 @@ class Model {
   }
 
   /**
+  * Checks a validator synchronously.
+  * @param {string} field The field you'd like to validate
+  * @param {any} value The value of the field to validate
+  */
+  static validationCheck(field, value) {
+    return (this.prototype._validations[field] || []).map(validation => {
+      return validation.action(value) ? null : validation.message;
+    }).filter(v => !!v);
+  }
+
+  /**
   * Creates a verifier. These run asynchronously, support multiple fields, and check every time you try to save a Model.
   * @param {string} field The field applied to the verification.
   * @param {string} message The error message shown if a verification fails.
@@ -427,7 +438,8 @@ class Model {
       field = null;
     }
 
-    if (!this.prototype.hasOwnProperty('_verificationsList')) {
+    if (!this.prototype.hasOwnProperty('_verifications')) {
+      this.prototype._verifications = {};
       this.prototype._verificationsList = [];
     };
 
@@ -438,6 +450,53 @@ class Model {
       fields: utilities.getFunctionParameters(fnAction).slice(0, -1)
     });
 
+    this.prototype._verifications[field] = this.prototype._verifications[field] || [];
+    this.prototype._verifications[field].push({
+      message: message,
+      action: fnAction,
+      fields: utilities.getFunctionParameters(fnAction).slice(0, -1)
+    });
+
+  }
+
+  /**
+  * Checks a validator synchronously.
+  * @param {string} field The field you'd like to verify
+  * @param {any} value The value of the field you'd like to verify
+  * @param {object} data Any additional field data, in key-value pairs
+  * @param {function} callback Callback to execute upon completion
+  */
+  static verificationCheck(field, value, data, callback) {
+    data = data || {};
+    data[field] = value;
+    return async.series(
+      (this.prototype._verifications[field] || []).map(verification => {
+        return cb => {
+          verification.action.apply(
+            this,
+            verification.fields
+              .map(field => data[field])
+              .concat(cb)
+          )
+        };
+      }),
+      (err, results) => {
+
+        if (err) {
+          return callback(err);
+        }
+
+        return callback(
+          null,
+          results.map((result, i) => {
+            return result ?
+              null :
+              this.prototype._verifications[field][i].message;
+          }).filter(v => !!v)
+        );
+
+      }
+    )
   }
 
   /**
