@@ -476,7 +476,7 @@ class Model {
             this,
             verification.fields
               .map(field => data[field])
-              .concat(cb)
+              .concat(result => cb(null, result))
           )
         };
       }),
