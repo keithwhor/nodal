@@ -288,7 +288,7 @@ class PostgresAdapter extends SQLAdapter {
       ssl: false
     };
 
-    let match = str.match(/^postgres:\/\/([A-Za-z0-9_]+)(?:\:([A-Za-z0-9_\-]+))?@([A-Za-z0-9_\.\-]+):(\d+)\/([A-Za-z0-9_]+)$/);
+    let match = str.match(/^postgres:\/\/([A-Za-z0-9_]+)(?:\:([A-Za-z0-9_\-]+))?@([A-Za-z0-9_\.\-]+):(\d+)\/([A-Za-z0-9_]+)(\?ssl=true)?$/);
 
     if (match) {
       cfg.user = match[1];
@@ -296,6 +296,7 @@ class PostgresAdapter extends SQLAdapter {
       cfg.host = match[3];
       cfg.port = match[4];
       cfg.database = match[5];
+      cfg.ssl = !!match[6];
     }
 
     return cfg;
