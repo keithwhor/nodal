@@ -535,16 +535,16 @@ class SQLAdapter {
     let columnEscapedOrderByArray = orderByArray.map(v => {
       v.escapedColumns = v.columnNames.map((columnName) => {
         let columnNameComponents = columnName.split('__');
-        if (columnNameComponents.length > 1 && !joinArray) {
-          return null;
-        } else if (columnNameComponents.length === 1) {
+        if (columnNameComponents.length === 1) {
           return `${this.escapeField(table)}.${this.escapeField(columnName)}`; 
-        } else {
+        } else if (joinArray) {
           let join = joinArray[0].find((join) => join.joinAlias === columnNameComponents.slice(0, -1).join('__'));
           if (!join) {
             return `${this.escapeField(table)}.${this.escapeField(columnName)}`; 
           }
           return `${this.escapeField(join.joinAlias)}.${this.escapeField(columnNameComponents[columnNameComponents.length - 1])}`
+        } else {
+          return null;
         }
       }).filter((columnName) => {
         return !!columnName;
