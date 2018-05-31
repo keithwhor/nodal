@@ -186,7 +186,7 @@ class SQLAdapter {
         this.generateJoinClause(table, joinArray, paramOffset),
         this.generateWhereClause(table, multiFilter, paramOffset),
         this.generateGroupByClause(table, groupByArray),
-        this.generateOrderByClause(table, orderByArray, groupByArray),
+        this.generateOrderByClause(table, orderByArray, groupByArray, joinArray),
         this.generateLimitClause(limitObj)
     ].join('');
 
@@ -530,11 +530,32 @@ class SQLAdapter {
       .map(whereObj => whereObj.value);
   }
 
-  generateOrderByClause(table, orderByArray, groupByArray) {
+  generateOrderByClause(table, orderByArray, groupByArray, joinArray) {
 
-    return !orderByArray.length ? '' : ' ORDER BY ' + orderByArray.map(v => {
-      let columns = v.columnNames.map(columnName => `${this.escapeField(table)}.${this.escapeField(columnName)}`);
-      return `${(v.transformation || (v => v)).apply(null, columns)} ${v.direction}`;
+    let columnEscapedOrderByArray = orderByArray.map(v => {
+      v.escapedColumns = v.columnNames.map((columnName) => {
+        let columnNameComponents = columnName.split('__');
+        if (columnNameComponents.length === 1) {
+          return `${this.escapeField(table)}.${this.escapeField(columnName)}`; 
+        } else if (joinArray) {
+          let join = joinArray[0].find((join) => join.joinAlias === columnNameComponents.slice(0, -1).join('__'));
+          if (!join) {
+            return `${this.escapeField(table)}.${this.escapeField(columnName)}`; 
+          }
+          return `${this.escapeField(join.joinAlias)}.${this.escapeField(columnNameComponents[columnNameComponents.length - 1])}`
+        } else {
+          return null;
+        }
+      }).filter((columnName) => {
+        return !!columnName;
+      });
+      return v;
+    }).filter((v) => {
+      return v.escapedColumns.length;
+    });
+
+    return !columnEscapedOrderByArray.length ? '' : ' ORDER BY ' + columnEscapedOrderByArray.map(v => {
+      return `${(v.transformation || (v => v)).apply(null, v.escapedColumns)} ${v.direction}`;
     }).join(', ');
 
   }

@@ -763,12 +763,6 @@ class Composer {
       transformation = v => `${v}`;
     }
 
-    fields.forEach(field => {
-      if (!this.Model.hasColumn(field)) {
-        throw new Error(`Cannot order by ${field}, it does not belong to ${this.Model.name}`);
-      }
-    });
-
     this._command = {
       type: 'orderBy',
       data: {
