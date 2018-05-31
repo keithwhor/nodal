@@ -308,6 +308,24 @@ module.exports = Nodal => {
 
     });
 
+    it('Should orderBy a joined property properly (DESC)', function(done) {
+
+      Child.query()
+        .join('parent')
+        .orderBy('parent__name', 'DESC')
+        .end((err, children) => {
+
+          expect(err).to.equal(null);
+          expect(children).to.be.an.instanceOf(Nodal.ModelArray);
+          expect(children.length).to.equal(100);
+          expect(children[0].joined('parent').get('name')).to.equal('Zoolander');
+          expect(children[99].joined('parent').get('name')).to.equal('Albert');
+          done();
+
+        });
+
+    });
+
     it('Should limit properly (10)', function(done) {
 
       Child.query()
