@@ -1149,6 +1149,26 @@ module.exports = Nodal => {
 
     });
 
+    it('Should join multiple properties from a deeply joined property', done => {
+
+      Parent.query()
+        .join('incomingFriendships')
+        .join('incomingFriendships__fromParent')
+        .join('incomingFriendships__fromParent__pets')
+        .join('incomingFriendships__fromParent__children')
+        .first((err, parent) => {
+
+          expect(err).to.not.exist;
+          expect(parent).to.exist;
+          expect(parent.joined('incomingFriendships')[0].joined('fromParent').joined('pets')).to.exist;
+          expect(parent.joined('incomingFriendships')[0].joined('fromParent').joined('children')).to.exist;
+
+          done();
+
+        });
+
+    });
+
     it('Should group by shirt', done => {
 
       Parent.query()
