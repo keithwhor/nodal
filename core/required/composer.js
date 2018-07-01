@@ -842,14 +842,15 @@ class Composer {
       let joinNameComponents = joinName.split('__');
       joinItem.joinAlias = joinNameComponents.slice(0, i + 1).join('__');
       joinItem.prevAlias = joinNameComponents.slice(0, i).join('__');
-      joinItem.multiFilter = this.db.adapter.createMultiFilter(
-        joinName,
-        comparisonsArray
-          .map(comparisons => this.__parseComparisons__(comparisons, relationship.getModel()))
-          .filter(f => f.length)
-      );
       return joinItem;
     });
+
+    joinData[joinData.length - 1].multiFilter = this.db.adapter.createMultiFilter(
+      joinName,
+      comparisonsArray
+        .map(comparisons => this.__parseComparisons__(comparisons, relationship.getModel()))
+        .filter(f => f.length)
+    );
 
     // FIXME: implement properly
     joinData[joinData.length - 1].orderBy = orderBy;
