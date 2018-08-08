@@ -445,6 +445,7 @@ class SQLAdapter {
 
     let lastTable = null;
     let clauses = [];
+    let joinedTables = {};
     let joinedClauses = [];
 
     for (let i = 0; i < whereObjArray.length; i++) {
@@ -463,25 +464,18 @@ class SQLAdapter {
 
       } else {
 
-        let currentJoinedClauses = [];
-
-        if (lastTable === table) {
-
-          currentJoinedClauses = joinedClauses[joinedClauses.length - 1].clauses;
-
+        if (joinedTables[table]) {
+          joinedTables[table].clauses.push(comparators[whereObj.comparator](whereObj.refName, whereObj.value));
         } else {
-
-          joinedClauses.push({
+          let clause = {
             table: table,
             joins: whereObj.joins,
-            clauses: currentJoinedClauses
-          });
-
+            clauses: [comparators[whereObj.comparator](whereObj.refName, whereObj.value)]
+          };
+          joinedTables[table] = clause;
+          joinedClauses.push(clause);
           clauses.push(null);
-
         }
-
-        currentJoinedClauses.push(comparators[whereObj.comparator](whereObj.refName, whereObj.value));
 
       }
 
@@ -536,11 +530,11 @@ class SQLAdapter {
       v.escapedColumns = v.columnNames.map((columnName) => {
         let columnNameComponents = columnName.split('__');
         if (columnNameComponents.length === 1) {
-          return `${this.escapeField(table)}.${this.escapeField(columnName)}`; 
+          return `${this.escapeField(table)}.${this.escapeField(columnName)}`;
         } else if (joinArray) {
           let join = joinArray[0].find((join) => join.joinAlias === columnNameComponents.slice(0, -1).join('__'));
           if (!join) {
-            return `${this.escapeField(table)}.${this.escapeField(columnName)}`; 
+            return `${this.escapeField(table)}.${this.escapeField(columnName)}`;
           }
           return `${this.escapeField(join.joinAlias)}.${this.escapeField(columnNameComponents[columnNameComponents.length - 1])}`
         } else {

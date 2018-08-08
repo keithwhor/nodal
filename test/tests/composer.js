@@ -1294,6 +1294,22 @@ module.exports = Nodal => {
 
     });
 
+    it('Should AND nested subfields together from tables', (done) => {
+
+      Parent.query()
+        .join('pets')
+        .where({pets__name: 'Ruby', pets__animal: 'Cat'})
+        .end((err, parents) => {
+
+          expect(err).to.not.exist;
+          expect(parents).to.exist;
+          expect(parents.length).to.equal(0);
+          done();
+
+        });
+
+    });
+
     // IMPORTANT: Do npt place any tests after the `Should do a destroy cascade`
     // test since all models will be gone
 
