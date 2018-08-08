@@ -10,6 +10,16 @@ const async = require('async');
 const pg = require('pg');
 pg.defaults.poolSize = 8;
 
+const POSTGRES_ERROR_CODES = {
+  '23000': 'integrity_constraint_violation',
+  '23001': 'restrict_violation',
+  '23502': 'not_null_violation',
+  '23503': 'foreign_key_violation',
+  '23505': 'unique_violation',
+  '23514': 'check_violation',
+  '23P01': 'exclusion_violation',
+};
+
 class PostgresAdapter extends SQLAdapter {
 
   constructor(db, cfg) {
@@ -30,6 +40,13 @@ class PostgresAdapter extends SQLAdapter {
   }
 
   /**
+  * Error translation
+  */
+  readErrorCode (code) {
+    return POSTGRES_ERROR_CODES[code] || 'sql_error';
+  }
+
+  /**
   * Transaction Functions
   */
 
@@ -39,6 +56,10 @@ class PostgresAdapter extends SQLAdapter {
 
     client.query(query, params, (err, result) => {
       this.db.log(query, params, new Date().valueOf() - start);
+      if (err) {
+        console.log('ERROR?');
+        console.log(err);
+      }
       callback(err, result);
     });
 

@@ -52,6 +52,18 @@ module.exports = Nodal => {
 
     House.joinsTo(Parent);
 
+    const schemaSpecialItem = {
+      table: 'special_items',
+      columns: [
+        {name: 'id', type: 'serial'},
+        {name: 'name', type: 'string', properties: {unique: true}}
+      ]
+    };
+    class SpecialItem extends Nodal.Model {}
+
+    SpecialItem.setDatabase(db);
+    SpecialItem.setSchema(schemaSpecialItem);
+
     class User extends Nodal.Model {}
     User.setSchema({
       table: 'users',
@@ -88,7 +100,7 @@ module.exports = Nodal => {
       db.connect(Nodal.my.Config.db.main);
 
       db.transaction(
-        [schemaParent, schemaHouse].map(schema => {
+        [schemaParent, schemaHouse, schemaSpecialItem].map(schema => {
           return db.adapter.generateCreateTableQuery(schema.table, schema.columns);
         }).join(';'),
         function(err, result) {
@@ -580,6 +592,32 @@ module.exports = Nodal => {
 
           }
         );
+
+      });
+
+      it('Should create a special item', (done) => {
+
+        SpecialItem.create({name: 'unique-name'}, (err, specialItem) => {
+
+          expect(err).to.not.exist;
+          expect(specialItem).to.exist;
+          expect(specialItem.get('name')).to.equal('unique-name');
+          done();
+
+        });
+
+      });
+
+      it('Should refuse to create a duplicate special item', (done) => {
+
+        SpecialItem.create({name: 'unique-name'}, (err, specialItem) => {
+
+          expect(err).to.exist;
+          expect(err.identifier).to.equal('unique_violation');
+          expect(specialItem.inStorage()).to.equal(false);
+          done();
+
+        });
 
       });
 

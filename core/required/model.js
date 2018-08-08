@@ -130,7 +130,7 @@ class Model {
 
     });
 
-  }
+  };
 
   /**
   * Finds and updates a model with a specified id. Return a notFound error if model does not exist.
@@ -578,6 +578,7 @@ class Model {
     this._data = Object.create(this._data); // Inherit from prototype
     this._changed = Object.create(this._changed); // Inherit from prototype
     this._errors = {};
+    this._errorDetails = {};
 
     return true;
 
@@ -727,6 +728,9 @@ class Model {
 
       error = new Error(message);
       error.details = errorObject;
+      if (errorObject._query) {
+        error.identifier = this._errorDetails._query;
+      }
 
     }
 
@@ -1114,9 +1118,12 @@ class Model {
   * @param {string} message The error message
   * @return {boolean}
   */
-  setError(key, message) {
+  setError(key, message, code) {
     this._errors[key] = this._errors[key] || [];
     this._errors[key].push(message);
+    if (code) {
+      this._errorDetails[key] = this.db.adapter.readErrorCode(code);
+    }
     return true;
   }
 
@@ -1125,8 +1132,9 @@ class Model {
   * @param {string} key The specified field for which to create the error (or '*' for generic)
   * @return {boolean}
   */
-  clearError(key) {
+  clearError (key) {
     delete this._errors[key];
+    delete this._errorDetails[key];
     return true;
   }
 
@@ -1216,6 +1224,8 @@ class Model {
 
       if (newTransaction) {
         if (err) {
+          console.log('ERROR IS?');
+          console.log(err);
           return txn.rollback(txnErr => callback(err, this));
         }
         return txn.commit(txnErr => callback(txnErr, this));
@@ -1315,7 +1325,7 @@ class Model {
       (err, result) => {
 
         if (err) {
-          this.setError('_query', err.message);
+          this.setError('_query', err.message, err.code);
         } else {
           result.rows.length && this.__load__(result.rows[0], true);
         }
