@@ -377,6 +377,7 @@ class SQLAdapter {
     return whereObj.map((where, i) => {
       return {
         table: where.table,
+        alias: where.alias,
         columnName: where.columnName,
         refName: [this.escapeField(where.table || table), this.escapeField(where.columnName)].join('.'),
         comparator: where.comparator,
@@ -453,6 +454,7 @@ class SQLAdapter {
       let whereObj = whereObjArray[i];
       let joined = whereObj.joined;
       let table = whereObj.table;
+      let alias = whereObj.alias;
 
       if (!joined) {
 
@@ -464,15 +466,15 @@ class SQLAdapter {
 
       } else {
 
-        if (joinedTables[table]) {
-          joinedTables[table].clauses.push(comparators[whereObj.comparator](whereObj.refName, whereObj.value));
+        if (joinedTables[alias]) {
+          joinedTables[alias].clauses.push(comparators[whereObj.comparator](whereObj.refName, whereObj.value));
         } else {
           let clause = {
             table: table,
             joins: whereObj.joins,
             clauses: [comparators[whereObj.comparator](whereObj.refName, whereObj.value)]
           };
-          joinedTables[table] = clause;
+          joinedTables[alias] = clause;
           joinedClauses.push(clause);
           clauses.push(null);
         }

@@ -586,6 +586,7 @@ class Composer {
 
         return {
           table: table,
+          alias: joinName,
           columnName: columnName,
           comparator: comparator,
           value: value,

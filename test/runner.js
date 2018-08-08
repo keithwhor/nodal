@@ -85,7 +85,8 @@ describe('Test Suite', function() {
       'model',
       'composer',
       'relationship_graph',
-      'graph_query'
+      'graph_query',
+      'joined'
     ].forEach(filename => require(`./tests/${filename}.js`)(Nodal));
 
   }

@@ -153,7 +153,7 @@ module.exports = Nodal => {
 
             p.setJoined('pets', Nodal.ModelArray.from(pets));
 
-            let partner = new Partner({parent_id: id, name: `Partner${i}`, job: ['Plumber', 'Engineer', 'Nurse'][(Math.random() * 3) | 0]});
+            let partner = new Partner({parent_id: id, name: `Partner${i}`, job: ['Plumber', 'Engineer', 'Nurse', 'Scientist'][i % 4]});
             p.setJoined('partner', partner);
 
             let friendships = new Nodal.ModelArray(Friendship);
@@ -1291,6 +1291,39 @@ module.exports = Nodal => {
           });
 
       });
+
+    });
+
+    it('Should AND nested subfields together from tables', (done) => {
+
+      Parent.query()
+        .join('pets')
+        .where({pets__name: 'Ruby', pets__animal: 'Cat'})
+        .end((err, parents) => {
+
+          expect(err).to.not.exist;
+          expect(parents).to.exist;
+          expect(parents.length).to.equal(0);
+          done();
+
+        });
+
+    });
+
+    it('Should add nested subfield correctly', (done) => {
+
+      Parent.query()
+        .join('partner')
+        .where({shirt: 'red', partner__job: 'Plumber'})
+        .end((err, parents) => {
+
+          expect(err).to.not.exist;
+          expect(parents).to.exist;
+          expect(parents.length).to.equal(1);
+          expect(parents[0].get('id')).to.equal(1);
+          done();
+
+        });
 
     });
 
