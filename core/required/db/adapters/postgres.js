@@ -709,7 +709,7 @@ class PostgresAdapter extends SQLAdapter {
   preprocessWhereObj(table, whereObj) {
 
     let whereObjArray = []
-    whereObj.forEach( where => {
+    whereObj.forEach(where => {
       if (utilities.isObject(where.value)) {
         Object.keys(where.value).map( (k) => {
           whereObjArray.push(Object.assign({}, where, {
@@ -717,6 +717,17 @@ class PostgresAdapter extends SQLAdapter {
             value: where.value[k]
           }));
         });
+      } else if (!this.comparatorExpectsArray[where.comparator] && Array.isArray(where.value)) {
+        whereObjArray = whereObjArray.concat(
+          where.value.map(value => {
+            return Object.keys(where)
+              .filter(key => key !== 'value')
+              .reduce((newWhere, key) => {
+                newWhere[key] = where[key];
+                return newWhere;
+            }, {value: value});
+          })
+        );
       } else {
         whereObjArray.push(where);
       }

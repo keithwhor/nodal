@@ -947,6 +947,36 @@ module.exports = Nodal => {
 
     });
 
+    it('Should AND icontains with an Array', (done) => {
+
+      // 'Albert',
+      // 'Derek',
+      // 'Dingleberry',
+      // 'James',
+      // 'Joe',
+      // 'Sally',
+      // 'Samantha',
+      // 'Samuel',
+      // 'Suzy',
+      // 'Zoolander'
+
+      Parent.query()
+        .where({name__icontains: ['a', 'e']})
+        .end((err, parents) => {
+
+          expect(err).to.not.exist;
+          expect(parents).to.exist;
+          expect(parents.length).to.equal(4);
+          expect(parents.map(p => p.get('name'))).to.contain('Albert');
+          expect(parents.map(p => p.get('name'))).to.contain('James');
+          expect(parents.map(p => p.get('name'))).to.contain('Samuel');
+          expect(parents.map(p => p.get('name'))).to.contain('Zoolander');
+          done();
+
+        });
+
+    });
+
     it('Should update all parents names', (done) => {
 
       Parent.query()

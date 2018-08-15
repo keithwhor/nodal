@@ -455,27 +455,26 @@ class SQLAdapter {
       let joined = whereObj.joined;
       let table = whereObj.table;
       let alias = whereObj.alias;
+      let clause = whereObj.sanitize ?
+        comparators[whereObj.comparator](whereObj.refName, whereObj.value) :
+        comparators[whereObj.comparator](whereObj.refName, whereObj.value).replace(/__VAR__/gi, whereObj.value)
 
       if (!joined) {
 
-        clauses.push(
-          whereObj.sanitize ?
-            comparators[whereObj.comparator](whereObj.refName, whereObj.value) :
-            comparators[whereObj.comparator](whereObj.refName, whereObj.value).replace(/__VAR__/gi, whereObj.value)
-        );
+        clauses.push(clause);
 
       } else {
 
         if (joinedTables[alias]) {
-          joinedTables[alias].clauses.push(comparators[whereObj.comparator](whereObj.refName, whereObj.value));
+          joinedTables[alias].clauses.push(clause);
         } else {
-          let clause = {
+          let joinedClause = {
             table: table,
             joins: whereObj.joins,
-            clauses: [comparators[whereObj.comparator](whereObj.refName, whereObj.value)]
+            clauses: [clause]
           };
-          joinedTables[alias] = clause;
-          joinedClauses.push(clause);
+          joinedTables[alias] = joinedClause;
+          joinedClauses.push(joinedClause);
           clauses.push(null);
         }
 
@@ -688,6 +687,11 @@ SQLAdapter.prototype.comparatorIgnoresValue = {
   not_null: true,
   not_true: true,
   not_false: true
+};
+
+SQLAdapter.prototype.comparatorExpectsArray = {
+  in: true,
+  not_in: true
 };
 
 SQLAdapter.prototype.documentTypes = [];
