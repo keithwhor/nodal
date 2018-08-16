@@ -1008,6 +1008,25 @@ module.exports = Nodal => {
 
     });
 
+    it('Should get correct pets on an OR join', (done) => {
+
+      Parent.query()
+        .join('pets', {name: 'Ruby'}, {name: 'Oliver'})
+        .end((err, parents) => {
+
+          expect(err).to.not.exist;
+          expect(parents).to.exist;
+          expect(parents.length).to.equal(10);
+          for (let i = 0; i < parents.length; i++) {
+            let parent = parents[i];
+            expect(parent.joined('pets').length).to.equal(2);
+          }
+          done();
+
+        });
+
+    });
+
     it('Should update all parents names', (done) => {
 
       Parent.query()

@@ -593,7 +593,7 @@ class SQLAdapter {
             ` LEFT JOIN ${this.escapeField(join.joinTable)}`,
             ` AS ${this.escapeField(join.joinAlias)}`,
             ` ON (${statements.join(' OR ')}`,
-            filterClause ? ` AND ${filterClause}` : '',
+            filterClause ? ` AND (${filterClause})` : '',
             ')'
           ].join('');
 
