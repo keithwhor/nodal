@@ -53,6 +53,7 @@ module.exports = Nodal => {
         {name: 'parent_id', type: 'int'},
         {name: 'name', type: 'string'},
         {name: 'job', type: 'string'},
+        {name: 'full_time', type: 'boolean'},
         {name: 'created_at', type: 'datetime'},
         {name: 'updated_at', type: 'datetime'}
       ]
@@ -153,7 +154,12 @@ module.exports = Nodal => {
 
             p.setJoined('pets', Nodal.ModelArray.from(pets));
 
-            let partner = new Partner({parent_id: id, name: `Partner${i}`, job: ['Plumber', 'Engineer', 'Nurse', 'Scientist'][i % 4]});
+            let partner = new Partner({
+              parent_id: id,
+              name: `Partner${i}`,
+              job: ['Plumber', 'Engineer', 'Nurse', 'Scientist'][i % 4],
+              full_time: !!(i % 2)
+            });
             p.setJoined('partner', partner);
 
             let friendships = new Nodal.ModelArray(Friendship);
@@ -971,6 +977,31 @@ module.exports = Nodal => {
           expect(parents.map(p => p.get('name'))).to.contain('James');
           expect(parents.map(p => p.get('name'))).to.contain('Samuel');
           expect(parents.map(p => p.get('name'))).to.contain('Zoolander');
+          done();
+
+        });
+
+    });
+
+    it('Should be able to filter multiple join types', (done) => {
+
+      Parent.query()
+        .join('partner', {job: 'Plumber', full_time: true}, {job: 'Nurse', full_time: true})
+        .join('pets', {name: 'Ruby'})
+        .end((err, parents) => {
+
+          expect(err).to.not.exist;
+          expect(parents).to.exist;
+          expect(parents.length).to.equal(10);
+          for (let i = 0; i < 10; i++) {
+            let parent = parents[i];
+            expect(parent.joined('pets').length).to.equal(1);
+            expect(parent.joined('pets')[0].get('name')).to.equal('Ruby');
+            if (parent.joined('partner')) {
+              expect(['Plumber', 'Nurse']).to.include(parent.joined('partner').get('job'));
+              expect(parent.joined('partner').get('full_time')).to.equal(true);
+            }
+          }
           done();
 
         });

@@ -585,7 +585,9 @@ class SQLAdapter {
 
 
           let filterClause = this.generateOrClause(join.joinAlias, join.multiFilter, paramOffset);
-          join.multiFilter && join.multiFilter.forEach(arr => paramOffset += arr.length);
+          join.multiFilter && join.multiFilter.forEach(arr => {
+            paramOffset += arr.filter(where => !where.ignoreValue).length;
+          });
 
           return [
             ` LEFT JOIN ${this.escapeField(join.joinTable)}`,
