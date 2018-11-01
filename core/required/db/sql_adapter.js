@@ -181,6 +181,7 @@ class SQLAdapter {
           ? '*'
           : columns.map(field => {
             let defn;
+            field = typeof field !== 'string' ? field : {columnNames: [field], alias: field, transformation: v => v};
             if (!joinNames || !field.joined || joinNames.indexOf(field.identifier) > -1) {
               defn = field.transformation.apply(null, field.columnNames.map(columnName => {
                 return formatTableField(field.identifier || field.table || table, columnName);
