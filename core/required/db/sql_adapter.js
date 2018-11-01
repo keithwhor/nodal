@@ -164,11 +164,7 @@ class SQLAdapter {
   generateSelectQuery(subQuery, table, columns, multiFilter, joinArray, groupByArray, orderByArray, limitObj, paramOffset) {
 
     let formatTableField = (table, column) => `${this.escapeField(table)}.${this.escapeField(column)}`;
-    let joinNames;
-
-    if (joinArray) {
-      joinNames = joinArray.map(j => j.joinAlias);
-    }
+    let joinNames = joinArray ? joinArray.map(j => j.joinAlias) : null;
 
     if (typeof subQuery === 'object' && subQuery !== null) {
       subQuery = this.escapeField(subQuery.table);
