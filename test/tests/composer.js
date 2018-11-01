@@ -1458,6 +1458,25 @@ module.exports = Nodal => {
 
     });
 
+    it('Should join two models adequately', done => {
+
+      Parent.query()
+        .join('children')
+        .join('partner')
+        .join('pets')
+        .end((err, parents) => {
+
+          expect(err).to.not.exist;
+          expect(parents).to.exist;
+          expect(parents.length).to.equal(10);
+          done();
+
+        });
+
+      //setTimeout(() => process.exit(0), 500);
+
+    });
+
     // IMPORTANT: Do npt place any tests after the `Should do a destroy cascade`
     // test since all models will be gone
 

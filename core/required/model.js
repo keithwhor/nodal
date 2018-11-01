@@ -219,6 +219,27 @@ class Model {
   }
 
   /**
+  * Get the model's column names with additional data for querying
+  * @return {Array}
+  */
+  static columnQueryInfo (columnList) {
+    let columns = columnList
+      ? this.prototype.schema.columns.filter(c => columnList.indexOf(c.name) > -1)
+      : this.prototype.schema.columns.slice();
+    return columns.map(c => {
+      let nc = Object.keys(c).reduce((nc, key) => {
+        nc[key] = c[key];
+        return nc;
+      }, {});
+      nc.columnNames = [nc.name];
+      nc.alias = nc.name;
+      nc.transformation = v => v;
+      nc.joined = false;
+      return nc;
+    });
+  }
+
+  /**
   * Get the model's column lookup data
   * @return {Object}
   */

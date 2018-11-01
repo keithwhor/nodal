@@ -180,15 +180,13 @@ class SQLAdapter {
         columns === '*'
           ? '*'
           : columns.map(field => {
-            let isBaseColumn = typeof field === 'string';
-            field = typeof field === 'string' ? {columnNames: [field], alias: field, transformation: v => v} : field;
             let defn;
-            if (!joinNames || isBaseColumn || joinNames.indexOf(field.name) > -1) {
+            if (!joinNames || !field.joined || joinNames.indexOf(field.identifier) > -1) {
               defn = field.transformation.apply(null, field.columnNames.map(columnName => {
-                return formatTableField(field.name || field.table || table, columnName);
+                return formatTableField(field.identifier || field.table || table, columnName);
               }));
             } else {
-              defn = 'NULL';
+              defn = this.generateNullField(field.type);
             }
             return `(${defn}) AS ${this.escapeField(field.alias)}`;
           }).join(','),
@@ -204,6 +202,10 @@ class SQLAdapter {
     ].join('');
 
   }
+
+  generateNullField(type) {
+    return `NULL::${this.getTypeDbName(type)}`;
+  };
 
   generateCountQuery(subQuery, table) {
 

@@ -360,14 +360,12 @@ class Composer {
   */
   __joinedColumns__(joinName) {
     let relationship = this.Model.relationships().findExplicit(joinName);
-    return relationship.getModel().columnNames().map(columnName => {
-      return {
-        name: joinName,
-        table: relationship.getModel().table(),
-        columnNames: [columnName],
-        alias: `\$${joinName}\$${columnName}`,
-        transformation: v => v
-      };
+    return relationship.getModel().columnQueryInfo().map(column => {
+      column.identifier = joinName;
+      column.table = relationship.getModel().table();
+      column.alias = `\$${joinName}\$${column.name}`;
+      column.joined = true;
+      return column;
     });
   }
 
@@ -454,8 +452,7 @@ class Composer {
   */
   __addJoinsToQuery__(query, queryInfo, includeColumns) {
 
-    let columns = includeColumns || this.Model.columnNames();
-
+    let columns = this.Model.columnQueryInfo(includeColumns);
     let joins = queryInfo.joins;
 
     // Set join OrderBys... in reverse order
