@@ -458,11 +458,43 @@ class Composer {
 
     let joins = queryInfo.joins;
 
+    // Set join OrderBys... in reverse order
+    let orderBy = queryInfo.commands.reduce((arr, command) => {
+      command.orderBy && (arr = command.orderBy.concat(arr));
+      return arr;
+    }, []);
+    
+    console.log('1 >>\n\n', joins);
+
     Object.keys(joins).forEach(joinName => {
       joins[joinName].forEach(j => {
         columns = columns.concat(this.__joinedColumns__(j.joinAlias));
       });
     });
+
+    // When doing joins, we count paramOffset as the last where parameter length
+    // Because we add in a bunch of parameters at the end.
+    let p = query.params.slice();
+    let joinSQL = this.db.adapter.generateUnionQuery(
+      Object.keys(queryInfo.joins).map((name, i) => {
+        let join = queryInfo.joins[name];
+        let offset = p.length;
+        join.forEach(j => { p = p.concat(this.db.adapter.getParamsFromMultiFilter(j.multiFilter)); });
+        return this.db.adapter.generateSelectQuery(
+          query.sql,
+          `j`,
+          columns,
+          null,
+          join,
+          null,
+          orderBy,
+          null,
+          offset
+        );
+      })
+    );
+
+    console.log('2 >>\n\n', joinSQL);
 
     joins = Object.keys(joins).map(k => joins[k]);
     let params = query.params.slice();
@@ -475,29 +507,41 @@ class Composer {
 
     });
 
-    // Set join OrderBys... in reverse order
-    let orderBy = queryInfo.commands.reduce((arr, command) => {
-      command.orderBy && (arr = command.orderBy.concat(arr));
-      return arr;
-    }, []);
+    if (!joinSQL) {
 
-    // When doing joins, we count paramOffset as the last where parameter length
-    // Because we add in a bunch of parameters at the end.
+      return {
+        sql: this.db.adapter.generateSelectQuery(
+          query.sql,
+          'j',
+          columns,
+          null,
+          joins,
+          null,
+          orderBy,
+          null,
+          query.params.length
+        ),
+        params: params
+      };
 
-    return {
-      sql: this.db.adapter.generateSelectQuery(
-        query.sql,
-        'j',
-        columns,
-        null,
-        joins,
-        null,
-        orderBy,
-        null,
-        query.params.length
-      ),
-      params: params
-    };
+    } else {
+
+      return {
+        sql: this.db.adapter.generateSelectQuery(
+          joinSQL,
+          'j',
+          '*',
+          null,
+          null,
+          null,
+          orderBy,
+          null,
+          p.length
+        ),
+        params: p
+      };
+
+    }
 
   }
 

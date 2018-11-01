@@ -157,9 +157,18 @@ class SQLAdapter {
 
   }
 
+  generateUnionQuery(queries) {
+    return queries.map(q => `(${q})`).join(' UNION ');
+  }
+
   generateSelectQuery(subQuery, table, columns, multiFilter, joinArray, groupByArray, orderByArray, limitObj, paramOffset) {
 
     let formatTableField = (table, column) => `${this.escapeField(table)}.${this.escapeField(column)}`;
+    let joinNames;
+
+    if (joinArray) {
+      joinNames = joinArray.map(j => j.joinAlias);
+    }
 
     if (typeof subQuery === 'object' && subQuery !== null) {
       subQuery = this.escapeField(subQuery.table);
@@ -172,13 +181,21 @@ class SQLAdapter {
 
     return [
       'SELECT ',
-        columns.map(field => {
-          field = typeof field === 'string' ? {columnNames: [field], alias: field, transformation: v => v} : field;
-          let defn = field.transformation.apply(null, field.columnNames.map(columnName => {
-            return formatTableField(field.name || field.table || table, columnName);
-          }));
-          return `(${defn}) AS ${this.escapeField(field.alias)}`;
-        }).join(','),
+        columns === '*'
+          ? '*'
+          : columns.map(field => {
+            let isBaseColumn = typeof field === 'string';
+            field = typeof field === 'string' ? {columnNames: [field], alias: field, transformation: v => v} : field;
+            let defn;
+            if (!joinNames || isBaseColumn || joinNames.indexOf(field.name) > -1) {
+              defn = field.transformation.apply(null, field.columnNames.map(columnName => {
+                return formatTableField(field.name || field.table || table, columnName);
+              }));
+            } else {
+              defn = 'NULL';
+            }
+            return `(${defn}) AS ${this.escapeField(field.alias)}`;
+          }).join(','),
       ' FROM ',
         subQuery,
         ' AS ',
@@ -533,7 +550,7 @@ class SQLAdapter {
         if (columnNameComponents.length === 1) {
           return `${this.escapeField(table)}.${this.escapeField(columnName)}`;
         } else if (joinArray) {
-          let join = joinArray[0].find((join) => join.joinAlias === columnNameComponents.slice(0, -1).join('__'));
+          let join = joinArray.find((join) => join.joinAlias === columnNameComponents.slice(0, -1).join('__'));
           if (!join) {
             return `${this.escapeField(table)}.${this.escapeField(columnName)}`;
           }
@@ -560,46 +577,45 @@ class SQLAdapter {
     paramOffset = Math.max(0, parseInt(paramOffset) || 0);
     let joinedAlready = {};
 
-    return (!joinArray || !joinArray.length) ? '' :
-      joinArray.map(joinData => {
+    if (!joinArray || !joinArray.length) {
+      return '';
+    }
 
-        joinData = joinData.filter(join => !joinedAlready[join.joinAlias]);
+    //let joinData = joinArray.filter(join => !joinedAlready[join.joinAlias]);
 
-        return joinData.map((join, i) => {
+    return joinArray.map((join, i) => {
 
-          joinedAlready[join.joinAlias] = true;
+      joinedAlready[join.joinAlias] = true;
 
-          let joinColumns = join.joinColumn instanceof Array ? join.joinColumn : [join.joinColumn]
-          let prevColumns = join.prevColumn instanceof Array ? join.prevColumn : [join.prevColumn]
+      let joinColumns = join.joinColumn instanceof Array ? join.joinColumn : [join.joinColumn]
+      let prevColumns = join.prevColumn instanceof Array ? join.prevColumn : [join.prevColumn]
 
-          let statements = [];
+      let statements = [];
 
-          joinColumns.forEach(joinColumn => {
-            prevColumns.forEach(prevColumn => {
-              statements.push(
-                `${this.escapeField(join.joinAlias)}.${this.escapeField(joinColumn)} = ` +
-                `${this.escapeField(join.prevAlias || table)}.${this.escapeField(prevColumn)}`
-              );
-            });
-          });
+      joinColumns.forEach(joinColumn => {
+        prevColumns.forEach(prevColumn => {
+          statements.push(
+            `${this.escapeField(join.joinAlias)}.${this.escapeField(joinColumn)} = ` +
+            `${this.escapeField(join.prevAlias || table)}.${this.escapeField(prevColumn)}`
+          );
+        });
+      });
 
 
-          let filterClause = this.generateOrClause(join.joinAlias, join.multiFilter, paramOffset);
-          join.multiFilter && join.multiFilter.forEach(arr => {
-            paramOffset += arr.filter(where => !where.ignoreValue).length;
-          });
+      let filterClause = this.generateOrClause(join.joinAlias, join.multiFilter, paramOffset);
+      join.multiFilter && join.multiFilter.forEach(arr => {
+        paramOffset += arr.filter(where => !where.ignoreValue).length;
+      });
 
-          return [
-            ` LEFT JOIN ${this.escapeField(join.joinTable)}`,
-            ` AS ${this.escapeField(join.joinAlias)}`,
-            ` ON (${statements.join(' OR ')}`,
-            filterClause ? ` AND (${filterClause})` : '',
-            ')'
-          ].join('');
+      return [
+        ` LEFT JOIN ${this.escapeField(join.joinTable)}`,
+        ` AS ${this.escapeField(join.joinAlias)}`,
+        ` ON (${statements.join(' OR ')}`,
+        filterClause ? ` AND (${filterClause})` : '',
+        ')'
+      ].join('');
 
-        }).join('')
-
-      }).join('');
+    }).join('')
 
   }
 
