@@ -1027,6 +1027,41 @@ module.exports = Nodal => {
 
     });
 
+    it('Should LIMIT properly with an OR join', (done) => {
+
+      Parent.query()
+        .join('pets')
+        .where({pets__name: 'Ruby'}, {pets__name: 'Oliver'})
+        .orderBy('created_at', 'DESC')
+        .limit(0, 5)
+        .end((err, parents) => {
+
+          expect(err).to.not.exist;
+          expect(parents).to.exist;
+          expect(parents.length).to.equal(5);
+          done();
+
+        });
+
+    });
+
+    it('Should LIMIT properly with an OR join and limit in OR', (done) => {
+
+      Parent.query()
+        .join('pets')
+        .where({pets__name: 'Ruby', __offset: 0, __count: 5}, {pets__name: 'Oliver', __offset: 0, __count: 5})
+        .orderBy('created_at', 'DESC')
+        .end((err, parents) => {
+
+          expect(err).to.not.exist;
+          expect(parents).to.exist;
+          expect(parents.length).to.equal(5);
+          done();
+
+        });
+
+    });
+
     it('Should update all parents names', (done) => {
 
       Parent.query()
