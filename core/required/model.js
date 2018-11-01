@@ -749,6 +749,10 @@ class Model {
 
       error = new Error(message);
       error.details = errorObject;
+      error.values = Object.keys(error.details).reduce((values, key) => {
+        values[key] = this._data[key];
+        return values;
+      }, {});
       if (errorObject._query) {
         error.identifier = this._errorDetails._query;
       }
@@ -779,6 +783,7 @@ class Model {
     let errors = this._errors;
     Object.keys(errors).forEach(function(key) {
       obj[key] = errors[key];
+      obj
     });
     return obj;
   }

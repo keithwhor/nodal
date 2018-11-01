@@ -230,22 +230,15 @@ class Composer {
 
       if (composerCommand.type === 'join') {
 
-        let curJoinName = composerCommand.data.name;
-        let curJoinData = composerCommand.data.joinData;
-        joins[curJoinName] = curJoinData;
-        Object.keys(joins)
-          .filter(joinName => joinName !== curJoinName)
-          .forEach(joinName => {
-
-            if (curJoinName.indexOf(joinName) === 0) {
-              joins[curJoinName] = joins[joinName].concat(curJoinData.slice(joins[joinName].length));
-              delete joins[joinName];
-            } else if (joinName.indexOf(curJoinName) === 0) {
-              joins[joinName][curJoinData.length - 1] = curJoinData[curJoinData.length - 1];
-              delete joins[curJoinName];
-            }
-
-          });
+        let joinName = composerCommand.data.name;
+        let joinData = composerCommand.data.joinData.slice();
+        joins[joinName] = {data: joinData.pop()};
+        while (joinData.length) {
+          let data = joinData.pop();
+          joins[data.joinAlias] = joins[data.joinAlias] || {data: data};
+          joins[joinName].prev = data.joinAlias;
+          joinName = data.joinAlias;
+        }
 
         return p;
 
@@ -292,6 +285,15 @@ class Composer {
       return p;
 
     }, []);
+
+    joins = Object.keys(joins).map(joinName => {
+      let list = [];
+      while (joinName) {
+        list.unshift(joins[joinName].data);
+        joinName = joins[joinName].prev;
+      }
+      return list;
+    });
 
     return {
       commands: commands,
@@ -473,9 +475,7 @@ class Composer {
     let joinSQL = this.db.adapter.generateUnionQuery(
       Object.keys(queryInfo.joins).map((name, i) => {
         let join = queryInfo.joins[name];
-        let offset = params.length;
-        join.forEach(j => { params = params.concat(this.db.adapter.getParamsFromMultiFilter(j.multiFilter)); });
-        return this.db.adapter.generateSelectQuery(
+        let sql = this.db.adapter.generateSelectQuery(
           query.sql,
           `j`,
           columns,
@@ -484,15 +484,17 @@ class Composer {
           null,
           orderBy,
           null,
-          offset
+          params.length
         );
+        join.forEach(j => { params = params.concat(this.db.adapter.getParamsFromMultiFilter(j.multiFilter)); });
+        return sql;
       })
     );
 
     return {
       sql: this.db.adapter.generateSelectQuery(
         joinSQL || query.sql,
-        'j',
+        'm',
         joinSQL ? '*' : columns,
         null,
         null,

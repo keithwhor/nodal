@@ -1062,6 +1062,35 @@ module.exports = Nodal => {
 
     });
 
+    it('Should filter a joined model properly', done => {
+
+      Child.query()
+        .join('parent', {name: 'Albert'})
+        .join('parent__pets')
+        .join('parent__partner')
+        .where({id__in: [1, 11, 22]})
+        .end((err, children) => {
+
+          let parentCount = 0;
+
+          expect(err).to.not.exist;
+          expect(children).to.exist;
+          expect(children.length).to.equal(3);
+          for (let i = 0; i < children.length; i++) {
+            let child = children[i];
+            let parent = child.joined('parent');
+            parentCount = parentCount + (parent ? 1 : 0);
+            parent && expect(parent.get('name')).to.equal('Albert');
+          }
+          expect(parentCount).to.equal(1);
+          done();
+
+        });
+
+    });
+
+    // ** adding and inserting ** //
+
     it('Should update all parents names', (done) => {
 
       Parent.query()
@@ -1472,8 +1501,6 @@ module.exports = Nodal => {
           done();
 
         });
-
-      //setTimeout(() => process.exit(0), 500);
 
     });
 
