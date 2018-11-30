@@ -81,7 +81,7 @@ class Controller extends fxn.Controller {
   * @param {Object} details Any additional details for the error (must be serializable)
   * @return {boolean}
   */
-  statusError(code, msg, details) {
+  httpError(code, msg, details) {
     this.status(code);
     this.render(API.error(msg || `${code} Status Code`, details));
     return true;
