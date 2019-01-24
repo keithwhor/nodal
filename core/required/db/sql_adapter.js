@@ -446,18 +446,25 @@ class SQLAdapter {
       return '';
     }
 
-    return ('(' + multiFilter.map(whereObj => {
-      return this.generateAndClause(table, whereObj);
-    }).join(') OR (') + ')').replace(/__VAR__/g, () => `\$${1 + (paramOffset++)}`);
+    return ('(' + multiFilter.map((whereObj) => {
+      let andClause = this.generateAndClause(table, whereObj, paramOffset);
+      paramOffset = andClause.offset;
+      return andClause.sql;
+    }).join(') OR (') + ')');
 
   }
 
-  generateAndClause(table, whereObjArray) {
+  generateAndClause(table, whereObjArray, paramOffset) {
+
+    paramOffset = Math.max(0, parseInt(paramOffset) || 0);
 
     let comparators = this.comparators;
 
     if (!whereObjArray.length) {
-      return '';
+      return {
+        sql: '',
+        offset: paramOffset
+      };
     }
 
     let lastTable = null;
@@ -471,9 +478,14 @@ class SQLAdapter {
       let joined = whereObj.joined;
       let table = whereObj.table;
       let alias = whereObj.alias;
-      let clause = whereObj.sanitize ?
-        comparators[whereObj.comparator](whereObj.refName, whereObj.value) :
-        comparators[whereObj.comparator](whereObj.refName, whereObj.value).replace(/__VAR__/gi, whereObj.value)
+      let clause = whereObj.sanitize
+        ? comparators[whereObj.comparator](whereObj.refName, whereObj.value).replace(
+            /__VAR__/gi,
+            () => {
+              return `\$${1 + paramOffset++}`;
+            }
+          )
+          : comparators[whereObj.comparator](whereObj.refName, whereObj.value).replace(/__VAR__/gi, whereObj.value)
 
       if (!joined) {
 
@@ -531,7 +543,10 @@ class SQLAdapter {
       return c;
     });
 
-    return clauses.join(' AND ');
+    return {
+      sql: clauses.join(' AND '),
+      offset: paramOffset
+    };
 
   }
 

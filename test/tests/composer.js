@@ -23,6 +23,18 @@ module.exports = Nodal => {
       ]
     };
 
+    let schemaCareer = {
+      table: 'careers',
+      columns: [
+        {name: 'id', type: 'serial'},
+        {name: 'parent_id', type: 'int'},
+        {name: 'title', type: 'string'},
+        {name: 'is_active', type: 'boolean'},
+        {name: 'created_at', type: 'datetime'},
+        {name: 'updated_at', type: 'datetime'}
+      ]
+    };
+
     let schemaFriendship = {
       table: 'friendships',
       columns: [
@@ -41,6 +53,8 @@ module.exports = Nodal => {
         {name: 'parent_id', type: 'int'},
         {name: 'name', type: 'string'},
         {name: 'age', type: 'int'},
+        {name: 'is_favorite', type: 'boolean'},
+        {name: 'license', type: 'string'},
         {name: 'created_at', type: 'datetime'},
         {name: 'updated_at', type: 'datetime'}
       ]
@@ -66,6 +80,7 @@ module.exports = Nodal => {
         {name: 'parent_id', type: 'int'},
         {name: 'name', type: 'string'},
         {name: 'animal', type: 'string'},
+        {name: 'is_alive', type: 'boolean'},
         {name: 'details', type: 'json'},
         {name: 'created_at', type: 'datetime'},
         {name: 'updated_at', type: 'datetime'}
@@ -77,6 +92,12 @@ module.exports = Nodal => {
     Parent.setDatabase(db);
     Parent.setSchema(schemaParent);
     Parent.hides('hidden');
+
+    class Career extends Nodal.Model {};
+
+    Career.setDatabase(db);
+    Career.setSchema(schemaCareer);
+    Career.joinsTo(Parent, {multiple: true});
 
     class Friendship extends Nodal.Model {}
 
@@ -108,7 +129,14 @@ module.exports = Nodal => {
       db.connect(Nodal.my.Config.db.main);
 
       db.transaction(
-        [schemaParent, schemaFriendship, schemaChild, schemaPartner, schemaPet].map(schema => {
+        [
+          schemaParent,
+          schemaCareer,
+          schemaFriendship,
+          schemaChild,
+          schemaPartner,
+          schemaPet
+        ].map(schema => {
           return [
             db.adapter.generateDropTableQuery(schema.table, true),
             db.adapter.generateCreateTableQuery(schema.table, schema.columns)
@@ -142,14 +170,33 @@ module.exports = Nodal => {
 
             let id = i + 1;
 
-            let children = 'ABCDEFGHIJ'.split('').map(name => {
-              return new Child({parent_id: id, name: `Child${name}`, age: (Math.random() * 30) | 0});
+            let careers = ['Freelancer', 'Poet'].map((title, n) => {
+              return new Career({parent_id: id, title: title, is_active: true});
+            });
+
+            p.setJoined('careers', Nodal.ModelArray.from(careers));
+
+            let children = 'ABCDEFGHIJ'.split('').map((name, n) => {
+              var ageOffset = (n >= 5) ? 16 : 0;
+              return new Child({
+                parent_id: id,
+                name: `Child${name}`,
+                age: ageOffset + ((Math.random() * 30) | 0),
+                is_favorite: !!(n % 2),
+                license: !!ageOffset ? 'DL_APPROVED' : null
+              });
             });
 
             p.setJoined('children', Nodal.ModelArray.from(children));
 
             let pets = ['Oliver', 'Ruby', 'Pascal'].map((name, i) => {
-              return new Pet({parent_id: id, name: name, animal: ['Cat', 'Dog', 'Cat'][i], details: { language: name === 'Pascal' }});
+              return new Pet({
+                parent_id: id,
+                name: name,
+                animal: ['Cat', 'Dog', 'Cat'][i],
+                is_alive: true,
+                details: { language: name === 'Pascal' }
+              });
             });
 
             p.setJoined('pets', Nodal.ModelArray.from(pets));
@@ -178,6 +225,7 @@ module.exports = Nodal => {
 
             async.series(
               [].concat(
+                parents.map(p => p.joined('careers').saveAll.bind(p.joined('careers'))),
                 parents.map(p => p.joined('children').saveAll.bind(p.joined('children'))),
                 parents.map(p => p.joined('pets').saveAll.bind(p.joined('pets'))),
                 parents.map(p => p.joined('partner').save.bind(p.joined('partner'))),
@@ -1089,7 +1137,56 @@ module.exports = Nodal => {
 
     });
 
-    // ** adding and inserting ** //
+    it('Should OR numerous nested fields together comprehensively', (done) => {
+
+      Parent.query()
+        .join('children')
+        .join('pets')
+        .join('careers')
+        .where([
+          {
+            children__is_favorite: true,
+            children__license: null,
+            pets__name: 'Oliver',
+            pets__alive: true,
+            name: 'Zoolander',
+            pets__animal__in: ['Cat']
+          },
+          {
+            children__is_favorite: true,
+            children__license__not_null: true,
+            pets__name: 'Oliver',
+            pets__alive: true,
+            name: 'Zoolander',
+            pets__animal__in: ['Cat']
+          },
+          {
+            careers__title: 'Freelancer',
+            careers__is_active: true,
+            pets__name: 'Oliver',
+            pets__alive: true,
+            name: 'Zoolander',
+            pets__animal__in: ['Cat']
+          },
+        ])
+        .limit(20)
+        .end((err, parents) => {
+
+          expect(err).to.not.exist;
+          expect(parents.length).to.equal(1);
+          expect(parents[0].get('name')).to.equal('Zoolander');
+          done();
+
+        });
+
+    });
+
+    /**
+    *
+    *  ADDING AND INSERTING RECORDS
+    *     DO NOT DEPEND ON UPSTREAM SET VALUES
+    *
+    */
 
     it('Should update all parents names', (done) => {
 
