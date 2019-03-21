@@ -303,6 +303,26 @@ module.exports = Nodal => {
       expect(obj[0].posts).to.exist;
       expect(obj[0].posts[0].comments).to.exist;
 
+    });
+
+    it('should clear joined models properly', function() {
+
+      let comments = Nodal.ModelArray.from([new Comment({body: 'Hello, World'})]);
+      let posts = Nodal.ModelArray.from([new Post({title: 'Hello', body: 'Everybody'})]);
+
+      posts[0].setJoined('comments', comments);
+      posts[0].clearJoined('comments');
+
+      expect(posts[0].joined('comments')).to.not.exist;
+
+      posts[0].clearJoined('comments');
+      expect(posts[0].joined('comments')).to.not.exist;
+
+      try {
+        posts[0].clearJoined('badfield');
+      } catch (e) {
+        expect(e.message).to.equal('No relationship named "badfield" exists')
+      }
 
     });
 
