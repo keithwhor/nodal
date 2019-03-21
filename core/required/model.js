@@ -926,6 +926,32 @@ class Model {
   }
 
   /**
+  * Clear a joined object (Model or ModelArray)
+  * @param {string} field The field (name of the join relationship)
+  */
+  clearJoined(field) {
+
+    let relationship = this.relationship(field);
+
+    if (!relationship) {
+
+      throw new Error(`No relationship named "${field}" exists`);
+
+    }
+
+    this._joinsList = this._joinsList.filter((joinName) => {
+      return joinName !== field;
+    });
+
+    let value = this._joinsCache[field];
+
+    delete this._joinsCache[field];
+
+    return value;
+
+  }
+
+  /**
   * Calculate field from calculations (assumes it exists)
   *  @param {string} field Name of the calculated field
   */
