@@ -27,6 +27,18 @@ class Controller extends fxn.Controller {
   }
 
   /**
+  * Using API formatting, send an http.ServerResponse indicating that payment is required (402)
+  * @param {string} msg Error message to send
+  * @param {Object} details Any additional details for the error (must be serializable)
+  * @return {boolean}
+  */
+  paymentRequired(msg, details) {
+    this.status(402);
+    this.render(API.error(msg || 'Payment Required', details));
+    return true;
+  }
+
+  /**
   * Using API formatting, send an http.ServerResponse indicating there was an Unauthorized request (401)
   * @param {string} msg Error message to send
   * @param {Object} details Any additional details for the error (must be serializable)
@@ -111,6 +123,10 @@ class Controller extends fxn.Controller {
 
       if (data.notFound) {
         return this.notFound(data.message, data.details);
+      }
+
+      if (data.statusCode === 402) {
+        return this.paymentRequired(data.message, data.details);
       }
 
       return this.badRequest(data.message, data.details);
