@@ -15,6 +15,7 @@ module.exports = Nodal => {
       columns: [
         {name: 'id', type: 'serial'},
         {name: 'username', type: 'string'},
+        {name: 'organization_location_id', type: 'int'},
         {name: 'created_at', type: 'datetime'},
         {name: 'updated_at', type: 'datetime'}
       ]
@@ -26,6 +27,18 @@ module.exports = Nodal => {
         {name: 'id', type: 'serial'},
         {name: 'user_id', type: 'int'},
         {name: 'organization_id', type: 'int'},
+        {name: 'created_at', type: 'datetime'},
+        {name: 'updated_at', type: 'datetime'}
+      ]
+    };
+
+    let schemaOrganizationLocations = {
+      table: 'organization_locations',
+      columns: [
+        {name: 'id', type: 'serial'},
+        {name: 'organization_id', type: 'int'},
+        {name: 'organization_authorization_access_code', type: 'string'},
+        {name: 'location', type: 'string'},
         {name: 'created_at', type: 'datetime'},
         {name: 'updated_at', type: 'datetime'}
       ]
@@ -43,12 +56,20 @@ module.exports = Nodal => {
     Membership.joinsTo(User, {multiple: true, as: 'memberships'});
     Membership.joinsTo(User, {multiple: true, via: 'organization_id', name: 'organization', as: 'members'});
 
+    class OrganizationLocations extends Nodal.Model {}
+
+    OrganizationLocations.setDatabase(db);
+    OrganizationLocations.setSchema(schemaOrganizationLocations);
+    OrganizationLocations.joinsTo(User, {multiple: true, via: 'organization_id', name: 'organization', as: 'organizationLocations'});
+
+    User.joinsTo(OrganizationLocations, {multiple: true, via: 'organization_location_id', name: 'organizationLocation', as: 'engineeringStaffMembers'});
+
     before(function(done) {
 
       db.connect(Nodal.my.Config.db.main);
 
       db.transaction(
-        [schemaUser, schemaMembership].map(schema => {
+        [schemaUser, schemaMembership, schemaOrganizationLocations].map(schema => {
           return [
             db.adapter.generateDropTableQuery(schema.table, true),
             db.adapter.generateCreateTableQuery(schema.table, schema.columns)
@@ -64,7 +85,8 @@ module.exports = Nodal => {
             new User({username: 'gregory'}),
             new User({username: 'georgia'}),
             new User({username: 'facebook'}),
-            new User({username: 'google'})
+            new User({username: 'google'}),
+            new User({username: 'sergey', organization_location_id: 1})
           ]);
 
           let memberships = Nodal.ModelArray.from([
@@ -74,9 +96,14 @@ module.exports = Nodal => {
             new Membership({user_id: 4, organization_id: 6})
           ]);
 
+          let organizationLocations = Nodal.ModelArray.from([
+            new OrganizationLocations({organization_id: 6, organization_authorization_access_code: 'secret_password', location: 'Mountain View'})
+          ]);
+
           async.series([
             users.saveAll.bind(users),
-            memberships.saveAll.bind(memberships)
+            memberships.saveAll.bind(memberships),
+            organizationLocations.saveAll.bind(organizationLocations)
           ], (err) => {
             expect(err).to.not.exist;
             done();
@@ -101,7 +128,7 @@ module.exports = Nodal => {
 
           expect(err).to.equal(null);
           expect(users).to.be.an.instanceOf(Nodal.ModelArray);
-          expect(users.length).to.equal(6);
+          expect(users.length).to.equal(7);
           done();
 
         });
@@ -124,6 +151,36 @@ module.exports = Nodal => {
           expect(memberships.length).to.equal(1);
           expect(memberships[0].joined('user').get('username')).to.equal('georgia');
           expect(memberships[0].joined('organization').get('username')).to.equal('google');
+          done();
+
+        });
+
+    });
+
+    it('Should truncate joined model names when querying', (done) => {
+
+      User.query()
+        .join('memberships')
+        .join('memberships__organization')
+        .join('memberships__organization__organizationLocations')
+        .join('memberships__organization__organizationLocations__engineeringStaffMembers')
+        .where({
+          username: 'georgia',
+          memberships__organization__username: 'google'
+        })
+        .end((err, users) => {
+
+          expect(err).to.equal(null);
+          expect(users).to.be.an.instanceOf(Nodal.ModelArray);
+          expect(users.length).to.equal(1);
+          expect(users[0].joined('memberships').length).to.equal(1);
+          expect(users[0].joined('memberships')[0].joined('organization').get('username')).to.equal('google');
+          let hq = users[0].joined('memberships')[0].joined('organization').joined('organizationLocations')[0];
+          expect(hq).to.exist;
+          expect(hq.get('location')).to.equal('Mountain View');
+          expect(hq.get('organization_authorization_access_code')).to.equal('secret_password');
+          expect(hq.joined('engineeringStaffMembers').length).to.equal(1);
+          expect(hq.joined('engineeringStaffMembers')[0].get('username')).to.equal('sergey');
           done();
 
         });

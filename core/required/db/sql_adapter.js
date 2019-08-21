@@ -164,7 +164,7 @@ class SQLAdapter {
   generateSelectQuery(subQuery, table, columns, multiFilter, joinArray, groupByArray, orderByArray, limitObj, paramOffset) {
 
     let formatTableField = (table, column) => `${this.escapeField(table)}.${this.escapeField(column)}`;
-    let joinNames = joinArray ? joinArray.map(j => j.joinAlias) : null;
+    let joinNames = joinArray ? joinArray.map(j => j.shortAlias) : null;
 
     if (typeof subQuery === 'object' && subQuery !== null) {
       subQuery = this.escapeField(subQuery.table);
@@ -189,7 +189,7 @@ class SQLAdapter {
             } else {
               defn = this.generateNullField(field.type);
             }
-            return `(${defn}) AS ${this.escapeField(field.alias)}`;
+            return `(${defn}) AS ${this.escapeField(field.shortAlias || field.alias)}`;
           }).join(','),
       ' FROM ',
         subQuery,
@@ -394,6 +394,7 @@ class SQLAdapter {
       return {
         table: where.table,
         alias: where.alias,
+        shortAlias: where.shortAlias,
         columnName: where.columnName,
         refName: [this.escapeField(where.table || table), this.escapeField(where.columnName)].join('.'),
         comparator: where.comparator,
@@ -486,7 +487,7 @@ class SQLAdapter {
             }
           )
           : comparators[whereObj.comparator](whereObj.refName, whereObj.value).replace(/__VAR__/gi, whereObj.value)
-
+// console.log('claws', whereObj, whereObj.refName, whereObj.value);
       if (!joined) {
 
         clauses.push(clause);
@@ -496,6 +497,7 @@ class SQLAdapter {
         if (joinedTables[alias]) {
           joinedTables[alias].clauses.push(clause);
         } else {
+          // console.log('joinClaws', whereObj);
           let joinedClause = {
             table: table,
             joins: whereObj.joins,
@@ -517,14 +519,16 @@ class SQLAdapter {
           `SELECT ${this.escapeField(jc.table)}.${this.escapeField('id')} `,
           `FROM ${this.escapeField(jc.table)} `,
           jc.joins.map((join, i) => {
+            // console.log('join clause join');
+            // console.log(jc);
             return [
-              `INNER JOIN ${this.escapeField(join.joinTable)} AS ${this.escapeField(join.joinAlias)} ON `,
-              `${this.escapeField(join.joinAlias)}.${this.escapeField(join.joinColumn)} = `,
+              `INNER JOIN ${this.escapeField(join.joinTable)} AS ${this.escapeField(join.shortAlias || join.joinAlias)} ON `,
+              `${this.escapeField(join.shortAlias || join.joinAlias)}.${this.escapeField(join.joinColumn)} = `,
               `${this.escapeField(join.prevTable || table)}.${this.escapeField(join.prevColumn)}`,
               i === jc.joins.length - 1 ?
                 [
                   ` AND `,
-                  `${this.escapeField(join.joinAlias)}.${this.escapeField(join.joinColumn)} = `,
+                  `${this.escapeField(join.shortAlias || join.joinAlias)}.${this.escapeField(join.joinColumn)} = `,
                   `${this.escapeField(jc.table)}.${this.escapeField(join.joinColumn)} `,
                   `AND (${jc.clauses.join(' AND ')}) `
                 ].join('') : ''
@@ -568,7 +572,7 @@ class SQLAdapter {
           if (!join) {
             return `${this.escapeField(table)}.${this.escapeField(columnName)}`;
           }
-          return `${this.escapeField(join.joinAlias)}.${this.escapeField(columnNameComponents[columnNameComponents.length - 1])}`
+          return `${this.escapeField(join.shortAlias)}.${this.escapeField(columnNameComponents[columnNameComponents.length - 1])}`
         } else {
           return null;
         }
@@ -609,21 +613,22 @@ class SQLAdapter {
       joinColumns.forEach(joinColumn => {
         prevColumns.forEach(prevColumn => {
           statements.push(
-            `${this.escapeField(join.joinAlias)}.${this.escapeField(joinColumn)} = ` +
-            `${this.escapeField(join.prevAlias || table)}.${this.escapeField(prevColumn)}`
+            `${this.escapeField(join.shortAlias)}.${this.escapeField(joinColumn)} = ` +
+            `${this.escapeField(join.prevShortAlias || join.prevAlias || table)}.${this.escapeField(prevColumn)}`
           );
         });
       });
 
-
-      let filterClause = this.generateOrClause(join.joinAlias, join.multiFilter, paramOffset);
+// console.log('short alias', join.shortAlias, join.multiFilter)
+      let filterClause = this.generateOrClause(join.shortAlias, join.multiFilter, paramOffset);
+      // console.log('filter', filterClause);
       join.multiFilter && join.multiFilter.forEach(arr => {
         paramOffset += arr.filter(where => !where.ignoreValue).length;
       });
 
       return [
         ` LEFT JOIN ${this.escapeField(join.joinTable)}`,
-        ` AS ${this.escapeField(join.joinAlias)}`,
+        ` AS ${this.escapeField(join.shortAlias)}`,
         ` ON (${statements.join(' OR ')}`,
         filterClause ? ` AND (${filterClause})` : '',
         ')'

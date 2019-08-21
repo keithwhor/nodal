@@ -25,6 +25,8 @@ class Composer {
     this._parent = parent || null;
     this._command = null;
     this._transaction = null;
+    this._shortAliasMap = {};
+    this._joinCount = 0;
 
   }
 
@@ -61,32 +63,41 @@ class Composer {
 
       }, {});
 
+    let shortAliasResolver = Object.keys(this._shortAliasMap).reduce((shortAliasResolver, alias) => {
+      shortAliasResolver[this._shortAliasMap[alias]] = alias;
+      return shortAliasResolver;
+    }, {});
+
     let joinsObject = keys
       .filter(k => k[0] === '$')
       .reduce((joinsObject, k) => {
 
         let mid = k.indexOf('$', 1);
-        let name = k.substring(1, mid)
-        let field = k.substring(mid + 1);
-        let relationship = this.Model.relationship(name);
+        let name = k.substring(1, mid);
+        let resolved = k.split('$').map(c => c.split('__').map(v => shortAliasResolver[v] || v).join('__')).join('$');
+        let resolvedMid = resolved.indexOf('$', 1);
+        let resolvedName = resolved.substring(1, resolvedMid);
+        let field = resolved.substring(resolvedMid + 1);
+        let relationship = this.Model.relationship(resolvedName);
 
-        joinsObject[name] = joinsObject[name] || {};
+        joinsObject[resolvedName] = joinsObject[resolvedName] || {};
 
         let rModel = relationship.getModel()
-        joinsObject[name].Model = rModel;
+        joinsObject[resolvedName].Model = rModel;
         cache[rModel.name] = {};
 
-        joinsObject[name].name = name;
-        joinsObject[name].key = k;
-        joinsObject[name].multiple = relationship.immediateMultiple();
+        joinsObject[resolvedName].name = name;
+        joinsObject[resolvedName].resolvedName = resolvedName;
+        joinsObject[resolvedName].key = k;
+        joinsObject[resolvedName].multiple = relationship.immediateMultiple();
 
-        joinsObject[name].columns = joinsObject[name].columns || [];
-        joinsObject[name].columns.push(field);
+        joinsObject[resolvedName].columns = joinsObject[resolvedName].columns || [];
+        joinsObject[resolvedName].columns.push(field);
 
-        joinsObject[name].columnsObject = joinsObject[name].columnsObject || {};
-        joinsObject[name].columnsObject[field] = null;
+        joinsObject[resolvedName].columnsObject = joinsObject[resolvedName].columnsObject || {};
+        joinsObject[resolvedName].columnsObject[field] = null;
 
-        joinsObject[name].cachedModel = null;
+        joinsObject[resolvedName].cachedModel = null;
 
         return joinsObject;
 
@@ -109,7 +120,6 @@ class Composer {
           obj[k] = row[k];
           return obj;
         }, columnsObject), true);
-
         models.push(model);
 
       }
@@ -120,8 +130,10 @@ class Composer {
 
         let name = join.name;
         let names = name.split('__');
-        let joinName = names.pop();
-        let parentName = names.join('__');
+        let resolvedName = join.resolvedName;
+        let resolvedNames = resolvedName.split('__');
+        let joinName = resolvedNames.pop();
+        let parentName = resolvedNames.join('__');
 
         let parentModel = parentName ? joinsObject[parentName].cachedModel : model;
 
@@ -233,8 +245,42 @@ class Composer {
         let joinName = composerCommand.data.name;
         let joinData = composerCommand.data.joinData.slice();
         joins[joinName] = {data: joinData.pop()};
+        let shortAliasComponents = joinName.split('__').map((aliasComponent) => {
+          this._shortAliasMap[aliasComponent] = this._shortAliasMap[aliasComponent] || ('j' + this._joinCount++);
+          return this._shortAliasMap[aliasComponent];
+        });
+        joins[joinName].data.shortAlias = shortAliasComponents.join('__');
+        joins[joinName].data.prevShortAlias = shortAliasComponents.slice(0, shortAliasComponents.length - 1).join('__');
+        joins[joinName].data.multiFilter = joins[joinName].data.multiFilter.map((comparisonArray) => {
+          return comparisonArray.map((comparison) => {
+            console.log(comparison);
+            if (comparison.alias) {
+              comparison.shortAlias = comparison.alias.split('__').map((aliasComponent) => {
+                console.log(aliasComponent, comparison.table);
+                // if (aliasComponent === comparison.table) {
+                //   return aliasComponent;
+                // }
+                this._shortAliasMap[aliasComponent] = this._shortAliasMap[aliasComponent] || ('j' + this._joinCount++);
+                return this._shortAliasMap[aliasComponent];
+              }).join('__');
+            } else {
+              this._shortAliasMap[joinName] = this._shortAliasMap[joinName] || ('j' + this._joinCount++);
+              comparison.shortAlias = this._shortAliasMap[joinName];
+            }
+            comparison.refName = [this.db.adapter.escapeField(comparison.shortAlias), this.db.adapter.escapeField(comparison.columnName)].join('.')
+            // console.log(comparison);
+            return comparison;
+          });
+        });
         while (joinData.length) {
+          console.log(joinData);
           let data = joinData.pop();
+          let shortAliasComponents = joinName.split('__').map((aliasComponent) => {
+            this._shortAliasMap[aliasComponent] = this._shortAliasMap[aliasComponent] || ('j' + this._joinCount++);
+            return this._shortAliasMap[aliasComponent];
+          });
+          data.shortAlias = shortAliasComponents.join('__');
+          data.prevShortAlias = shortAliasComponents.slice(0, shortAliasComponents.length - 1).join('__');
           joins[data.joinAlias] = joins[data.joinAlias] || {data: data};
           joins[joinName].prev = data.joinAlias;
           joinName = data.joinAlias;
@@ -270,14 +316,29 @@ class Composer {
 
         command[composerCommand.type].push(
           Object.keys(composerCommand.data).reduce((p, c) => {
-            return (p[c] = composerCommand.data[c], p);
+            p[c] = composerCommand.data[c]
+            return p;
           }, {})
         );
 
       } else {
 
         command[composerCommand.type] = Object.keys(composerCommand.data).reduce((p, c) => {
-          return (p[c] = composerCommand.data[c], p);
+          if (c === 'comparisons') {
+            p[c] = composerCommand.data[c].map((comparisonArray) => {
+              return comparisonArray.map((comparison) => {
+                if (comparison.alias) {
+                  comparison.shortAlias = comparison.alias.split('__').map((aliasComponent) => {
+                    this._shortAliasMap[aliasComponent] = this._shortAliasMap[aliasComponent] || ('j' + this._joinCount++);
+                    return this._shortAliasMap[aliasComponent];
+                  }).join('__');
+                }
+                return comparison;
+              });
+            });
+          }
+          p[c] = composerCommand.data[c];
+          return p;
         }, {});
 
       }
@@ -320,7 +381,6 @@ class Composer {
       }
 
       let table = `t${i}`;
-
       let multiFilter = this.db.adapter.createMultiFilter(table, command.where ? command.where.comparisons : []);
       let params = this.db.adapter.getParamsFromMultiFilter(multiFilter);
 
@@ -358,14 +418,16 @@ class Composer {
   /**
   * Retrieve all joined column data for a given join
   * @param {string} joinName The name of the join relationship
+  * @param {string} shortAlias The shortened name of the join relationship
   * @private
   */
-  __joinedColumns__(joinName) {
+  __joinedColumns__(joinName, shortAlias) {
     let relationship = this.Model.relationships().findExplicit(joinName);
     return relationship.getModel().columnQueryInfo().map(column => {
-      column.identifier = joinName;
+      column.identifier = shortAlias;
       column.table = relationship.getModel().table();
       column.alias = `\$${joinName}\$${column.name}`;
+      column.shortAlias = `\$${shortAlias}\$${column.name}`;
       column.joined = true;
       return column;
     });
@@ -465,7 +527,7 @@ class Composer {
 
     Object.keys(joins).forEach(joinName => {
       joins[joinName].forEach(j => {
-        columns = columns.concat(this.__joinedColumns__(j.joinAlias));
+        columns = columns.concat(this.__joinedColumns__(j.joinAlias, j.shortAlias));
       });
     });
 
@@ -537,6 +599,10 @@ class Composer {
 
         if (column.length > 1) {
           joinName = column.slice(0, column.length - 1).join('__');
+          // column.slice(0, column.length - 1).map((aliasComponent) => {
+          //   this._shortAliasMap[aliasComponent] = this._shortAliasMap[aliasComponent] || ('j' + this._joinCount++);
+          //   return this._shortAliasMap[aliasComponent];
+          // });
           rel = Model.relationship(joinName);
           column = column.slice(column.length - 1);
         }
