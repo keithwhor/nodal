@@ -72,8 +72,8 @@ class Composer {
       .filter(k => k[0] === '$')
       .reduce((joinsObject, k) => {
 
-        let aliasMid = k.indexOf('$', 1);
-        let shortAlias = k.substring(1, aliasMid);
+        let shortAliasMid = k.indexOf('$', 1);
+        let shortAlias = k.substring(1, shortAliasMid);
         let resolved = k.split('$').map(c => c.split('__').map(v => shortAliasResolver[v] || v).join('__')).join('$');
         let resolvedMid = resolved.indexOf('$', 1);
         let resolvedName = resolved.substring(1, resolvedMid);
@@ -224,6 +224,34 @@ class Composer {
     return this.__collapse__().filter(c => c._command && c._command.type === 'groupBy').length > 0;
   }
 
+  __addShortAliasToJoinData__(joinData) {
+    let shortAliasComponents = joinData.joinAlias.split('__').map((aliasComponent) => {
+      this._shortAliasMap[aliasComponent] = this._shortAliasMap[aliasComponent] || ('j' + this._joinCount++);
+      return this._shortAliasMap[aliasComponent];
+    });
+    joinData.shortAlias = shortAliasComponents.join('__');
+    joinData.prevShortAlias = shortAliasComponents.slice(0, shortAliasComponents.length - 1).join('__');
+    joinData.multiFilter = (joinData.multiFilter || []).map((comparisonArray) => {
+      return comparisonArray.map((comparison) => {
+        if (comparison.alias) {
+          comparison.shortAlias = comparison.alias.split('__').map((aliasComponent) => {
+            if (aliasComponent === comparison.alias) {
+              return comparison.table;
+            }
+            this._shortAliasMap[aliasComponent] = this._shortAliasMap[aliasComponent] || ('j' + this._joinCount++);
+            return this._shortAliasMap[aliasComponent];
+          }).join('__');
+        } else {
+          this._shortAliasMap[joinData.joinAlias] = this._shortAliasMap[joinData.joinAlias] || ('j' + this._joinCount++);
+          comparison.shortAlias = this._shortAliasMap[joinData.joinAlias];
+        }
+        comparison.refName = [this.db.adapter.escapeField(comparison.shortAlias), this.db.adapter.escapeField(comparison.columnName)].join('.')
+        return comparison;
+      });
+    });
+    return joinData;
+  }
+
   /**
   * Reduces an array of composer queries to a single query information object
   * @param {Array} [composerArray]
@@ -242,39 +270,9 @@ class Composer {
 
         let joinName = composerCommand.data.name;
         let joinData = composerCommand.data.joinData.slice();
-        joins[joinName] = {data: joinData.pop()};
-        let shortAliasComponents = joins[joinName].data.joinAlias.split('__').map((aliasComponent) => {
-          this._shortAliasMap[aliasComponent] = this._shortAliasMap[aliasComponent] || ('j' + this._joinCount++);
-          return this._shortAliasMap[aliasComponent];
-        });
-        joins[joinName].data.shortAlias = shortAliasComponents.join('__');
-        joins[joinName].data.prevShortAlias = shortAliasComponents.slice(0, shortAliasComponents.length - 1).join('__');
-        joins[joinName].data.multiFilter = joins[joinName].data.multiFilter.map((comparisonArray) => {
-          return comparisonArray.map((comparison) => {
-            if (comparison.alias) {
-              comparison.shortAlias = comparison.alias.split('__').map((aliasComponent) => {
-                if (aliasComponent === comparison.alias) {
-                  return comparison.table;
-                }
-                this._shortAliasMap[aliasComponent] = this._shortAliasMap[aliasComponent] || ('j' + this._joinCount++);
-                return this._shortAliasMap[aliasComponent];
-              }).join('__');
-            } else {
-              this._shortAliasMap[joinName] = this._shortAliasMap[joinName] || ('j' + this._joinCount++);
-              comparison.shortAlias = this._shortAliasMap[joinName];
-            }
-            comparison.refName = [this.db.adapter.escapeField(comparison.shortAlias), this.db.adapter.escapeField(comparison.columnName)].join('.')
-            return comparison;
-          });
-        });
+        joins[joinName] = {data: this.__addShortAliasToJoinData__(joinData.pop())};
         while (joinData.length) {
-          let data = joinData.pop();
-          let shortAliasComponents = data.joinAlias.split('__').map((aliasComponent) => {
-            this._shortAliasMap[aliasComponent] = this._shortAliasMap[aliasComponent] || ('j' + this._joinCount++);
-            return this._shortAliasMap[aliasComponent];
-          });
-          data.shortAlias = shortAliasComponents.join('__');
-          data.prevShortAlias = shortAliasComponents.slice(0, shortAliasComponents.length - 1).join('__');
+          let data = this.__addShortAliasToJoinData__(joinData.pop());
           joins[data.joinAlias] = joins[data.joinAlias] || {data: data};
           joins[joinName].prev = data.joinAlias;
           joinName = data.joinAlias;
@@ -310,29 +308,14 @@ class Composer {
 
         command[composerCommand.type].push(
           Object.keys(composerCommand.data).reduce((p, c) => {
-            p[c] = composerCommand.data[c]
-            return p;
+            return (p[c] = composerCommand.data[c], p);
           }, {})
         );
 
       } else {
 
         command[composerCommand.type] = Object.keys(composerCommand.data).reduce((p, c) => {
-          if (c === 'comparisons') {
-            p[c] = composerCommand.data[c].map((comparisonArray) => {
-              return comparisonArray.map((comparison) => {
-                if (comparison.alias) {
-                  comparison.shortAlias = comparison.alias.split('__').map((aliasComponent) => {
-                    this._shortAliasMap[aliasComponent] = this._shortAliasMap[aliasComponent] || ('j' + this._joinCount++);
-                    return this._shortAliasMap[aliasComponent];
-                  }).join('__');
-                }
-                return comparison;
-              });
-            });
-          }
-          p[c] = composerCommand.data[c];
-          return p;
+          return (p[c] = composerCommand.data[c], p);
         }, {});
 
       }
@@ -375,6 +358,7 @@ class Composer {
       }
 
       let table = `t${i}`;
+
       let multiFilter = this.db.adapter.createMultiFilter(table, command.where ? command.where.comparisons : []);
       let params = this.db.adapter.getParamsFromMultiFilter(multiFilter);
 
@@ -593,10 +577,6 @@ class Composer {
 
         if (column.length > 1) {
           joinName = column.slice(0, column.length - 1).join('__');
-          // column.slice(0, column.length - 1).map((aliasComponent) => {
-          //   this._shortAliasMap[aliasComponent] = this._shortAliasMap[aliasComponent] || ('j' + this._joinCount++);
-          //   return this._shortAliasMap[aliasComponent];
-          // });
           rel = Model.relationship(joinName);
           column = column.slice(column.length - 1);
         }

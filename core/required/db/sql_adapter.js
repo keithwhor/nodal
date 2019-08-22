@@ -394,7 +394,6 @@ class SQLAdapter {
       return {
         table: where.table,
         alias: where.alias,
-        shortAlias: where.shortAlias,
         columnName: where.columnName,
         refName: [this.escapeField(where.table || table), this.escapeField(where.columnName)].join('.'),
         comparator: where.comparator,
@@ -611,7 +610,7 @@ class SQLAdapter {
         prevColumns.forEach(prevColumn => {
           statements.push(
             `${this.escapeField(join.shortAlias)}.${this.escapeField(joinColumn)} = ` +
-            `${this.escapeField(join.prevShortAlias || join.prevAlias || table)}.${this.escapeField(prevColumn)}`
+            `${this.escapeField(join.prevShortAlias || table)}.${this.escapeField(prevColumn)}`
           );
         });
       });
