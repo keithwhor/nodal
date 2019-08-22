@@ -72,8 +72,8 @@ class Composer {
       .filter(k => k[0] === '$')
       .reduce((joinsObject, k) => {
 
-        let mid = k.indexOf('$', 1);
-        let name = k.substring(1, mid);
+        let aliasMid = k.indexOf('$', 1);
+        let shortAlias = k.substring(1, aliasMid);
         let resolved = k.split('$').map(c => c.split('__').map(v => shortAliasResolver[v] || v).join('__')).join('$');
         let resolvedMid = resolved.indexOf('$', 1);
         let resolvedName = resolved.substring(1, resolvedMid);
@@ -86,7 +86,7 @@ class Composer {
         joinsObject[resolvedName].Model = rModel;
         cache[rModel.name] = {};
 
-        joinsObject[resolvedName].name = name;
+        joinsObject[resolvedName].shortAlias = shortAlias;
         joinsObject[resolvedName].resolvedName = resolvedName;
         joinsObject[resolvedName].key = k;
         joinsObject[resolvedName].multiple = relationship.immediateMultiple();
@@ -126,10 +126,8 @@ class Composer {
 
       joins.forEach(join => {
 
-        let id = row[`\$${join.name}\$id`];
+        let id = row[`\$${join.shortAlias}\$id`];
 
-        let name = join.name;
-        let names = name.split('__');
         let resolvedName = join.resolvedName;
         let resolvedNames = resolvedName.split('__');
         let joinName = resolvedNames.pop();
@@ -150,7 +148,7 @@ class Composer {
 
         if (!joinModel) {
           joinModel = join.cachedModel = joinCache[id] = new join.Model(join.columns.reduce((obj, k) => {
-            obj[k] = row[`\$${join.name}\$${k}`];
+            obj[k] = row[`\$${join.shortAlias}\$${k}`];
             return obj;
           }, join.columnsObject), true)
         }
@@ -245,7 +243,7 @@ class Composer {
         let joinName = composerCommand.data.name;
         let joinData = composerCommand.data.joinData.slice();
         joins[joinName] = {data: joinData.pop()};
-        let shortAliasComponents = joinName.split('__').map((aliasComponent) => {
+        let shortAliasComponents = joins[joinName].data.joinAlias.split('__').map((aliasComponent) => {
           this._shortAliasMap[aliasComponent] = this._shortAliasMap[aliasComponent] || ('j' + this._joinCount++);
           return this._shortAliasMap[aliasComponent];
         });
@@ -253,13 +251,11 @@ class Composer {
         joins[joinName].data.prevShortAlias = shortAliasComponents.slice(0, shortAliasComponents.length - 1).join('__');
         joins[joinName].data.multiFilter = joins[joinName].data.multiFilter.map((comparisonArray) => {
           return comparisonArray.map((comparison) => {
-            console.log(comparison);
             if (comparison.alias) {
               comparison.shortAlias = comparison.alias.split('__').map((aliasComponent) => {
-                console.log(aliasComponent, comparison.table);
-                // if (aliasComponent === comparison.table) {
-                //   return aliasComponent;
-                // }
+                if (aliasComponent === comparison.alias) {
+                  return comparison.table;
+                }
                 this._shortAliasMap[aliasComponent] = this._shortAliasMap[aliasComponent] || ('j' + this._joinCount++);
                 return this._shortAliasMap[aliasComponent];
               }).join('__');
@@ -268,14 +264,12 @@ class Composer {
               comparison.shortAlias = this._shortAliasMap[joinName];
             }
             comparison.refName = [this.db.adapter.escapeField(comparison.shortAlias), this.db.adapter.escapeField(comparison.columnName)].join('.')
-            // console.log(comparison);
             return comparison;
           });
         });
         while (joinData.length) {
-          console.log(joinData);
           let data = joinData.pop();
-          let shortAliasComponents = joinName.split('__').map((aliasComponent) => {
+          let shortAliasComponents = data.joinAlias.split('__').map((aliasComponent) => {
             this._shortAliasMap[aliasComponent] = this._shortAliasMap[aliasComponent] || ('j' + this._joinCount++);
             return this._shortAliasMap[aliasComponent];
           });

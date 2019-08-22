@@ -487,7 +487,7 @@ class SQLAdapter {
             }
           )
           : comparators[whereObj.comparator](whereObj.refName, whereObj.value).replace(/__VAR__/gi, whereObj.value)
-// console.log('claws', whereObj, whereObj.refName, whereObj.value);
+
       if (!joined) {
 
         clauses.push(clause);
@@ -497,7 +497,6 @@ class SQLAdapter {
         if (joinedTables[alias]) {
           joinedTables[alias].clauses.push(clause);
         } else {
-          // console.log('joinClaws', whereObj);
           let joinedClause = {
             table: table,
             joins: whereObj.joins,
@@ -519,8 +518,6 @@ class SQLAdapter {
           `SELECT ${this.escapeField(jc.table)}.${this.escapeField('id')} `,
           `FROM ${this.escapeField(jc.table)} `,
           jc.joins.map((join, i) => {
-            // console.log('join clause join');
-            // console.log(jc);
             return [
               `INNER JOIN ${this.escapeField(join.joinTable)} AS ${this.escapeField(join.shortAlias || join.joinAlias)} ON `,
               `${this.escapeField(join.shortAlias || join.joinAlias)}.${this.escapeField(join.joinColumn)} = `,
@@ -619,9 +616,7 @@ class SQLAdapter {
         });
       });
 
-// console.log('short alias', join.shortAlias, join.multiFilter)
       let filterClause = this.generateOrClause(join.shortAlias, join.multiFilter, paramOffset);
-      // console.log('filter', filterClause);
       join.multiFilter && join.multiFilter.forEach(arr => {
         paramOffset += arr.filter(where => !where.ignoreValue).length;
       });
