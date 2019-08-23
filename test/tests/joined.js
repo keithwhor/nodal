@@ -84,20 +84,22 @@ module.exports = Nodal => {
             new User({username: 'felicia'}),
             new User({username: 'gregory'}),
             new User({username: 'georgia'}),
+            new User({username: 'gilliam'}),
             new User({username: 'facebook'}),
             new User({username: 'google'}),
-            new User({username: 'sergey', organization_location_id: 1})
+            new User({username: 'sergey', organization_location_id: 1}),
           ]);
 
           let memberships = Nodal.ModelArray.from([
-            new Membership({user_id: 1, organization_id: 5}),
-            new Membership({user_id: 2, organization_id: 5}),
-            new Membership({user_id: 3, organization_id: 6}),
-            new Membership({user_id: 4, organization_id: 6})
+            new Membership({user_id: 1, organization_id: 6}),
+            new Membership({user_id: 2, organization_id: 6}),
+            new Membership({user_id: 3, organization_id: 7}),
+            new Membership({user_id: 4, organization_id: 7}),
+            new Membership({user_id: 5, organization_id: 7})
           ]);
 
           let organizationLocations = Nodal.ModelArray.from([
-            new OrganizationLocations({organization_id: 6, organization_authorization_access_code: 'secret_password', location: 'Mountain View'})
+            new OrganizationLocations({organization_id: 7, organization_authorization_access_code: 'secret_password', location: 'Mountain View'})
           ]);
 
           async.series([
@@ -121,14 +123,14 @@ module.exports = Nodal => {
 
     });
 
-    it('Should query all users (6)', function(done) {
+    it('Should query all users (8)', function(done) {
 
       User.query()
         .end((err, users) => {
 
           expect(err).to.equal(null);
           expect(users).to.be.an.instanceOf(Nodal.ModelArray);
-          expect(users.length).to.equal(7);
+          expect(users.length).to.equal(8);
           done();
 
         });
@@ -187,7 +189,7 @@ module.exports = Nodal => {
 
     });
 
-    it('Should truncate joined model names when querying', (done) => {
+    it('Should filter comparisons in nested join statements properly', (done) => {
 
       User.query()
         .join('members')
@@ -198,9 +200,16 @@ module.exports = Nodal => {
           expect(err).to.equal(null);
           expect(organizations).to.be.an.instanceOf(Nodal.ModelArray);
           expect(organizations.length).to.equal(1);
-          expect(organizations[0].joined('members').length).to.equal(2);
-          expect(organizations[0].joined('members')[0].joined('user')).to.exist;
-          expect(organizations[0].joined('members')[1].joined('user')).to.exist;
+          expect(organizations[0].joined('members').length).to.equal(3);
+          expect(organizations[0].joined('members').find((member) => {
+            return member.joined('user') && member.joined('user').get('username') === 'georgia';
+          })).to.exist;
+          expect(organizations[0].joined('members').find((member) => {
+            return member.joined('user') && member.joined('user').get('username') === 'gregory';
+          })).to.exist;
+          expect(organizations[0].joined('members').find((member) => {
+            return member.joined('user') && member.joined('user').get('username') === 'gilliam';
+          })).to.not.exist;
           done();
 
         });
