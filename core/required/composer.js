@@ -224,6 +224,12 @@ class Composer {
     return this.__collapse__().filter(c => c._command && c._command.type === 'groupBy').length > 0;
   }
 
+  /**
+  * Adds shortened aliases to joins
+  * @param {Object} [joinData] Information about a join
+  * @return {Object} The input join data with an added short alias
+  * @private
+  */
   __addShortAliasToJoinData__(joinData) {
 
     let shortAliasComponents = joinData.joinAlias.split('__').map((aliasComponent) => {
@@ -233,6 +239,7 @@ class Composer {
 
     joinData.shortAlias = shortAliasComponents.join('__');
     joinData.prevShortAlias = shortAliasComponents.slice(0, shortAliasComponents.length - 1).join('__');
+
     joinData.multiFilter = (joinData.multiFilter || []).map((comparisonArray) => {
       return comparisonArray.map((comparison) => {
         if (comparison.joins && comparison.joins.length) {
