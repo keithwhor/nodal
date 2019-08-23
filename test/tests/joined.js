@@ -187,6 +187,26 @@ module.exports = Nodal => {
 
     });
 
+    it('Should truncate joined model names when querying', (done) => {
+
+      User.query()
+        .join('members')
+        .join('members__user', {username: 'georgia'}, {username: 'gregory'})
+        .where({username: 'google'})
+        .end((err, organizations) => {
+
+          expect(err).to.equal(null);
+          expect(organizations).to.be.an.instanceOf(Nodal.ModelArray);
+          expect(organizations.length).to.equal(1);
+          expect(organizations[0].joined('members').length).to.equal(2);
+          expect(organizations[0].joined('members')[0].joined('user')).to.exist;
+          expect(organizations[0].joined('members')[1].joined('user')).to.exist;
+          done();
+
+        });
+
+    });
+
   });
 
 };

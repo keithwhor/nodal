@@ -246,7 +246,10 @@ class Composer {
           comparison.shortAlias = comparison.joins[comparison.joins.length - 1].joinAlias;
           return comparison;
         }
-        this._shortAliasMap[joinData.joinAlias] = this._shortAliasMap[joinData.joinAlias] || ('j' + this._joinCount++);
+        this._shortAliasMap[joinData.joinAlias] = joinData.joinAlias.split('__').map((aliasComponent) => {
+          this._shortAliasMap[aliasComponent] = this._shortAliasMap[aliasComponent] || ('j' + this._joinCount++);
+          return this._shortAliasMap[aliasComponent];
+        }).join('__');
         comparison.shortAlias = this._shortAliasMap[joinData.joinAlias];
         comparison.refName = [this.db.adapter.escapeField(comparison.shortAlias), this.db.adapter.escapeField(comparison.columnName)].join('.')
         return comparison;
