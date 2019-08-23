@@ -225,31 +225,29 @@ class Composer {
   }
 
   __addShortAliasToJoinData__(joinData) {
+
     let shortAliasComponents = joinData.joinAlias.split('__').map((aliasComponent) => {
       this._shortAliasMap[aliasComponent] = this._shortAliasMap[aliasComponent] || ('j' + this._joinCount++);
       return this._shortAliasMap[aliasComponent];
     });
+
     joinData.shortAlias = shortAliasComponents.join('__');
     joinData.prevShortAlias = shortAliasComponents.slice(0, shortAliasComponents.length - 1).join('__');
     joinData.multiFilter = (joinData.multiFilter || []).map((comparisonArray) => {
       return comparisonArray.map((comparison) => {
-        if (comparison.alias) {
-          comparison.shortAlias = comparison.alias.split('__').map((aliasComponent) => {
-            if (aliasComponent === comparison.alias) {
-              return comparison.table;
-            }
-            this._shortAliasMap[aliasComponent] = this._shortAliasMap[aliasComponent] || ('j' + this._joinCount++);
-            return this._shortAliasMap[aliasComponent];
-          }).join('__');
-        } else {
-          this._shortAliasMap[joinData.joinAlias] = this._shortAliasMap[joinData.joinAlias] || ('j' + this._joinCount++);
-          comparison.shortAlias = this._shortAliasMap[joinData.joinAlias];
+        if (comparison.joins && comparison.joins.length) {
+          comparison.shortAlias = comparison.joins[comparison.joins.length - 1].joinAlias;
+          return comparison;
         }
+        this._shortAliasMap[joinData.joinAlias] = this._shortAliasMap[joinData.joinAlias] || ('j' + this._joinCount++);
+        comparison.shortAlias = this._shortAliasMap[joinData.joinAlias];
         comparison.refName = [this.db.adapter.escapeField(comparison.shortAlias), this.db.adapter.escapeField(comparison.columnName)].join('.')
         return comparison;
       });
     });
+
     return joinData;
+
   }
 
   /**
