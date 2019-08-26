@@ -814,6 +814,23 @@ module.exports = Nodal => {
 
     });
 
+    it('Should find all parents with children id <= 15, by joining with parent restrictions that joins another field', (done) => {
+
+      Parent.query()
+        .join('children', {parent__children__id__in: [1, 2, 3]})
+        .where({children__id__lte: 15})
+        .end((err, parents) => {
+
+          expect(err).to.equal(null);
+          expect(parents.length).to.equal(2);
+          expect(parents[0].joined('children').length).to.equal(10);
+          expect(parents[1].joined('children').length).to.equal(0);
+          done();
+
+        });
+
+    });
+
     it('Should join children and partners both to parents', (done) => {
 
       Parent.query()
