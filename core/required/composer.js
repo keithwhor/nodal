@@ -845,8 +845,8 @@ class Composer {
       offset = 0;
     }
 
-    count = parseInt(count);
-    offset = parseInt(offset);
+    count = parseInt(count) || 0;
+    offset = parseInt(offset) || 0;
 
     this._command = {
       type: 'limit',
