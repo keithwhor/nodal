@@ -397,6 +397,23 @@ module.exports = Nodal => {
 
     });
 
+    it('Should limit properly with an undefined offset', function(done) {
+
+      Child.query()
+        .limit(undefined, 10)
+        .end((err, children) => {
+
+          expect(err).to.equal(null);
+          expect(children).to.be.an.instanceOf(Nodal.ModelArray);
+          expect(children.length).to.equal(10);
+          expect(children._meta.total).to.equal(100);
+          expect(children._meta.offset).to.equal(0);
+          done();
+
+        });
+
+    });
+
     it('Should limit properly (query params, offset)', (done) => {
 
       Child.query()
