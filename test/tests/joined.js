@@ -216,7 +216,7 @@ module.exports = Nodal => {
 
     });
 
-    it('Should filter comparisons on deeply nested join statements properly', (done) => {
+    it('Should filter on comparisons containing joined fields within join statements properly', (done) => {
 
       User.query()
         .join('members', {user__username: 'georgia'}, {user__username: 'gilliam'})
