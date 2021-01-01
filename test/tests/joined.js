@@ -216,6 +216,30 @@ module.exports = Nodal => {
 
     });
 
+    it('Should filter on comparisons containing joined fields within join statements properly', (done) => {
+
+      User.query()
+        .join('members', {user__username: 'georgia'}, {user__username: 'gilliam'})
+        .join('members__user')
+        .where({username: 'google'})
+        .end((err, organizations) => {
+
+          expect(err).to.equal(null);
+          expect(organizations).to.be.an.instanceOf(Nodal.ModelArray);
+          expect(organizations.length).to.equal(1);
+          expect(organizations[0].joined('members').length).to.equal(2);
+          expect(organizations[0].joined('members').find((member) => {
+            return member.joined('user') && member.joined('user').get('username') === 'georgia';
+          })).to.exist;
+          expect(organizations[0].joined('members').find((member) => {
+            return member.joined('user') && member.joined('user').get('username') === 'gilliam';
+          })).to.exist;
+          done();
+
+        });
+
+    });
+
   });
 
 };
