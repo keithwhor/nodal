@@ -8,6 +8,14 @@
       "user": "postgres",
       "password": "",
       "database": "nodal_test"
+    },
+    "readonly": {
+      "adapter": "postgres",
+      "host": "localhost",
+      "port": "5432",
+      "user": "postgres",
+      "password": "",
+      "database": "nodal_test_readonly"
     }
   },
 
@@ -19,6 +27,14 @@
       "user": "postgres",
       "password": "",
       "database": "travis_ci_test"
+    },
+    "readonly": {
+      "adapter": "postgres",
+      "host": "localhost",
+      "port": "5432",
+      "user": "postgres",
+      "password": "",
+      "database": "travis_ci_test_readonly"
     }
   }
 

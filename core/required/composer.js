@@ -16,13 +16,15 @@ class Composer {
   * Created by Model#query, used for composing SQL queries based on Models
   * @param {Nodal.Model} Model The model class the composer is querying from
   * @param {Nodal.Composer} [parent=null] The composer's parent (another composer instance)
+  * @param {optional Nodal.Database} readonlyDb Provide a database to query from
   */
-  constructor(Model, parent) {
+  constructor(Model, parent, readonlyDb) {
 
-    this.db = Model.prototype.db;
+    this.db = readonlyDb || (parent && parent.db) || Model.prototype.db;
     this.Model = Model;
 
     this._parent = parent || null;
+    this._readonly = !!(readonlyDb || (parent && parent._readonly));
     this._command = null;
     this._transaction = null;
     this._shortAliasMap = {};
@@ -1113,6 +1115,10 @@ class Composer {
   * @param {function({Error}, {Nodal.ModelArray})} callback The callback for the update query
   */
   update(fields, callback) {
+
+    if (this._readonly) {
+      return callback(new Error('Cannot use update in a readonly query.'));
+    }
 
     if (this.__isGrouped__()) {
       throw new Error('Cannot update grouped queries');
