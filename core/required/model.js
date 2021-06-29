@@ -174,7 +174,7 @@ class Model {
 
   /**
   * Creates a new Composer (ORM) instance to begin a new query.
-  * @param {optional Nodal.Database} readonlyDb Provide a read-only database to query from
+  * @param {optional Nodal.Database} readonlyDb Provide a readonly database to query from
   * @return {Nodal.Composer}
   */
   static query(readonlyDb) {

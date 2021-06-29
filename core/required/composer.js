@@ -16,7 +16,7 @@ class Composer {
   * Created by Model#query, used for composing SQL queries based on Models
   * @param {Nodal.Model} Model The model class the composer is querying from
   * @param {Nodal.Composer} [parent=null] The composer's parent (another composer instance)
-  * @param {optional Nodal.Database} readonlyDb Provide a database to query from
+  * @param {optional Nodal.Database} readonlyDb Provide a readonly database to query from
   */
   constructor(Model, parent, readonlyDb) {
 
