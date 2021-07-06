@@ -8,7 +8,29 @@ module.exports = Nodal => {
 
   describe('Nodal.Composer', function() {
 
-    let db = new Nodal.Database();
+    let mainDb = new Nodal.Database();
+    let readonlyDb = new Nodal.Database();
+
+    let connectionParams = [{
+      db: mainDb,
+      config: Nodal.my.Config.db.main
+    }, {
+      db: readonlyDb,
+      config: Nodal.my.Config.db.readonly
+    }];
+
+    let originalParentNames = [
+      'Albert',
+      'Derek',
+      'Dingleberry',
+      'James',
+      'Joe',
+      'Sally',
+      'Samantha',
+      'Samuel',
+      'Suzy',
+      'Zoolander'
+    ];
 
     let schemaParent = {
       table: 'parents',
@@ -89,167 +111,188 @@ module.exports = Nodal => {
 
     class Parent extends Nodal.Model {}
 
-    Parent.setDatabase(db);
+    Parent.setDatabase(mainDb);
     Parent.setSchema(schemaParent);
     Parent.hides('hidden');
 
     class Career extends Nodal.Model {};
 
-    Career.setDatabase(db);
+    Career.setDatabase(mainDb);
     Career.setSchema(schemaCareer);
     Career.joinsTo(Parent, {multiple: true});
 
     class Friendship extends Nodal.Model {}
 
-    Friendship.setDatabase(db);
+    Friendship.setDatabase(mainDb);
     Friendship.setSchema(schemaFriendship);
     Friendship.joinsTo(Parent, {name: 'fromParent', as: 'outgoingFriendships', multiple: true});
     Friendship.joinsTo(Parent, {name: 'toParent', as: 'incomingFriendships', multiple: true});
 
     class Child extends Nodal.Model {}
 
-    Child.setDatabase(db);
+    Child.setDatabase(mainDb);
     Child.setSchema(schemaChild);
     Child.joinsTo(Parent, {multiple: true});
 
     class Partner extends Nodal.Model {}
 
-    Partner.setDatabase(db);
+    Partner.setDatabase(mainDb);
     Partner.setSchema(schemaPartner);
     Partner.joinsTo(Parent);
 
     class Pet extends Nodal.Model {}
 
-    Pet.setDatabase(db);
+    Pet.setDatabase(mainDb);
     Pet.setSchema(schemaPet);
     Pet.joinsTo(Parent, {multiple: true});
 
     before(function(done) {
 
-      db.connect(Nodal.my.Config.db.main);
+      async.series(connectionParams.map((connection) => {
 
-      db.transaction(
-        [
-          schemaParent,
-          schemaCareer,
-          schemaFriendship,
-          schemaChild,
-          schemaPartner,
-          schemaPet
-        ].map(schema => {
-          return [
-            db.adapter.generateDropTableQuery(schema.table, true),
-            db.adapter.generateCreateTableQuery(schema.table, schema.columns)
-          ].join(';');
-        }).join(';'),
-        function(err, result) {
+        return (cb) => {
 
-          expect(err).to.equal(null);
+          let db = connection.db;
+          let config = connection.config;
 
-          let parents = [
-            'Albert',
-            'Derek',
-            'Dingleberry',
-            'James',
-            'Joe',
-            'Sally',
-            'Samantha',
-            'Samuel',
-            'Suzy',
-            'Zoolander'
-          ].map((name, i) => new Parent({
-            name: name,
-            shirt: ['red', 'green', 'blue'][i % 3],
-            pantaloons: ['jeans', 'shorts'][i % 2],
-            hidden: 'abcdef'.split('')[i % 6]
-          }));
+          db.connect(config);
 
-          parents = Nodal.ModelArray.from(parents);
+          Parent.setDatabase(db);
+          Career.setDatabase(db);
+          Friendship.setDatabase(db);
+          Child.setDatabase(db);
+          Partner.setDatabase(db);
+          Pet.setDatabase(db);
 
-          parents.forEach((p, i) => {
+          db.transaction(
+            [
+              schemaParent,
+              schemaCareer,
+              schemaFriendship,
+              schemaChild,
+              schemaPartner,
+              schemaPet
+            ].map(schema => {
+              return [
+                db.adapter.generateDropTableQuery(schema.table, true),
+                db.adapter.generateCreateTableQuery(schema.table, schema.columns)
+              ].join(';');
+            }).join(';'),
+            function(err, result) {
 
-            let id = i + 1;
+              expect(err).to.equal(null);
 
-            let careers = ['Freelancer', 'Poet'].map((title, n) => {
-              return new Career({parent_id: id, title: title, is_active: true});
-            });
-
-            p.setJoined('careers', Nodal.ModelArray.from(careers));
-
-            let children = 'ABCDEFGHIJ'.split('').map((name, n) => {
-              var ageOffset = (n >= 5) ? 16 : 0;
-              return new Child({
-                parent_id: id,
-                name: `Child${name}`,
-                age: ageOffset + ((Math.random() * 30) | 0),
-                is_favorite: !!(n % 2),
-                license: !!ageOffset ? 'DL_APPROVED' : null
-              });
-            });
-
-            p.setJoined('children', Nodal.ModelArray.from(children));
-
-            let pets = ['Oliver', 'Ruby', 'Pascal'].map((name, i) => {
-              return new Pet({
-                parent_id: id,
+              let parents = originalParentNames.map((name, i) => new Parent({
                 name: name,
-                animal: ['Cat', 'Dog', 'Cat'][i],
-                is_alive: true,
-                details: { language: name === 'Pascal' }
+                shirt: ['red', 'green', 'blue'][i % 3],
+                pantaloons: ['jeans', 'shorts'][i % 2],
+                hidden: 'abcdef'.split('')[i % 6]
+              }));
+
+              parents = Nodal.ModelArray.from(parents);
+
+              parents.forEach((p, i) => {
+
+                let id = i + 1;
+
+                let careers = ['Freelancer', 'Poet'].map((title, n) => {
+                  return new Career({parent_id: id, title: title, is_active: true});
+                });
+
+                p.setJoined('careers', Nodal.ModelArray.from(careers));
+
+                let children = 'ABCDEFGHIJ'.split('').map((name, n) => {
+                  var ageOffset = (n >= 5) ? 16 : 0;
+                  return new Child({
+                    parent_id: id,
+                    name: `Child${name}`,
+                    age: ageOffset + ((Math.random() * 30) | 0),
+                    is_favorite: !!(n % 2),
+                    license: !!ageOffset ? 'DL_APPROVED' : null
+                  });
+                });
+
+                p.setJoined('children', Nodal.ModelArray.from(children));
+
+                let pets = ['Oliver', 'Ruby', 'Pascal'].map((name, i) => {
+                  return new Pet({
+                    parent_id: id,
+                    name: name,
+                    animal: ['Cat', 'Dog', 'Cat'][i],
+                    is_alive: true,
+                    details: { language: name === 'Pascal' }
+                  });
+                });
+
+                p.setJoined('pets', Nodal.ModelArray.from(pets));
+
+                let partner = new Partner({
+                  parent_id: id,
+                  name: `Partner${i}`,
+                  job: ['Plumber', 'Engineer', 'Nurse', 'Scientist'][i % 4],
+                  full_time: !!(i % 2)
+                });
+                p.setJoined('partner', partner);
+
+                let friendships = new Nodal.ModelArray(Friendship);
+                while (i--) {
+                  let friendship = new Friendship({from_parent_id: id, to_parent_id: i + 1});
+                  friendships.push(friendship);
+                }
+
+                p.setJoined('outgoingFriendships', friendships);
+
               });
-            });
 
-            p.setJoined('pets', Nodal.ModelArray.from(pets));
+              parents.saveAll(err => {
 
-            let partner = new Partner({
-              parent_id: id,
-              name: `Partner${i}`,
-              job: ['Plumber', 'Engineer', 'Nurse', 'Scientist'][i % 4],
-              full_time: !!(i % 2)
-            });
-            p.setJoined('partner', partner);
+                expect(err).to.equal(null);
 
-            let friendships = new Nodal.ModelArray(Friendship);
-            while (i--) {
-              let friendship = new Friendship({from_parent_id: id, to_parent_id: i + 1});
-              friendships.push(friendship);
+                async.series(
+                  [].concat(
+                    parents.map(p => p.joined('careers').saveAll.bind(p.joined('careers'))),
+                    parents.map(p => p.joined('children').saveAll.bind(p.joined('children'))),
+                    parents.map(p => p.joined('pets').saveAll.bind(p.joined('pets'))),
+                    parents.map(p => p.joined('partner').save.bind(p.joined('partner'))),
+                    parents.map(p => p.joined('outgoingFriendships').saveAll.bind(p.joined('outgoingFriendships'))).filter(p => p)
+                  ), (err) => {
+
+                    expect(err).to.not.exist;
+                    cb()
+
+                  }
+                );
+
+              });
+
             }
+          );
+        };
 
-            p.setJoined('outgoingFriendships', friendships);
-
-          });
-
-          parents.saveAll(err => {
-
-            expect(err).to.equal(null);
-
-            async.series(
-              [].concat(
-                parents.map(p => p.joined('careers').saveAll.bind(p.joined('careers'))),
-                parents.map(p => p.joined('children').saveAll.bind(p.joined('children'))),
-                parents.map(p => p.joined('pets').saveAll.bind(p.joined('pets'))),
-                parents.map(p => p.joined('partner').save.bind(p.joined('partner'))),
-                parents.map(p => p.joined('outgoingFriendships').saveAll.bind(p.joined('outgoingFriendships'))).filter(p => p)
-              ), (err) => {
-
-                expect(err).to.not.exist;
-                done();
-
-              }
-            );
-
-          });
-
+      }), (err) => {
+        if (err) {
+          return done(err);
         }
-      );
+        Parent.setDatabase(mainDb);
+        Career.setDatabase(mainDb);
+        Friendship.setDatabase(mainDb);
+        Child.setDatabase(mainDb);
+        Partner.setDatabase(mainDb);
+        Pet.setDatabase(mainDb);
+        return done();
+      });
 
     });
 
     after(function(done) {
 
-      db.close(function() {
-        done();
-      });
+      async.series(connectionParams.map((connection) => {
+        return (cb) => {
+          connection.db.close(function() {
+            cb();
+          });
+        };
+      }), done);
 
     });
 
@@ -1295,6 +1338,37 @@ module.exports = Nodal => {
             expect(parent.get('id')).to.equal(10 - i);
           });
 
+          done();
+
+        });
+
+    });
+
+    it('Should query the readonly and see all parents with their original names', (done) => {
+
+      Parent.query(readonlyDb)
+        .orderBy('name', 'ASC')
+        .end((err, parents) => {
+
+          expect(err).to.not.exist;
+          expect(parents.length).to.equal(10);
+
+          parents.forEach((parent, i) => {
+            expect(parent.get('name')).to.equal(originalParentNames[i]);
+          });
+
+          done();
+
+        });
+
+    });
+
+    it('Should throw an error when trying to update with a readonly database', (done) => {
+
+      Parent.query(readonlyDb)
+        .update({name: 'Cobb'}, (err, parents) => {
+
+          expect(err).to.exist;
           done();
 
         });

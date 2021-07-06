@@ -174,13 +174,12 @@ class Model {
 
   /**
   * Creates a new Composer (ORM) instance to begin a new query.
-  * @param {optional Nodal.Database} db Deprecated - provide a database to query from. Set the model's db in its constructor file, instead.
+  * @param {optional Nodal.Database} readonlyDb Provide a readonly database to query from
   * @return {Nodal.Composer}
   */
-  static query(db) {
+  static query(readonlyDb) {
 
-    db = db || this.prototype.db;
-    return new Composer(this);
+    return new Composer(this, null, readonlyDb);
 
   }
 

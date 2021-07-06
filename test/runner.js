@@ -35,7 +35,13 @@ describe('Test Suite', function() {
           //
           child_process.exec('psql -a -c "create database nodal_test;" -U postgres', processOptions, function(error, stdout, stderr) {
             if(error) console.warn("Warning:", stderr, "\nErrors ignored.");
-            done();
+            child_process.exec('psql -q -c "drop database if exists nodal_test_readonly;" -U postgres', processOptions, function(error, stdout, stderr) {
+              if(error) console.warn("Warning:", stderr, "\nErrors ignored.");
+              child_process.exec('psql -a -c "create database nodal_test_readonly;" -U postgres', processOptions, function(error, stdout, stderr) {
+                if(error) console.warn("Warning:", stderr, "\nErrors ignored.");
+                done();
+              });
+            });
           });
         });
       }
@@ -47,7 +53,10 @@ describe('Test Suite', function() {
         // Don't remove the -q option, it will break the db connection pool
         child_process.exec('psql -q -c "drop database if exists nodal_test;" -U postgres', processOptions, function(error, stdout, stderr) {
           if(error) console.warn("Warning:", stderr, "\nErrors ignored.");
-          done();
+          child_process.exec('psql -q -c "drop database if exists nodal_test_readonly;" -U postgres', processOptions, function(error, stdout, stderr) {
+            if(error) console.warn("Warning:", stderr, "\nErrors ignored.");
+            done();
+          });
         });
       }
     });
@@ -60,6 +69,8 @@ describe('Test Suite', function() {
         // child_process.execSync('createuser postgres -s -q');
         child_process.execSync('psql -c \'drop database if exists nodal_test;\' -U postgres');
         child_process.execSync('psql -c \'create database nodal_test;\' -U postgres');
+        child_process.execSync('psql -c \'drop database if exists nodal_test_readonly;\' -U postgres');
+        child_process.execSync('psql -c \'create database nodal_test_readonly;\' -U postgres');
       }
     });
 
@@ -67,6 +78,7 @@ describe('Test Suite', function() {
       this.timeout(30000);
       if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
         child_process.execSync('psql -c \'drop database if exists nodal_test;\' -U postgres');
+        child_process.execSync('psql -c \'drop database if exists nodal_test_readonly;\' -U postgres');
       }
     });
 
