@@ -15,10 +15,11 @@ class TestRunner {
   tests() {
 
     let tests = [];
-    let filter;
+    // Strip mocha and node flags out before looking for filter
+    let filter = process.argv.filter(str => !str.startsWith('--')).slice(3)[0]
 
-    if (process.argv.length > 3) {
-      filter = process.argv[3];
+
+    if (filter) {
       filter = filter.endsWith('.js') ? filter : `${filter}.js`;
     }
 
