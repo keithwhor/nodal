@@ -242,7 +242,7 @@ class SQLAdapter {
 
     return [
       `UPDATE ${this.escapeField(table)}`,
-      ` SET (${fields.join(',')}) = (${params.join(',')})`,
+      ` SET (${fields.join(',')}) = ROW(${params.join(',')})`,
       ` WHERE (`,
         this.escapeField(pkColumn),
         subQuery ? ` IN (${subQuery})` : ` = $1`,
