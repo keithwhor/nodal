@@ -593,9 +593,11 @@ class Composer {
 
         if (rel) {
 
-          // if it's not found, return null...
-          if (!rel.getModel().hasColumn(column[0])) {
-            return null;
+          let model = rel.getModel();
+
+          // block out bad column names
+          if (!model.hasColumn(column[0])) {
+            throw new Error(`Column '${column[0]}' doesn't exist on '${model.name}'`);
           }
 
           table = rel.getModel().table();
@@ -608,7 +610,7 @@ class Composer {
 
         // block out bad column names
         if (!rel && !Model.hasColumn(columnName)) {
-          return null;
+          throw new Error(`Column '${columnName}' doesn't exist on '${this.Model.name}'`);
         }
 
         let value = comparisons[comparison];
