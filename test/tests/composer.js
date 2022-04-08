@@ -4,7 +4,7 @@ module.exports = Nodal => {
 
   const async = require('async');
 
-  let expect = require('chai').expect;
+  const { assert, expect } = require('chai');
 
   describe('Nodal.Composer', function() {
 
@@ -1225,7 +1225,7 @@ module.exports = Nodal => {
             children__is_favorite: true,
             children__license: null,
             pets__name: 'Oliver',
-            pets__alive: true,
+            pets__is_alive: true,
             name: 'Zoolander',
             pets__animal__in: ['Cat']
           },
@@ -1233,7 +1233,7 @@ module.exports = Nodal => {
             children__is_favorite: true,
             children__license__not_null: true,
             pets__name: 'Oliver',
-            pets__alive: true,
+            pets__is_alive: true,
             name: 'Zoolander',
             pets__animal__in: ['Cat']
           },
@@ -1241,7 +1241,7 @@ module.exports = Nodal => {
             careers__title: 'Freelancer',
             careers__is_active: true,
             pets__name: 'Oliver',
-            pets__alive: true,
+            pets__is_alive: true,
             name: 'Zoolander',
             pets__animal__in: ['Cat']
           },
@@ -1706,6 +1706,50 @@ module.exports = Nodal => {
           done();
 
         });
+
+    });
+
+    it('Should throw errors when querying with a bad column name', done => {
+
+      try {
+
+        Parent.query()
+          .join('pets')
+          .where({ active: true })
+          .end();
+
+        assert.fail("Expected query to throw an error");
+
+      } catch (error) {
+
+        expect(error.message).to.contain("Column 'active'");
+        expect(error.message).to.contain("'Parent'");
+
+      }
+
+      done();
+
+    });
+
+    it('Should throw errors when querying joins with a bad column name', done => {
+
+      try {
+
+        Parent.query()
+          .join('pets')
+          .where({ pets__active: true })
+          .end();
+
+        assert.fail("Expected query to throw an error");
+
+      } catch (error) {
+
+        expect(error.message).to.contain("Column 'active'");
+        expect(error.message).to.contain("'Pet'");
+
+      }
+
+      done();
 
     });
 
