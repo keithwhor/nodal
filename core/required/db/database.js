@@ -12,6 +12,7 @@ class Database {
   constructor() {
 
     this.adapter = null;
+    this._logsEnabled = false;
     this._useLogColor = 0;
 
   }
@@ -37,17 +38,27 @@ class Database {
 
   }
 
+  enableLogs(enabled) {
+
+    this._logsEnabled = !!enabled;
+
+  }
+
   log(sql, params, time) {
 
-    let colorFunc = this.__logColorFuncs[this._useLogColor];
+    if (this._logsEnabled) {
 
-    console.log();
-    console.log(colorFunc(sql));
-    params && console.log(colorFunc(JSON.stringify(params)));
-    time && console.log(colorFunc(time + 'ms'));
-    console.log();
+      let colorFunc = this.__logColorFuncs[this._useLogColor];
 
-    this._useLogColor = (this._useLogColor + 1) % this.__logColorFuncs.length;
+      console.log();
+      console.log(colorFunc(sql));
+      params && console.log(colorFunc(JSON.stringify(params)));
+      time && console.log(colorFunc(time + 'ms'));
+      console.log();
+
+      this._useLogColor = (this._useLogColor + 1) % this.__logColorFuncs.length;
+
+    }
 
     return true;
 
