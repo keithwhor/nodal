@@ -85,26 +85,19 @@ class PostgresAdapter extends SQLAdapter {
 
   }
 
-  createTransaction(callback) {
-
-    pg.connect(this._config, (err, client, complete) => {
-
+  async createTransaction(callback) {
+    let client;
+    try {
+      client = await this._pool.connect();
+    } catch (e) {
+      return callback(e);
+    }
+    this.beginClient(client, (err) => {
       if (err) {
         return callback(err);
       }
-
-      this.beginClient(client, (err) => {
-
-        if (err) {
-          return callback(err);
-        }
-
-        return callback(null, new Transaction(this, client, complete));
-
-      });
-
+      return callback(null, new Transaction(this, client, () => client.release()));
     });
-
   }
 
   query(query, params, callback) {
@@ -129,7 +122,7 @@ class PostgresAdapter extends SQLAdapter {
         this.db.error(err.message);
         callback.apply(this, err);
       } else {
-        callback.apply(this, [err, results]);
+        callback.apply(this, [null, results]);
       }
     });
 
