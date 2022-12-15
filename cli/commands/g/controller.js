@@ -163,9 +163,10 @@ class GenerateControllerCommand extends Command {
       return callback(new Error('Controller already exists'));
     }
 
-    while (controllerPath.length && (cd += '/' + controllerPath.shift()) && !fs.existsSync(cd)) {
-      fs.mkdirSync(cd);
-      cd += '/' + controllerPath.shift();
+    while (controllerPath.length && (cd += '/' + controllerPath.shift())) {
+      if (!fs.existsSync(cd)) {
+        fs.mkdirSync(cd);
+      }
     }
 
     fs.writeFileSync(createPath, generateController(fullControllerName, forModel));
