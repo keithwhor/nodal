@@ -53,6 +53,7 @@ class Bootstrapper {
 
   drop(callback) {
 
+    console.log(this.rootDb().drop);
     this.rootDb().drop(this.cfg.database, callback);
 
   }

@@ -8,7 +8,6 @@ const utilities = require('../../utilities.js');
 const async = require('async');
 
 const pg = require('pg');
-pg.defaults.poolSize = 8;
 
 const POSTGRES_ERROR_CODES = {
   '23000': 'integrity_constraint_violation',
@@ -30,12 +29,13 @@ class PostgresAdapter extends SQLAdapter {
 
     this.db = db;
     this._config = cfg;
+    this._pool = new pg.Pool(this._config);
 
   }
 
   close() {
 
-    pg.end();
+    this._pool.end();
 
   }
 
@@ -57,7 +57,6 @@ class PostgresAdapter extends SQLAdapter {
     client.query(query, params, (err, result) => {
       this.db.log(query, params, new Date().valueOf() - start);
       if (err) {
-        console.log('ERROR?');
         console.log(err);
       }
       callback(err, result);
@@ -125,29 +124,20 @@ class PostgresAdapter extends SQLAdapter {
     let start = new Date().valueOf();
     let log = this.db.log.bind(this.db);
 
-    pg.connect(this._config, (err, client, complete) => {
-
+    this._pool.query(query, params, (err, results) => {
       if (err) {
         this.db.error(err.message);
-        complete();
-        callback.apply(this, [err]);
-        return;
+        callback.apply(this, err);
+      } else {
+        callback.apply(this, [err, results]);
       }
-
-      this.queryClient(client, query, params, (function (err, results) {
-
-        complete();
-        callback.apply(this, arguments);
-
-      }).bind(this));
-
     });
 
     return true;
 
   }
 
-  transaction(preparedArray, callback) {
+  async transaction (preparedArray, callback) {
 
     if (!preparedArray.length) {
       throw new Error('Must give valid array of statements (with or without parameters)');
@@ -167,84 +157,135 @@ class PostgresAdapter extends SQLAdapter {
 
     let start = new Date().valueOf();
 
-    pg.connect(this._config, (err, client, complete) => {
-
-      if (err) {
-        this.db.error(err.message);
-        callback(err);
-        return complete();
-      }
-
-      let queries = preparedArray.map(queryData => {
-
-        let query = queryData[0];
-        let params = queryData[1] || [];
-
-        return (callback) => {
-          this.db.log(query, params, new Date().valueOf() - start);
-          client.query(queryData[0], queryData[1], callback);
-        };
-
-      });
-
-      queries = [].concat(
-        (callback) => {
-          client.query('BEGIN', callback);
-        },
-        queries
-      );
-
-      this.db.info('Transaction started...');
-
-      async.series(queries, (txnErr, results) => {
-
-        if (txnErr) {
-
-          this.db.error(txnErr.message);
-          this.db.info('Rollback started...');
-
-          client.query('ROLLBACK', (err) => {
-
-            if (err) {
-              this.db.error(`Rollback failed - ${err.message}`);
-              this.db.info('Transaction complete!');
-              complete();
-              callback(err);
-            } else {
-              this.db.info('Rollback complete!')
-              this.db.info('Transaction complete!');
-              complete();
-              callback(txnErr);
-            };
-
-          });
-
-        } else {
-
-          this.db.info('Commit started...');
-
-          client.query('COMMIT', (err) => {
-
-            if (err) {
-              this.db.error(`Commit failed - ${err.message}`);
-              this.db.info('Transaction complete!');
-              complete();
-              callback(err);
-              return;
-            }
-
-            this.db.info('Commit complete!')
-            this.db.info('Transaction complete!');
-            complete();
-            callback(null, results);
-
-          });
-
-        }
-
-      });
-
+    const client = await this._pool.connect();
+    let queries = preparedArray.map(queryData => {
+      let query = queryData[0];
+      let params = queryData[1] || [];
+      return (callback) => {
+        this.db.log(query, params, new Date().valueOf() - start);
+        client.query(queryData[0], queryData[1], callback);
+      };
     });
+    queries = [].concat(
+      async (callback) => {
+        client.query('BEGIN', callback);
+      },
+      queries
+    );
+    this.db.info('Transaction started...');
+    async.series(queries, (txnErr, results) => {
+      if (txnErr) {
+        this.db.error(txnErr.message);
+        this.db.info('Rollback started...');
+        client.query('ROLLBACK', (err) => {
+          if (err) {
+            this.db.error(`Rollback failed - ${err.message}`);
+            this.db.info('Transaction complete!');
+            client.release();
+            callback(err);
+          } else {
+            this.db.info('Rollback complete!')
+            this.db.info('Transaction complete!');
+            client.release();
+            callback(txnErr);
+          };
+        });
+      } else {
+        this.db.info('Commit started...');
+        client.query('COMMIT', (err) => {
+          if (err) {
+            this.db.error(`Commit failed - ${err.message}`);
+            this.db.info('Transaction complete!');
+            client.release();
+            callback(err);
+            return;
+          }
+          this.db.info('Commit complete!')
+          this.db.info('Transaction complete!');
+          client.release();
+          callback(null, results);
+        });
+      }
+    });
+
+    // pg.connect(this._config, (err, client, complete) => {
+    //
+    //   if (err) {
+    //     this.db.error(err.message);
+    //     callback(err);
+    //     return complete();
+    //   }
+    //
+    //   let queries = preparedArray.map(queryData => {
+    //
+    //     let query = queryData[0];
+    //     let params = queryData[1] || [];
+    //
+    //     return (callback) => {
+    //       this.db.log(query, params, new Date().valueOf() - start);
+    //       client.query(queryData[0], queryData[1], callback);
+    //     };
+    //
+    //   });
+    //
+    //   queries = [].concat(
+    //     (callback) => {
+    //       client.query('BEGIN', callback);
+    //     },
+    //     queries
+    //   );
+    //
+    //   this.db.info('Transaction started...');
+    //
+    //   async.series(queries, (txnErr, results) => {
+    //
+    //     if (txnErr) {
+    //
+    //       this.db.error(txnErr.message);
+    //       this.db.info('Rollback started...');
+    //
+    //       client.query('ROLLBACK', (err) => {
+    //
+    //         if (err) {
+    //           this.db.error(`Rollback failed - ${err.message}`);
+    //           this.db.info('Transaction complete!');
+    //           complete();
+    //           callback(err);
+    //         } else {
+    //           this.db.info('Rollback complete!')
+    //           this.db.info('Transaction complete!');
+    //           complete();
+    //           callback(txnErr);
+    //         };
+    //
+    //       });
+    //
+    //     } else {
+    //
+    //       this.db.info('Commit started...');
+    //
+    //       client.query('COMMIT', (err) => {
+    //
+    //         if (err) {
+    //           this.db.error(`Commit failed - ${err.message}`);
+    //           this.db.info('Transaction complete!');
+    //           complete();
+    //           callback(err);
+    //           return;
+    //         }
+    //
+    //         this.db.info('Commit complete!')
+    //         this.db.info('Transaction complete!');
+    //         complete();
+    //         callback(null, results);
+    //
+    //       });
+    //
+    //     }
+    //
+    //   });
+    //
+    // });
 
   }
 
