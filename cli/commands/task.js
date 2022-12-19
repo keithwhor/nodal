@@ -33,15 +33,15 @@ class TaskCommand extends Command {
     const Task = require(taskPath);
     let task = new Task();
 
-    task.exec(params.args.slice(1), (err) => {
+    task.exec(params.args.slice(1), (err, result) => {
 
       if (err) {
         console.log(`${colors.red.bold('Task Error:')} ${err.message}`);
       } else {
-        console.log('Task complete!');
+        console.log(colors.green.bold('Task complete!'));
       }
 
-      callback(null);
+      callback(null, result || null);
 
     });
 
