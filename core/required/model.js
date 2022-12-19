@@ -1275,8 +1275,7 @@ class Model {
 
       if (newTransaction) {
         if (err) {
-          console.log('ERROR IS?');
-          console.log(err);
+          console.error(err);
           return txn.rollback(txnErr => callback(err, this));
         }
         return txn.commit(txnErr => callback(txnErr, this));
