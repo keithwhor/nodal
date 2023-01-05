@@ -351,7 +351,7 @@ class PostgresAdapter extends SQLAdapter {
       cfg.host = match[3];
       cfg.port = match[4];
       cfg.database = match[5];
-      cfg.ssl = !!match[6];
+      cfg.ssl = !!match[6] || 'no-verify';
     }
 
     return cfg;
