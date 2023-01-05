@@ -25,7 +25,9 @@ class PostgresAdapter extends SQLAdapter {
 
     super();
 
-    cfg = cfg.connectionString ? this.parseConnectionString(cfg.connectionString) : cfg;
+    cfg = cfg.connectionString
+      ? this.parseConnectionString(cfg.connectionString)
+      : cfg;
 
     this.db = db;
     this._config = cfg;
@@ -119,7 +121,6 @@ class PostgresAdapter extends SQLAdapter {
 
     this._pool.query(query, params, (err, results) => {
       if (err) {
-        console.log(this._config);
         console.error(err);
         this.db.error(err.message);
         callback.apply(this, err);
@@ -352,11 +353,13 @@ class PostgresAdapter extends SQLAdapter {
       cfg.host = match[3];
       cfg.port = match[4];
       cfg.database = match[5];
-      cfg.ssl = !!match[6]
-        ? true
-        : {
-            rejectUnauthorized: false
-          }
+      if (match[6] === '?ssl=true') {
+        cfg.ssl = true;
+      } else if (match[6] === '?ssl=unauthorized') {
+        cfg.ssl = {
+          rejectUnauthorized: false
+        };
+      }
     }
 
     return cfg;
