@@ -119,6 +119,7 @@ class PostgresAdapter extends SQLAdapter {
 
     this._pool.query(query, params, (err, results) => {
       if (err) {
+        console.error(err);
         this.db.error(err.message);
         callback.apply(this, err);
       } else {
