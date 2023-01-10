@@ -123,7 +123,7 @@ class PostgresAdapter extends SQLAdapter {
       if (err) {
         console.error(err);
         this.db.error(err.message);
-        callback.apply(this, err);
+        callback.apply(this, [err]);
       } else {
         callback.apply(this, [null, results]);
       }
