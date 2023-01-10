@@ -896,6 +896,10 @@ class Model {
 
     let relationship = this.relationship(field);
 
+    if (Array.isArray(value) && !value.length) {
+      value = new ModelArray(relationship.getModel());
+    }
+
     if (!relationship.multiple()) {
 
       if (!(value instanceof relationship.getModel())) {
