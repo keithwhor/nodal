@@ -76,7 +76,7 @@ class PostgresAdapter extends SQLAdapter {
   beginSerializableClient(client, callback) {
 
     this.db.info('Transaction BEGIN ISOLATION LEVEL SERIALIZABLE');
-    client.query('BEGIN', callback);
+    client.query('BEGIN ISOLATION LEVEL SERIALIZABLE', callback);
 
   }
 
