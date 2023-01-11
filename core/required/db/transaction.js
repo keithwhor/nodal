@@ -25,7 +25,7 @@ class Transaction {
   }
 
   toString () {
-    return `Transaction <${this.uuid}>`;
+    return `Transaction <${this._uuid}>`;
   }
 
   __check__() {

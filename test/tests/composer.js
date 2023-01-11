@@ -156,6 +156,7 @@ module.exports = Nodal => {
           let config = connection.config;
 
           db.connect(config);
+          db.enableLogs(true);
 
           Parent.setDatabase(db);
           Career.setDatabase(db);
@@ -1706,6 +1707,32 @@ module.exports = Nodal => {
           done();
 
         });
+
+    });
+
+    it('Should start a transaction, insert a child, then select for that child', done => {
+
+      Child.transaction((err, txn) => {
+
+        Child.create({name: 'Alec'}, (err, child) => {
+
+          Child.query()
+            .transact(txn)
+            .where({id: child.get('id')})
+            .first((err, child) => {
+
+              txn.commit(() => {
+                expect(err).to.not.exist;
+                expect(child).to.exist;
+                expect(child.get('name')).to.equal('Alec');
+                done();
+              });
+
+            });
+
+        }, txn);
+
+      });
 
     });
 

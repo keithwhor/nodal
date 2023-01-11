@@ -26,7 +26,9 @@ class Composer {
     this._parent = parent || null;
     this._readonly = !!(readonlyDb || (parent && parent._readonly));
     this._command = null;
-    this._transaction = null;
+    this._transaction = this._parent
+      ? this._parent._transaction
+      : null;
     this._shortAliasMap = {};
     this._joinCount = 0;
 

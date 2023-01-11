@@ -57,7 +57,7 @@ class PostgresAdapter extends SQLAdapter {
     let start = new Date().valueOf();
 
     client.query(query, params, (err, result) => {
-      this.db.log(query, params, new Date().valueOf() - start);
+      this.db.log(`<txn> ${query}`, params, new Date().valueOf() - start);
       if (err) {
         console.log(err);
       }
@@ -139,8 +139,8 @@ class PostgresAdapter extends SQLAdapter {
     }
 
     let start = new Date().valueOf();
-    let log = this.db.log.bind(this.db);
 
+    this.db.log(query, params, new Date().valueOf() - start);
     this._pool.query(query, params, (err, results) => {
       if (err) {
         console.error(err);

@@ -78,7 +78,7 @@ class Database {
   }
 
   query() {
-    
+
     this.adapter.query.apply(this.adapter, arguments);
 
   }
