@@ -194,6 +194,16 @@ class Model {
   }
 
   /**
+  * Creates a serializable transaction object to be passed to database methods
+  * @param {Function} callback Callback to execute upon completion
+  */
+  static serializableTransaction(callback) {
+
+    return this.prototype.db.adapter.createSerializableTransaction(callback);
+
+  }
+
+  /**
   * Get the model's table name
   * @return {string}
   */

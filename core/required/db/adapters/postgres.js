@@ -73,6 +73,13 @@ class PostgresAdapter extends SQLAdapter {
 
   }
 
+  beginSerializableClient(client, callback) {
+
+    this.db.info('Transaction BEGIN ISOLATION LEVEL SERIALIZABLE');
+    client.query('BEGIN', callback);
+
+  }
+
   rollbackClient(client, callback) {
 
     this.db.info('Transaction ROLLBACK');
@@ -95,6 +102,21 @@ class PostgresAdapter extends SQLAdapter {
       return callback(e);
     }
     this.beginClient(client, (err) => {
+      if (err) {
+        return callback(err);
+      }
+      return callback(null, new Transaction(this, client, () => client.release()));
+    });
+  }
+
+  async createSerializableTransaction(callback) {
+    let client;
+    try {
+      client = await this._pool.connect();
+    } catch (e) {
+      return callback(e);
+    }
+    this.beginSerializableClient(client, (err) => {
       if (err) {
         return callback(err);
       }
