@@ -1,6 +1,7 @@
 'use strict';
 
 const async = require('async');
+const uuid = require('uuid');
 
 const TXN_STATUS = {
   READY: 0,
@@ -16,10 +17,15 @@ class Transaction {
   constructor(adapter, client, complete) {
 
     this.adapter = adapter;
+    this._uuid = uuid.v4();
     this._client = client;
     this._complete = complete;
     this._status = TXN_STATUS.READY;
 
+  }
+
+  toString () {
+    return `Transaction <${this.uuid}>`;
   }
 
   __check__() {

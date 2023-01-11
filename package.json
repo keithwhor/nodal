@@ -1,6 +1,6 @@
 {
   "name": "nodal",
-  "version": "1.1.0-rc14",
+  "version": "1.1.0-rc15",
   "description": "An API Server and Framework for node.js",
   "keywords": [
     "framework",
@@ -27,7 +27,8 @@
     "i": "~0.3.4",
     "inquirer": "~0.11.3",
     "mime-types": "~2.1.9",
-    "pg": "^8.8.0"
+    "pg": "^8.8.0",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "chai": "~3.5.0",
