@@ -1305,6 +1305,29 @@ module.exports = Nodal => {
 
     });
 
+    it('Should update all childrens ages and license', (done) => {
+
+      Child.query().orderBy('id').end((err, children) => {
+
+        let ages = children.map(c => c.get('age'));
+
+        Child.query()
+          .orderBy('id')
+          .update({license: 'DL_APPROVED_HOORAY', age: age => `${age} + 10`}, (err, children) => {
+
+            children.forEach((child, i) => {
+              expect(child.get('age')).to.equal(ages[i] + 10);
+              expect(child.get('license')).to.equal('DL_APPROVED_HOORAY');
+            });
+
+            done();
+
+          });
+
+      });
+
+    });
+
     it('Should update all parents names and join children', (done) => {
 
       Parent.query()
