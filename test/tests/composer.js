@@ -102,6 +102,7 @@ module.exports = Nodal => {
         {name: 'parent_id', type: 'int'},
         {name: 'name', type: 'string'},
         {name: 'animal', type: 'string'},
+        {name: 'added_at', type: 'datetime'},
         {name: 'is_alive', type: 'boolean'},
         {name: 'details', type: 'json'},
         {name: 'created_at', type: 'datetime'},
@@ -220,6 +221,7 @@ module.exports = Nodal => {
                     parent_id: id,
                     name: name,
                     animal: ['Cat', 'Dog', 'Cat'][i],
+                    added_at: new Date(`2020-0${i + 1}-0${i + 1}T00:00:13.370Z`),
                     is_alive: true,
                     details: { language: name === 'Pascal' }
                   });
@@ -1325,6 +1327,25 @@ module.exports = Nodal => {
           });
 
       });
+
+    });
+
+    it('Should query pets by datetime', (done) => {
+
+      let compareDate = new Date(`2020-01-01T00:00:13.370Z`);
+
+      Pet.query()
+        .where({added_at__gt: compareDate})
+        .end((err, pets) => {
+
+          expect(err).to.not.exist;
+          expect(pets.length).to.equal(20);
+          pets.forEach(pet => {
+            expect(pet.get('added_at')).to.be.greaterThan(compareDate);
+          });
+          done();
+
+        });
 
     });
 
